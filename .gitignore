@@ -1,0 +1,12 @@
+#
+# Build
+#
+
+[Bb]uild
+
+#
+# Editor
+#
+
+.cache
+.vscode
