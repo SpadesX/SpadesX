@@ -21,7 +21,7 @@ add_executable(server "")
 target_link_libraries(server
     PRIVATE
         enet
-        zlib
+        z
 )
 
 add_subdirectory(Source)
