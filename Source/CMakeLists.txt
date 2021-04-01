@@ -31,4 +31,4 @@ target_compile_features(server
 
 add_executable(readvxl ReadVXL.c)
 
-target_link_libraries(readvxl PRIVATE zlib)
+target_link_libraries(readvxl PRIVATE z)
