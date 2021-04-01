@@ -21,15 +21,22 @@ typedef enum {
 } DisconnectedReason;
 
 typedef enum {
-    PACKET_TYPE_STATE_DATA = 15,
-    PACKET_TYPE_MAP_START  = 18,
-    PACKET_TYPE_MAP_CHUNK  = 19,
+    PACKET_TYPE_CREATE_PLAYER = 12,
+    PACKET_TYPE_STATE_DATA    = 15,
+    PACKET_TYPE_MAP_START     = 18,
+    PACKET_TYPE_MAP_CHUNK     = 19,
 } PacketID;
+
+typedef enum {
+    GAMEMODE_CTF = 0,
+    GAMEMODE_TC  = 1,
+} GameMode;
 
 typedef enum {
     CONNECTION_STARTING_MAP,
     CONNECTION_LOADING_CHUNKS,
     CONNECTION_LOADING_STATE,
+    CONNECTION_SPAWNING,
     CONNECTION_HOLD,
     CONNECTION_DISCONNECTED
 } ConnectionState;
