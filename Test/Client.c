@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define SERVER_PORT 32887
-#define TIMEOUT     10
+#define TIMEOUT     1
 
 #define MAX_INPUT_LENGTH 100
 
@@ -21,6 +21,8 @@ int main()
     ENetHost* client;
     client = enet_host_create(NULL, 1, 1, 0, 0);
 
+    enet_host_compress_with_range_coder(client);
+
     if (client == NULL) {
         fprintf(stderr, "An error occurred while trying to create an ENet client host!\n");
         return EXIT_FAILURE;
@@ -34,7 +36,7 @@ int main()
 
     printf("INFO: creating client\n");
 
-    peer = enet_host_connect(client, &address, 1, 0);
+    peer = enet_host_connect(client, &address, 1, 3);
     if (peer == NULL) {
         fprintf(stderr, "ERROR: failed to create client\n");
         return EXIT_FAILURE;
@@ -63,14 +65,27 @@ int main()
         while (enet_host_service(client, &event, TIMEOUT) > 0) {
             switch (event.type) {
                 case ENET_EVENT_TYPE_RECEIVE:
-                    printf("PACKET: from %X:%u, channel %u, length %zu:\n%s\n",
+                    printf("PACKET: from %X:%u, channel %u, length %zu, code: %u\n",
                            event.peer->address.host,
                            event.peer->address.port,
                            event.channelID,
                            event.packet->dataLength,
-                           event.packet->data);
-
-                    waitAnswer = 0;
+                           event.packet->data[0]);
+                    if (event.packet->data[0] == 19) {
+                        break;
+                    }
+                    unsigned  length = event.packet->dataLength;
+                    unsigned  words  = length / 4;
+                    unsigned  bytes  = length % 4;
+                    unsigned* data   = (unsigned*) event.packet->data;
+                    for (unsigned i = 0; i < words; ++i) {
+                        printf("%X", data[i]);
+                    }
+                    char* ptr = (char*) (data + words);
+                    for (unsigned i = 0; i < bytes; ++i) {
+                        printf("%X", ptr[i]);
+                    }
+                    putchar('\n');
                     // enet_packet_destroy(event.packet);
                     break;
                 case ENET_EVENT_TYPE_DISCONNECT:
@@ -81,20 +96,6 @@ int main()
                     printf("WARNING: invalid event\n");
                     break;
             }
-        }
-        if (!waitAnswer) {
-            printf("write message:");
-            fgets(buffer, MAX_INPUT_LENGTH, stdin);
-
-            int length         = strlen(buffer);
-            buffer[length - 1] = '\0'; // replace '\n'
-
-            printf("INFO: sending packet\n");
-            // enet_packet_resize(packet, length);
-            strcpy((char*) packet->data, buffer);
-            enet_peer_send(peer, 0, packet);
-
-            waitAnswer = 1;
         }
     }
 

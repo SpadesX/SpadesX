@@ -179,13 +179,24 @@ void ServerStep(Server* server, int timeout)
         }
 
         if (event->type == ENET_EVENT_TYPE_RECEIVE) {
-            printf("PACKET: %X:%u, channel %u, data %u, length %zu\n\tmessage: '%s'\n",
+            printf("PACKET: from %X:%u, channel %u, length %zu, code: %u\n",
                    event->peer->address.host,
                    event->peer->address.port,
                    event->channelID,
-                   event->data,
                    event->packet->dataLength,
-                   (const char*) event->packet->data);
+                   event->packet->data[0]);
+            unsigned  length = event->packet->dataLength;
+            unsigned  words  = length / 4;
+            unsigned  bytes  = length % 4;
+            unsigned* data   = (unsigned*) event->packet->data;
+            for (unsigned i = 0; i < words; ++i) {
+                printf("%X", data[i]);
+            }
+            char* ptr = (char*) (data + words);
+            for (unsigned i = 0; i < bytes; ++i) {
+                printf("%X", ptr[i]);
+            }
+            putchar('\n');
         }
     }
 
@@ -261,7 +272,7 @@ void ServerStep(Server* server, int timeout)
     if (connection->state == CONNECTION_LOADING_STATE) {
         printf("STATUS: sending state\n");
 
-#define SIZE 53
+#define SIZE 104
 
         ENetPacket* packet = enet_packet_create(NULL, SIZE, ENET_PACKET_FLAG_RELIABLE);
         memset(packet->data, 0, SIZE);
