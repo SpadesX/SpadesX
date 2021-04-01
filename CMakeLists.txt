@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.18)
 
 #
-# Project1
+# BetterFasterSpades
 #
 
-project(Project1)
+project(BetterFasterSpades)
 
 #
 # Add third party libraries
