@@ -285,7 +285,7 @@ static void ReceiveInputData(GameServer* server, uint8 playerID, DataStream* dat
 {
 	StreamSkip(data, 1); // ID
 	server->input[playerID] = ReadByte(data);
-	server->inputFlags |= (uint32) 1 << playerID;
+	//server->inputFlags |= (uint32) 1 << playerID; //Commented out for now. Causing a LOT of issues when receiving data
 }
 
 static void SendWorldUpdate(GameServer* server)
@@ -368,6 +368,28 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			WriteInt(&stream, X);
 			WriteInt(&stream, Y);
 			WriteInt(&stream, Z);
+			enet_host_broadcast(server->host, 0, packet);
+			break;
+		}
+		case PACKET_TYPE_BLOCK_LINE:
+		{
+			uint8 player = ReadByte(data);
+			int sX = ReadInt(data);
+			int sY = ReadInt(data);
+			int sZ = ReadInt(data);
+			int eX = ReadInt(data);
+			int eY = ReadInt(data);
+			int eZ = ReadInt(data);
+			ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
+			DataStream  stream = {packet->data, packet->dataLength, 0};
+			WriteByte(&stream, PACKET_TYPE_BLOCK_LINE);
+			WriteByte(&stream, player);
+			WriteInt(&stream, sX);
+			WriteInt(&stream, sY);
+			WriteInt(&stream, sZ);
+			WriteInt(&stream, eX);
+			WriteInt(&stream, eY);
+			WriteInt(&stream, eZ);
 			enet_host_broadcast(server->host, 0, packet);
 			break;
 		}
