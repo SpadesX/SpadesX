@@ -288,9 +288,9 @@ static void ReceiveInputData(GameServer* server, uint8 playerID, DataStream* dat
     server->inputFlags |= (uint32) 1 << playerID;
 }
 
-static void OnPlayerInput(GameServer* server, uint8 playerID, DataStream* data)
+static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* data, ENetEvent event)
 {
-    uint8 type = (PacketID) ReadByte(data);
+    PacketID type = (PacketID) ReadByte(data);
     switch (type) {
         case PACKET_TYPE_EXISTING_PLAYER:
             ReceiveExistingPlayer(server, playerID, data);
@@ -304,6 +304,39 @@ static void OnPlayerInput(GameServer* server, uint8 playerID, DataStream* data)
         case PACKET_TYPE_INPUT_DATA:
             ReceiveInputData(server, playerID, data);
             break;
+        case PACKET_TYPE_CHAT_MESSAGE:
+        {
+            uint32 packetSize = event.packet->dataLength + 1;
+            int player = ReadByte(data);
+            int meantfor = ReadByte(data);
+            uint32 length = DataLeft(data);
+            char * message = calloc(length, sizeof (char));
+            ReadArray(data, message, length);
+            message[length] = '\0';
+            ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
+            DataStream  stream = {packet->data, packet->dataLength, 0};
+            WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
+            WriteByte(&stream, player);
+            WriteByte(&stream, meantfor);
+            WriteArray(&stream, message, length);
+            if (message[0] == '/') {
+                if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
+                    ENetPacket* pcket = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+                    DataStream  sream = {pcket->data, pcket->dataLength, 0};
+                    WriteByte(&sream, 16);
+                    WriteByte(&sream, player);
+                    WriteByte(&sream, player);
+                    WriteByte(&sream, 1);
+                    WriteByte(&sream, 1);
+                    enet_peer_send(server->peer[playerID], 0, pcket);
+                }
+            }
+            else {
+                enet_peer_send(server->peer[playerID], 0, packet);
+            }
+            free(message);
+            break;
+        }
         default:
             printf("unhandled input, id %u, code %u\n", playerID, type);
             break;
@@ -330,7 +363,7 @@ static void SendInputData(GameServer* server, uint8 playerID)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
     WriteByte(&stream, server->input[playerID]);
-    enet_host_broadcast(server->host, 0, packet);
+    //enet_host_broadcast(server->host, 0, packet);
 }
 
 static void OnPlayerUpdate(GameServer* server, uint8 playerID)
@@ -397,7 +430,7 @@ static void ServerUpdate(GameServer* server, int timeout)
             {
                 DataStream stream = {event.packet->data, event.packet->dataLength, 0};
                 playerID          = (uint8)((size_t) event.peer->data);
-                OnPlayerInput(server, playerID, &stream);
+                OnPacketReceived(server, playerID, &stream, event);
                 enet_packet_destroy(event.packet);
                 break;
             }
