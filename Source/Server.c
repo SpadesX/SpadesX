@@ -1,24 +1,529 @@
 #include "Server.h"
 
-#include "Compress.h"
-#include "DataStream.h"
+#include "Enums.h"
+#include "Types.h"
 
+#include <Compress.h>
+#include <DataStream.h>
+#include <Queue.h>
 #include <enet/enet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-void ServerStart(Server* server,
-                 uint16  port,
-                 uint32  connections,
-                 uint32  channels,
-                 uint32  inBandwidth,
-                 uint32  outBandwidth)
+typedef struct
 {
-    printf("INFO: initializing ENet\n");
+    uint8     scoreTeamA;
+    uint8     scoreTeamB;
+    uint8     scoreLimit;
+    IntelFlag intelFlags;
+    Vector3f  intelTeamA;
+    Vector3f  intelTeamB;
+    Vector3f  baseTeamA;
+    Vector3f  baseTeamB;
+    uint8     playerIntelTeamA; // player ID if intel flags & 1 != 0
+    uint8     playerIntelTeamB; // player ID if intel flags & 2 != 0
+} ModeCTF;
+
+typedef struct
+{
+    ENetHost* host;
+    //
+    uint8 numPlayers;
+    uint8 maxPlayers;
+    //
+    Color3i  colorFog;
+    Color3i  colorTeamA;
+    Color3i  colorTeamB;
+    char     nameTeamA[11];
+    char     nameTeamB[11];
+    GameMode mode;
+    // mode
+    ModeCTF ctf;
+    // compressed map
+    Queue* compressedMap;
+    uint32 compressedSize;
+    // respawn area
+    Quad2D spawns[2];
+    // dirty flag
+    uint8 dirty;
+    // per player
+    uint8  input[32];
+    uint32 inputFlags;
+
+    Queue*    queues[32];
+    State     state[32];
+    Weapon    weapon[32];
+    Team      team[32];
+    Tool      item[32];
+    uint32    kills[32];
+    Color3i   color[32];
+    Vector3f  pos[32];
+    Vector3f  rot[32];
+    char      name[17][32];
+    ENetPeer* peer[32];
+} GameServer;
+
+#define STATUS(msg)  printf("STATUS: " msg "\n")
+#define WARNING(msg) printf("WARNING: " msg "\n")
+#define ERROR(msg)   fprintf(stderr, "ERROR: " msg "\n");
+
+static void SetPlayerRespawnPoint(GameServer* server, uint8 playerID)
+{
+    if (server->team[playerID] != TEAM_SPECTATOR) {
+        Quad2D* spawn = server->spawns + server->team[playerID];
+
+        float dx = spawn->to.x - spawn->from.x;
+        float dy = spawn->to.y - spawn->from.y;
+
+        server->pos[playerID].x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
+        server->pos[playerID].y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
+        server->pos[playerID].z = 62.f;
+
+        server->rot[playerID].x = 0.f;
+        server->rot[playerID].y = 0.f;
+        server->rot[playerID].z = 0.f;
+
+        printf("respawn: %f %f %f\n", server->pos[playerID].x, server->pos[playerID].y, server->pos[playerID].z);
+    }
+}
+
+//
+// On player connection:
+//
+// START_MAP
+// MAP_CHUNK multiple
+// STATE_DATA
+// CREATE_PLAYER multiple
+//
+
+static void SendMapStart(GameServer* server, uint8 playerID)
+{
+    STATUS("sending map info");
+    ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_MAP_START);
+    WriteInt(&stream, server->compressedSize);
+    if (enet_peer_send(server->peer[playerID], 0, packet) == 0) {
+        server->state[playerID] = STATE_LOADING_CHUNKS;
+        // map
+        server->queues[playerID] = server->compressedMap;
+    }
+}
+
+static void SendMapChunks(GameServer* server, uint8 playerID)
+{
+    if (server->queues[playerID] == NULL) {
+        server->state[playerID] = STATE_JOINING;
+        STATUS("loading chunks done");
+    } else {
+        ENetPacket* packet = enet_packet_create(NULL, server->queues[playerID]->length + 1, ENET_PACKET_FLAG_RELIABLE);
+        DataStream  stream = {packet->data, packet->dataLength, 0};
+        WriteByte(&stream, PACKET_TYPE_MAP_CHUNK);
+        WriteArray(&stream, server->queues[playerID]->block, server->queues[playerID]->length);
+
+        if (enet_peer_send(server->peer[playerID], 0, packet) == 0) {
+            server->queues[playerID] = server->queues[playerID]->next;
+        }
+    }
+}
+
+static void SendStateData(GameServer* server, uint8 playerID)
+{
+    ENetPacket* packet = enet_packet_create(NULL, 104, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_STATE_DATA);
+    WriteByte(&stream, playerID);
+    WriteColor3i(&stream, server->colorFog);
+    WriteColor3i(&stream, server->colorTeamA);
+    WriteColor3i(&stream, server->colorTeamB);
+    WriteArray(&stream, server->nameTeamA, 10);
+    WriteArray(&stream, server->nameTeamB, 10);
+    WriteByte(&stream, server->mode);
+
+    // MODE CTF:
+
+    WriteByte(&stream, server->ctf.scoreTeamA); // SCORE TEAM A
+    WriteByte(&stream, server->ctf.scoreTeamB); // SCORE TEAM B
+    WriteByte(&stream, server->ctf.scoreLimit); // SCORE LIMIT
+    WriteByte(&stream, server->ctf.intelFlags); // INTEL FLAGS
+
+    if ((server->ctf.intelFlags & 1) == 0) {
+        WriteVector3f(&stream, &server->ctf.intelTeamA);
+    } else {
+        WriteByte(&stream, server->ctf.playerIntelTeamA);
+        StreamSkip(&stream, 11);
+    }
+
+    if ((server->ctf.intelFlags & 2) == 0) {
+        WriteVector3f(&stream, &server->ctf.intelTeamB);
+    } else {
+        WriteByte(&stream, server->ctf.playerIntelTeamB);
+        StreamSkip(&stream, 11);
+    }
+
+    WriteVector3f(&stream, &server->ctf.baseTeamA);
+    WriteVector3f(&stream, &server->ctf.baseTeamB);
+
+    if (enet_peer_send(server->peer[playerID], 0, packet) == 0) {
+        server->state[playerID] = STATE_READY;
+    }
+}
+
+static void SendPlayerState(GameServer* server, uint8 playerID, uint8 otherID)
+{
+    ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_CREATE_PLAYER);
+    WriteByte(&stream, otherID);                    // ID
+    WriteByte(&stream, server->weapon[otherID]);    // WEAPON
+    WriteByte(&stream, server->team[otherID]);      // TEAM
+    WriteVector3f(&stream, server->pos + otherID);  // X Y Z
+    WriteArray(&stream, server->name[otherID], 16); // NAME
+
+    if (enet_peer_send(server->peer[playerID], 0, packet) != 0) {
+        WARNING("failed to send player state\n");
+    }
+}
+
+static void SendJoiningData(GameServer* server, uint8 playerID)
+{
+    STATUS("sending state");
+    SendStateData(server, playerID);
+    for (uint8 i = 0; i < server->maxPlayers; ++i) {
+        if (i != playerID && server->state[i] != STATE_DISCONNECTED) {
+            SendPlayerState(server, playerID, i);
+        }
+    }
+}
+
+static void SendPlayerLeft(GameServer* server, uint8 playerID)
+{
+    STATUS("sending player left event");
+    for (uint8 i = 0; i < server->maxPlayers; ++i) {
+        if (i != playerID && server->state[i] != STATE_DISCONNECTED) {
+            ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
+            packet->data[0]    = PACKET_TYPE_PLAYER_LEFT;
+            packet->data[1]    = playerID;
+
+            if (enet_peer_send(server->peer[i], 0, packet) != 0) {
+                WARNING("failed to send player left event\n");
+            }
+        }
+    }
+}
+
+static void SendRespawn(GameServer* server, uint8 playerID)
+{
+    for (uint8 i = 0; i < server->maxPlayers; ++i) {
+        if (server->state[i] != STATE_DISCONNECTED) {
+            SendPlayerState(server, i, playerID);
+        }
+    }
+    server->state[playerID] = STATE_READY;
+}
+
+static uint8 OnConnect(GameServer* server, uint32 data)
+{
+    if (server->numPlayers == server->maxPlayers) {
+        return 0xFF;
+    }
+    uint8 playerID;
+    for (playerID = 0; playerID < server->maxPlayers; ++playerID) {
+        if (server->state[playerID] == STATE_DISCONNECTED) {
+            server->state[playerID] = STATE_STARTING_MAP;
+            break;
+        }
+    }
+    server->numPlayers++;
+    return playerID;
+}
+
+static void ReceiveExistingPlayer(GameServer* server, uint8 playerID, DataStream* data)
+{
+    uint8 id = ReadByte(data);
+    if (playerID != id) {
+        WARNING("different player id");
+    }
+
+    server->team[playerID]   = ReadByte(data);
+    server->weapon[playerID] = ReadByte(data);
+    server->item[playerID]   = ReadByte(data);
+    server->kills[playerID]  = ReadInt(data);
+
+    ReadColor3i(data, server->color[playerID]);
+
+    uint32 length = DataLeft(data);
+    if (length > 16) {
+        WARNING("name too long");
+    } else {
+        server->name[playerID][length] = '\0';
+        ReadArray(data, server->name[playerID], length);
+    }
+
+    server->state[playerID] = STATE_SPAWNING;
+}
+
+static void ReceivePositionData(GameServer* server, uint8 playerID, DataStream* data)
+{
+    server->pos[playerID].x = ReadFloat(data);
+    server->pos[playerID].y = ReadFloat(data);
+    server->pos[playerID].z = ReadFloat(data);
+    server->dirty           = 1;
+}
+
+static void ReceiveOrientationData(GameServer* server, uint8 playerID, DataStream* data)
+{
+    server->rot[playerID].x = ReadFloat(data);
+    server->rot[playerID].y = ReadFloat(data);
+    server->rot[playerID].z = ReadFloat(data);
+    server->dirty           = 1;
+}
+
+static void ReceiveInputData(GameServer* server, uint8 playerID, DataStream* data)
+{
+    StreamSkip(data, 1); // ID
+    server->input[playerID] = ReadByte(data);
+    server->inputFlags |= (uint32) 1 << playerID;
+}
+
+static void OnPlayerInput(GameServer* server, uint8 playerID, DataStream* data)
+{
+    uint8 type = (PacketID) ReadByte(data);
+    switch (type) {
+        case PACKET_TYPE_EXISTING_PLAYER:
+            ReceiveExistingPlayer(server, playerID, data);
+            break;
+        case PACKET_TYPE_POSITION_DATA:
+            ReceivePositionData(server, playerID, data);
+            break;
+        case PACKET_TYPE_ORIENTATION_DATA:
+            ReceiveOrientationData(server, playerID, data);
+            break;
+        case PACKET_TYPE_INPUT_DATA:
+            ReceiveInputData(server, playerID, data);
+            break;
+        default:
+            printf("unhandled input, id %u, code %u\n", playerID, type);
+            break;
+    }
+}
+
+static void SendWorldUpdate(GameServer* server)
+{
+    ENetPacket* packet = enet_packet_create(NULL, 1 + (32 * 24), ENET_PACKET_FLAG_UNSEQUENCED);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_WORLD_UPDATE);
+
+    for (uint8 j = 0; j < 32; ++j) {
+        WriteVector3f(&stream, server->pos + j);
+        WriteVector3f(&stream, server->rot + j);
+    }
+
+    enet_host_broadcast(server->host, 0, packet);
+}
+
+static void SendInputData(GameServer* server, uint8 playerID)
+{
+    ENetPacket* packet = enet_packet_create(NULL, 1 + (32 * 24), ENET_PACKET_FLAG_UNSEQUENCED);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
+    WriteByte(&stream, server->input[playerID]);
+    enet_host_broadcast(server->host, 0, packet);
+}
+
+static void OnPlayerUpdate(GameServer* server, uint8 playerID)
+{
+    switch (server->state[playerID]) {
+        case STATE_STARTING_MAP:
+            SendMapStart(server, playerID);
+            break;
+        case STATE_LOADING_CHUNKS:
+            SendMapChunks(server, playerID);
+            break;
+        case STATE_JOINING:
+            SendJoiningData(server, playerID);
+            break;
+        case STATE_SPAWNING:
+            SetPlayerRespawnPoint(server, playerID);
+            SendRespawn(server, playerID);
+            break;
+        case STATE_READY:
+            // send data
+            if (server->inputFlags & ((uint32) 1 << playerID)) {
+                SendInputData(server, playerID);
+                server->inputFlags &= ~((uint32) 1 << playerID);
+            }
+            break;
+        default:
+            // disconnected
+            break;
+    }
+}
+
+static void ServerUpdate(GameServer* server, int timeout)
+{
+    ENetEvent event;
+    while (enet_host_service(server->host, &event, timeout) > 0) {
+        uint8 playerID;
+        switch (event.type) {
+            case ENET_EVENT_TYPE_NONE:
+                WARNING("none event");
+                break;
+            case ENET_EVENT_TYPE_CONNECT:
+                if (event.data != VERSION_0_75) {
+                    enet_peer_disconnect(event.peer, REASON_WRONG_PROTOCOL_VERSION);
+                    break;
+                }
+                // check peer
+                // ...
+                // find next free ID
+                playerID = OnConnect(server, event.data);
+                if (playerID == 0xFF) {
+                    enet_peer_disconnect(event.peer, REASON_SERVER_FULL);
+                    break;
+                }
+                server->peer[playerID] = event.peer;
+                event.peer->data       = (void*) ((size_t) playerID);
+                printf("INFO: connected %u:%u, id %u\n", event.peer->address.host, event.peer->address.port, playerID);
+                break;
+            case ENET_EVENT_TYPE_DISCONNECT:
+                playerID                = (uint8)((size_t) event.peer->data);
+                server->state[playerID] = STATE_DISCONNECTED;
+                SendPlayerLeft(server, playerID);
+                break;
+            case ENET_EVENT_TYPE_RECEIVE:
+            {
+                DataStream stream = {event.packet->data, event.packet->dataLength, 0};
+                playerID          = (uint8)((size_t) event.peer->data);
+                OnPlayerInput(server, playerID, &stream);
+                enet_packet_destroy(event.packet);
+                break;
+            }
+        }
+    }
+    for (uint8 playerID = 0; playerID < server->maxPlayers; ++playerID) {
+        OnPlayerUpdate(server, playerID);
+    }
+    if (server->dirty) {
+        SendWorldUpdate(server);
+        server->dirty = 0;
+    }
+}
+
+static void LoadMap(GameServer* server, const char* path)
+{
+    STATUS("loading map");
+
+    while (server->compressedMap) {
+        server->compressedMap = Pop(server->compressedMap);
+    }
+
+    FILE* file = fopen("hallway.vxl", "rb");
+    if (!file) {
+        perror("file not found");
+        exit(EXIT_FAILURE);
+    }
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    uint8* buffer = (uint8*) malloc(size);
+    fread(buffer, size, 1, file);
+    fclose(file);
+
+    STATUS("compressing map data");
+
+    server->compressedMap = CompressData(buffer, size, DEFAULT_COMPRESSOR_CHUNK_SIZE);
+    free(buffer);
+
+    Queue* node            = server->compressedMap;
+    server->compressedSize = 0;
+    while (node) {
+        server->compressedSize += node->length;
+        node = node->next;
+    }
+}
+
+static void ServerInit(GameServer* server, uint32 connections)
+{
+    server->numPlayers = 0;
+    server->maxPlayers = (connections <= 32) ? connections : 32;
+
+    server->dirty = 0;
+
+    server->compressedMap  = NULL;
+    server->compressedSize = 0;
+    server->inputFlags     = 0;
+
+    for (uint32 i = 0; i < server->maxPlayers; ++i) {
+        server->state[i]  = STATE_DISCONNECTED;
+        server->queues[i] = NULL;
+        server->input[i]  = 0;
+        memset(server->name[i], 0, 17);
+    }
+
+    srand(time(NULL));
+
+    server->spawns[0].from.x = 64.f;
+    server->spawns[0].from.y = 224.f;
+    server->spawns[0].to.x   = 128.f;
+    server->spawns[0].to.y   = 288.f;
+
+    server->spawns[1].from.x = 382.f;
+    server->spawns[1].from.y = 224.f;
+    server->spawns[1].to.x   = 448.f;
+    server->spawns[1].to.y   = 288.f;
+
+    server->colorFog[0] = 0xff;
+    server->colorFog[1] = 0xff;
+    server->colorFog[2] = 0xff;
+
+    server->colorTeamA[0] = 0xff;
+    server->colorTeamA[1] = 0x00;
+    server->colorTeamA[2] = 0x00;
+
+    server->colorTeamB[0] = 0x00;
+    server->colorTeamB[1] = 0xff;
+    server->colorTeamB[2] = 0x00;
+
+    memcpy(server->nameTeamA, "Team A", sizeof("Team A"));
+    memcpy(server->nameTeamB, "Team B", sizeof("Team B"));
+
+    server->mode = GAME_MODE_CTF;
+
+    // Init CTF
+
+    server->ctf.scoreTeamA = 0;
+    server->ctf.scoreTeamB = 0;
+    server->ctf.scoreLimit = 10;
+    server->ctf.intelFlags = 0;
+    // intel
+    server->ctf.intelTeamA.x = 120.f;
+    server->ctf.intelTeamA.y = 256.f;
+    server->ctf.intelTeamA.z = 62.f;
+    server->ctf.intelTeamB.x = 110.f;
+    server->ctf.intelTeamB.y = 256.f;
+    server->ctf.intelTeamB.z = 62.f;
+    // bases
+    server->ctf.baseTeamA.x = 120.f;
+    server->ctf.baseTeamA.y = 250.f;
+    server->ctf.baseTeamA.z = 62.f;
+    server->ctf.baseTeamB.x = 110.f;
+    server->ctf.baseTeamB.y = 250.f;
+    server->ctf.baseTeamB.z = 62.f;
+
+    LoadMap(server, "hallway.vxl");
+}
+
+void ServerRun(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth)
+{
+    STATUS("initializing ENet");
 
     if (enet_initialize() != 0) {
-        fprintf(stderr, "ERROR: failed to initialize ENet\n");
+        ERROR("failed to initalize ENet");
         exit(EXIT_FAILURE);
     }
     atexit(enet_deinitialize);
@@ -27,281 +532,35 @@ void ServerStart(Server* server,
     address.host = ENET_HOST_ANY;
     address.port = port;
 
-    printf("INFO: creating server\n");
+    STATUS("creating server");
 
-    server->host = enet_host_create(&address, connections, channels, inBandwidth, outBandwidth);
-    if (server == NULL) {
-        fprintf(stderr, "ERROR: failed to create server\n");
+    GameServer server;
+
+    server.host = enet_host_create(&address, connections, channels, inBandwidth, outBandwidth);
+    if (server.host == NULL) {
+        ERROR("failed to create server");
         exit(EXIT_FAILURE);
     }
 
-    server->connections    = (Connection*) malloc(sizeof(Connection) * connections);
-    server->maxConnections = connections;
-    server->event          = (ENetEvent*) malloc(sizeof(ENetEvent));
+    if (enet_host_compress_with_range_coder(server.host) != 0) {
+        WARNING("compress with range coder failed");
+    }
 
-    enet_host_compress_with_range_coder(server->host);
+    STATUS("intializing server");
 
-    InitCompressor(5);
-}
+    if (InitCompressor(5) != 0) {
+        WARNING("failed to initialize compressor");
+    }
 
-void ServerDestroy(Server* server)
-{
-    printf("INFO: destroying server\n");
+    ServerInit(&server, connections);
 
+    STATUS("server started");
+
+    while (1) {
+        ServerUpdate(&server, 1);
+    }
+
+    STATUS("destroying server");
     CloseCompressor();
-
-    enet_host_destroy(server->host);
-}
-
-Connection* CurrentConnection = NULL;
-Queue*      MapData           = NULL;
-
-void ServerStep(Server* server, int timeout)
-{
-    uint8_t team;
-    uint8_t weapon;
-    char* name;
-    uint32 length;
-    ENetEvent event;
-    while (enet_host_service(server->host, &event, timeout) > 0) {
-
-        if (event.type == ENET_EVENT_TYPE_DISCONNECT) {
-            printf("INFO: connection %X terminated\n", event.peer->address.host);
-            Connection* connection = event.peer->data;
-            connection->state      = CONNECTION_DISCONNECTED;
-            connection->peer       = NULL;
-            CurrentConnection      = NULL;
-        }
-
-        if (event.type == ENET_EVENT_TYPE_CONNECT) {
-            printf("INFO: new connection: %X:%u, channel %u, data %u\n",
-                   event.peer->address.host,
-                   event.peer->address.port,
-                   event.channelID,
-                   event.data);
-
-            event.peer->data       = server->connections + 13;
-            Connection* connection = event.peer->data;
-
-            connection->playerID = 13;
-            connection->state    = CONNECTION_STARTING_MAP;
-            connection->peer     = event.peer;
-
-            CurrentConnection = connection;
-        }
-
-        if (event.type == ENET_EVENT_TYPE_RECEIVE) {
-            printf("PACKET: from %X:%u, channel %u, length %zu, code: %u\n",
-                   event.peer->address.host,
-                   event.peer->address.port,
-                   event.channelID,
-                   event.packet->dataLength,
-                   event.packet->data[0]);
-
-            DataStream stream = {event.packet->data, event.packet->dataLength, 0};
-
-            Connection* connection = event.peer->data;
-            switch (ReadByte(&stream)) {
-            case PACKET_TYPE_EXISTING_PLAYER:
-            {
-                printf("id %u\n", ReadByte(&stream));
-                team = ReadByte(&stream);
-                printf("team %u\n", team);
-                weapon = ReadByte(&stream);
-                printf("weapon %u\n", weapon);
-                printf("held %u\n", ReadByte(&stream));
-                printf("kills %u\n", ReadInt(&stream));
-                printf("rgb: %X %X %X\n", ReadByte(&stream), ReadByte(&stream), ReadByte(&stream));
-
-                length = DataLeft(&stream);
-                printf("name length: %u\n", length);
-                name = malloc(length + 1);
-                ReadArray(&stream, name, length);
-                name[length] = '\0';
-                // ReadArray(&stream, name, length);
-                printf("name: '%s'\n", name);
-
-                connection->state = CONNECTION_SPAWNING;
-                break;
-            }
-            case PACKET_TYPE_CHAT:
-            {
-                uint32 packetSize = event.packet->dataLength + 1;
-                int player = ReadByte(&stream);
-                int meantfor = ReadByte(&stream);
-                uint32 length = DataLeft(&stream);
-                char * message = calloc(length, sizeof (char));
-                ReadArray(&stream, message, length);
-                message[length] = '\0';
-                ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
-                DataStream  stream = {packet->data, packet->dataLength, 0};
-                WriteByte(&stream, PACKET_TYPE_CHAT);
-                WriteByte(&stream, player);
-                WriteByte(&stream, meantfor);
-                WriteArray(&stream, message, length);
-                if (message[0] == '/') {
-                printf("Got a command message");
-                if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
-                printf("Got kill command");
-                ENetPacket* pcket = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-                DataStream  sream = {pcket->data, pcket->dataLength, 0};
-                WriteByte(&sream, 16);
-                WriteByte(&sream, connection->playerID);
-                WriteByte(&sream, connection->playerID);
-                WriteByte(&sream, 1);
-                WriteByte(&sream, 1);
-                enet_peer_send(connection->peer, 0, pcket);
-                }
-                }
-                else {
-                enet_peer_send(connection->peer, 0, packet);
-                }
-                free(message);
-                break;
-            }
-            }
-
-            enet_packet_destroy(event.packet);
-        }
-    }
-
-    Connection* connection = CurrentConnection;
-    if (connection == NULL) {
-        return;
-    }
-
-    if (connection->state == CONNECTION_STARTING_MAP) {
-        printf("STATUS: loading map\n");
-
-        if (MapData == NULL) {
-            FILE* file = fopen("hallway.vxl", "rb");
-            if (!file) {
-                perror("file not found");
-                exit(EXIT_FAILURE);
-            }
-
-            fseek(file, 0, SEEK_END);
-            long size = ftell(file);
-            fseek(file, 0, SEEK_SET);
-
-            uint8* buffer = (uint8*) malloc(size);
-            fread(buffer, size, 1, file);
-            fclose(file);
-
-            printf("STATUS: compressing\n");
-
-            while (MapData) {
-                MapData = Pop(MapData);
-            }
-
-            MapData = CompressData(buffer, size, DEFAULT_COMPRESSOR_CHUNK_SIZE);
-            free(buffer);
-        }
-
-        Queue* node    = MapData;
-        uint32 mapSize = 0;
-        while (node) {
-            mapSize += node->length;
-            node = node->next;
-        }
-
-        printf("STATUS: sending map info\n");
-
-        ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-        DataStream  stream = {packet->data, packet->dataLength, 0};
-        WriteByte(&stream, PACKET_TYPE_MAP_START);
-        WriteInt(&stream, mapSize);
-
-        if (enet_peer_send(connection->peer, 0, packet) == 0) {
-            connection->state = CONNECTION_LOADING_CHUNKS;
-        }
-    }
-
-    if (connection->state == CONNECTION_LOADING_CHUNKS) {
-        if (MapData == NULL) {
-            connection->state = CONNECTION_LOADING_STATE;
-            printf("STATUS: loading chunks done\n");
-        } else {
-            ENetPacket* packet = enet_packet_create(NULL, MapData->length + 1, ENET_PACKET_FLAG_RELIABLE);
-            DataStream  stream = {packet->data, packet->dataLength, 0};
-            WriteByte(&stream, PACKET_TYPE_MAP_CHUNK);
-            WriteArray(&stream, MapData->block, MapData->length);
-
-            printf("sending map data, size: %u\n", MapData->length);
-
-            if (enet_peer_send(connection->peer, 0, packet) == 0) {
-                MapData = Pop(MapData);
-            }
-        }
-    }
-
-    if (connection->state == CONNECTION_LOADING_STATE) {
-        printf("STATUS: sending state\n");
-
-        ENetPacket* packet = enet_packet_create(NULL, 104, ENET_PACKET_FLAG_RELIABLE);
-        DataStream  stream = {packet->data, packet->dataLength, 0};
-        WriteByte(&stream, PACKET_TYPE_STATE_DATA);
-        WriteByte(&stream, connection->playerID);
-        WriteColor3iv(&stream, 0xFF, 0xFF, 0xFF);
-        WriteColor3iv(&stream, 0xFF, 0x00, 0x00);
-        WriteColor3iv(&stream, 0x00, 0xFF, 0x00);
-        WriteArray(&stream, "RED TEAM  ", 10);
-        WriteArray(&stream, "GREEN TEAM", 10);
-        WriteByte(&stream, GAMEMODE_CTF);
-
-        // if gamemode == GAMEMODE_CTF
-
-        WriteByte(&stream, 9);  // SCORE TEAM 1
-        WriteByte(&stream, 1);  // SCORE TEAM 2
-        WriteByte(&stream, 10); // SCORE LIMIT
-        WriteByte(&stream, 0);  // INTEL FLAGS
-
-        // INTEL 1 IF FLAG & 1 == 0
-        WriteFloat(&stream, 0.f); // X
-        WriteFloat(&stream, 0.f); // Y
-        WriteFloat(&stream, 0.f); // Z
-
-        // INTEL 2 IF FLAG & 2 == 0
-        WriteFloat(&stream, 0.f); // X
-        WriteFloat(&stream, 0.f); // Y
-        WriteFloat(&stream, 0.f); // Z
-
-        // TEAM 1 BASE
-        WriteFloat(&stream, 1.f); // X
-        WriteFloat(&stream, 1.f); // Y
-        WriteFloat(&stream, 0.f); // Z
-
-        // TEAM 2 BASE
-        WriteFloat(&stream, 2.f); // X
-        WriteFloat(&stream, 4.f); // Y
-        WriteFloat(&stream, 0.f); // Z
-
-        if (enet_peer_send(connection->peer, 0, packet) == 0) {
-            connection->state = CONNECTION_HOLD;
-        }
-    }
-
-    if (connection->state == CONNECTION_SPAWNING) {
-        // player id 	UByte 	0
-        // weapon 	UByte 	0
-        // team 	Byte 	0
-        // x position 	LE Float 	0
-        // y position 	LE Float 	0
-        // z position 	LE Float 	0
-        // name 	CP437 String 	Deuce
-        ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
-        DataStream  stream = {packet->data, packet->dataLength, 0};
-        WriteByte(&stream, PACKET_TYPE_CREATE_PLAYER);
-        WriteByte(&stream, connection->playerID); // ID
-        WriteByte(&stream, weapon);                    // WEAPON
-        WriteByte(&stream, team);                    // TEAM
-        WriteFloat(&stream, 120.f);               // X
-        WriteFloat(&stream, 256.f);               // Y
-        WriteFloat(&stream, 62.f);                // Z
-        WriteArray(&stream, name, length);
-
-        if (enet_peer_send(connection->peer, 0, packet) == 0) {
-            connection->state = CONNECTION_HOLD;
-        }
-    }
+    enet_host_destroy(server.host);
 }

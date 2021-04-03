@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.17)
 
 #
 # BetterFasterSpades
@@ -10,7 +10,7 @@ project(BetterFasterSpades)
 # Add third party libraries
 #
 
-add_subdirectory(Extern)
+# add_subdirectory(Extern)
 
 #
 # Add main target

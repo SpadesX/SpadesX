@@ -2,20 +2,12 @@
 # Add sources
 #
 
-add_compile_options(-Wall -Wextra)
-
 set(SERVER_HEADERS
-    Queue.h
-    Compress.h
-    DataStream.h
+    Enums.h
     Server.h
-    Types.h
 )
 
 set(SERVER_SOURCES
-    Queue.c
-    Compress.c
-    DataStream.c
     Server.c
     Main.c
 )
@@ -31,6 +23,23 @@ target_compile_features(server
         c_std_11
 )
 
-add_executable(readvxl ReadVXL.c)
+target_include_directories(server
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
-target_link_libraries(readvxl PRIVATE z)
+target_link_libraries(server
+    PRIVATE
+        enet
+        util
+)
+
+# add_executable(readvxl ReadVXL.c)
+
+# target_link_libraries(readvxl PRIVATE zlib)
+
+#
+# Add subdirectories
+#
+
+add_subdirectory(Util)
