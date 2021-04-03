@@ -2,6 +2,8 @@
 # Add sources
 #
 
+add_compile_options(-Wall -Wextra)
+
 set(SERVER_HEADERS
     Queue.h
     Compress.h

@@ -99,7 +99,9 @@ void ServerStep(Server* server, int timeout)
             DataStream stream = {event.packet->data, event.packet->dataLength, 0};
 
             Connection* connection = event.peer->data;
-            if (ReadByte(&stream) == 9) {
+            switch (ReadByte(&stream)) {
+            case 9:
+            {
                 printf("id %u\n", ReadByte(&stream));
                 printf("team %u\n", ReadByte(&stream));
                 printf("weapon %u\n", ReadByte(&stream));
@@ -117,6 +119,27 @@ void ServerStep(Server* server, int timeout)
                 free(name);
 
                 connection->state = CONNECTION_SPAWNING;
+                break;
+            }
+            case 17:
+            {
+                uint32 packetSize = event.packet->dataLength + 1;
+                int player = ReadByte(&stream);
+                int meantfor = ReadByte(&stream);
+                uint32 length = DataLeft(&stream);
+                char * message = calloc(length, sizeof (char));
+                ReadArray(&stream, message, length);
+                message[length] = '\0';
+                ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
+                DataStream  stream = {packet->data, packet->dataLength, 0};
+                WriteByte(&stream, PACKET_TYPE_CHAT);
+                WriteByte(&stream, player);
+                WriteByte(&stream, meantfor);
+                WriteArray(&stream, message, length);
+                free(message);
+                enet_peer_send(connection->peer, 0, packet);
+                break;
+            }
             }
 
             enet_packet_destroy(event.packet);
@@ -247,7 +270,7 @@ void ServerStep(Server* server, int timeout)
         // y position 	LE Float 	0
         // z position 	LE Float 	0
         // name 	CP437 String 	Deuce
-        ENetPacket* packet = enet_packet_create(NULL, 15 + 2, ENET_PACKET_FLAG_RELIABLE);
+        ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
         DataStream  stream = {packet->data, packet->dataLength, 0};
         WriteByte(&stream, PACKET_TYPE_CREATE_PLAYER);
         WriteByte(&stream, connection->playerID); // ID

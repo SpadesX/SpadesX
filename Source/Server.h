@@ -23,6 +23,7 @@ typedef enum {
 typedef enum {
     PACKET_TYPE_CREATE_PLAYER = 12,
     PACKET_TYPE_STATE_DATA    = 15,
+    PACKET_TYPE_CHAT          = 17,
     PACKET_TYPE_MAP_START     = 18,
     PACKET_TYPE_MAP_CHUNK     = 19,
 } PacketID;
