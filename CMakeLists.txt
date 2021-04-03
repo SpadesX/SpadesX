@@ -15,7 +15,7 @@ add_subdirectory(Extern)
 #
 # Add main target
 #
-
+add_compile_options(-Wall -Wextra)
 add_executable(server "")
 
 target_link_libraries(server
