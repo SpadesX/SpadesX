@@ -58,8 +58,10 @@ Queue*      MapData           = NULL;
 
 void ServerStep(Server* server, int timeout)
 {
-    ENetPacket* packet = enet_packet_create("ok", 3, ENET_PACKET_FLAG_RELIABLE);
-
+    uint8_t team;
+    uint8_t weapon;
+    char* name;
+    uint32 length;
     ENetEvent event;
     while (enet_host_service(server->host, &event, timeout) > 0) {
 
@@ -100,28 +102,29 @@ void ServerStep(Server* server, int timeout)
 
             Connection* connection = event.peer->data;
             switch (ReadByte(&stream)) {
-            case 9:
+            case PACKET_TYPE_EXISTING_PLAYER:
             {
                 printf("id %u\n", ReadByte(&stream));
-                printf("team %u\n", ReadByte(&stream));
-                printf("weapon %u\n", ReadByte(&stream));
+                team = ReadByte(&stream);
+                printf("team %u\n", team);
+                weapon = ReadByte(&stream);
+                printf("weapon %u\n", weapon);
                 printf("held %u\n", ReadByte(&stream));
                 printf("kills %u\n", ReadInt(&stream));
                 printf("rgb: %X %X %X\n", ReadByte(&stream), ReadByte(&stream), ReadByte(&stream));
 
-                uint32 length = DataLeft(&stream);
+                length = DataLeft(&stream);
                 printf("name length: %u\n", length);
-                char* name = malloc(length + 1);
+                name = malloc(length + 1);
                 ReadArray(&stream, name, length);
                 name[length] = '\0';
                 // ReadArray(&stream, name, length);
                 printf("name: '%s'\n", name);
-                free(name);
 
                 connection->state = CONNECTION_SPAWNING;
                 break;
             }
-            case 17:
+            case PACKET_TYPE_CHAT:
             {
                 uint32 packetSize = event.packet->dataLength + 1;
                 int player = ReadByte(&stream);
@@ -136,8 +139,24 @@ void ServerStep(Server* server, int timeout)
                 WriteByte(&stream, player);
                 WriteByte(&stream, meantfor);
                 WriteArray(&stream, message, length);
-                free(message);
+                if (message[0] == '/') {
+                printf("Got a command message");
+                if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
+                printf("Got kill command");
+                ENetPacket* pcket = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+                DataStream  sream = {pcket->data, pcket->dataLength, 0};
+                WriteByte(&sream, 16);
+                WriteByte(&sream, connection->playerID);
+                WriteByte(&sream, connection->playerID);
+                WriteByte(&sream, 1);
+                WriteByte(&sream, 1);
+                enet_peer_send(connection->peer, 0, pcket);
+                }
+                }
+                else {
                 enet_peer_send(connection->peer, 0, packet);
+                }
+                free(message);
                 break;
             }
             }
@@ -274,12 +293,12 @@ void ServerStep(Server* server, int timeout)
         DataStream  stream = {packet->data, packet->dataLength, 0};
         WriteByte(&stream, PACKET_TYPE_CREATE_PLAYER);
         WriteByte(&stream, connection->playerID); // ID
-        WriteByte(&stream, 0);                    // WEAPON
-        WriteByte(&stream, 0);                    // TEAM
+        WriteByte(&stream, weapon);                    // WEAPON
+        WriteByte(&stream, team);                    // TEAM
         WriteFloat(&stream, 120.f);               // X
         WriteFloat(&stream, 256.f);               // Y
         WriteFloat(&stream, 62.f);                // Z
-        WriteArray(&stream, "dotnet", 7);
+        WriteArray(&stream, name, length);
 
         if (enet_peer_send(connection->peer, 0, packet) == 0) {
             connection->state = CONNECTION_HOLD;
