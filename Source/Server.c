@@ -332,9 +332,55 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
                 }
             }
             else {
-                enet_peer_send(server->peer[playerID], 0, packet);
+                enet_host_broadcast(server->host, 0, packet);
             }
             free(message);
+            break;
+        }
+        case PACKET_TYPE_BLOCK_ACTION:
+        {
+            uint8 player = ReadByte(data);
+            uint8 actionType = ReadByte(data);
+            int X = ReadInt(data);
+            int Y = ReadInt(data);
+            int Z = ReadInt(data);
+            ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+            DataStream  stream = {packet->data, packet->dataLength, 0};
+            WriteByte(&stream, PACKET_TYPE_BLOCK_ACTION);
+            WriteByte(&stream, player);
+            WriteByte(&stream, actionType);
+            WriteInt(&stream, X);
+            WriteInt(&stream, Y);
+            WriteInt(&stream, Z);
+            enet_host_broadcast(server->host, 0, packet);
+            break;
+        }
+        case PACKET_TYPE_SET_TOOL:
+        {
+            uint8 player = ReadByte(data);
+            uint8 tool = ReadByte(data);
+            ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+            DataStream  stream = {packet->data, packet->dataLength, 0};
+            WriteByte(&stream, PACKET_TYPE_SET_TOOL);
+            WriteByte(&stream, player);
+            WriteByte(&stream, tool);
+            enet_host_broadcast(server->host, 0, packet);
+            break;
+        }
+        case PACKET_TYPE_SET_COLOR:
+        {
+            uint8 player = ReadByte(data);
+            uint8 B = ReadByte(data);
+            uint8 G = ReadByte(data);
+            uint8 R = ReadByte(data);
+            ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+            DataStream  stream = {packet->data, packet->dataLength, 0};
+            WriteByte(&stream, PACKET_TYPE_SET_COLOR);
+            WriteByte(&stream, player);
+            WriteByte(&stream, B);
+            WriteByte(&stream, R);
+            WriteByte(&stream, G);
+            enet_host_broadcast(server->host, 0, packet);
             break;
         }
         default:
@@ -363,7 +409,7 @@ static void SendInputData(GameServer* server, uint8 playerID)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
     WriteByte(&stream, server->input[playerID]);
-    //enet_host_broadcast(server->host, 0, packet);
+    enet_host_broadcast(server->host, 0, packet); //                                                               CHANGE ME YOU FUCKER. WE DONT WANT TO SEND TO ALL PLAYERS.
 }
 
 static void OnPlayerUpdate(GameServer* server, uint8 playerID)
