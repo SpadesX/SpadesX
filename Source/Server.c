@@ -52,17 +52,19 @@ typedef struct
 	uint8  input[32];
 	uint32 inputFlags;
 
-	Queue*	queues[32];
-	State	 state[32];
-	Weapon	weapon[32];
-	Team	  team[32];
-	Tool	  item[32];
-	uint32	kills[32];
-	Color3i   color[32];
-	Vector3f  pos[32];
-	Vector3f  rot[32];
-	char	  name[17][32];
-	ENetPeer* peer[32];
+	Queue*		queues[32];
+	State		state[32];
+	Weapon		weapon[32];
+	Team		team[32];
+	Tool		item[32];
+	uint32		kills[32];
+	Color3i		color[32];
+	Vector3f	pos[32];
+	Vector3f	rot[32];
+	char		name[17][32];
+	ENetPeer*	peer[32];
+	uint8		respawnTime[32];
+	uint32		startOfRespawnWait[32];
 } GameServer;
 
 #define STATUS(msg)  printf("STATUS: " msg "\n")
@@ -302,6 +304,19 @@ static void SendWorldUpdate(GameServer* server)
 	enet_host_broadcast(server->host, 0, packet);
 }
 
+static void sendKillPacket(GameServer* server, uint8 playerID, uint8 killReason, uint8 respawnTime) {
+	ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
+	WriteByte(&stream, playerID); //Player that got killed ID
+	WriteByte(&stream, playerID); //KillerID
+	WriteByte(&stream, killReason); //Killing reason (1 is headshot)
+	WriteByte(&stream, respawnTime); //Time before respawn happens
+	enet_peer_send(server->peer[playerID], 0, packet);
+	server->respawnTime[playerID] = respawnTime;
+	server->startOfRespawnWait[playerID] = time(NULL);
+}
+
 static void sendMessage(ENetEvent event, DataStream* data, GameServer* server, uint8 playerID) {
 	uint32 packetSize = event.packet->dataLength + 1;
 	int player = ReadByte(data);
@@ -313,19 +328,13 @@ static void sendMessage(ENetEvent event, DataStream* data, GameServer* server, u
 			ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
 			WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
-			WriteByte(&stream, player);
+			WriteByte(&stream, playerID);
 			WriteByte(&stream, meantfor);
 			WriteArray(&stream, message, length);
 			if (message[0] == '/') {
 				if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
-					ENetPacket* pcket = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-					DataStream  sream = {pcket->data, pcket->dataLength, 0};
-					WriteByte(&sream, 16);
-					WriteByte(&sream, player);
-					WriteByte(&sream, player);
-					WriteByte(&sream, 1);
-					WriteByte(&sream, 1);
-					enet_peer_send(server->peer[playerID], 0, pcket);
+					sendKillPacket(server, playerID, 1, 5);
+					server->state[playerID] = STATE_WAITING_FOR_RESPAWN;
 				}
 			}
 			else {
@@ -464,6 +473,13 @@ static void OnPlayerUpdate(GameServer* server, uint8 playerID)
 			SetPlayerRespawnPoint(server, playerID);
 			SendRespawn(server, playerID);
 			break;
+		case STATE_WAITING_FOR_RESPAWN:
+		{
+			if (time(NULL) - server->startOfRespawnWait[playerID] >= server->respawnTime[playerID]) {
+				server->state[playerID] = STATE_SPAWNING;
+			}
+			break;
+		}
 		case STATE_READY:
 			// send data
 			if (server->inputFlags & ((uint32) 1 << playerID)) {

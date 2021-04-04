@@ -9,6 +9,7 @@ typedef enum {
     STATE_LOADING_CHUNKS,
     STATE_JOINING,
     STATE_SPAWNING,
+    STATE_WAITING_FOR_RESPAWN,
     STATE_READY,
 } State;
 
