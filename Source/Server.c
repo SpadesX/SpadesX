@@ -65,6 +65,7 @@ typedef struct
 	ENetPeer*	peer[32];
 	uint8		respawnTime[32];
 	uint32		startOfRespawnWait[32];
+	uint8		HP[32];
 } GameServer;
 
 #define STATUS(msg)  printf("STATUS: " msg "\n")
@@ -173,7 +174,7 @@ static void SendStateData(GameServer* server, uint8 playerID)
 	}
 }
 
-static void SendPlayerState(GameServer* server, uint8 playerID, uint8 otherID)
+static void SendPlayerState(GameServer* server, uint8 playerID, uint8 otherID) //Change me to existing player.
 {
 	ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
 	DataStream  stream = {packet->data, packet->dataLength, 0};
@@ -287,7 +288,7 @@ static void ReceiveInputData(GameServer* server, uint8 playerID, DataStream* dat
 {
 	StreamSkip(data, 1); // ID
 	server->input[playerID] = ReadByte(data);
-	//server->inputFlags |= (uint32) 1 << playerID; //Commented out for now. Causing a LOT of issues when receiving data
+
 }
 
 static void SendWorldUpdate(GameServer* server)
@@ -304,20 +305,45 @@ static void SendWorldUpdate(GameServer* server)
 	enet_host_broadcast(server->host, 0, packet);
 }
 
-static void sendKillPacket(GameServer* server, uint8 playerID, uint8 killReason, uint8 respawnTime) {
+static void sendKillPacket(GameServer* server, uint8 killerID, uint8 playerID, uint8 killReason, uint8 respawnTime) {
 	ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
 	DataStream  stream = {packet->data, packet->dataLength, 0};
 	WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
-	WriteByte(&stream, playerID); //Player that got killed ID
-	WriteByte(&stream, playerID); //KillerID
+	WriteByte(&stream, playerID); //Player that shot
+	WriteByte(&stream, killerID); //playerID
 	WriteByte(&stream, killReason); //Killing reason (1 is headshot)
 	WriteByte(&stream, respawnTime); //Time before respawn happens
-	enet_peer_send(server->peer[playerID], 0, packet);
+	for (uint8 i = 0; i < 32; ++i) {
+		if (server->state[i] != STATE_DISCONNECTED) {
+			enet_peer_send(server->peer[i], 0, packet);
+		}
+	}
 	server->respawnTime[playerID] = respawnTime;
 	server->startOfRespawnWait[playerID] = time(NULL);
+	server->kills[playerID]++;
+	server->state[playerID] = STATE_WAITING_FOR_RESPAWN;
 }
 
-static void sendMessage(ENetEvent event, DataStream* data, GameServer* server, uint8 playerID) {
+static void sendHP(GameServer* server, uint8 hitPlayerID, uint8 playerID, uint8 HPChange, uint8 type, uint8 killReason, uint8 respawnTime) {
+	ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	server->HP[hitPlayerID] -= HPChange;
+	if (server->HP[hitPlayerID] == 0 || server->HP[hitPlayerID] >= 100) {
+		server->HP[hitPlayerID] = 100;
+		sendKillPacket(server, hitPlayerID, playerID, killReason, respawnTime);
+	}
+	else {
+	WriteByte(&stream, PACKET_TYPE_SET_HP);
+	WriteByte(&stream, server->HP[hitPlayerID]);
+	WriteByte(&stream, type);
+	WriteFloat(&stream, server->pos[playerID].x);
+	WriteFloat(&stream, server->pos[playerID].y);
+	WriteFloat(&stream, server->pos[playerID].z);
+	enet_peer_send(server->peer[playerID], 0, packet);
+	}
+}
+
+static void sendMessage(ENetEvent event, DataStream* data, GameServer* server) {
 	uint32 packetSize = event.packet->dataLength + 1;
 	int player = ReadByte(data);
 	int meantfor = ReadByte(data);
@@ -328,13 +354,12 @@ static void sendMessage(ENetEvent event, DataStream* data, GameServer* server, u
 			ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
 			WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
-			WriteByte(&stream, playerID);
+			WriteByte(&stream, player);
 			WriteByte(&stream, meantfor);
 			WriteArray(&stream, message, length);
 			if (message[0] == '/') {
 				if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
-					sendKillPacket(server, playerID, 1, 5);
-					server->state[playerID] = STATE_WAITING_FOR_RESPAWN;
+					sendKillPacket(server, player, player, 0, 5);
 				}
 			}
 			else {
@@ -360,7 +385,7 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			ReceiveInputData(server, playerID, data);
 			break;
 		case PACKET_TYPE_CHAT_MESSAGE:
-			sendMessage(event, data, server, playerID);
+			sendMessage(event, data, server);
 			break;
 		case PACKET_TYPE_BLOCK_ACTION:
 		{
@@ -438,6 +463,92 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			}
 			break;
 		}
+		case PACKET_TYPE_HIT_PACKET:
+		{
+			uint8 hitPlayerID = ReadByte(data);
+			Hit hitType = ReadByte(data);
+			switch (server->weapon[playerID]) {
+				case WEAPON_RIFLE:
+				{
+					switch (hitType) {
+						case HIT_TYPE_HEAD:
+						{
+							sendKillPacket(server, playerID, hitPlayerID, 1, 5);
+							break;
+						}
+						case HIT_TYPE_TORSO:
+						{
+							sendHP(server, playerID, hitPlayerID, 49, 1, 0, 5);
+							break;
+						}
+						case HIT_TYPE_ARMS:
+						{
+							sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5);
+							break;
+						}
+						case HIT_TYPE_LEGS:
+						{
+							sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5);
+							break;
+						}
+					}
+					break;
+				}
+				case WEAPON_SMG:
+				{
+					switch (hitType) {
+						case HIT_TYPE_HEAD:
+						{
+							sendHP(server, playerID, hitPlayerID, 75, 1, 1, 5);
+							break;
+						}
+						case HIT_TYPE_TORSO:
+						{
+							sendHP(server, playerID, hitPlayerID, 29, 1, 0, 5);
+							break;
+						}
+						case HIT_TYPE_ARMS:
+						{
+							sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5);
+							break;
+						}
+						case HIT_TYPE_LEGS:
+						{
+							sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5);
+							break;
+						}
+					}
+					break;
+				}
+				case WEAPON_SHOTGUN:
+				{
+					switch (hitType) {
+						case HIT_TYPE_HEAD:
+						{
+							sendHP(server, playerID, hitPlayerID, 37, 1, 1, 5);
+							break;
+						}
+						case HIT_TYPE_TORSO:
+						{
+							sendHP(server, playerID, hitPlayerID, 27, 1, 0, 5);
+							break;
+						}
+						case HIT_TYPE_ARMS:
+						{
+							sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5);
+							break;
+						}
+						case HIT_TYPE_LEGS:
+						{
+							sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5);
+							break;
+						}
+					}
+					break;
+				}
+			}
+			break;
+		}
 		default:
 			printf("unhandled input, id %u, code %u\n", playerID, type);
 			break;
@@ -452,7 +563,7 @@ static void SendInputData(GameServer* server, uint8 playerID)
 			DataStream  stream = {packet->data, packet->dataLength, 0};
 			WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
 			WriteByte(&stream, server->input[playerID]);
-			enet_host_broadcast(server->host, 0, packet);
+			enet_peer_send(server->peer[i], 0, packet);
 		}
 	}
 }
@@ -484,7 +595,6 @@ static void OnPlayerUpdate(GameServer* server, uint8 playerID)
 			// send data
 			if (server->inputFlags & ((uint32) 1 << playerID)) {
 				SendInputData(server, playerID);
-				server->inputFlags &= ~((uint32) 1 << playerID);
 			}
 			break;
 		default:
@@ -517,6 +627,7 @@ static void ServerUpdate(GameServer* server, int timeout)
 				}
 				server->peer[playerID] = event.peer;
 				event.peer->data	   = (void*) ((size_t) playerID);
+				server->HP[playerID] = 100;
 				printf("INFO: connected %u:%u, id %u\n", event.peer->address.host, event.peer->address.port, playerID);
 				break;
 			case ENET_EVENT_TYPE_DISCONNECT:

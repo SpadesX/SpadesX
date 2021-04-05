@@ -91,4 +91,12 @@ typedef enum {
     TOOL_GRENADE = 3,
 } Tool;
 
+typedef enum {
+    HIT_TYPE_TORSO = 0,
+    HIT_TYPE_HEAD = 1,
+    HIT_TYPE_ARMS = 2,
+    HIT_TYPE_LEGS = 3,
+    HIT_TYPE_MELEE = 4,
+} Hit;
+
 #endif /* ENUMS_H */
