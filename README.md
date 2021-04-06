@@ -1,7 +1,7 @@
 # SpadesX
 
 ## What is SpadesX and why ?
-TL;DR Ace of Spades server written in C
+TL;DR Ace of Spades server written in C (Currently in full on development and thus early Alpha)
 Now if you would like to know the full picture read bellow:
 
 SpadesX is project started by 3 people.
