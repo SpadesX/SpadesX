@@ -179,6 +179,24 @@ static void SendPlayerState(GameServer* server, uint8 playerID, uint8 otherID) /
 {
 	ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
 	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_EXISTING_PLAYER);
+	WriteByte(&stream, otherID);					// ID
+	WriteByte(&stream, server->team[otherID]);	  // TEAM
+	WriteByte(&stream, server->weapon[otherID]);	// WEAPON
+	WriteByte(&stream, server->item[otherID]);	//HELD ITEM
+	WriteInt(&stream, server->kills[otherID]);	//KILLS
+	WriteColor3i(&stream, server->color[otherID]);	//COLOR
+	WriteArray(&stream, server->name[otherID], 16); // NAME
+
+	if (enet_peer_send(server->peer[playerID], 0, packet) != 0) {
+		WARNING("failed to send player state\n");
+	}
+}
+
+static void SendRespawnState(GameServer* server, uint8 playerID, uint8 otherID)
+{
+	ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
 	WriteByte(&stream, PACKET_TYPE_CREATE_PLAYER);
 	WriteByte(&stream, otherID);					// ID
 	WriteByte(&stream, server->weapon[otherID]);	// WEAPON
@@ -222,7 +240,7 @@ static void SendRespawn(GameServer* server, uint8 playerID)
 {
 	for (uint8 i = 0; i < server->maxPlayers; ++i) {
 		if (server->state[i] != STATE_DISCONNECTED) {
-			SendPlayerState(server, i, playerID);
+			SendRespawnState(server, i, playerID);
 		}
 	}
 	server->state[playerID] = STATE_READY;
@@ -319,6 +337,7 @@ static void sendKillPacket(GameServer* server, uint8 killerID, uint8 playerID, u
 			enet_peer_send(server->peer[i], 0, packet);
 		}
 	}
+	server->kills[killerID]++;
 	server->respawnTime[playerID] = respawnTime;
 	server->startOfRespawnWait[playerID] = time(NULL);
 	server->kills[playerID]++;
