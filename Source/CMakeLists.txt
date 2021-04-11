@@ -26,6 +26,7 @@ target_compile_features(server
 target_include_directories(server
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${PROJECT_SOURCE_DIR}/Extern
 )
 
 target_link_libraries(server

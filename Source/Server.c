@@ -7,6 +7,7 @@
 #include <DataStream.h>
 #include <Queue.h>
 #include <enet/enet.h>
+#include <libvxl/libvxl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
