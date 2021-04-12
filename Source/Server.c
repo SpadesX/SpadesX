@@ -45,6 +45,7 @@ typedef struct
 	// compressed map
 	Queue* compressedMap;
 	uint32 compressedSize;
+	uint32 mapSize;
 	// respawn area
 	Quad2D spawns[2];
 	// dirty flag
@@ -52,6 +53,7 @@ typedef struct
 	// per player
 	uint8  input[32];
 	uint32 inputFlags;
+	struct libvxl_map map;
 
 	Queue*		queues[32];
 	State		state[32];
@@ -111,8 +113,13 @@ static void SendMapStart(GameServer* server, uint8 playerID)
 	WriteInt(&stream, server->compressedSize);
 	if (enet_peer_send(server->peer[playerID], 0, packet) == 0) {
 		server->state[playerID] = STATE_LOADING_CHUNKS;
+		
 		// map
+		uint8* mapOut = (uint8*) malloc(server->mapSize);
+		libvxl_write(&server->map, mapOut, &server->mapSize);
+		server->compressedMap = CompressData(mapOut, server->mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
 		server->queues[playerID] = server->compressedMap;
+		free(mapOut);
 	}
 }
 
@@ -414,6 +421,21 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			int X = ReadInt(data);
 			int Y = ReadInt(data);
 			int Z = ReadInt(data);
+			switch (actionType) {
+				case 0:
+					libvxl_map_set(&server->map, X, Y, Z, 255);
+				break;
+				
+				case 1:
+					libvxl_map_setair(&server->map, X, Y, Z);
+				break;
+				
+				case 2:
+					libvxl_map_setair(&server->map, X, Y, Z);
+					libvxl_map_setair(&server->map, X, Y, Z-1);
+					libvxl_map_setair(&server->map, X, Y, Z+1);
+				break;
+			}
 			ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
 			WriteByte(&stream, PACKET_TYPE_BLOCK_ACTION);
@@ -689,19 +711,22 @@ static void LoadMap(GameServer* server, const char* path)
 	}
 
 	fseek(file, 0, SEEK_END);
-	long size = ftell(file);
+	server->mapSize = ftell(file);
 	fseek(file, 0, SEEK_SET);
 
-	uint8* buffer = (uint8*) malloc(size);
-	fread(buffer, size, 1, file);
+	uint8* buffer = (uint8*) malloc(server->mapSize);
+	uint8* mapOut = (uint8*) malloc(server->mapSize);
+	fread(buffer, server->mapSize, 1, file);
 	fclose(file);
-
+	libvxl_create(&server->map, 512, 512, 64, buffer, server->mapSize);
 	STATUS("compressing map data");
 
-	server->compressedMap = CompressData(buffer, size, DEFAULT_COMPRESSOR_CHUNK_SIZE);
+	libvxl_write(&server->map, mapOut, &server->mapSize);
+	server->compressedMap = CompressData(mapOut, server->mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
 	free(buffer);
+	free(mapOut);
 
-	Queue* node			= server->compressedMap;
+	Queue* node = server->compressedMap;
 	server->compressedSize = 0;
 	while (node) {
 		server->compressedSize += node->length;
@@ -810,10 +835,6 @@ void ServerRun(uint16 port, uint32 connections, uint32 channels, uint32 inBandwi
 
 	STATUS("intializing server");
 
-	if (InitCompressor(5) != 0) {
-		WARNING("failed to initialize compressor");
-	}
-
 	ServerInit(&server, connections);
 
 	STATUS("server started");
@@ -823,6 +844,5 @@ void ServerRun(uint16 port, uint32 connections, uint32 channels, uint32 inBandwi
 	}
 
 	STATUS("destroying server");
-	CloseCompressor();
 	enet_host_destroy(server.host);
 }

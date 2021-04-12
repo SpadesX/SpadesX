@@ -23,6 +23,7 @@ target_link_libraries(server
         enet
         util
         vxl
+        m
 )
 
 add_subdirectory(Source)

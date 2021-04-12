@@ -45,6 +45,7 @@ int CloseCompressor()
 
 Queue* CompressData(uint8* data, uint32 length, uint32 chunkSize)
 {
+    InitCompressor(5);
     if (GlobalCompressor == NULL) {
         fprintf(stderr, "WARNING: compressor is not initialized\n");
         return NULL;
@@ -72,6 +73,7 @@ Queue* CompressData(uint8* data, uint32 length, uint32 chunkSize)
         }
         node->length = chunkSize - GlobalCompressor->avail_out;
     } while (GlobalCompressor->avail_out == 0);
+    CloseCompressor();
 
     return first;
 }
