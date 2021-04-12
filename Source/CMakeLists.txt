@@ -29,12 +29,6 @@ target_include_directories(server
         ${PROJECT_SOURCE_DIR}/Extern
 )
 
-target_link_libraries(server
-    PRIVATE
-        enet
-        util
-)
-
 # add_executable(readvxl ReadVXL.c)
 
 # target_link_libraries(readvxl PRIVATE zlib)

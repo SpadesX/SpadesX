@@ -10,7 +10,7 @@ project(SpadesX)
 # Add third party libraries
 #
 
-# add_subdirectory(Extern)
+add_subdirectory(Extern)
 
 #
 # Add main target
@@ -21,7 +21,8 @@ add_executable(server "")
 target_link_libraries(server
     PRIVATE
         enet
-        z
+        util
+        vxl
 )
 
 add_subdirectory(Source)
