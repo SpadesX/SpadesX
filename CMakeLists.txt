@@ -27,9 +27,3 @@ target_link_libraries(server
 )
 
 add_subdirectory(Source)
-
-#
-# Add test
-#
-
-add_subdirectory(Test)
