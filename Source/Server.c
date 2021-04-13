@@ -609,6 +609,22 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			}
 			break;
 		}
+		case PACKET_TYPE_CHANGE_TEAM:
+		{
+			uint8 player = ReadByte(data);
+			server->team[player] = ReadByte(data);
+			sendKillPacket(server, playerID, playerID, 5, 5);
+			server->state[playerID] = STATE_WAITING_FOR_RESPAWN;
+			break;
+		}
+		case PACKET_TYPE_CHANGE_WEAPON:
+		{
+			uint8 player = ReadByte(data);
+			server->weapon[player] = ReadByte(data);
+			sendKillPacket(server, playerID, playerID, 6, 5);
+			server->state[playerID] = STATE_WAITING_FOR_RESPAWN;
+			break;
+		}
 		default:
 			printf("unhandled input, id %u, code %u\n", playerID, type);
 			break;
