@@ -30,6 +30,11 @@ typedef struct
 typedef struct
 {
 	ENetHost* host;
+	//Master
+	ENetHost* client;
+	ENetPeer* masterpeer;
+	uint8 countOfUsers;
+	time_t waitBeforeSend;
 	//
 	uint8 numPlayers;
 	uint8 maxPlayers;
@@ -395,6 +400,19 @@ static void sendMessage(ENetEvent event, DataStream* data, GameServer* server) {
 			free(message);
 }
 
+static void updateMaster(GameServer* server) {
+	server->countOfUsers = 0;
+	for (int i = 0; i < 32; i++) {
+		if (server->state[i] == STATE_READY) {
+			server->countOfUsers++;
+		}
+	}
+	ENetPacket* packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, server->countOfUsers);
+	enet_peer_send(server->masterpeer, 0, packet);
+}
+
 static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* data, ENetEvent event)
 {
 	PacketID type = (PacketID) ReadByte(data);
@@ -638,6 +656,7 @@ static void OnPlayerUpdate(GameServer* server, uint8 playerID)
 			if (server->inputFlags & ((uint32) 1 << playerID)) {
 				SendInputData(server, playerID);
 			}
+			updateMaster(server);
 			break;
 		default:
 			// disconnected
@@ -648,6 +667,14 @@ static void OnPlayerUpdate(GameServer* server, uint8 playerID)
 static void ServerUpdate(GameServer* server, int timeout)
 {
 	ENetEvent event;
+	if (time(NULL) - server->waitBeforeSend >= 1) {
+	ENetEvent eventMaster;
+	while (enet_host_service(server->client, &eventMaster, 1) > 0) {
+	//Quite literally here to keep the connection alive
+	}
+	server->waitBeforeSend = time(NULL);
+	}
+
 	while (enet_host_service(server->host, &event, timeout) > 0) {
 		uint8 playerID;
 		switch (event.type) {
@@ -676,6 +703,7 @@ static void ServerUpdate(GameServer* server, int timeout)
 				playerID				= (uint8)((size_t) event.peer->data);
 				server->state[playerID] = STATE_DISCONNECTED;
 				SendPlayerLeft(server, playerID);
+				updateMaster(server);
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
 			{
@@ -805,6 +833,44 @@ static void ServerInit(GameServer* server, uint32 connections)
 	LoadMap(server, "hallway.vxl");
 }
 
+int ConnectMaster(GameServer* server) {
+    server->client = enet_host_create(NULL, 1, 1, 0, 0);
+
+    enet_host_compress_with_range_coder(server->client);
+
+    if (server->client == NULL) {
+        fprintf(stderr, "An error occurred while trying to create an ENet client host!\n");
+        return EXIT_FAILURE;
+    }
+
+    ENetAddress address;
+    //ENetPeer*   peer;
+
+    enet_address_set_host(&address, "67.205.183.163");
+    address.port = 32886;
+
+	STATUS("Connecting to master server");
+
+    server->masterpeer = enet_host_connect(server->client, &address, 2, 31);
+    if (server->masterpeer == NULL) {
+        fprintf(stderr, "ERROR: failed to create client\n");
+        return EXIT_FAILURE;
+    }
+
+    ENetEvent event;
+    while (enet_host_service(server->client, &event, 2000) > 0) {
+    				STATUS("Connection success");
+				ENetPacket* packet = enet_packet_create(NULL, 61, ENET_PACKET_FLAG_RELIABLE);
+				DataStream  stream = {packet->data, packet->dataLength, 0};
+				WriteByte(&stream, 32);
+				WriteShort(&stream, 32887);
+				WriteArray(&stream, "SpadesX Server", 15);
+				WriteArray(&stream, "ctf", 4);
+				WriteArray(&stream, "hallway", 8);
+				enet_peer_send(server->masterpeer, 0, packet);
+	}
+}
+
 void ServerRun(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth)
 {
 	STATUS("initializing ENet");
@@ -838,7 +904,8 @@ void ServerRun(uint16 port, uint32 connections, uint32 channels, uint32 inBandwi
 	ServerInit(&server, connections);
 
 	STATUS("server started");
-
+	ConnectMaster(&server);
+	server.waitBeforeSend = time(NULL);
 	while (1) {
 		ServerUpdate(&server, 1);
 	}
