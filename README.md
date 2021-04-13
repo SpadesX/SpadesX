@@ -19,13 +19,14 @@ There we truly a lot of great names thrown around. But SpadesX was one day throw
 
 ## OK thats all great but i want to test it. How do i test it ?????
 Rather simple. Are you on Unix based system ? You are in luck.
-`git clone https://github.com/SpadesX/SpadesX
 
- cd SpadesX && mkdir build && cd build
+> git clone https://github.com/SpadesX/SpadesX
+
+> cd SpadesX && mkdir build && cd build
  
- cmake ..
+> cmake ..
  
- make -jX (Replace X with number of threads you have on your system)`
+> make -jX (Replace X with number of threads you have on your system)
 
 Some of you maybe arent on Linux. We understand but for the time being we do not offer Windows build instructions.
 
