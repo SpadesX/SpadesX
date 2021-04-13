@@ -34,6 +34,7 @@ typedef struct
 	ENetHost* client;
 	ENetPeer* masterpeer;
 	uint8 countOfUsers;
+	uint8 enableMasterConnection;
 	time_t waitBeforeSend;
 	//
 	uint8 numPlayers;
@@ -672,7 +673,9 @@ static void OnPlayerUpdate(GameServer* server, uint8 playerID)
 			if (server->inputFlags & ((uint32) 1 << playerID)) {
 				SendInputData(server, playerID);
 			}
-			updateMaster(server);
+			if (server->enableMasterConnection == 1) {
+				updateMaster(server);
+			}
 			break;
 		default:
 			// disconnected
@@ -683,12 +686,14 @@ static void OnPlayerUpdate(GameServer* server, uint8 playerID)
 static void ServerUpdate(GameServer* server, int timeout)
 {
 	ENetEvent event;
-	if (time(NULL) - server->waitBeforeSend >= 1) {
-	ENetEvent eventMaster;
-	while (enet_host_service(server->client, &eventMaster, 1) > 0) {
-	//Quite literally here to keep the connection alive
-	}
-	server->waitBeforeSend = time(NULL);
+	if (server->enableMasterConnection == 1) {
+		if (time(NULL) - server->waitBeforeSend >= 1) {
+		ENetEvent eventMaster;
+		while (enet_host_service(server->client, &eventMaster, 1) > 0) {
+		//Quite literally here to keep the connection alive
+		}
+		server->waitBeforeSend = time(NULL);
+		}
 	}
 
 	while (enet_host_service(server->host, &event, timeout) > 0) {
@@ -719,7 +724,9 @@ static void ServerUpdate(GameServer* server, int timeout)
 				playerID				= (uint8)((size_t) event.peer->data);
 				server->state[playerID] = STATE_DISCONNECTED;
 				SendPlayerLeft(server, playerID);
-				updateMaster(server);
+				if (server->enableMasterConnection == 1) {
+					updateMaster(server);
+				}
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
 			{
@@ -920,7 +927,10 @@ void ServerRun(uint16 port, uint32 connections, uint32 channels, uint32 inBandwi
 	ServerInit(&server, connections);
 
 	STATUS("server started");
-	ConnectMaster(&server);
+	server.enableMasterConnection = 0; //Change to 1 for enable or 0 to disable. Will be changed in future to read from config.
+	if (server.enableMasterConnection == 1) {
+		ConnectMaster(&server);
+	}
 	server.waitBeforeSend = time(NULL);
 	while (1) {
 		ServerUpdate(&server, 1);
