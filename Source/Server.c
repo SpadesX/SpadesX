@@ -381,7 +381,7 @@ static void sendMessage(ENetEvent event, DataStream* data, GameServer* server) {
 	int player = ReadByte(data);
 	int meantfor = ReadByte(data);
 	uint32 length = DataLeft(data);
-	char * message = calloc(length, sizeof (char));
+	char * message = calloc(length + 1, sizeof (char));
 	ReadArray(data, message, length);
 			message[length] = '\0';
 			ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
