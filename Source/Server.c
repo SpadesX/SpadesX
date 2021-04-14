@@ -125,7 +125,7 @@ static void SendMapStart(GameServer* server, uint8 playerID)
 		libvxl_write(&server->map, mapOut, &server->mapSize);
 		server->compressedMap = CompressData(mapOut, server->mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
 		server->queues[playerID] = server->compressedMap;
-		free(mapOut);
+		//free(mapOut); //Causes double free so lets comment it out
 	}
 }
 
