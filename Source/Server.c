@@ -377,9 +377,28 @@ static void sendHP(GameServer* server, uint8 hitPlayerID, uint8 playerID, uint8 
 }
 
 static void sendMessage(ENetEvent event, DataStream* data, GameServer* server) {
-			ENetPacket* packet = enet_packet_create(data->data, data->length, ENET_PACKET_FLAG_RELIABLE);
+	uint32 packetSize = event.packet->dataLength + 1;
+	int player = ReadByte(data);
+	int meantfor = ReadByte(data);
+	uint32 length = DataLeft(data);
+	char * message = calloc(length + 1, sizeof (char));
+	ReadArray(data, message, length);
+			message[length] = '\0';
+			ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
-			enet_host_broadcast(server->host, 0, packet);
+			WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
+			WriteByte(&stream, player);
+			WriteByte(&stream, meantfor);
+			WriteArray(&stream, message, length);
+			if (message[0] == '/') {
+				if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
+					sendKillPacket(server, player, player, 0, 5);
+				}
+			}
+			else {
+				enet_host_broadcast(server->host, 0, packet);
+			}
+			free(message);
 }
 
 static void updateMaster(GameServer* server) {
