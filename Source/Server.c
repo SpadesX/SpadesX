@@ -743,7 +743,8 @@ static void LoadMap(GameServer* server, const char* path)
 	}
 
 	fseek(file, 0, SEEK_END);
-	server->mapSize = ftell(file);
+	//server->mapSize = ftell(file);
+	server->mapSize = 1024*1024*64; //The size of file wasnt enough memory for it. Lets bump it up to this for now to fix building
 	fseek(file, 0, SEEK_SET);
 
 	uint8* buffer = (uint8*) malloc(server->mapSize);
