@@ -22,7 +22,11 @@ Rather simple. Are you on Unix based system ? You are in luck.
 
 > git clone https://github.com/SpadesX/SpadesX
 
-> cd SpadesX && mkdir build && cd build
+> cd SpadesX
+
+> git submodule init && git submodule update
+
+> mkdir build && cd build
  
 > cmake ..
  
