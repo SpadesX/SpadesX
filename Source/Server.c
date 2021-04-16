@@ -13,9 +13,6 @@
 #include <string.h>
 #include <time.h>
 
-union toolColor {
-	uint8 R
-
 typedef struct
 {
 	uint8	 scoreTeamA;
@@ -78,6 +75,7 @@ typedef struct
 	uint8		respawnTime[32];
 	uint32		startOfRespawnWait[32];
 	uint8		HP[32];
+	uint64		toolColor[32];
 } GameServer;
 
 #define STATUS(msg)  printf("STATUS: " msg "\n")
@@ -445,7 +443,7 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			int Z = ReadInt(data);
 			switch (actionType) {
 				case 0:
-					libvxl_map_set(&server->map, X, Y, Z, 255);
+					libvxl_map_set(&server->map, X, Y, Z, server->toolColor[playerID]);
 				break;
 				
 				case 1:
@@ -513,6 +511,9 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			uint8 B = ReadByte(data);
 			uint8 G = ReadByte(data);
 			uint8 R = ReadByte(data);
+			uint8 A = 0;
+			// I know looks horrible but simply we are putting 4 uint8 to uint64 in correct order
+			server->toolColor[playerID] = ((uint64)(((uint8)A) << 24) |  (uint64)(((uint8)R) << 16) |  (uint64)(((uint8)G) << 8) | (uint64)((uint8)B));
 			ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
 			WriteByte(&stream, PACKET_TYPE_SET_COLOR);
