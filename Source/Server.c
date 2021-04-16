@@ -13,6 +13,9 @@
 #include <string.h>
 #include <time.h>
 
+union toolColor {
+	uint8 R
+
 typedef struct
 {
 	uint8	 scoreTeamA;
@@ -515,8 +518,8 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			WriteByte(&stream, PACKET_TYPE_SET_COLOR);
 			WriteByte(&stream, player);
 			WriteByte(&stream, B);
-			WriteByte(&stream, R);
 			WriteByte(&stream, G);
+			WriteByte(&stream, R);
 			for (uint8 i = 0; i < 32; ++i) {
 				if (playerID != i && server->state[i] != STATE_DISCONNECTED) {
 					enet_peer_send(server->peer[i], 0, packet);
