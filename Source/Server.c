@@ -527,6 +527,24 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 			}
 			break;
 		}
+		
+		case PACKET_TYPE_WEAPON_INPUT:
+		{
+			uint8 player = ReadByte(data);
+			uint8 wInput = ReadByte(data);
+			ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+			DataStream  stream = {packet->data, packet->dataLength, 0};
+			WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
+			WriteByte(&stream, player);
+			WriteByte(&stream, wInput);
+			for (uint8 i = 0; i < 32; ++i) {
+				if (playerID != i && server->state[i] != STATE_DISCONNECTED) {
+					enet_peer_send(server->peer[i], 0, packet);
+				}
+			}
+			break;
+		}
+		
 		case PACKET_TYPE_HIT_PACKET:
 		{
 			uint8 hitPlayerID = ReadByte(data);
