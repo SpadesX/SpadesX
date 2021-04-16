@@ -76,6 +76,8 @@ typedef struct
 	uint32		startOfRespawnWait[32];
 	uint8		HP[32];
 	uint64		toolColor[32];
+	uint8		weaponReserve[32];
+	uint8		weaponClip[32];
 } GameServer;
 
 #define STATUS(msg)  printf("STATUS: " msg "\n")
@@ -628,6 +630,24 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 						}
 					}
 					break;
+				}
+			}
+			break;
+		}
+		case PACKET_TYPE_WEAPON_RELOAD:
+		{
+			uint8 player = ReadByte(data);
+			server->weaponReserve[playerID] = ReadByte(data);
+			server->weaponClip[playerID] = ReadByte(data);
+			ENetPacket* packet = enet_packet_create(NULL, 4, ENET_PACKET_FLAG_RELIABLE);
+			DataStream  stream = {packet->data, packet->dataLength, 0};
+			WriteByte(&stream, PACKET_TYPE_WEAPON_RELOAD);
+			WriteByte(&stream, player);
+			WriteByte(&stream, server->weaponReserve[playerID]);
+			WriteByte(&stream, server->weaponClip[playerID]);
+			for (uint8 i = 0; i < 32; ++i) {
+				if (playerID != i && server->state[i] != STATE_DISCONNECTED) {
+					enet_peer_send(server->peer[i], 0, packet);
 				}
 			}
 			break;
