@@ -279,6 +279,21 @@ static uint8 OnConnect(GameServer* server, uint32 data)
 	return playerID;
 }
 
+
+static void SendInputData(GameServer* server, uint8 playerID)
+{
+	ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
+	WriteByte(&stream, playerID);
+	WriteByte(&stream, server->input[playerID]);
+	for (uint8 i = 0; i < 32; ++i) {
+		if (playerID != i && server->state[i] != STATE_DISCONNECTED) {
+			enet_peer_send(server->peer[i], 0, packet);
+		}
+	}
+}
+
 static void ReceiveExistingPlayer(GameServer* server, uint8 playerID, DataStream* data)
 {
 	uint8 id = ReadByte(data);
@@ -674,20 +689,6 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 		default:
 			printf("unhandled input, id %u, code %u\n", playerID, type);
 			break;
-	}
-}
-
-static void SendInputData(GameServer* server, uint8 playerID)
-{
-	ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
-	DataStream  stream = {packet->data, packet->dataLength, 0};
-	WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
-	WriteByte(&stream, playerID);
-	WriteByte(&stream, server->input[playerID]);
-	for (uint8 i = 0; i < 32; ++i) {
-		if (playerID != i && server->state[i] != STATE_DISCONNECTED) {
-			enet_peer_send(server->peer[i], 0, packet);
-		}
 	}
 }
 
