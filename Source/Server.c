@@ -455,10 +455,10 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 				
 				case 2:
 					libvxl_map_setair(&server->map, X, Y, Z);
-					if (Z-1 < 63) {
-						libvxl_map_setair(&server->map, X, Y, Z-1);
+					libvxl_map_setair(&server->map, X, Y, Z-1);
+					if (Z+1 < 62) {
+						libvxl_map_setair(&server->map, X, Y, Z+1);
 					}
-					libvxl_map_setair(&server->map, X, Y, Z+1);
 				break;
 			}
 			ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
