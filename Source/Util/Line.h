@@ -21,7 +21,7 @@ typedef struct
  * @param result Array of blocks positions
  * @return Number of block positions
  */
-static inline int block_line(const vec3i* v1, const vec3i* v2, vec3i* result)
+static inline int blockLine(const vec3i* v1, const vec3i* v2, vec3i* result)
 {
     int count = 0;
 

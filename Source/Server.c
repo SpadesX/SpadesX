@@ -78,7 +78,8 @@ typedef struct
 	uint8		HP[32];
 	uint64		toolColor[32];
 	uint8		weaponReserve[32];
-	uint8		weaponClip[32];
+	short		weaponClip[32];
+	vec3i		resultLine[32][50]
 } GameServer;
 
 #define STATUS(msg)  printf("STATUS: " msg "\n")
@@ -300,7 +301,20 @@ static void ReceiveExistingPlayer(GameServer* server, uint8 playerID, DataStream
 		server->name[playerID][length] = '\0';
 		ReadArray(data, server->name[playerID], length);
 	}
-
+	switch (server->weapon[playerID]) {
+		case 0:
+			server->weaponReserve[playerID] = 50;
+			server->weaponClip[playerID] = 10;
+			break;
+		case 1:
+			server->weaponReserve[playerID] = 120;
+			server->weaponClip[playerID] = 30;
+			break;
+		case 2:
+			server->weaponReserve[playerID] = 48;
+			server->weaponClip[playerID] = 6;
+			break;
+	}
 	server->state[playerID] = STATE_SPAWNING;
 }
 
@@ -418,6 +432,13 @@ static void updateMaster(GameServer* server) {
 	enet_peer_send(server->masterpeer, 0, packet);
 }
 
+static void writeBlockLine(GameServer* server, uint8 playerID, vec3i* start, vec3i* end) {
+	int size = blockLine(start, end, server->resultLine[playerID]);
+	for (int i = 0; i < size; i++) {
+		libvxl_map_set(&server->map, server->resultLine[playerID][i].x, server->resultLine[playerID][i].y, server->resultLine[playerID][i].z, server->toolColor[playerID]);
+	}
+}
+
 static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* data, ENetEvent event)
 {
 	PacketID type = (PacketID) ReadByte(data);
@@ -474,24 +495,27 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 		}
 		case PACKET_TYPE_BLOCK_LINE:
 		{
+			vec3i start;
+			vec3i end;
 			uint8 player = ReadByte(data);
-			int sX = ReadInt(data);
-			int sY = ReadInt(data);
-			int sZ = ReadInt(data);
-			int eX = ReadInt(data);
-			int eY = ReadInt(data);
-			int eZ = ReadInt(data);
+			start.x = ReadInt(data);
+			start.y = ReadInt(data);
+			start.z = ReadInt(data);
+			end.x = ReadInt(data);
+			end.y = ReadInt(data);
+			end.z = ReadInt(data);
 			ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
 			WriteByte(&stream, PACKET_TYPE_BLOCK_LINE);
 			WriteByte(&stream, player);
-			WriteInt(&stream, sX);
-			WriteInt(&stream, sY);
-			WriteInt(&stream, sZ);
-			WriteInt(&stream, eX);
-			WriteInt(&stream, eY);
-			WriteInt(&stream, eZ);
+			WriteInt(&stream, start.x);
+			WriteInt(&stream, start.y);
+			WriteInt(&stream, start.z);
+			WriteInt(&stream, end.x);
+			WriteInt(&stream, end.y);
+			WriteInt(&stream, end.z);
 			enet_host_broadcast(server->host, 0, packet);
+			writeBlockLine(server, playerID, &start, &end);
 			break;
 		}
 		case PACKET_TYPE_SET_TOOL:
@@ -538,15 +562,23 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 		{
 			uint8 player = ReadByte(data);
 			uint8 wInput = ReadByte(data);
-			ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
-			DataStream  stream = {packet->data, packet->dataLength, 0};
-			WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
-			WriteByte(&stream, player);
-			WriteByte(&stream, wInput);
-			for (uint8 i = 0; i < 32; ++i) {
-				if (playerID != i && server->state[i] != STATE_DISCONNECTED) {
-					enet_peer_send(server->peer[i], 0, packet);
+			if (server->weaponClip[playerID] >= 0) {
+				ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+				DataStream  stream = {packet->data, packet->dataLength, 0};
+				WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
+				WriteByte(&stream, player);
+				WriteByte(&stream, wInput);
+				for (uint8 i = 0; i < 32; ++i) {
+					if (playerID != i && server->state[i] != STATE_DISCONNECTED) {
+						enet_peer_send(server->peer[i], 0, packet);
+					}
 				}
+				if (wInput == 1 || wInput == 3) {
+					server->weaponClip[playerID]--;
+				}
+			}
+			else {
+				//sendKillPacket(server, playerID, playerID, 0, 30);
 			}
 			break;
 		}
@@ -640,8 +672,10 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 		case PACKET_TYPE_WEAPON_RELOAD:
 		{
 			uint8 player = ReadByte(data);
-			server->weaponReserve[playerID] = ReadByte(data);
-			server->weaponClip[playerID] = ReadByte(data);
+			uint8 reserve = ReadByte(data);
+			uint8 clip = ReadByte(data);
+			server->weaponReserve[playerID] = 50; //Temporary
+			server->weaponClip[playerID] = 10;
 			ENetPacket* packet = enet_packet_create(NULL, 4, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
 			WriteByte(&stream, PACKET_TYPE_WEAPON_RELOAD);
@@ -681,7 +715,7 @@ static void SendInputData(GameServer* server, uint8 playerID)
 {
 	for (uint8 i = 0; i < 32; ++i) {
 		if (playerID != i && server->state[i] != STATE_DISCONNECTED) {
-			ENetPacket* packet = enet_packet_create(NULL, 1 + (32 * 24), ENET_PACKET_FLAG_UNSEQUENCED);
+			ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
 			WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
 			WriteByte(&stream, server->input[playerID]);
