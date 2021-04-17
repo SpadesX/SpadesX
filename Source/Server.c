@@ -2,6 +2,7 @@
 
 #include "Enums.h"
 #include "Types.h"
+#include "Line.h"
 
 #include <Compress.h>
 #include <DataStream.h>
