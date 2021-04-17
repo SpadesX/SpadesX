@@ -5,6 +5,7 @@
 set(SERVER_HEADERS
     Enums.h
     Server.h
+    Line.h
 )
 
 set(SERVER_SOURCES
