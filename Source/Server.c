@@ -324,7 +324,7 @@ static void ReceiveInputData(GameServer* server, uint8 playerID, DataStream* dat
 {
 	StreamSkip(data, 1); // ID
 	server->input[playerID] = ReadByte(data);
-
+	SendInputData(server, playerID);
 }
 
 static void SendWorldUpdate(GameServer* server)
@@ -716,9 +716,6 @@ static void OnPlayerUpdate(GameServer* server, uint8 playerID)
 		}
 		case STATE_READY:
 			// send data
-			if (server->inputFlags & ((uint32) 1 << playerID)) {
-				SendInputData(server, playerID);
-			}
 			if (server->enableMasterConnection == 1) {
 				updateMaster(server);
 			}
