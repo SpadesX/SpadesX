@@ -455,7 +455,9 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 				
 				case 2:
 					libvxl_map_setair(&server->map, X, Y, Z);
-					libvxl_map_setair(&server->map, X, Y, Z-1);
+					if (Z-1 < 63) {
+						libvxl_map_setair(&server->map, X, Y, Z-1);
+					}
 					libvxl_map_setair(&server->map, X, Y, Z+1);
 				break;
 			}
