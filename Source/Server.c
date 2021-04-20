@@ -893,9 +893,9 @@ static void ServerInit(GameServer* server, uint32 connections)
 	server->spawns[1].to.x   = 448.f;
 	server->spawns[1].to.y   = 288.f;
 
-	server->colorFog[0] = 0xff;
-	server->colorFog[1] = 0xff;
-	server->colorFog[2] = 0xff;
+	server->colorFog[0] = 0x80;
+	server->colorFog[1] = 0xE8;
+	server->colorFog[2] = 0xFF;
 
 	server->colorTeamA[0] = 0xff;
 	server->colorTeamA[1] = 0x00;
