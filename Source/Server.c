@@ -865,6 +865,8 @@ static void LoadMap(GameServer* server, const char* path)
 
 static void ServerInit(GameServer* server, uint32 connections)
 {
+	char team1[] = "Team A";
+	char team2[] = "Team B";
 	server->numPlayers = 0;
 	server->maxPlayers = (connections <= 32) ? connections : 32;
 
@@ -905,8 +907,8 @@ static void ServerInit(GameServer* server, uint32 connections)
 	server->colorTeamB[1] = 0xff;
 	server->colorTeamB[2] = 0x00;
 
-	memcpy(server->nameTeamA, "Team A", sizeof("Team A"));
-	memcpy(server->nameTeamB, "Team B", sizeof("Team B"));
+	memcpy(server->nameTeamA, team1, strlen(team1));
+	memcpy(server->nameTeamB, team2, strlen(team2));
 
 	server->mode = GAME_MODE_CTF;
 
