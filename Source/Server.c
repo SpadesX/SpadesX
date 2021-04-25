@@ -81,6 +81,7 @@ typedef struct
 	short		weaponClip[32];
 	vec3i		resultLine[32][50];
 	uint8		ip[32][4];
+	uint8		alive[32];
 } GameServer;
 
 #define STATUS(msg)  printf("STATUS: " msg "\n")
@@ -394,7 +395,6 @@ static void sendKillPacket(GameServer* server, uint8 killerID, uint8 playerID, u
 	server->kills[killerID]++;
 	server->respawnTime[playerID] = respawnTime;
 	server->startOfRespawnWait[playerID] = time(NULL);
-	server->kills[playerID]++;
 	server->state[playerID] = STATE_WAITING_FOR_RESPAWN;
 }
 
@@ -402,11 +402,13 @@ static void sendHP(GameServer* server, uint8 hitPlayerID, uint8 playerID, uint8 
 	ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
 	DataStream  stream = {packet->data, packet->dataLength, 0};
 	server->HP[hitPlayerID] -= HPChange;
-	if (server->HP[hitPlayerID] <= 0 || server->HP[hitPlayerID] >= 100) {
-		//server->HP[hitPlayerID] = 100;
+	if ((server->HP[hitPlayerID] <= 0 || server->HP[hitPlayerID] > 100) && server->alive[playerID] == 1) {
+		server->alive[playerID] = 0;
+		server->HP[playerID] = 0;
 		sendKillPacket(server, hitPlayerID, playerID, killReason, respawnTime);
 	}
 	else {
+	if (server->HP[hitPlayerID] >= 1 && server->HP[hitPlayerID] <= 100) {
 	WriteByte(&stream, PACKET_TYPE_SET_HP);
 	WriteByte(&stream, server->HP[hitPlayerID]);
 	WriteByte(&stream, type);
@@ -414,6 +416,7 @@ static void sendHP(GameServer* server, uint8 hitPlayerID, uint8 playerID, uint8 
 	WriteFloat(&stream, server->pos[playerID].y);
 	WriteFloat(&stream, server->pos[playerID].z);
 	enet_peer_send(server->peer[playerID], 0, packet);
+	}
 	}
 }
 
@@ -748,6 +751,7 @@ static void OnPlayerUpdate(GameServer* server, uint8 playerID)
 			break;
 		case STATE_SPAWNING:
 			server->HP[playerID] = 100;
+			server->alive[playerID] = 1;
 			SetPlayerRespawnPoint(server, playerID);
 			SendRespawn(server, playerID);
 			break;
