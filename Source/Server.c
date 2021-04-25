@@ -117,11 +117,11 @@ static void SetPlayerRespawnPoint(GameServer* server, uint8 playerID)
 //
 
 static void uint32ToUint8(GameServer* server, ENetEvent event, uint8 playerID) {
-	unsigned long x = event.peer->address.host;  // you need UL to indicate it is unsigned long
-	server->ip[playerID][1] = (unsigned int)(x & 0xff);
-	server->ip[playerID][2] = (unsigned int)(x >> 8) & 0xff;
-	server->ip[playerID][3] = (unsigned int)(x >> 16) & 0xff;
-	server->ip[playerID][4] = (unsigned int)(x >> 24);
+	uint32 ip = event.peer->address.host;
+	server->ip[playerID][1] = (uint32)(ip & 0xff);
+	server->ip[playerID][2] = (uint32)(ip >> 8) & 0xff;
+	server->ip[playerID][3] = (uint32)(ip >> 16) & 0xff;
+	server->ip[playerID][4] = (uint32)(ip >> 24);
 }
 
 static void SendMapStart(GameServer* server, uint8 playerID)
