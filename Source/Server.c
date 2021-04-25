@@ -79,7 +79,8 @@ typedef struct
 	uint64		toolColor[32];
 	uint8		weaponReserve[32];
 	short		weaponClip[32];
-	vec3i		resultLine[32][50]
+	vec3i		resultLine[32][50];
+	uint8		ip[32][4];
 } GameServer;
 
 #define STATUS(msg)  printf("STATUS: " msg "\n")
@@ -114,6 +115,14 @@ static void SetPlayerRespawnPoint(GameServer* server, uint8 playerID)
 // STATE_DATA
 // CREATE_PLAYER multiple
 //
+
+static void uint32ToUint8(GameServer* server, ENetEvent event, uint8 playerID) {
+	unsigned long x = event.peer->address.host;  // you need UL to indicate it is unsigned long
+	server->ip[playerID][1] = (unsigned int)(x & 0xff);
+	server->ip[playerID][2] = (unsigned int)(x >> 8) & 0xff;
+	server->ip[playerID][3] = (unsigned int)(x >> 16) & 0xff;
+	server->ip[playerID][4] = (unsigned int)(x >> 24);
+}
 
 static void SendMapStart(GameServer* server, uint8 playerID)
 {
@@ -795,7 +804,8 @@ static void ServerUpdate(GameServer* server, int timeout)
 				server->peer[playerID] = event.peer;
 				event.peer->data	   = (void*) ((size_t) playerID);
 				server->HP[playerID] = 100;
-				printf("INFO: connected %u:%u, id %u\n", event.peer->address.host, event.peer->address.port, playerID);
+				uint32ToUint8(server, event, playerID);
+				printf("INFO: connected %u (%d.%d.%d.%d):%u, id %u\n", event.peer->address.host, server->ip[playerID][1], server->ip[playerID][2], server->ip[playerID][3], server->ip[playerID][4], event.peer->address.port, playerID);
 				break;
 			case ENET_EVENT_TYPE_DISCONNECT:
 				playerID				= (uint8)((size_t) event.peer->data);
