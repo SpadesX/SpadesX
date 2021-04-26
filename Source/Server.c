@@ -57,6 +57,8 @@ typedef struct
 	Quad2D spawns[2];
 	// dirty flag
 	uint8 dirty;
+	
+	uint8 allowTK;
 	// per player
 	uint8  input[32];
 	uint32 inputFlags;
@@ -408,7 +410,7 @@ static void sendHP(GameServer* server, uint8 hitPlayerID, uint8 playerID, uint8 
 		sendKillPacket(server, hitPlayerID, playerID, killReason, respawnTime);
 	}
 	else {
-	if (server->HP[hitPlayerID] >= 1 && server->HP[hitPlayerID] <= 100 && server->alive[playerID] == 1) {
+	if (server->HP[hitPlayerID] >= 1 && server->HP[hitPlayerID] <= 100 && server->alive[playerID] == 1 ) {
 	WriteByte(&stream, PACKET_TYPE_SET_HP);
 	WriteByte(&stream, server->HP[hitPlayerID]);
 	WriteByte(&stream, type);
@@ -437,6 +439,14 @@ static void sendMessage(ENetEvent event, DataStream* data, GameServer* server) {
 			if (message[0] == '/') {
 				if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
 					sendKillPacket(server, player, player, 0, 5);
+				}
+				else if (message[1] == 't' && message[2] == 'k') {
+					if (server->allowTK == 1) {
+						server->allowTK = 0;
+					}
+					else if (server->allowTK == 0) {
+						server->allowTK = 1;
+					}
 				}
 			}
 			else {
@@ -613,6 +623,7 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 		{
 			uint8 hitPlayerID = ReadByte(data);
 			Hit hitType = ReadByte(data);
+			if (server->team[playerID] != server->team[hitPlayerID] || server->allowTK) {
 			switch (server->weapon[playerID]) {
 				case WEAPON_RIFLE:
 				{
@@ -692,6 +703,7 @@ static void OnPacketReceived(GameServer* server, uint8 playerID, DataStream* dat
 					}
 					break;
 				}
+			}
 			}
 			break;
 		}
@@ -962,7 +974,6 @@ int ConnectMaster(GameServer* server) {
     }
 
     ENetAddress address;
-    //ENetPeer*   peer;
 
     enet_address_set_host(&address, "67.205.183.163");
     address.port = 32886;
@@ -1023,6 +1034,7 @@ void ServerRun(uint16 port, uint32 connections, uint32 channels, uint32 inBandwi
 
 	STATUS("server started");
 	server.enableMasterConnection = 0; //Change to 1 for enable or 0 to disable. Will be changed in future to read from config.
+	server.allowTK = 0;
 	if (server.enableMasterConnection == 1) {
 		ConnectMaster(&server);
 	}
