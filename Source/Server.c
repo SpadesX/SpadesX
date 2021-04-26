@@ -408,7 +408,7 @@ static void sendHP(GameServer* server, uint8 hitPlayerID, uint8 playerID, uint8 
 		sendKillPacket(server, hitPlayerID, playerID, killReason, respawnTime);
 	}
 	else {
-	if (server->HP[hitPlayerID] >= 1 && server->HP[hitPlayerID] <= 100) {
+	if (server->HP[hitPlayerID] >= 1 && server->HP[hitPlayerID] <= 100 && server->alive[playerID] == 1) {
 	WriteByte(&stream, PACKET_TYPE_SET_HP);
 	WriteByte(&stream, server->HP[hitPlayerID]);
 	WriteByte(&stream, type);
