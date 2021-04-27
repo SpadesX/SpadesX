@@ -56,7 +56,7 @@
 //SpadesX
 #include "Enums.h"
 #include "Types.h"
-#include "Server.h"
+#include "../Server.h"
 #include <libvxl/libvxl.h>
 
 enum damage_index {BODY_TORSO, BODY_HEAD, BODY_ARMS, BODY_LEGS, BODY_MELEE};
@@ -84,7 +84,7 @@ struct PlayerType
     Vector p, v;
 };*/
 
-inline void get_orientation(Orientation * o,
+/*inline void get_orientation(Orientation * o,
                             float orientation_x, 
                             float orientation_y,
                             float orientation_z)
@@ -100,14 +100,14 @@ inline void get_orientation(Orientation * o,
     o->h.x = -orientation_z*o->s.y;
     o->h.y = orientation_z*o->s.x;
     o->h.z = orientation_x*o->s.y - orientation_y*o->s.x;
-}
+}*/
 
 float distance3d(float x1, float y1, float z1, float x2, float y2, float z2)
 {
     return sqrtf(pow(x2-x1, 2) + pow(y2-y1,2) + pow(z2-z1,2));
 }
 
-int validate_hit(float shooter_x, float shooter_y, float shooter_z,
+/*int validate_hit(float shooter_x, float shooter_y, float shooter_z,
                  float orientation_x, float orientation_y, float orientation_z, 
                  float ox, float oy, float oz, 
                  float tolerance)
@@ -132,7 +132,7 @@ int validate_hit(float shooter_x, float shooter_y, float shooter_z,
     }
 #endif
     return ret;
-}
+}*/
 
 // silly VOXLAP function
 inline void ftol(float f, long *a)
@@ -154,7 +154,7 @@ int clipbox(GameServer* server ,float x, float y, float z)
         sz=62;
     else if (sz >= 64)
         return 1;
-    return libvxl_map_issolid(server->map, (int)x, (int)y, sz);
+    return libvxl_map_issolid(&server->map, (int)x, (int)y, sz);
 }
 
 //same as isvoxelsolid() but with wrapping
@@ -164,7 +164,7 @@ long isvoxelsolidwrap(GameServer* server, long x, long y, long z)
         return 0;
     else if (z >= 64)
         return 1;
-	return libvxl_map_issolid(server->map ,(int)x & VSIDM, (int)y & VSIDM, z);
+	return libvxl_map_issolid(&server->map ,(int)x & VSIDM, (int)y & VSIDM, z);
 }
 
 //same as isvoxelsolid but water is empty
@@ -183,7 +183,7 @@ long clipworld(GameServer* server, long x, long y, long z)
         return 1;
     else if (sz < 0)
         return 0;
-    return libvxl_map_issolid(server->map ,(int)x, (int)y, sz);
+    return libvxl_map_issolid(&server->map ,(int)x, (int)y, sz);
 }
 
 /*long can_see(float x0, float y0, float z0, float x1, float y1,
@@ -607,7 +607,7 @@ int move_grenade(GrenadeType * g)
 
 // C interface
 
-PlayerType * create_player()
+/*PlayerType * create_player()
 {
     PlayerType * player = new PlayerType;
     player->s.x = 0; player->s.y = 1; player->s.z = 0;
@@ -627,7 +627,7 @@ PlayerType * create_player()
 void destroy_player(PlayerType * player)
 {
     delete player;
-}
+}*/
 
 /*void destroy_grenade(GrenadeType * grenade)
 {
