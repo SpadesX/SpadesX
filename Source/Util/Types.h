@@ -32,4 +32,11 @@ typedef struct
     float z;
 } Vector3f;
 
+typedef struct
+{
+    long x;
+    long y;
+    long z;
+} Vector3l;
+
 #endif /* TYPES_H */

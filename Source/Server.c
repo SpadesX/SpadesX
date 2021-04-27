@@ -3,6 +3,7 @@
 #include "Enums.h"
 #include "Types.h"
 #include "Line.h"
+#include "Physics.h"
 
 #include <Compress.h>
 #include <DataStream.h>
