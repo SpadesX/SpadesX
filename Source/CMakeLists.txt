@@ -4,11 +4,9 @@
 
 set(SERVER_HEADERS
     Enums.h
-    Server.h
 )
 
 set(SERVER_SOURCES
-    Server.c
     Main.c
 )
 
@@ -28,13 +26,5 @@ target_include_directories(server
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/Extern
 )
-
-# add_executable(readvxl ReadVXL.c)
-
-# target_link_libraries(readvxl PRIVATE zlib)
-
-#
-# Add subdirectories
-#
 
 add_subdirectory(Util)
