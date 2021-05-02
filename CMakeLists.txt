@@ -16,7 +16,7 @@ add_subdirectory(Extern)
 # Add main target
 #
 add_compile_options(-Wall -Wextra)
-add_executable(server)
+add_executable(server "")
 
 target_link_libraries(server
     PRIVATE
@@ -24,6 +24,7 @@ target_link_libraries(server
         util
         vxl
         m
+        json-c
 )
 
 add_subdirectory(Source)

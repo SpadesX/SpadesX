@@ -3,10 +3,14 @@
 #
 
 set(SERVER_HEADERS
+    Player.h
+    Protocol.h
     Enums.h
+    Server.h
 )
 
 set(SERVER_SOURCES
+    Server.c
     Main.c
 )
 
