@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "Line.h"
 #include "Conversion.h"
+#include "Master.h"
 
 #include <Compress.h>
 #include <DataStream.h>
@@ -133,8 +134,8 @@ static void ServerUpdate(Server* server, int timeout)
 				playerID				= (uint8)((size_t) event.peer->data);
 				server->player[playerID].state = STATE_DISCONNECTED;
 				//SendPlayerLeft(server, playerID);
-				if (server->protocol.enableMasterConnection == 1) {
-					//updateMaster(server);
+				if (server->master.enableMasterConnection == 1) {
+					updateMaster(server);
 				}
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
@@ -145,7 +146,7 @@ static void ServerUpdate(Server* server, int timeout)
 	}
 }
 
-void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth)
+void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth, uint8 master)
 {
 	STATUS("Welcome to SpadesX server");
 	STATUS("Initializing ENet");
@@ -179,12 +180,11 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 	ServerInit(&server, connections);
 
 	STATUS("Server started");
-	//server.enableMasterConnection = 0; //Change to 1 for enable or 0 to disable. Will be changed in future to read from config.
-	//server.allowTK = 0;
-	/*if (server.enableMasterConnection == 1) {
-		ConnectMaster(&server);
+	server.master.enableMasterConnection = master;
+	if (server.master.enableMasterConnection == 1) {
+		ConnectMaster(&server, port);
 	}
-	server.waitBeforeSend = time(NULL);*/
+	server.protocol.waitBeforeSend = time(NULL);
 	while (1) {
 		ServerUpdate(&server, 1);
 	}

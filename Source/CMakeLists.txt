@@ -5,6 +5,7 @@
 set(SERVER_HEADERS
     Player.h
     Protocol.h
+    Master.h
     Enums.h
     Server.h
 )
@@ -12,6 +13,7 @@ set(SERVER_HEADERS
 set(SERVER_SOURCES
     Server.c
     Main.c
+    Master.c
 )
 
 target_sources(server

@@ -29,6 +29,7 @@ typedef struct {
     uint8     ip[4];
     uint8     alive;
     uint8	  input;
+    uint8	  allowTK;
 } Player;
 
 #endif

@@ -22,11 +22,7 @@ typedef struct
 } ModeCTF;
 
 typedef struct {
-	// Master
-    ENetHost* client;
-    ENetPeer* masterpeer;
     uint8     countOfUsers;
-    uint8     enableMasterConnection;
     time_t    waitBeforeSend;
     //
     uint8 numPlayers;
