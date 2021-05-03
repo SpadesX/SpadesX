@@ -1,7 +1,7 @@
 #ifndef MASTER_H
 #define MASTER_H
 
-#include "Server.h"
+#include "Structs.h"
 #include "Enums.h"
 #include "Types.h"
 

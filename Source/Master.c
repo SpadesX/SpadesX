@@ -1,9 +1,8 @@
 #include <stdio.h>
-#include "Server.h"
-
-#include "Enums.h"
-#include "Types.h"
 #include <DataStream.h>
+
+#include "Structs.h"
+#include "Types.h"
 
 int ConnectMaster(Server* server, uint16 port) {
     server->master.client = enet_host_create(NULL, 1, 1, 0, 0);

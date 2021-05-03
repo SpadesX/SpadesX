@@ -8,12 +8,17 @@ set(SERVER_HEADERS
     Master.h
     Enums.h
     Server.h
+    Structs.h
+    Map.h
 )
 
 set(SERVER_SOURCES
     Server.c
     Main.c
     Master.c
+    Map.c
+    Player.c
+    Protocol.c
 )
 
 target_sources(server

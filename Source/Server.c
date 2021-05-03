@@ -1,10 +1,14 @@
 #include "Server.h"
 
+#include "Structs.h"
 #include "Enums.h"
 #include "Types.h"
 #include "Line.h"
 #include "Conversion.h"
 #include "Master.h"
+#include "Map.h"
+#include "Player.h"
+#include "Protocol.h"
 
 #include <Compress.h>
 #include <DataStream.h>
@@ -16,15 +20,15 @@
 #include <string.h>
 #include <time.h>
 
-static void ServerInit(Server* server, uint32 connections)
+static void ServerInit(Server* server, uint32 connections, char* map)
 {
 	char team1[] = "Team A";
 	char team2[] = "Team B";
 	server->protocol.numPlayers = 0;
 	server->protocol.maxPlayers = (connections <= 32) ? connections : 32;
 
-	server->protocol.compressedMap  = NULL;
-	server->protocol.compressedSize = 0;
+	server->map.compressedMap  = NULL;
+	server->map.compressedSize = 0;
 	server->protocol.inputFlags = 0;
 
 	for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
@@ -84,12 +88,22 @@ static void ServerInit(Server* server, uint32 connections)
 	server->protocol.ctf.baseTeamB.y = 250.f;
 	server->protocol.ctf.baseTeamB.z = 62.f;
 
-	//LoadMap(server, "hallway.vxl");
+	LoadMap(server, map);
 }
 
-static uint8 OnConnect(Server* server, uint32 data)
+static void SendJoiningData(Server* server, uint8 playerID)
 {
-	printf("max: %d\n", server->protocol.maxPlayers);
+	STATUS("sending state");
+	SendStateData(server, playerID);
+	for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
+		if (i != playerID && server->player[i].state != STATE_DISCONNECTED) {
+			SendPlayerState(server, playerID, i);
+		}
+	}
+}
+
+static uint8 OnConnect(Server* server)
+{
 	if (server->protocol.numPlayers == server->protocol.maxPlayers) {
 		return 0xFF;
 	}
@@ -102,6 +116,43 @@ static uint8 OnConnect(Server* server, uint32 data)
 	}
 	server->protocol.numPlayers++;
 	return playerID;
+}
+
+static void OnPlayerUpdate(Server* server, uint8 playerID)
+{
+	switch (server->player[playerID].state) {
+		case STATE_STARTING_MAP:
+			SendMapStart(server, playerID);
+			break;
+		case STATE_LOADING_CHUNKS:
+			SendMapChunks(server, playerID);
+			break;
+		case STATE_JOINING:
+			SendJoiningData(server, playerID);
+			break;
+		case STATE_SPAWNING:
+			server->player[playerID].HP = 100;
+			server->player[playerID].alive = 1;
+			//SetPlayerRespawnPoint(server, playerID);
+			//SendRespawn(server, playerID);
+			break;
+		case STATE_WAITING_FOR_RESPAWN:
+		{
+			if (time(NULL) - server->player[playerID].startOfRespawnWait >= server->player[playerID].respawnTime) {
+				server->player[playerID].state = STATE_SPAWNING;
+			}
+			break;
+		}
+		case STATE_READY:
+			// send data
+			if (server->master.enableMasterConnection == 1) {
+				updateMaster(server);
+			}
+			break;
+		default:
+			// disconnected
+			break;
+	}
 }
 
 static void ServerUpdate(Server* server, int timeout)
@@ -119,7 +170,7 @@ static void ServerUpdate(Server* server, int timeout)
 				// check peer
 				// ...
 				// find next free ID
-				playerID = OnConnect(server, event.data);
+				playerID = OnConnect(server);
 				if (playerID == 0xFF) {
 					enet_peer_disconnect(event.peer, REASON_SERVER_FULL);
 					break;
@@ -144,9 +195,12 @@ static void ServerUpdate(Server* server, int timeout)
 			}
 		}
 	}
+	for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
+		OnPlayerUpdate(server, playerID);
+	}
 }
 
-void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth, uint8 master)
+void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth, uint8 master, char* map)
 {
 	STATUS("Welcome to SpadesX server");
 	STATUS("Initializing ENet");
@@ -177,7 +231,7 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 
 	STATUS("Intializing server");
 
-	ServerInit(&server, connections);
+	ServerInit(&server, connections, map);
 
 	STATUS("Server started");
 	server.master.enableMasterConnection = master;
