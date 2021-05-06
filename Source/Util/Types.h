@@ -12,10 +12,12 @@ typedef unsigned long long int uint64;
 
 /**
  * @brief 3-byte color
- * @details [0] = R, [1] = G, [2] = B
+ * @details [0] = A, [1] = R, [2] = G [3] = B
  *
  */
 typedef uint8 Color3i[3];
+
+typedef uint8 Color4i[4];
 
 typedef struct
 {

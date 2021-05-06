@@ -9,6 +9,8 @@
 #include "Map.h"
 #include "Player.h"
 #include "Protocol.h"
+#include "Packets.h"
+#include "PacketReceive.h"
 
 #include <Compress.h>
 #include <DataStream.h>
@@ -20,6 +22,17 @@
 #include <string.h>
 #include <time.h>
 
+	struct arg_struct {
+    Server* server;
+    uint8 playerID;
+	};
+
+static unsigned long long get_nanos(void) {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
+}
+
 static void ServerInit(Server* server, uint32 connections, char* map)
 {
 	char team1[] = "Team A";
@@ -30,10 +43,17 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 	server->map.compressedMap  = NULL;
 	server->map.compressedSize = 0;
 	server->protocol.inputFlags = 0;
+	
+	for (uint8 i = 0; i < 11; i++) {
+		server->protocol.nameTeamA[i] = ' ';
+		server->protocol.nameTeamB[i] = ' ';
+	}
 
 	for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
 		server->player[i].state  = STATE_DISCONNECTED;
 		server->player[i].queues = NULL;
+		server->player[i].ups = 60;
+		server->player[i].timeSinceLastWU = get_nanos();
 		server->player[i].input  = 0;
 		memset(server->player[i].name, 0, 17);
 	}
@@ -133,8 +153,8 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
 		case STATE_SPAWNING:
 			server->player[playerID].HP = 100;
 			server->player[playerID].alive = 1;
-			//SetPlayerRespawnPoint(server, playerID);
-			//SendRespawn(server, playerID);
+			SetPlayerRespawnPoint(server, playerID);
+			SendRespawn(server, playerID);
 			break;
 		case STATE_WAITING_FOR_RESPAWN:
 		{
@@ -158,10 +178,21 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
 static void ServerUpdate(Server* server, int timeout)
 {
 	ENetEvent event;
-	
+	if (server->master.enableMasterConnection == 1) {
+		if (time(NULL) - server->master.timeSinceLastSend >= 1) {
+		ENetEvent eventMaster;
+		while (enet_host_service(server->master.client, &eventMaster, 1) > 0) {
+		//Quite literally here to keep the connection alive
+		}
+		server->master.timeSinceLastSend = time(NULL);
+		}
+	}
 	while (enet_host_service(server->host, &event, timeout) > 0) {
 		uint8 playerID;
 		switch (event.type) {
+			case ENET_EVENT_TYPE_NONE:
+				STATUS("Event of type none received. Ignoring");
+			break;
 			case ENET_EVENT_TYPE_CONNECT:
 				if (event.data != VERSION_0_75) {
 					enet_peer_disconnect(event.peer, REASON_WRONG_PROTOCOL_VERSION);
@@ -179,24 +210,38 @@ static void ServerUpdate(Server* server, int timeout)
 				event.peer->data	   = (void*) ((size_t) playerID);
 				server->player[playerID].HP = 100;
 				uint32ToUint8(server, event, playerID);
-				printf("INFO: connected %u (%d.%d.%d.%d):%u, id %u\n", event.peer->address.host, server->player[playerID].ip[1], server->player[playerID].ip[2], server->player[playerID].ip[3], server->player[playerID].ip[4], event.peer->address.port, playerID);
+				printf("INFO: connected %u (%d.%d.%d.%d):%u, id %u\n", event.peer->address.host, server->player[playerID].ip[0], server->player[playerID].ip[1], server->player[playerID].ip[2], server->player[playerID].ip[3], event.peer->address.port, playerID);
 				break;
 			case ENET_EVENT_TYPE_DISCONNECT:
 				playerID				= (uint8)((size_t) event.peer->data);
 				server->player[playerID].state = STATE_DISCONNECTED;
-				//SendPlayerLeft(server, playerID);
+				SendPlayerLeft(server, playerID);
 				if (server->master.enableMasterConnection == 1) {
 					updateMaster(server);
 				}
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
 			{
+				DataStream stream = {event.packet->data, event.packet->dataLength, 0};
+				playerID		  = (uint8)((size_t) event.peer->data);
+				OnPacketReceived(server, playerID, &stream, event);
+				enet_packet_destroy(event.packet);
 				break;
 			}
 		}
 	}
 	for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
 		OnPlayerUpdate(server, playerID);
+	}
+
+	for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
+		if (server->player[playerID].state == STATE_READY) {
+			unsigned long long time = get_nanos();
+			if (time - server->player[playerID].timeSinceLastWU >= (1000000000/server->player[playerID].ups)) {
+				SendWorldUpdate(server, playerID);
+				server->player[playerID].timeSinceLastWU = get_nanos();
+			}
+		}
 	}
 }
 
@@ -238,7 +283,7 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 	if (server.master.enableMasterConnection == 1) {
 		ConnectMaster(&server, port);
 	}
-	server.protocol.waitBeforeSend = time(NULL);
+	server.master.timeSinceLastSend = time(NULL);
 	while (1) {
 		ServerUpdate(&server, 1);
 	}

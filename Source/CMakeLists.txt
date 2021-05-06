@@ -10,6 +10,9 @@ set(SERVER_HEADERS
     Server.h
     Structs.h
     Map.h
+    Packets.h
+    PacketReceive.h
+    Conversion.h
 )
 
 set(SERVER_SOURCES
@@ -19,6 +22,8 @@ set(SERVER_SOURCES
     Map.c
     Player.c
     Protocol.c
+    Packets.c
+    PacketReceive.c
 )
 
 target_sources(server

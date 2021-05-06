@@ -1,8 +1,10 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include <bits/types/struct_timeval.h>
 #include <enet/enet.h>
 #include <libvxl/libvxl.h>
+#include <time.h>
 
 #include "Enums.h"
 #include "Queue.h"
@@ -13,6 +15,7 @@ typedef struct {
     // compressed map
     Queue* compressedMap;
     uint32 compressedSize;
+    vec3i resultLine[50];
     long unsigned int mapSize;
     struct libvxl_map map;
 } Map;
@@ -33,7 +36,6 @@ typedef struct
 
 typedef struct {
     uint8     countOfUsers;
-    time_t    waitBeforeSend;
     //
     uint8 numPlayers;
     uint8 maxPlayers;
@@ -66,7 +68,7 @@ typedef struct {
     uint8     respawnTime;
     uint32    startOfRespawnWait;
     uint8     HP;
-    uint64    toolColor;
+    Color4i   toolColor;
     uint8     weaponReserve;
     short     weaponClip;
     vec3i     resultLine[50];
@@ -74,6 +76,8 @@ typedef struct {
     uint8     alive;
     uint8	  input;
     uint8	  allowTK;
+    unsigned long long timeSinceLastWU;
+    uint16    ups;
 } Player;
 
 typedef struct {
@@ -81,6 +85,7 @@ typedef struct {
     ENetHost* client;
     ENetPeer* peer;
     uint8     enableMasterConnection;
+    time_t    timeSinceLastSend;
 } Master;
 
 typedef struct {
@@ -89,6 +94,7 @@ typedef struct {
 	Protocol protocol;
 	Master master;
     Map map;
+    uint8 dirty;
 } Server;
 
 #endif

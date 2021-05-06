@@ -6,7 +6,6 @@
 #include "Types.h"
 
 void LoadMap(Server* server, const char* path);
-void SendMapStart(Server* server, uint8 playerID);
-void SendMapChunks(Server* server, uint8 playerID);
+void writeBlockLine(Server* server, uint8 playerID, vec3i* start, vec3i* end);
 
 #endif

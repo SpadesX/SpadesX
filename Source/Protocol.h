@@ -5,9 +5,11 @@
 #include "Queue.h"
 #include "Types.h"
 #include "Map.h"
+#include "DataStream.h"
 
 #include <enet/enet.h>
 
-void SendStateData(Server* server, uint8 playerID);
+void SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
+void SetTeamKillingFlag(Server* server, uint8 flag);
 
 #endif

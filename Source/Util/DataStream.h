@@ -79,6 +79,15 @@ static inline void ReadColor3i(DataStream* stream, Color3i color)
     color[0] = stream->data[stream->pos++];
 }
 
+static inline void ReadColor4i(DataStream* stream, Color4i color)
+{
+    ACCESS_CHECK_N(stream, 4);
+    color[3] = stream->data[stream->pos++];
+    color[2] = stream->data[stream->pos++];
+    color[1] = stream->data[stream->pos++];
+    color[0] = stream->data[stream->pos++];
+}
+
 void ReadArray(DataStream* stream, void* output, uint32 length);
 
 static inline void WriteByte(DataStream* stream, uint8 value)
@@ -114,16 +123,25 @@ static inline void WriteFloat(DataStream* stream, float value)
     WriteInt(stream, u.v);
 }
 
-static inline void WriteVector3f(DataStream* stream, Vector3f* vector)
+static inline void WriteVector3f(DataStream* stream, Vector3f vector)
 {
-    WriteFloat(stream, vector->x);
-    WriteFloat(stream, vector->y);
-    WriteFloat(stream, vector->z);
+    WriteFloat(stream, vector.x);
+    WriteFloat(stream, vector.y);
+    WriteFloat(stream, vector.z);
 }
 
 static inline void WriteColor3i(DataStream* stream, Color3i color)
 {
     ACCESS_CHECK_N(stream, 3);
+    stream->data[stream->pos++] = color[2];
+    stream->data[stream->pos++] = color[1];
+    stream->data[stream->pos++] = color[0];
+}
+
+static inline void WriteColor4i(DataStream* stream, Color4i color)
+{
+    ACCESS_CHECK_N(stream, 4);
+    stream->data[stream->pos++] = color[3];
     stream->data[stream->pos++] = color[2];
     stream->data[stream->pos++] = color[1];
     stream->data[stream->pos++] = color[0];
@@ -135,6 +153,15 @@ static inline void WriteColor3iv(DataStream* stream, uint8 r, uint8 g, uint8 b)
     stream->data[stream->pos++] = b;
     stream->data[stream->pos++] = g;
     stream->data[stream->pos++] = r;
+}
+
+static inline void WriteColor4iv(DataStream* stream, uint8 a, uint8 r, uint8 g, uint8 b)
+{
+    ACCESS_CHECK_N(stream, 4);
+    stream->data[stream->pos++] = b;
+    stream->data[stream->pos++] = g;
+    stream->data[stream->pos++] = r;
+    stream->data[stream->pos++] = a;
 }
 
 void WriteArray(DataStream* stream, const void* array, uint32 length);

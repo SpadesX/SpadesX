@@ -42,38 +42,10 @@ void LoadMap(Server* server, const char* path)
 	}
 }
 
-void SendMapStart(Server* server, uint8 playerID)
-{
-	STATUS("sending map info");
-	ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-	DataStream  stream = {packet->data, packet->dataLength, 0};
-	WriteByte(&stream, PACKET_TYPE_MAP_START);
-	WriteInt(&stream, server->map.compressedSize);
-	if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
-		server->player[playerID].state = STATE_LOADING_CHUNKS;
-		
-		// map
-		uint8* out = (uint8*) malloc(server->map.mapSize);
-		libvxl_write(&server->map.map, out, &server->map.mapSize);
-		server->map.compressedMap = CompressData(out, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
-		server->player[playerID].queues = server->map.compressedMap;
-		free(out);
-	}
-}
 
-void SendMapChunks(Server* server, uint8 playerID)
-{
-	if (server->player[playerID].queues == NULL) {
-		server->player[playerID].state = STATE_JOINING;
-		STATUS("loading chunks done");
-	} else {
-		ENetPacket* packet = enet_packet_create(NULL, server->player[playerID].queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
-		DataStream  stream = {packet->data, packet->dataLength, 0};
-		WriteByte(&stream, PACKET_TYPE_MAP_CHUNK);
-		WriteArray(&stream, server->player[playerID].queues->block, server->player[playerID].queues->length);
-
-		if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
-			server->player[playerID].queues = server->player[playerID].queues->next;
-		}
+void writeBlockLine(Server* server, uint8 playerID, vec3i* start, vec3i* end) {
+	int size = blockLine(start, end, server->map.resultLine);
+	for (int i = 0; i < size; i++) {
+		libvxl_map_set(&server->map.map, server->map.resultLine[i].x, server->map.resultLine[i].y, server->map.resultLine[i].z, color4iToInt(server->player[playerID].toolColor));
 	}
 }
