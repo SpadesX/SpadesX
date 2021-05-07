@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 

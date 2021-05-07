@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #ifndef CONVERSION_H
 #define CONVERSION_H
 

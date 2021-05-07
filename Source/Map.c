@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #include <stdio.h>
 #include "Structs.h"
 #include "Queue.h"

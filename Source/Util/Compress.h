@@ -1,3 +1,4 @@
+//Copyright CircumScriptor and DarkNeutrino 2021
 #ifndef COMPRESS_H
 #define COMPRESS_H
 

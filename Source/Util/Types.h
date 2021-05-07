@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #ifndef TYPES_H
 #define TYPES_H
 

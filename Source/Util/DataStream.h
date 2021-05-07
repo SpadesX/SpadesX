@@ -1,3 +1,4 @@
+//Copyright CircumScriptor and DarkNeutrino 2021
 #ifndef DATASTREAM_H
 #define DATASTREAM_H
 

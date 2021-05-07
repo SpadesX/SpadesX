@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #ifndef SERVER_H
 #define SERVER_H
 

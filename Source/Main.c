@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #include <stdio.h>
 #include <json-c/json.h>
 #include "Types.h"

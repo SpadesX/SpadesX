@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #include "Server.h"
 
 #include "Structs.h"

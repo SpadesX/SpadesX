@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #ifndef MASTER_H
 #define MASTER_H
 

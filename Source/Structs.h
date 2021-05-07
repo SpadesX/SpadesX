@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #ifndef STRUCTS_H
 #define STRUCTS_H
 

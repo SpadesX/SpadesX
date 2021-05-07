@@ -1,3 +1,4 @@
+//Copyright CircumScriptor and DarkNeutrino 2021
 #include "DataStream.h"
 
 #include <stdlib.h>

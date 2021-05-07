@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #ifndef ENUMS_H
 #define ENUMS_H
 

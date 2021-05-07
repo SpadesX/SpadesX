@@ -1,3 +1,4 @@
+//Copyright DarkNeutrino 2021
 #ifndef PACKETS_H
 #define PACKETS_H
 

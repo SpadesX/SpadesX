@@ -1,3 +1,4 @@
+//Copyright CircumScriptor and DarkNeutrino 2021
 #ifndef QUEUE_H
 #define QUEUE_H
 
