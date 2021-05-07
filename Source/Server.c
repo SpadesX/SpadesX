@@ -286,6 +286,7 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 	server.master.timeSinceLastSend = time(NULL);
 	while (1) {
 		ServerUpdate(&server, 0);
+		usleep(1); //otherwise we would run at 100% cpu usage all the time. Not exactly what we want :P
 	}
 
 	STATUS("Destroying server");
