@@ -1,3 +1,11 @@
+/*
+    Copyright (c) Mathias Kaerlev 2011-2012.
+    Modified by DarkNeutrino and CircumScriptor
+
+    Cobe based upon pyspades in file world_c.cpp
+    hugely modified to fit this project.
+*/
+
 #ifndef UTIL_LINE_H
 #define UTIL_LINE_H
 
