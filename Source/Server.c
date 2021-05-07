@@ -285,7 +285,7 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 	}
 	server.master.timeSinceLastSend = time(NULL);
 	while (1) {
-		ServerUpdate(&server, 1);
+		ServerUpdate(&server, 0);
 	}
 
 	STATUS("Destroying server");
