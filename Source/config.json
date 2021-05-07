@@ -1,4 +1,5 @@
 {
 	"port": 32887,
-	"master": 1
+	"master": 0,
+	"map": "hallway.vxl"
 }
