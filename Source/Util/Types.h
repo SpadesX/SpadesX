@@ -1,4 +1,4 @@
-//Copyright DarkNeutrino 2021
+//Copyright CircumScriptor and DarkNeutrino 2021
 #ifndef TYPES_H
 #define TYPES_H
 

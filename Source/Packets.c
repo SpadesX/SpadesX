@@ -158,7 +158,7 @@ void SendInputData(Server* server, uint8 playerID)
 	WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
 	WriteByte(&stream, playerID);
 	WriteByte(&stream, server->player[playerID].input);
-	SendPacketExceptSender(server, packet, playerID);
+	SendPacketExceptSenderDistCheck(server, packet, playerID);
 }
 
 void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killReason, uint8 respawnTime) {
@@ -317,9 +317,18 @@ void SendWorldUpdate(Server* server, uint8 playerID)
 	WriteByte(&stream, PACKET_TYPE_WORLD_UPDATE);
 
 	for (uint8 j = 0; j < 32; ++j) {
-		WriteVector3f(&stream, server->player[j].pos);
-		WriteVector3f(&stream, server->player[j].rot);
+		if (playerToPlayerVisible(server, playerID, j)) {
+			WriteVector3f(&stream, server->player[j].pos);
+			WriteVector3f(&stream, server->player[j].rot);
+		}
+		else {
+			Vector3f empty;
+			empty.x = 0;
+			empty.y = 0;
+			empty.z = 0;
+			WriteVector3f(&stream, empty);
+			WriteVector3f(&stream, empty);
+		}
 	}
-
 	enet_peer_send(server->player[playerID].peer, 0, packet);
 }

@@ -11,6 +11,8 @@
 #include <enet/enet.h>
 
 void SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
+void SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
 void SetTeamKillingFlag(Server* server, uint8 flag);
+uint8 playerToPlayerVisible(Server *server, uint8 playerID, uint8 playerID2);
 
 #endif
