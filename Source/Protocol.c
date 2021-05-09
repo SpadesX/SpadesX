@@ -9,7 +9,7 @@
 
 uint8 playerToPlayerVisible(Server *server, uint8 playerID, uint8 playerID2) {
 	float distance = 0;
-	distance = sqrt(pow((server->player[playerID].pos.x - server->player[playerID2].pos.x), 2) + pow((server->player[playerID].pos.y - server->player[playerID2].pos.y), 2) + pow((server->player[playerID].pos.z - server->player[playerID2].pos.z), 2));
+	distance = sqrt(pow((server->player[playerID].pos.x - server->player[playerID2].pos.x), 2) + pow((server->player[playerID].pos.y - server->player[playerID2].pos.y), 2));
 	if (distance >= 132) {
 		return 0;
 	}
