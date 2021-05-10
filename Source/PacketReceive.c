@@ -136,7 +136,7 @@ void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
 	server->player[playerID].kills  = ReadInt(data);
 
 	ReadColor3i(data, server->player[playerID].color);
-	server->player[playerID].ups = 10;
+	server->player[playerID].ups = 60;
 
 	uint32 length = DataLeft(data);
 	if (length > 16) {
