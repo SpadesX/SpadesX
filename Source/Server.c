@@ -217,6 +217,7 @@ static void ServerUpdate(Server* server, int timeout)
 				playerID				= (uint8)((size_t) event.peer->data);
 				server->player[playerID].state = STATE_DISCONNECTED;
 				SendPlayerLeft(server, playerID);
+				server->player[playerID].ups = 10;
 				if (server->master.enableMasterConnection == 1) {
 					updateMaster(server);
 				}
