@@ -329,11 +329,16 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 					}
 				}
 				else if (message[1] == 'u' && message[2] == 'p' && message[3] == 's') {
-					int ups = 0;
+					float ups = 0;
 					char uselessString[30]; // Just to be sure we dont read dumb stuff
-					sscanf(message, "%s %d", uselessString, &ups);
-					server->player[player].ups = ups;
-					sendServerNotice(server, player, "UPS changed succesufully");
+					sscanf(message, "%s %f", uselessString, &ups);
+					if (ups >=1 && ups <= 300) {
+						server->player[player].ups = ups;
+						sendServerNotice(server, player, "UPS changed succesufully");
+					}
+					else {
+						sendServerNotice(server, player, "Changing UPS failed. Please select value between 1 and 300");
+					}
 				}
 			}
 			else {
