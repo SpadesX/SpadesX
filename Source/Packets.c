@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include "Enums.h"
 #include "Structs.h"
 #include "Queue.h"
 #include "Types.h"
@@ -293,7 +294,22 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 			WriteByte(&stream, meantfor);
 			WriteArray(&stream, message, length);
 			if (message[0] == '/') {
-				if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
+				if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l' && message[5] == 'p') {
+					char uselessString[30];
+					int id = 0;
+					if (sscanf(message, "%s #%d", uselessString, &id) == 1) {
+						sendKillPacket(server, player, player, 0, 5);
+					}
+					else {
+						if (server->player[id].state == STATE_READY) {
+							sendKillPacket(server, player, id, 0, 5);
+						}
+						else {
+							sendServerNotice(server, player, "Player does not exist or isnt spawned yet");
+						}
+					}
+				}
+				else if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
 					sendKillPacket(server, player, player, 0, 5);
 				}
 				else if (message[1] == 't' && message[2] == 'k') {
