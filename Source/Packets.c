@@ -302,7 +302,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 					}
 					else {
 						if (server->player[id].state == STATE_READY) {
-							sendKillPacket(server, player, id, 0, 5);
+							sendKillPacket(server, id, id, 0, 5);
 						}
 						else {
 							sendServerNotice(server, player, "Player does not exist or isnt spawned yet");
