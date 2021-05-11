@@ -133,26 +133,6 @@ void SendStateData(Server* server, uint8 playerID)
 	}
 }
 
-void SetPlayerRespawnPoint(Server* server, uint8 playerID)
-{
-	if (server->player[playerID].team != TEAM_SPECTATOR) {
-		Quad2D* spawn = server->protocol.spawns + server->player[playerID].team;
-
-		float dx = spawn->to.x - spawn->from.x;
-		float dy = spawn->to.y - spawn->from.y;
-
-		server->player[playerID].pos.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
-		server->player[playerID].pos.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-		server->player[playerID].pos.z = 62.f;
-
-		server->player[playerID].rot.x = 0.f;
-		server->player[playerID].rot.y = 0.f;
-		server->player[playerID].rot.z = 0.f;
-
-		printf("respawn: %f %f %f\n", server->player[playerID].pos.x, server->player[playerID].pos.y, server->player[playerID].pos.z);
-	}
-}
-
 void SendInputData(Server* server, uint8 playerID)
 {
 	ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
