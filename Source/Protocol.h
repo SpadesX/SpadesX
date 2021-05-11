@@ -10,6 +10,8 @@
 
 #include <enet/enet.h>
 
+void sendServerNotice(Server* server, uint8 playerID, char *message);
+void broadcastServerNotice(Server* server, char *message);
 void SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
 void SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
 void SetTeamKillingFlag(Server* server, uint8 flag);

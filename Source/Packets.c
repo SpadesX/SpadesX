@@ -278,28 +278,6 @@ void SendRespawn(Server* server, uint8 playerID)
 	server->player[playerID].state = STATE_READY;
 }
 
-void sendServerNotice(Server* server, uint8 playerID, char *message) {
-	uint32 packetSize = 3 + strlen(message);
-	ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
-	DataStream  stream = {packet->data, packet->dataLength, 0};
-	WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
-	WriteByte(&stream, 33);
-	WriteByte(&stream, 0);
-	WriteArray(&stream, message, strlen(message));
-	enet_peer_send(server->player[playerID].peer, 0, packet);
-}
-
-void broadcastServerNotice(Server* server, uint8 playerID, char *message) {
-	uint32 packetSize = 3 + strlen(message);
-	ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
-	DataStream  stream = {packet->data, packet->dataLength, 0};
-	WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
-	WriteByte(&stream, 33);
-	WriteByte(&stream, 0);
-	WriteArray(&stream, message, strlen(message));
-	enet_host_broadcast(server->host, 0, packet);
-}
-
 void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 	uint32 packetSize = event.packet->dataLength + 1;
 	int player = ReadByte(data);
@@ -321,20 +299,25 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 				else if (message[1] == 't' && message[2] == 'k') {
 					if (server->player[player].allowTK == 1) {
 						SetTeamKillingFlag(server, 0);
-						broadcastServerNotice(server, player, "Team Killing has been disabled");
+						broadcastServerNotice(server, "Team Killing has been disabled");
 					}
 					else if (server->player[player].allowTK == 0) {
 						SetTeamKillingFlag(server, 1);
-						broadcastServerNotice(server, player, "Team Killing has been enabled");
+						broadcastServerNotice(server, "Team Killing has been enabled");
 					}
 				}
 				else if (message[1] == 'u' && message[2] == 'p' && message[3] == 's') {
 					float ups = 0;
 					char uselessString[30]; // Just to be sure we dont read dumb stuff
+					char upsString[4];
 					sscanf(message, "%s %f", uselessString, &ups);
+					sscanf(message, "%s %s", uselessString, upsString);
 					if (ups >=1 && ups <= 300) {
 						server->player[player].ups = ups;
-						sendServerNotice(server, player, "UPS changed succesufully");
+						char fullString[32] = "UPS changed to ";
+						strcat(fullString, upsString);
+						strcat(fullString, " succesufully");
+						sendServerNotice(server, player, fullString);
 					}
 					else {
 						sendServerNotice(server, player, "Changing UPS failed. Please select value between 1 and 300");
