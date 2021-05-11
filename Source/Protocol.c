@@ -3,6 +3,7 @@
 #include <enet/enet.h>
 #include <math.h>
 
+#include "Enums.h"
 #include "Structs.h"
 #include "DataStream.h"
 #include "Types.h"
@@ -10,7 +11,10 @@
 uint8 playerToPlayerVisible(Server *server, uint8 playerID, uint8 playerID2) {
 	float distance = 0;
 	distance = sqrt(pow((server->player[playerID].pos.x - server->player[playerID2].pos.x), 2) + pow((server->player[playerID].pos.y - server->player[playerID2].pos.y), 2));
-	if (distance >= 132) {
+	if (server->player[playerID2].team == TEAM_SPECTATOR) {
+		return 1;
+	}
+	else if (distance >= 132) {
 		return 0;
 	}
 	else {
