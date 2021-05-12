@@ -218,6 +218,7 @@ static void ServerUpdate(Server* server, int timeout)
 				server->player[playerID].state = STATE_DISCONNECTED;
 				SendPlayerLeft(server, playerID);
 				server->player[playerID].ups = 10;
+				server->protocol.numPlayers--;
 				if (server->master.enableMasterConnection == 1) {
 					updateMaster(server);
 				}
