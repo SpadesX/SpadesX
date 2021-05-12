@@ -232,11 +232,9 @@ static void ServerUpdate(Server* server, int timeout)
 			}
 		}
 	}
-	for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
-		OnPlayerUpdate(server, playerID);
-	}
 
 	for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
+		OnPlayerUpdate(server, playerID);
 		if (server->player[playerID].state == STATE_READY) {
 			unsigned long long time = get_nanos();
 			if (time - server->player[playerID].timeSinceLastWU >= (1000000000/server->player[playerID].ups)) {
