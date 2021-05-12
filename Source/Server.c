@@ -115,12 +115,12 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 static void SendJoiningData(Server* server, uint8 playerID)
 {
 	STATUS("sending state");
-	SendStateData(server, playerID);
 	for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
 		if (i != playerID && server->player[i].state != STATE_DISCONNECTED) {
 			SendPlayerState(server, playerID, i);
 		}
 	}
+	SendStateData(server, playerID);
 }
 
 static uint8 OnConnect(Server* server)
