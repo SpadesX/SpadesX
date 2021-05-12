@@ -182,7 +182,7 @@ void sendHP(Server* server, uint8 hitPlayerID, uint8 playerID, uint8 HPChange, u
 
 void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
 {
-	ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
+	ENetPacket* packet = enet_packet_create(NULL, 28, ENET_PACKET_FLAG_RELIABLE);
 	DataStream  stream = {packet->data, packet->dataLength, 0};
 	WriteByte(&stream, PACKET_TYPE_EXISTING_PLAYER);
 	WriteByte(&stream, otherID);					// ID
