@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "Structs.h"
 #include "Enums.h"
@@ -102,10 +103,16 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
 
 void ReceiveOrientationData(Server* server, uint8 playerID, DataStream* data)
 {
-	server->player[playerID].rot.x = ReadFloat(data);
-	server->player[playerID].rot.y = ReadFloat(data);
-	server->player[playerID].rot.z = ReadFloat(data);
-	server->dirty		   = 1;
+	float x, y, z;
+	x = ReadFloat(data);
+	y = ReadFloat(data);
+	z = ReadFloat(data);
+	float length = 1/sqrt((x*x) + (y*y) + (z*z));
+	//Normalize the vectors as soon as we get them
+	server->player[playerID].rot.x = x * length;
+	server->player[playerID].rot.y = y * length;
+	server->player[playerID].rot.z = z * length;
+	printf("X: %f, Y: %f, Z: %f oX: %f, oY: %f, oZ: %f\n", server->player[playerID].rot.x, server->player[playerID].rot.y, server->player[playerID].rot.z, x, y, z);
 }
 
 void ReceiveInputData(Server* server, uint8 playerID, DataStream* data)
@@ -120,7 +127,6 @@ void ReceivePositionData(Server* server, uint8 playerID, DataStream* data)
 	server->player[playerID].pos.x = ReadFloat(data);
 	server->player[playerID].pos.y = ReadFloat(data);
 	server->player[playerID].pos.z = ReadFloat(data);
-	server->dirty		   = 1;
 }
 
 void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
