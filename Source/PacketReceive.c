@@ -98,6 +98,9 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
 					break;
 				}
 			}
+			if (hitType == HIT_TYPE_MELEE) {
+				sendHP(server, playerID, hitPlayerID, 80, 1, 2, 5);
+			}
 			}
 }
 
