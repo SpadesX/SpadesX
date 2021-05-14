@@ -7,6 +7,7 @@
 #include <time.h>
 #include <math.h>
 
+#include "Protocol.h"
 #include "Structs.h"
 #include "Enums.h"
 #include "Types.h"
@@ -196,24 +197,29 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			int X = ReadInt(data);
 			int Y = ReadInt(data);
 			int Z = ReadInt(data);
-			switch (actionType) {
-				case 0:
-					libvxl_map_set(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
-				break;
-				
-				case 1:
-					libvxl_map_setair(&server->map.map, X, Y, Z);
-				break;
-				
-				case 2:
-					libvxl_map_setair(&server->map.map, X, Y, Z);
-					libvxl_map_setair(&server->map.map, X, Y, Z-1);
-					if (Z+1 < 62) {
-						libvxl_map_setair(&server->map.map, X, Y, Z+1);
-					}
-				break;
+			if (((server->player[playerID].item == 0)  && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1)) {
+				switch (actionType) {
+					case 0:
+						libvxl_map_set(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
+					break;
+
+					case 1:
+						libvxl_map_setair(&server->map.map, X, Y, Z);
+					break;
+
+					case 2:
+						libvxl_map_setair(&server->map.map, X, Y, Z);
+						libvxl_map_setair(&server->map.map, X, Y, Z-1);
+						if (Z+1 < 62) {
+							libvxl_map_setair(&server->map.map, X, Y, Z+1);
+						}
+					break;
+				}
+				SendBlockAction(server, playerID, actionType, X, Y, Z);
 			}
-			SendBlockAction(server, playerID, actionType, X, Y, Z);
+			else {
+				printf("Player: #%d may be using BlockExploit with Item: %d and Action: %d\n", playerID, server->player[playerID].item, actionType);
+			}
 			break;
 		}
 		case PACKET_TYPE_BLOCK_LINE:
@@ -236,6 +242,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		{
 			uint8 player = ReadByte(data);
 			uint8 tool = ReadByte(data);
+			server->player[playerID].item = tool;
 			SendSetTool(server, playerID, tool);
 			break;
 		}
