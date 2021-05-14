@@ -112,7 +112,6 @@ void ReceiveOrientationData(Server* server, uint8 playerID, DataStream* data)
 	server->player[playerID].rot.x = x * length;
 	server->player[playerID].rot.y = y * length;
 	server->player[playerID].rot.z = z * length;
-	printf("X: %f, Y: %f, Z: %f oX: %f, oY: %f, oZ: %f\n", server->player[playerID].rot.x, server->player[playerID].rot.y, server->player[playerID].rot.z, x, y, z);
 }
 
 void ReceiveInputData(Server* server, uint8 playerID, DataStream* data)
