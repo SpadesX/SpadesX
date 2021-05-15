@@ -120,8 +120,21 @@ void ReceiveOrientationData(Server* server, uint8 playerID, DataStream* data)
 
 void ReceiveInputData(Server* server, uint8 playerID, DataStream* data)
 {
+	bool bits[8];
+	uint8 mask = 1;
 	StreamSkip(data, 1); // ID
 	server->player[playerID].input = ReadByte(data);
+	for (int i = 0; i < 8; i++) {
+		bits[i] = (server->player[playerID].input >> i) & mask;
+	}
+	server->player[playerID].movForward = bits[0];
+	server->player[playerID].movBackwards = bits[1];
+	server->player[playerID].movLeft = bits[2];
+	server->player[playerID].movRight = bits[3];
+	server->player[playerID].jumping = bits[4];
+	server->player[playerID].crouching = bits[5];
+	server->player[playerID].sneaking = bits[6];
+	server->player[playerID].sprinting = bits[7];
 	SendInputData(server, playerID);
 }
 

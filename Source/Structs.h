@@ -79,6 +79,15 @@ typedef struct {
     uint8	  allowTK;
     unsigned long long timeSinceLastWU;
     uint16    ups;
+    uint8     movForward;
+    uint8     movBackwards;
+    uint8     movLeft;
+    uint8     movRight;
+    uint8     jumping;
+    uint8     crouching;
+    uint8     sneaking;
+    uint8     sprinting;
+
 } Player;
 
 typedef struct {
