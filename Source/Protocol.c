@@ -18,8 +18,7 @@ void updatePositions(Server *server, unsigned long long timeNow, unsigned long l
 			int falldamage = 0;
 			falldamage = move_player(server, playerID);
 			if (falldamage > 0) {
-				//STATUS("Sending damage");
-				//sendHP(server, playerID, playerID, falldamage, 0, 4, 5);
+				sendHP(server, playerID, playerID, falldamage, 0, 4, 5);
 			}
 		}
 	}

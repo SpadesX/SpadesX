@@ -306,7 +306,7 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 	while (1) {
 		updateTime = get_nanos();
 		if (updateTime - lastUpdateTime >= (1000000000/120)) {
-			updatePositions(&server);
+			updatePositions(&server, updateTime, lastUpdateTime);
 			lastUpdateTime = get_nanos();
 		} 
 		ServerUpdate(&server, 0);

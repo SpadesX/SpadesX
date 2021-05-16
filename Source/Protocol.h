@@ -10,7 +10,7 @@
 
 #include <enet/enet.h>
 
-void updatePositions(Server* server);
+void updatePositions(Server* server, unsigned long long timeNow, unsigned long long timeSinceLastUpdate);
 void SetPlayerRespawnPoint(Server* server, uint8 playerID);
 void sendServerNotice(Server* server, uint8 playerID, char *message);
 void broadcastServerNotice(Server* server, char *message);
