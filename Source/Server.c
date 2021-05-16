@@ -12,7 +12,6 @@
 #include "Protocol.h"
 #include "Packets.h"
 #include "PacketReceive.h"
-#include "Physics.h"
 
 #include <Compress.h>
 #include <DataStream.h>
@@ -49,13 +48,32 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 		server->protocol.nameTeamA[i] = ' ';
 		server->protocol.nameTeamB[i] = ' ';
 	}
-
+	Vector3f empty = {0, 0, 0};
 	for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
 		server->player[i].state  = STATE_DISCONNECTED;
 		server->player[i].queues = NULL;
 		server->player[i].ups = 60;
 		server->player[i].timeSinceLastWU = get_nanos();
 		server->player[i].input  = 0;
+		server->player[i].movement.eyePos = empty;
+		server->player[i].movement.forwardOrientation = empty;
+		server->player[i].movement.strafeOrientation = empty;
+		server->player[i].movement.heightOrientation = empty;
+		server->player[i].movement.position = empty;
+		server->player[i].movement.velocity = empty;
+		server->player[i].airborne = 0;
+		server->player[i].wade = 0;
+		server->player[i].lastclimb = 0;
+		server->player[i].movBackwards = 0;
+		server->player[i].movForward = 0;
+		server->player[i].movLeft = 0;
+		server->player[i].movRight = 0;
+		server->player[i].jumping = 0;
+		server->player[i].crouching = 0;
+		server->player[i].sneaking = 0;
+		server->player[i].sprinting = 0;
+		server->player[i].primary_fire = 0;
+		server->player[i].secondary_fire = 0;
 		memset(server->player[i].name, 0, 17);
 	}
 
@@ -239,8 +257,6 @@ static void ServerUpdate(Server* server, int timeout)
 		if (server->player[playerID].state == STATE_READY) {
 			unsigned long long time = get_nanos();
 			if (time - server->player[playerID].timeSinceLastWU >= (1000000000/server->player[playerID].ups)) {
-				set_globals(time/1000000000.f, (time - server->player[playerID].timeSinceLastWU) / 1000000000.f);
-				move_player(server, playerID);
 				SendWorldUpdate(server, playerID);
 				server->player[playerID].timeSinceLastWU = get_nanos();
 			}
@@ -288,6 +304,11 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 	}
 	server.master.timeSinceLastSend = time(NULL);
 	while (1) {
+		updateTime = get_nanos();
+		if (updateTime - lastUpdateTime >= (1000000000/120)) {
+			updatePositions(&server);
+			lastUpdateTime = get_nanos();
+		} 
 		ServerUpdate(&server, 0);
 		usleep(1); //otherwise we would run at 100% cpu usage all the time. Not exactly what we want :P
 	}

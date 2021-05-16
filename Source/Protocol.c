@@ -8,6 +8,22 @@
 #include "Structs.h"
 #include "DataStream.h"
 #include "Types.h"
+#include "Packets.h"
+#include "Physics.h"
+
+void updatePositions(Server *server, unsigned long long timeNow, unsigned long long timeSinceLastUpdate) {
+	set_globals(timeNow/1000000000.f, (timeNow - timeSinceLastUpdate) / 1000000000.f);
+	for (int playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
+		if (server->player[playerID].state == STATE_READY) {
+			int falldamage = 0;
+			falldamage = move_player(server, playerID);
+			if (falldamage > 0) {
+				//STATUS("Sending damage");
+				//sendHP(server, playerID, playerID, falldamage, 0, 4, 5);
+			}
+		}
+	}
+}
 
 void SetPlayerRespawnPoint(Server* server, uint8 playerID)
 {
