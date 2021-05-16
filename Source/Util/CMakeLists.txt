@@ -9,6 +9,7 @@ set(UTIL_HEADERS
     Compress.h
     DataStream.h
     Types.h
+    Physics.h
 )
 
 set(UTIL_SOURCES

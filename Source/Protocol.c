@@ -17,15 +17,15 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
 		float dx = spawn->to.x - spawn->from.x;
 		float dy = spawn->to.y - spawn->from.y;
 
-		server->player[playerID].pos.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
-		server->player[playerID].pos.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-		server->player[playerID].pos.z = 62.f - 2.36f;
+		server->player[playerID].movement.position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
+		server->player[playerID].movement.position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
+		server->player[playerID].movement.position.z = 62.f - 2.36f;
 
-		server->player[playerID].rot.x = 0.f;
-		server->player[playerID].rot.y = 0.f;
-		server->player[playerID].rot.z = 0.f;
+		server->player[playerID].movement.forwardOrientation.x = 0.f;
+		server->player[playerID].movement.forwardOrientation.y = 0.f;
+		server->player[playerID].movement.forwardOrientation.z = 0.f;
 
-		printf("respawn: %f %f %f\n", server->player[playerID].pos.x, server->player[playerID].pos.y, server->player[playerID].pos.z);
+		printf("respawn: %f %f %f\n", server->player[playerID].movement.position.x, server->player[playerID].movement.position.y, server->player[playerID].movement.position.z);
 	}
 }
 
@@ -53,7 +53,7 @@ void broadcastServerNotice(Server* server, char *message) {
 
 uint8 playerToPlayerVisible(Server *server, uint8 playerID, uint8 playerID2) {
 	float distance = 0;
-	distance = sqrt(pow((server->player[playerID].pos.x - server->player[playerID2].pos.x), 2) + pow((server->player[playerID].pos.y - server->player[playerID2].pos.y), 2));
+	distance = sqrt(pow((server->player[playerID].movement.position.x - server->player[playerID2].movement.position.x), 2) + pow((server->player[playerID].movement.position.y - server->player[playerID2].movement.position.y), 2));
 	if (server->player[playerID].team == TEAM_SPECTATOR) {
 		return 1;
 	}

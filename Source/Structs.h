@@ -11,6 +11,22 @@
 #include "Queue.h"
 #include "Types.h"
 #include "Util/Line.h"
+#include "enet/protocol.h"
+
+typedef struct { // Seriously what the F. Thank voxlap motion for this mess.
+    Vector3f position;
+    Vector3f eyePos;
+    Vector3f velocity;
+    Vector3f strafeOrientation;
+    Vector3f heightOrientation;
+    Vector3f forwardOrientation;
+} Movement;
+
+typedef struct { //Yet again thanks voxlap.
+    Vector3f forward;
+    Vector3f strafe;
+    Vector3f height;
+} Orientation;
 
 typedef struct {
     // compressed map
@@ -62,8 +78,6 @@ typedef struct {
     Tool      item;
     uint32    kills;
     Color3i   color;
-    Vector3f  pos;
-    Vector3f  rot;
     char      name[17];
     ENetPeer* peer;
     uint8     respawnTime;
@@ -87,7 +101,14 @@ typedef struct {
     uint8     crouching;
     uint8     sneaking;
     uint8     sprinting;
+    uint8     primary_fire;
+    uint8     secondary_fire;
 
+    //Bellow this point is stuff used for calculating movement.
+    Movement movement;
+    uint8 airborne;
+    uint8 wade;
+    float lastclimb;
 } Player;
 
 typedef struct {
@@ -104,7 +125,6 @@ typedef struct {
 	Protocol protocol;
 	Master master;
     Map map;
-    uint8 dirty;
 } Server;
 
 #endif

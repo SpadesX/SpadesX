@@ -172,9 +172,9 @@ void sendHP(Server* server, uint8 hitPlayerID, uint8 playerID, uint8 HPChange, u
 	WriteByte(&stream, PACKET_TYPE_SET_HP);
 	WriteByte(&stream, server->player[hitPlayerID].HP);
 	WriteByte(&stream, type);
-	WriteFloat(&stream, server->player[playerID].pos.x);
-	WriteFloat(&stream, server->player[playerID].pos.y);
-	WriteFloat(&stream, server->player[playerID].pos.z);
+	WriteFloat(&stream, server->player[playerID].movement.position.x);
+	WriteFloat(&stream, server->player[playerID].movement.position.y);
+	WriteFloat(&stream, server->player[playerID].movement.position.z);
 	enet_peer_send(server->player[playerID].peer, 0, packet);
 	}
 	}
@@ -241,7 +241,7 @@ void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
 	WriteByte(&stream, otherID);					// ID
 	WriteByte(&stream, server->player[otherID].weapon);	// WEAPON
 	WriteByte(&stream, server->player[otherID].team);	  // TEAM
-	WriteVector3f(&stream, server->player[otherID].pos);  // X Y Z
+	WriteVector3f(&stream, server->player[otherID].movement.position);  // X Y Z
 	WriteArray(&stream, server->player[otherID].name, 16); // NAME
 
 	if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
@@ -334,8 +334,8 @@ void SendWorldUpdate(Server* server, uint8 playerID)
 
 	for (uint8 j = 0; j < 32; ++j) {
 		if (playerToPlayerVisible(server, playerID, j)) {
-			WriteVector3f(&stream, server->player[j].pos);
-			WriteVector3f(&stream, server->player[j].rot);
+			WriteVector3f(&stream, server->player[j].movement.position);
+			WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
 		}
 		else {
 			Vector3f empty;
