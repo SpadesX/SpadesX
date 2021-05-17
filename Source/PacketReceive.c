@@ -167,6 +167,19 @@ void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
 	} else {
 		server->player[playerID].name[length] = '\0';
 		ReadArray(data, server->player[playerID].name, length);
+		int count = 0;
+		for (uint8 i = 0; i < server->protocol.maxPlayers; i++) {
+			if (server->player[i].state != STATE_DISCONNECTED && i != playerID) {
+				if (strcmp(server->player[playerID].name, server->player[i].name) == 0) {
+					count++;
+				}
+			}
+		}
+		if (count > 0) {
+			char idChar[3];
+			sprintf(idChar, "%d", playerID);
+			strcat(server->player[playerID].name, idChar);
+		}
 	}
 	switch (server->player[playerID].weapon) {
 		case 0:
