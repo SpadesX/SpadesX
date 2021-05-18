@@ -76,6 +76,7 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 		server->player[i].secondary_fire = 0;
 		server->player[i].canBuild = 1;
 		server->player[i].allowKilling = 1;
+		server->player[i].allowTeamKilling = 0;
 		server->player[i].muted = 0;
 		memset(server->player[i].name, 0, 17);
 	}
