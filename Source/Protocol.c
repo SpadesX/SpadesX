@@ -97,9 +97,3 @@ void SendPacketExceptSenderDistCheck(Server *server, ENetPacket* packet, uint8 p
 		}
 	}
 }
-
-void SetTeamKillingFlag(Server *server, uint8 flag) {
-	for (uint8 i = 0; i < 32; ++i) {
-		server->player[i].allowTK = flag;
-	}
-}

@@ -90,9 +90,13 @@ typedef struct {
     uint8     ip[4];
     uint8     alive;
     uint8	  input;
-    uint8	  allowTK;
+    uint8	  allowKilling;
+    uint8     allowTeamKilling;
     unsigned long long timeSinceLastWU;
     uint16    ups;
+    uint8     muted;
+    uint8     canBuild;
+
     uint8     movForward;
     uint8     movBackwards;
     uint8     movLeft;
@@ -125,6 +129,8 @@ typedef struct {
 	Protocol protocol;
 	Master master;
     Map map;
+    uint8 globalAK;
+    uint8 globalAB;
 } Server;
 
 #endif

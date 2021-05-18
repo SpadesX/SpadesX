@@ -18,7 +18,7 @@
 //#include "Conversion.h"
 
 void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType) {
-	if (server->player[playerID].team != server->player[hitPlayerID].team || server->player[playerID].allowTK) {
+	if ((server->player[playerID].team != server->player[hitPlayerID].team || server->player[playerID].allowTeamKilling) && (server->player[playerID].allowKilling && server->globalAK)) {
 			switch (server->player[playerID].weapon) {
 				case WEAPON_RIFLE:
 				{
@@ -219,6 +219,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			break;
 		case PACKET_TYPE_BLOCK_ACTION:
 		{
+			if (server->player[playerID].canBuild && server->globalAB) {
 			uint8 player = ReadByte(data);
 			uint8 actionType = ReadByte(data);
 			int X = ReadInt(data);
@@ -247,10 +248,12 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			else {
 				printf("Player: #%d may be using BlockExploit with Item: %d and Action: %d\n", playerID, server->player[playerID].item, actionType);
 			}
+			}
 			break;
 		}
 		case PACKET_TYPE_BLOCK_LINE:
 		{
+			if (server->player[playerID].canBuild && server->globalAB) {
 			vec3i start;
 			vec3i end;
 			uint8 player = ReadByte(data);
@@ -263,6 +266,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			writeBlockLine(server, playerID, &start, &end);
 
 			SendBlockLine(server, playerID, start, end);
+			}
 			break;
 		}
 		case PACKET_TYPE_SET_TOOL:

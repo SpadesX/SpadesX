@@ -274,10 +274,11 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 			WriteByte(&stream, meantfor);
 			WriteArray(&stream, message, length);
 			if (message[0] == '/') {
-				if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l' && message[5] == 'p') {
-					char uselessString[30];
+				char command[30];
+				sscanf(message, "%s", command);
+				if (strcmp(command, "/killp") == 0) {
 					int id = 0;
-					if (sscanf(message, "%s #%d", uselessString, &id) == 1) {
+					if (sscanf(message, "%s #%d", command, &id) == 1) {
 						sendKillPacket(server, player, player, 0, 5);
 					}
 					else {
@@ -289,25 +290,142 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 						}
 					}
 				}
-				else if (message[1] == 'k' && message[2] == 'i' && message[3] == 'l' && message[4] == 'l') {
-					sendKillPacket(server, player, player, 0, 5);
-				}
-				else if (message[1] == 't' && message[2] == 'k') {
-					if (server->player[player].allowTK == 1) {
-						SetTeamKillingFlag(server, 0);
-						broadcastServerNotice(server, "Team Killing has been disabled");
+				else if (strcmp(command, "/tk") == 0) {
+					int ID;
+					if (sscanf(message, "%s #%d", command, &ID) == 1) {
+						if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+							if (server->globalAK == 1) {
+								server->globalAK = 0;
+								broadcastServerNotice(server, "Killing has been disabled");
+							}
+							else if (server->globalAK == 0) {
+								server->globalAK = 1;
+								broadcastServerNotice(server, "Killing has been enabled");
+							}
+						}
+						else {
+							sendServerNotice(server, player, "ID not in range or player doesnt exist");	
+						}
 					}
-					else if (server->player[player].allowTK == 0) {
-						SetTeamKillingFlag(server, 1);
-						broadcastServerNotice(server, "Team Killing has been enabled");
+					else {
+						char broadcastDis[100] = "Killing has been disabled for player: ";
+						char broadcastEna[100] = "Killing has been enabled for player: ";
+						strcat(broadcastDis, server->player[ID].name);
+						strcat(broadcastEna, server->player[ID].name);
+						if (server->player[ID].allowKilling == 1) {
+							server->player[ID].allowKilling = 0;
+							broadcastServerNotice(server, broadcastDis);
+						}
+						else if (server->player[ID].allowKilling == 0) {
+							server->player[ID].allowKilling = 1;
+							broadcastServerNotice(server, broadcastEna);
+						}
 					}
 				}
-				else if (message[1] == 'u' && message[2] == 'p' && message[3] == 's') {
+				else if (strcmp(command, "/ttk") == 0) {
+					int ID = 33;
+					if (sscanf(message, "%s #%d", command, &ID) == 2) {
+						if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+							char broadcastDis[100] = "Team Killing has been disabled for player: ";
+							char broadcastEna[100] = "Team Killing has been enabled for player: ";
+							strcat(broadcastDis, server->player[ID].name);
+							strcat(broadcastEna, server->player[ID].name);
+							if (server->player[ID].allowTeamKilling) {
+								server->player[ID].allowTeamKilling = 0;
+								sendServerNotice(server, player, broadcastDis);
+							}
+							else {
+								server->player[ID].allowTeamKilling = 1;
+								sendServerNotice(server, player, broadcastEna);
+							}
+						}
+						else {
+							sendServerNotice(server, player, "ID not in range or player doesnt exist");	
+						}
+					}
+					else {
+						sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
+					}
+				}
+				else if (strcmp(command, "/tb") == 0) {
+					int ID;
+					if (sscanf(message, "%s #%d", command, &ID) == 1) {
+						if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+							if (server->globalAB == 1) {
+								server->globalAB = 0;
+								broadcastServerNotice(server, "Building has been disabled");
+							}
+							else if (server->globalAB == 0) {
+								server->globalAB = 1;
+								broadcastServerNotice(server, "Building has been enabled");
+							}
+						}
+						else {
+							sendServerNotice(server, player, "ID not in range or player doesnt exist");	
+						}
+					}
+					else {
+						char broadcastDis[100] = "Building has been disabled for player: ";
+						char broadcastEna[100] = "Building has been enabled for player: ";
+						strcat(broadcastDis, server->player[ID].name);
+						strcat(broadcastEna, server->player[ID].name);
+						if (server->player[ID].canBuild == 1) {
+							server->player[ID].canBuild = 0;
+							broadcastServerNotice(server, broadcastDis);
+						}
+						else if (server->player[ID].canBuild == 0) {
+							server->player[ID].canBuild = 1;
+							broadcastServerNotice(server, broadcastEna);
+						}
+					}
+				}
+				else if (strcmp(command, "/kick") == 0) {
+					int ID = 33;
+					if (sscanf(message, "%s #%d", command, &ID) == 2) {
+						if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+							char sendingMessage[100];
+							strcpy(sendingMessage, server->player[ID].name);
+							strcat(sendingMessage, " has been kicked");
+							enet_peer_disconnect(server->player[ID].peer, REASON_KICKED);
+							broadcastServerNotice(server, sendingMessage);
+						}
+						else {
+							sendServerNotice(server, player, "ID not in range or player doesnt exist");	
+						}
+					}
+					else {
+						sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
+					}
+				}
+				else if (strcmp(command, "/mute") == 0) {
+					int ID = 33;
+					if (sscanf(message, "%s #%d", command, &ID) == 2) {
+						if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+							char sendingMessage[100];
+							strcpy(sendingMessage, server->player[ID].name);
+							if (server->player[ID].muted) {
+								server->player[ID].muted = 0;
+								strcat(sendingMessage, " has been unmuted");
+							}
+							else {
+								server->player[ID].muted = 1;
+								strcat(sendingMessage, " has been muted");
+							}
+							sendServerNotice(server, player, sendingMessage);
+						}
+						else {
+							sendServerNotice(server, player, "ID not in range or player doesnt exist");	
+						}
+					}
+					else {
+						sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
+					}
+				}
+				else if (strcmp(command, "/ups") == 0) {
 					float ups = 0;
-					char uselessString[30]; // Just to be sure we dont read dumb stuff
 					char upsString[4];
-					sscanf(message, "%s %f", uselessString, &ups);
-					sscanf(message, "%s %s", uselessString, upsString);
+					sscanf(message, "%s %f", command, &ups);
+					sscanf(message, "%s %s", command, upsString);
 					if (ups >=1 && ups <= 300) {
 						server->player[player].ups = ups;
 						char fullString[32] = "UPS changed to ";
@@ -319,9 +437,37 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 						sendServerNotice(server, player, "Changing UPS failed. Please select value between 1 and 300");
 					}
 				}
+				else if (strcmp(command, "/banp") == 0) {
+					int ID = 33;
+					if (sscanf(message, "%s #%d", command, &ID) == 2) {
+						if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+							char sendingMessage[100];
+							strcpy(sendingMessage, server->player[ID].name);
+							strcat(sendingMessage, " has been banned");
+							FILE *fp;
+							fp = fopen("BanList.txt", "a");
+							if (fp == NULL) {
+								sendServerNotice(server, player, "Player could not be banned. File failed to open");
+								return;
+							}
+							fprintf(fp, "%d %s\n", server->player[ID].peer->address.host, server->player[ID].name);
+							fclose(fp);
+							enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
+							broadcastServerNotice(server, sendingMessage);
+						}
+						else {
+							sendServerNotice(server, player, "ID not in range or player doesnt exist");	
+						}
+					}
+					else {
+						sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
+					}
+				}
 			}
 			else {
-				enet_host_broadcast(server->host, 0, packet);
+				if (!server->player[player].muted) {
+					enet_host_broadcast(server->host, 0, packet);
+				}
 			}
 			free(message);
 }

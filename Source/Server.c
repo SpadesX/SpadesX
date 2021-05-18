@@ -74,11 +74,15 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 		server->player[i].sprinting = 0;
 		server->player[i].primary_fire = 0;
 		server->player[i].secondary_fire = 0;
+		server->player[i].canBuild = 1;
+		server->player[i].allowKilling = 1;
+		server->player[i].muted = 0;
 		memset(server->player[i].name, 0, 17);
 	}
 
 	srand(time(NULL));
-
+	server->globalAB = 1;
+	server->globalAK = 1;
 	server->protocol.spawns[0].from.x = 64.f;
 	server->protocol.spawns[0].from.y = 224.f;
 	server->protocol.spawns[0].to.x   = 128.f;
@@ -103,7 +107,9 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 
 	memcpy(server->protocol.nameTeamA, team1, strlen(team1));
 	memcpy(server->protocol.nameTeamB, team2, strlen(team2));
-
+	server->protocol.nameTeamA[strlen(team1)] = '\0';
+	server->protocol.nameTeamB[strlen(team2)] = '\0';
+	
 	server->protocol.mode = GAME_MODE_CTF;
 
 	// Init CTF
@@ -207,6 +213,7 @@ static void ServerUpdate(Server* server, int timeout)
 		}
 	}
 	while (enet_host_service(server->host, &event, timeout) > 0) {
+		uint8 bannedUser = 0;
 		uint8 playerID;
 		switch (event.type) {
 			case ENET_EVENT_TYPE_NONE:
@@ -214,7 +221,27 @@ static void ServerUpdate(Server* server, int timeout)
 			break;
 			case ENET_EVENT_TYPE_CONNECT:
 				if (event.data != VERSION_0_75) {
-					enet_peer_disconnect(event.peer, REASON_WRONG_PROTOCOL_VERSION);
+					enet_peer_disconnect_now(event.peer, REASON_WRONG_PROTOCOL_VERSION);
+					break;
+				}
+				
+				FILE *fp;
+				fp = fopen("BanList.txt", "r");
+				if (fp == NULL) {
+					WARNING("BanList.txt could not be opened for checking ban. PLEASE FIX THIS NOW BY CREATING THIS FILE!!!!");
+				}
+				unsigned int IP = 0;
+				char nameOfPlayer[20];
+				while (fscanf(fp, "%d %s", &IP, nameOfPlayer) != EOF) {
+					if (IP == event.peer->address.host) {
+						enet_peer_disconnect_now(event.peer, REASON_BANNED);
+						printf("WARNING: Banned user %s tried to join. IP: %d\n", nameOfPlayer, IP);
+						bannedUser = 1;
+						break;
+					}
+				}
+				fclose(fp);
+				if (bannedUser) {
 					break;
 				}
 				// check peer
@@ -222,7 +249,8 @@ static void ServerUpdate(Server* server, int timeout)
 				// find next free ID
 				playerID = OnConnect(server);
 				if (playerID == 0xFF) {
-					enet_peer_disconnect(event.peer, REASON_SERVER_FULL);
+					enet_peer_disconnect_now(event.peer, REASON_SERVER_FULL);
+					STATUS("Server full. Kicking player");
 					break;
 				}
 				server->player[playerID].peer = event.peer;
@@ -235,7 +263,10 @@ static void ServerUpdate(Server* server, int timeout)
 				playerID				= (uint8)((size_t) event.peer->data);
 				server->player[playerID].state = STATE_DISCONNECTED;
 				SendPlayerLeft(server, playerID);
-				server->player[playerID].ups = 10;
+				server->player[playerID].ups = 60;
+				server->player[playerID].allowKilling = 1;
+				server->player[playerID].muted = 0;
+				server->player[playerID].canBuild = 1;
 				server->protocol.numPlayers--;
 				if (server->master.enableMasterConnection == 1) {
 					updateMaster(server);

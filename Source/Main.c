@@ -32,6 +32,6 @@ int main(int argc, char *argv[]) {
 	port = json_object_get_int(portInConfig);
 	master = json_object_get_int(masterInConfig);
 
-	StartServer(port, 32, 2, 0, 0, master, map);
+	StartServer(port, 64, 2, 0, 0, master, map);
 	return 0;
 }
