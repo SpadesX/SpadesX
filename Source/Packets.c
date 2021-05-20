@@ -158,7 +158,7 @@ void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killRe
 	server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
 
-void sendHP(Server* server, uint8 hitPlayerID, uint8 playerID, uint8 HPChange, uint8 type, uint8 killReason, uint8 respawnTime) {
+void sendHP(Server* server, uint8 hitPlayerID, uint8 playerID, long HPChange, uint8 type, uint8 killReason, uint8 respawnTime) {
 	ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
 	DataStream  stream = {packet->data, packet->dataLength, 0};
 	server->player[hitPlayerID].HP -= HPChange;
@@ -332,11 +332,11 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 							strcat(broadcastEna, server->player[ID].name);
 							if (server->player[ID].allowTeamKilling) {
 								server->player[ID].allowTeamKilling = 0;
-								sendServerNotice(server, player, broadcastDis);
+								broadcastServerNotice(server, broadcastDis);
 							}
 							else {
 								server->player[ID].allowTeamKilling = 1;
-								sendServerNotice(server, player, broadcastEna);
+								broadcastServerNotice(server, broadcastEna);
 							}
 						}
 						else {
@@ -411,7 +411,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 								server->player[ID].muted = 1;
 								strcat(sendingMessage, " has been muted");
 							}
-							sendServerNotice(server, player, sendingMessage);
+							broadcastServerNotice(server, sendingMessage);
 						}
 						else {
 							sendServerNotice(server, player, "ID not in range or player doesnt exist");	

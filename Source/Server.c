@@ -25,6 +25,7 @@
 
 unsigned long long updateTime;
 unsigned long long lastUpdateTime;
+unsigned long long timeSinceStart;
 
 static unsigned long long get_nanos(void) {
     struct timespec ts;
@@ -49,6 +50,9 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 		server->protocol.nameTeamB[i] = ' ';
 	}
 	Vector3f empty = {0, 0, 0};
+	Vector3f forward = {1, 0, 0};
+	Vector3f height = {0, 0, 1};
+	Vector3f strafe = {0, 1, 0};
 	for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
 		server->player[i].state  = STATE_DISCONNECTED;
 		server->player[i].queues = NULL;
@@ -56,9 +60,9 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 		server->player[i].timeSinceLastWU = get_nanos();
 		server->player[i].input  = 0;
 		server->player[i].movement.eyePos = empty;
-		server->player[i].movement.forwardOrientation = empty;
-		server->player[i].movement.strafeOrientation = empty;
-		server->player[i].movement.heightOrientation = empty;
+		server->player[i].movement.forwardOrientation = forward;
+		server->player[i].movement.strafeOrientation = strafe;
+		server->player[i].movement.heightOrientation = height;
 		server->player[i].movement.position = empty;
 		server->player[i].movement.velocity = empty;
 		server->player[i].airborne = 0;
@@ -298,6 +302,7 @@ static void ServerUpdate(Server* server, int timeout)
 
 void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth, uint8 master, char* map)
 {
+	timeSinceStart = get_nanos();
 	STATUS("Welcome to SpadesX server");
 	STATUS("Initializing ENet");
 
@@ -338,7 +343,7 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 	while (1) {
 		updateTime = get_nanos();
 		if (updateTime - lastUpdateTime >= (1000000000/120)) {
-			updatePositions(&server, updateTime, lastUpdateTime);
+			updatePositions(&server, updateTime, lastUpdateTime, timeSinceStart);
 			lastUpdateTime = get_nanos();
 		} 
 		ServerUpdate(&server, 0);

@@ -82,7 +82,7 @@ typedef struct {
     ENetPeer* peer;
     uint8     respawnTime;
     uint32    startOfRespawnWait;
-    uint8     HP;
+    int       HP;
     Color4i   toolColor;
     uint8     weaponReserve;
     short     weaponClip;
