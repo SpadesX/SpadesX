@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <enet/enet.h>
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
 #include <libvxl/libvxl.h>
 
@@ -32,6 +33,17 @@ void updateMovementAndGrenades(Server *server, unsigned long long timeNow, unsig
 					move_grenade(server, playerID, i);
 					if ((get_nanos() - server->player[playerID].grenade[i].timeSinceSent) / 1000000000.f >= server->player[playerID].grenade[i].fuse) {
 						SendBlockAction(server, playerID, 3, server->player[playerID].grenade[i].position.x, server->player[playerID].grenade[i].position.y, server->player[playerID].grenade[i].position.z);
+						for (int y = 0; y < server->protocol.maxPlayers; ++y) {
+							if (server->player[y].state == STATE_READY) {
+								int diffX = fabsf(server->player[y].movement.position.x - server->player[playerID].grenade[i].position.x);
+								int diffY = fabsf(server->player[y].movement.position.y - server->player[playerID].grenade[i].position.y);
+								int diffZ = fabsf(server->player[y].movement.position.z - server->player[playerID].grenade[i].position.z);
+								if (diffX < 16 && diffY < 16 && diffZ <16) {
+									int value = 4096 / ((diffX*diffX) + (diffY*diffY) + (diffZ*diffZ));
+									sendHP(server, y, playerID, value, 1, 3, 5);
+								}
+							}
+						}
 						for (int z = server->player[playerID].grenade[i].position.z - 1; z <= server->player[playerID].grenade[i].position.z + 1; ++z) {
 							for (int y = server->player[playerID].grenade[i].position.y - 1; y <= server->player[playerID].grenade[i].position.y + 1; ++y) {
 								for (int x = server->player[playerID].grenade[i].position.x - 1; x <= server->player[playerID].grenade[i].position.x + 1; ++x) {
