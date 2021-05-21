@@ -208,15 +208,6 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
 static void ServerUpdate(Server* server, int timeout)
 {
 	ENetEvent event;
-	if (server->master.enableMasterConnection == 1) {
-		if (time(NULL) - server->master.timeSinceLastSend >= 1) {
-		ENetEvent eventMaster;
-		while (enet_host_service(server->master.client, &eventMaster, 1) > 0) {
-		//Quite literally here to keep the connection alive
-		}
-		server->master.timeSinceLastSend = time(NULL);
-		}
-	}
 	while (enet_host_service(server->host, &event, timeout) > 0) {
 		uint8 bannedUser = 0;
 		uint8 playerID;
@@ -346,6 +337,7 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 				}
 			}
 		}
+		keepMasterAlive(&server);
 		usleep(1); //otherwise we would run at 100% cpu usage all the time. Not exactly what we want :P
 	}
 

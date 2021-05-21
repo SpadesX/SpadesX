@@ -1,9 +1,19 @@
 //Copyright DarkNeutrino 2021
 #include <stdio.h>
 #include <DataStream.h>
+#include <time.h>
 
 #include "Structs.h"
 #include "Types.h"
+
+void keepMasterAlive(Server* server) {
+	if (server->master.enableMasterConnection == 1) {
+		if (time(NULL) - server->master.timeSinceLastSend >= 5) {
+		enet_host_service(server->master.client, &server->master.event, 0);
+		server->master.timeSinceLastSend = time(NULL);
+		}
+	}
+}
 
 int ConnectMaster(Server* server, uint16 port) {
     server->master.client = enet_host_create(NULL, 1, 1, 0, 0);

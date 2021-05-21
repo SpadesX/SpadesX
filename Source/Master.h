@@ -6,6 +6,7 @@
 #include "Enums.h"
 #include "Types.h"
 
+void keepMasterAlive(Server* server);
 int ConnectMaster(Server* server, uint16 port);
 void updateMaster(Server* server);
 #endif

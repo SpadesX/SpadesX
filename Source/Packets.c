@@ -174,24 +174,26 @@ void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killRe
 }
 
 void sendHP(Server* server, uint8 hitPlayerID, uint8 playerID, long HPChange, uint8 type, uint8 killReason, uint8 respawnTime) {
-	ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
-	DataStream  stream = {packet->data, packet->dataLength, 0};
-	server->player[hitPlayerID].HP -= HPChange;
-	if ((server->player[hitPlayerID].HP <= 0 || server->player[hitPlayerID].HP > 100) && server->player[playerID].alive == 1) {
-		server->player[playerID].alive = 0;
-		server->player[playerID].HP = 0;
-		sendKillPacket(server, hitPlayerID, playerID, killReason, respawnTime);
-	}
-	else {
-	if (server->player[hitPlayerID].HP >= 1 && server->player[hitPlayerID].HP <= 100 && server->player[playerID].alive == 1 ) {
-	WriteByte(&stream, PACKET_TYPE_SET_HP);
-	WriteByte(&stream, server->player[hitPlayerID].HP);
-	WriteByte(&stream, type);
-	WriteFloat(&stream, server->player[playerID].movement.position.x);
-	WriteFloat(&stream, server->player[playerID].movement.position.y);
-	WriteFloat(&stream, server->player[playerID].movement.position.z);
-	enet_peer_send(server->player[playerID].peer, 0, packet);
-	}
+	if (server->player[playerID].allowKilling && server->globalAK && server->player[playerID].allowKilling) {
+		ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+		DataStream  stream = {packet->data, packet->dataLength, 0};
+		server->player[hitPlayerID].HP -= HPChange;
+		if ((server->player[hitPlayerID].HP <= 0 || server->player[hitPlayerID].HP > 100) && server->player[playerID].alive == 1) {
+			server->player[playerID].alive = 0;
+			server->player[playerID].HP = 0;
+			sendKillPacket(server, hitPlayerID, playerID, killReason, respawnTime);
+		}
+		else {
+			if (server->player[hitPlayerID].HP >= 1 && server->player[hitPlayerID].HP <= 100 && server->player[playerID].alive == 1 ) {
+				WriteByte(&stream, PACKET_TYPE_SET_HP);
+				WriteByte(&stream, server->player[hitPlayerID].HP);
+				WriteByte(&stream, type);
+				WriteFloat(&stream, server->player[playerID].movement.position.x);
+				WriteFloat(&stream, server->player[playerID].movement.position.y);
+				WriteFloat(&stream, server->player[playerID].movement.position.z);
+				enet_peer_send(server->player[playerID].peer, 0, packet);
+			}
+		}
 	}
 }
 

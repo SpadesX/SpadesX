@@ -130,6 +130,7 @@ typedef struct {
 	// Master
     ENetHost* client;
     ENetPeer* peer;
+    ENetEvent event;
     uint8     enableMasterConnection;
     time_t    timeSinceLastSend;
 } Master;

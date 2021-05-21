@@ -30,7 +30,9 @@ void handleGrenade(Server* server, uint8 playerID) {
 						int diffX = fabsf(server->player[y].movement.position.x - server->player[playerID].grenade[i].position.x);
 						int diffY = fabsf(server->player[y].movement.position.y - server->player[playerID].grenade[i].position.y);
 						int diffZ = fabsf(server->player[y].movement.position.z - server->player[playerID].grenade[i].position.z);
-						if (diffX < 16 && diffY < 16 && diffZ <16) {
+						Vector3f playerPos = server->player[y].movement.position;
+						Vector3f grenadePos = server->player[y].grenade[i].position;
+						if (diffX < 16 && diffY < 16 && diffZ <16 && can_see(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) && server->player[playerID].grenade[i].position.z < 62) {
 							int value = 4096 / ((diffX*diffX) + (diffY*diffY) + (diffZ*diffZ));
 							sendHP(server, y, playerID, value, 1, 3, 5);
 						}

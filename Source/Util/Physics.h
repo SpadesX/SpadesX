@@ -178,11 +178,11 @@ static inline long clipworld(Server* server, long x, long y, long z)
     return libvxl_map_issolid(&server->map.map, (int) x, (int) y, sz);
 }
 
-/*long can_see(float x0, float y0, float z0, float x1, float y1,
+long can_see(Server* server, float x0, float y0, float z0, float x1, float y1,
              float z1)
 {
-    Vector f, g;
-    LongVector a, c, d, p, i;
+    Vector3f f, g;
+    Vector3l a, c, d, p, i;
     long cnt = 0;
 
     ftol(x0-.5f,&a.x); ftol(y0-.5f,&a.y); ftol(z0-.5f,&a.z);
@@ -231,14 +231,14 @@ static inline long clipworld(Server* server, long x, long y, long z)
             a.y += d.y; p.y += i.z; p.z += i.x;
         }
 
-        if (isvoxelsolidwrap(a.x, a.y, a.z))
+        if (isvoxelsolidwrap(server, a.x, a.y, a.z))
             return 0;
         cnt--;
     }
     return 1;
 }
 
-long cast_ray(float x0, float y0, float z0, float x1, float y1,
+/*long cast_ray(float x0, float y0, float z0, float x1, float y1,
               float z1, float length, long* x, long* y, long* z)
 {
     x1 = x0 + x1 * length;
