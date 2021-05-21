@@ -10,6 +10,7 @@
 
 #include <enet/enet.h>
 
+void handleGrenade(Server* server, uint8 playerID);
 void updateMovementAndGrenades(Server* server, unsigned long long timeNow, unsigned long long timeSinceLastUpdate, unsigned long long timeSinceStart);
 void SetPlayerRespawnPoint(Server* server, uint8 playerID);
 void sendServerNotice(Server* server, uint8 playerID, char *message);
