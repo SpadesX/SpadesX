@@ -7,6 +7,7 @@
 #include "Types.h"
 #include "DataStream.h"
 
+void ReceiveGrenadePacket(Server* server, uint8 playerID, DataStream* data);
 void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType);
 void ReceiveOrientationData(Server* server, uint8 playerID, DataStream* data);
 void ReceiveInputData(Server* server, uint8 playerID, DataStream* data);

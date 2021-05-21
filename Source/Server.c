@@ -287,17 +287,6 @@ static void ServerUpdate(Server* server, int timeout)
 			}
 		}
 	}
-
-	for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
-		OnPlayerUpdate(server, playerID);
-		if (server->player[playerID].state == STATE_READY) {
-			unsigned long long time = get_nanos();
-			if (time - server->player[playerID].timeSinceLastWU >= (1000000000/server->player[playerID].ups)) {
-				SendWorldUpdate(server, playerID);
-				server->player[playerID].timeSinceLastWU = get_nanos();
-			}
-		}
-	}
 }
 
 void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth, uint8 master, char* map)
@@ -343,10 +332,20 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 	while (1) {
 		updateTime = get_nanos();
 		if (updateTime - lastUpdateTime >= (1000000000/120)) {
-			updatePositions(&server, updateTime, lastUpdateTime, timeSinceStart);
+			updateMovementAndGrenades(&server, updateTime, lastUpdateTime, timeSinceStart);
 			lastUpdateTime = get_nanos();
 		} 
 		ServerUpdate(&server, 0);
+		for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
+			OnPlayerUpdate(&server, playerID);
+			if (server.player[playerID].state == STATE_READY) {
+				unsigned long long time = get_nanos();
+				if (time - server.player[playerID].timeSinceLastWU >= (1000000000/server.player[playerID].ups)) {
+					SendWorldUpdate(&server, playerID);
+					server.player[playerID].timeSinceLastWU = get_nanos();
+				}
+			}
+		}
 		usleep(1); //otherwise we would run at 100% cpu usage all the time. Not exactly what we want :P
 	}
 

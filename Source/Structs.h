@@ -13,6 +13,16 @@
 #include "Util/Line.h"
 #include "enet/protocol.h"
 
+typedef struct {
+    uint8 sent;
+    float fuse;
+    uint8 exploded;
+    Vector3f position;
+    Vector3f velocity;
+    unsigned long long timeSinceSent;
+    unsigned long long timeNow;
+} Grenade;
+
 typedef struct { // Seriously what the F. Thank voxlap motion for this mess.
     Vector3f position;
     Vector3f eyePos;
@@ -96,6 +106,7 @@ typedef struct {
     uint16    ups;
     uint8     muted;
     uint8     canBuild;
+    Grenade   grenade[3];
 
     uint8     movForward;
     uint8     movBackwards;

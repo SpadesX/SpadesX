@@ -10,6 +10,21 @@
 #include "DataStream.h"
 #include "Protocol.h"
 
+void SendGrenade(Server *server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity) {
+	ENetPacket* packet = enet_packet_create(NULL, 30, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_GRENADE_PACKET);
+	WriteByte(&stream, playerID);
+	WriteFloat(&stream, fuse);
+	WriteFloat(&stream, position.x);
+	WriteFloat(&stream, position.y);
+	WriteFloat(&stream, position.z);
+	WriteFloat(&stream, velocity.x);
+	WriteFloat(&stream, velocity.y);
+	WriteFloat(&stream, velocity.z);
+	SendPacketExceptSender(server, packet, playerID);
+}
+
 void SendPlayerLeft(Server* server, uint8 playerID)
 {
 	STATUS("sending player left event");

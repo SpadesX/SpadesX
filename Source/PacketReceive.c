@@ -17,6 +17,30 @@
 #include "Map.h"
 //#include "Conversion.h"
 
+static unsigned long long get_nanos(void) {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
+}
+
+void ReceiveGrenadePacket(Server *server, uint8 playerID, DataStream *data) {
+	for (int i = 0; i < 3; ++i) {
+		if (server->player[playerID].grenade[i].sent == 0) {
+			server->player[playerID].grenade[i].fuse = ReadFloat(data);
+			server->player[playerID].grenade[i].position.x = ReadFloat(data);
+			server->player[playerID].grenade[i].position.y = ReadFloat(data);
+			server->player[playerID].grenade[i].position.z = ReadFloat(data);
+			server->player[playerID].grenade[i].velocity.x = ReadFloat(data);
+			server->player[playerID].grenade[i].velocity.y = ReadFloat(data);
+			server->player[playerID].grenade[i].velocity.z = ReadFloat(data);
+			SendGrenade(server, playerID, server->player[playerID].grenade[i].fuse, server->player[playerID].grenade[i].position, server->player[playerID].grenade[i].velocity);
+			server->player[playerID].grenade[i].sent = 1;
+			server->player[playerID].grenade[i].timeSinceSent = get_nanos();
+			break;
+		}
+	}
+}
+
 void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType) {
 	if ((server->player[playerID].team != server->player[hitPlayerID].team || server->player[playerID].allowTeamKilling) && (server->player[playerID].allowKilling && server->globalAK)) {
 			switch (server->player[playerID].weapon) {
@@ -347,6 +371,12 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			server->player[player].weapon = ReadByte(data);
 			sendKillPacket(server, playerID, playerID, 6, 5);
 			server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
+			break;
+		}
+		case PACKET_TYPE_GRENADE_PACKET:
+		{
+			uint8 player = ReadByte(data);
+			ReceiveGrenadePacket(server, playerID, data);
 			break;
 		}
 		default:

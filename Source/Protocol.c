@@ -3,6 +3,7 @@
 #include <enet/enet.h>
 #include <math.h>
 #include <string.h>
+#include <libvxl/libvxl.h>
 
 #include "Enums.h"
 #include "Structs.h"
@@ -11,7 +12,13 @@
 #include "Packets.h"
 #include "Physics.h"
 
-void updatePositions(Server *server, unsigned long long timeNow, unsigned long long timeSinceLastUpdate, unsigned long long timeSinceStart) {
+static unsigned long long get_nanos(void) {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
+}
+
+void updateMovementAndGrenades(Server *server, unsigned long long timeNow, unsigned long long timeSinceLastUpdate, unsigned long long timeSinceStart) {
 	set_globals((timeNow - timeSinceStart)/1000000000.f, (timeNow - timeSinceLastUpdate) / 1000000000.f);
 	for (int playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
 		if (server->player[playerID].state == STATE_READY) {
@@ -19,6 +26,24 @@ void updatePositions(Server *server, unsigned long long timeNow, unsigned long l
 			falldamage = move_player(server, playerID);
 			if (falldamage > 0) {
 				sendHP(server, playerID, playerID, falldamage, 0, 4, 5);
+			}
+			for (int i = 0; i < 3; ++i) {
+				if (server->player[playerID].grenade[i].sent) {
+					move_grenade(server, playerID, i);
+					if ((get_nanos() - server->player[playerID].grenade[i].timeSinceSent) / 1000000000.f >= server->player[playerID].grenade[i].fuse) {
+						SendBlockAction(server, playerID, 3, server->player[playerID].grenade[i].position.x, server->player[playerID].grenade[i].position.y, server->player[playerID].grenade[i].position.z);
+						for (int z = server->player[playerID].grenade[i].position.z - 1; z <= server->player[playerID].grenade[i].position.z + 1; ++z) {
+							for (int y = server->player[playerID].grenade[i].position.y - 1; y <= server->player[playerID].grenade[i].position.y + 1; ++y) {
+								for (int x = server->player[playerID].grenade[i].position.x - 1; x <= server->player[playerID].grenade[i].position.x + 1; ++x) {
+									if (z < 62 && y >= 0 && y <= 512 && x <= 512 && x >= 0) {
+										libvxl_map_setair(&server->map.map, x, y, z);
+									}
+								}
+							}
+						}
+						server->player[playerID].grenade[i].sent = 0;
+					}
+				}
 			}
 		}
 	}
