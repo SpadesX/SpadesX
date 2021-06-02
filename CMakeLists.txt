@@ -25,6 +25,7 @@ target_link_libraries(server
         vxl
         m
         json-c
+        pthread
 )
 
 add_subdirectory(Source)

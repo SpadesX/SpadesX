@@ -238,14 +238,14 @@ long can_see(Server* server, float x0, float y0, float z0, float x1, float y1,
     return 1;
 }
 
-/*long cast_ray(float x0, float y0, float z0, float x1, float y1,
+long cast_ray(Server* server, float x0, float y0, float z0, float x1, float y1,
               float z1, float length, long* x, long* y, long* z)
 {
     x1 = x0 + x1 * length;
     y1 = y0 + y1 * length;
     z1 = z0 + z1 * length;
-    Vector f, g;
-    LongVector a, c, d, p, i;
+    Vector3f f, g;
+    Vector3l a, c, d, p, i;
     long cnt = 0;
 
     ftol(x0-.5f,&a.x); ftol(y0-.5f,&a.y); ftol(z0-.5f,&a.z);
@@ -294,7 +294,7 @@ long can_see(Server* server, float x0, float y0, float z0, float x1, float y1,
             a.y += d.y; p.y += i.z; p.z += i.x;
         }
 
-        if (isvoxelsolidwrap(a.x, a.y,a.z)) {
+        if (isvoxelsolidwrap(server, a.x, a.y, a.z)) {
             *x = a.x;
             *y = a.y;
             *z = a.z;
@@ -303,7 +303,7 @@ long can_see(Server* server, float x0, float y0, float z0, float x1, float y1,
         cnt--;
     }
     return 0;
-}*/
+}
 
 // original C code
 
