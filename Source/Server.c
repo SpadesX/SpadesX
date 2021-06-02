@@ -28,6 +28,7 @@ unsigned long long updateTime;
 unsigned long long lastUpdateTime;
 unsigned long long timeSinceStart;
 Server server;
+pthread_t thread[3];
 
 static unsigned long long get_nanos(void) {
     struct timespec ts;
@@ -284,13 +285,41 @@ static void ServerUpdate(Server* server, int timeout)
 				break;
 			case ENET_EVENT_TYPE_DISCONNECT:
 				playerID				= (uint8)((size_t) event.peer->data);
-				server->player[playerID].state = STATE_DISCONNECTED;
 				SendPlayerLeft(server, playerID);
+				Vector3f empty = {0, 0, 0};
+				Vector3f forward = {1, 0, 0};
+				Vector3f height = {0, 0, 1};
+				Vector3f strafe = {0, 1, 0};
+				server->player[playerID].state  = STATE_DISCONNECTED;
+				server->player[playerID].queues = NULL;
 				server->player[playerID].ups = 60;
-				server->player[playerID].allowKilling = 1;
-				server->player[playerID].muted = 0;
+				server->player[playerID].timeSinceLastWU = get_nanos();
+				server->player[playerID].input  = 0;
+				server->player[playerID].movement.eyePos = empty;
+				server->player[playerID].movement.forwardOrientation = forward;
+				server->player[playerID].movement.strafeOrientation = strafe;
+				server->player[playerID].movement.heightOrientation = height;
+				server->player[playerID].movement.position = empty;
+				server->player[playerID].movement.velocity = empty;
+				server->player[playerID].airborne = 0;
+				server->player[playerID].wade = 0;
+				server->player[playerID].lastclimb = 0;
+				server->player[playerID].movBackwards = 0;
+				server->player[playerID].movForward = 0;
+				server->player[playerID].movLeft = 0;
+				server->player[playerID].movRight = 0;
+				server->player[playerID].jumping = 0;
+				server->player[playerID].crouching = 0;
+				server->player[playerID].sneaking = 0;
+				server->player[playerID].sprinting = 0;
+				server->player[playerID].primary_fire = 0;
+				server->player[playerID].secondary_fire = 0;
 				server->player[playerID].canBuild = 1;
+				server->player[playerID].allowKilling = 1;
+				server->player[playerID].allowTeamKilling = 0;
+				server->player[playerID].muted = 0;
 				server->player[playerID].toldToMaster = 0;
+				memset(server->player[playerID].name, 0, 17);
 				server->protocol.numPlayers--;
 				if (server->master.enableMasterConnection == 1) {
 					updateMaster(server);
@@ -348,7 +377,6 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 		ConnectMaster(&server, port);
 	}
 	server.master.timeSinceLastSend = time(NULL);
-	pthread_t thread[3];
 	while (1) {
 		calculatePhysics();
 		ServerUpdate(&server, 0);
