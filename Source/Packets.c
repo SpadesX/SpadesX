@@ -9,6 +9,35 @@
 #include "Compress.h"
 #include "DataStream.h"
 #include "Protocol.h"
+#include "enet/enet.h"
+
+void SendIntelCapture(Server* server, uint8 playerID, uint8 winning) {
+	ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_INTEL_CAPTURE);
+	WriteByte(&stream, playerID);
+	WriteByte(&stream, winning);
+	enet_host_broadcast(server->host, 0, packet);
+}
+
+void SendIntelPickup(Server* server, uint8 playerID) {
+	ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_INTEL_PICKUP);
+	WriteByte(&stream, playerID);
+	enet_host_broadcast(server->host, 0, packet);
+}
+
+void SendIntelDrop(Server* server, uint8 playerID) {
+	ENetPacket* packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_INTEL_DROP);
+	WriteByte(&stream, playerID);
+	WriteInt(&stream, server->player[playerID].movement.position.x);
+	WriteInt(&stream, server->player[playerID].movement.position.y);
+	WriteInt(&stream, server->player[playerID].movement.position.z);
+	enet_host_broadcast(server->host, 0, packet);
+}
 
 void SendGrenade(Server *server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity) {
 	ENetPacket* packet = enet_packet_create(NULL, 30, ENET_PACKET_FLAG_RELIABLE);
