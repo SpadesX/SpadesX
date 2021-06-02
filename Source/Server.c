@@ -22,15 +22,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
 unsigned long long updateTime;
 unsigned long long lastUpdateTime;
 unsigned long long timeSinceStart;
+Server server;
 
 static unsigned long long get_nanos(void) {
     struct timespec ts;
     timespec_get(&ts, TIME_UTC);
     return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
+}
+
+static void* calculatePhysics() {
+	updateTime = get_nanos();
+	if (updateTime - lastUpdateTime >= (1000000000/120)) {
+		updateMovementAndGrenades(&server, updateTime, lastUpdateTime, timeSinceStart);
+		lastUpdateTime = get_nanos();
+	} 
 }
 
 static void ServerInit(Server* server, uint32 connections, char* map)
@@ -82,6 +92,7 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 		server->player[i].allowKilling = 1;
 		server->player[i].allowTeamKilling = 0;
 		server->player[i].muted = 0;
+		server->player[i].toldToMaster = 0;
 		memset(server->player[i].name, 0, 17);
 	}
 
@@ -196,12 +207,28 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
 		case STATE_READY:
 			// send data
 			if (server->master.enableMasterConnection == 1) {
-				updateMaster(server);
+				if (server->player[playerID].toldToMaster == 0) {
+					updateMaster(server);
+					server->player[playerID].toldToMaster = 1;
+				}
 			}
 			break;
 		default:
 			// disconnected
 			break;
+	}
+}
+
+static void* WorldUpdate() {
+	for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
+		OnPlayerUpdate(&server, playerID);
+		if (server.player[playerID].state == STATE_READY) {
+			unsigned long long time = get_nanos();
+			if (time - server.player[playerID].timeSinceLastWU >= (1000000000/server.player[playerID].ups)) {
+				SendWorldUpdate(&server, playerID);
+				server.player[playerID].timeSinceLastWU = get_nanos();
+			}
+		}
 	}
 }
 
@@ -263,6 +290,7 @@ static void ServerUpdate(Server* server, int timeout)
 				server->player[playerID].allowKilling = 1;
 				server->player[playerID].muted = 0;
 				server->player[playerID].canBuild = 1;
+				server->player[playerID].toldToMaster = 0;
 				server->protocol.numPlayers--;
 				if (server->master.enableMasterConnection == 1) {
 					updateMaster(server);
@@ -298,7 +326,7 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 
 	printf("Creating server at port %d\n", port);
 
-	Server server;
+	//Server server;
 
 	server.host = enet_host_create(&address, connections, channels, inBandwidth, outBandwidth);
 	if (server.host == NULL) {
@@ -320,25 +348,12 @@ void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBand
 		ConnectMaster(&server, port);
 	}
 	server.master.timeSinceLastSend = time(NULL);
+	pthread_t thread[3];
 	while (1) {
-		updateTime = get_nanos();
-		if (updateTime - lastUpdateTime >= (1000000000/120)) {
-			updateMovementAndGrenades(&server, updateTime, lastUpdateTime, timeSinceStart);
-			lastUpdateTime = get_nanos();
-		} 
+		calculatePhysics();
 		ServerUpdate(&server, 0);
-		for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
-			OnPlayerUpdate(&server, playerID);
-			if (server.player[playerID].state == STATE_READY) {
-				unsigned long long time = get_nanos();
-				if (time - server.player[playerID].timeSinceLastWU >= (1000000000/server.player[playerID].ups)) {
-					SendWorldUpdate(&server, playerID);
-					server.player[playerID].timeSinceLastWU = get_nanos();
-				}
-			}
-		}
+		WorldUpdate();
 		keepMasterAlive(&server);
-		usleep(1); //otherwise we would run at 100% cpu usage all the time. Not exactly what we want :P
 	}
 
 	STATUS("Destroying server");

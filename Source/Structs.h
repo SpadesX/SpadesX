@@ -107,6 +107,7 @@ typedef struct {
     uint8     muted;
     uint8     canBuild;
     Grenade   grenade[3];
+    uint8     toldToMaster;
 
     uint8     movForward;
     uint8     movBackwards;
