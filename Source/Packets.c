@@ -308,6 +308,7 @@ void SendRespawn(Server* server, uint8 playerID)
 void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 	uint32 packetSize = event.packet->dataLength + 1;
 	int player = ReadByte(data);
+	player = (long)server->player[player].peer->data;
 	int meantfor = ReadByte(data);
 	uint32 length = DataLeft(data);
 	char * message = calloc(length + 1, sizeof (char));
