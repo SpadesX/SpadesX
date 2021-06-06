@@ -511,8 +511,10 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 				}
 			}
 			else {
-				if (!server->player[player].muted) {
-					enet_host_broadcast(server->host, 0, packet);
+				for (int playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
+					if (!server->player[player].muted && ((server->player[playerID].team == server->player[player].team && meantfor == 1) || meantfor == 0) && server->player[playerID].state != STATE_DISCONNECTED) {
+						enet_peer_send(server->player[playerID].peer, 0, packet);
+					}
 				}
 			}
 			free(message);
