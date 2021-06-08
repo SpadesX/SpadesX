@@ -156,21 +156,21 @@ void SendStateData(Server* server, uint8 playerID)
 	WriteByte(&stream, server->protocol.ctf.intelFlags); // INTEL FLAGS
 
 	if ((server->protocol.ctf.intelFlags & 1) == 0) {
-		WriteVector3f(&stream, server->protocol.ctf.intelTeamA);
+		WriteVector3f(&stream, server->protocol.ctf.intel[0]);
 	} else {
 		WriteByte(&stream, server->protocol.ctf.playerIntelTeamA);
 		StreamSkip(&stream, 11);
 	}
 
 	if ((server->protocol.ctf.intelFlags & 2) == 0) {
-		WriteVector3f(&stream, server->protocol.ctf.intelTeamB);
+		WriteVector3f(&stream, server->protocol.ctf.intel[1]);
 	} else {
 		WriteByte(&stream, server->protocol.ctf.playerIntelTeamB);
 		StreamSkip(&stream, 11);
 	}
 
-	WriteVector3f(&stream, server->protocol.ctf.baseTeamA);
-	WriteVector3f(&stream, server->protocol.ctf.baseTeamB);
+	WriteVector3f(&stream, server->protocol.ctf.base[0]);
+	WriteVector3f(&stream, server->protocol.ctf.base[1]);
 
 	if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
 		server->player[playerID].state = STATE_READY;

@@ -19,6 +19,10 @@ static unsigned long long get_nanos(void) {
     return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
+void handleIntel(Server* server, uint8 playerID) {
+
+}
+
 void handleGrenade(Server* server, uint8 playerID) {
 	for (int i = 0; i < 3; ++i) {
 		if (server->player[playerID].grenade[i].sent) {
@@ -63,6 +67,7 @@ void updateMovementAndGrenades(Server *server, unsigned long long timeNow, unsig
 				sendHP(server, playerID, playerID, falldamage, 0, 4, 5);
 			}
 			handleGrenade(server, playerID);
+			handleIntel(server, playerID);
 		}
 	}
 }
@@ -85,6 +90,19 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
 
 		printf("respawn: %f %f %f\n", server->player[playerID].movement.position.x, server->player[playerID].movement.position.y, server->player[playerID].movement.position.z);
 	}
+}
+
+Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
+{
+		Quad2D* spawn = server->protocol.spawns + team;
+
+		float dx = spawn->to.x - spawn->from.x;
+		float dy = spawn->to.y - spawn->from.y;
+		Vector3f position;
+		position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
+		position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
+		position.z = 62.f;
+		return position;
 }
 
 void sendServerNotice(Server* server, uint8 playerID, char *message) {

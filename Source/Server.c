@@ -136,19 +136,11 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 	server->protocol.ctf.scoreLimit = 10;
 	server->protocol.ctf.intelFlags = 0;
 	// intel
-	server->protocol.ctf.intelTeamA.x = 120.f;
-	server->protocol.ctf.intelTeamA.y = 256.f;
-	server->protocol.ctf.intelTeamA.z = 62.f;
-	server->protocol.ctf.intelTeamB.x = 110.f;
-	server->protocol.ctf.intelTeamB.y = 256.f;
-	server->protocol.ctf.intelTeamB.z = 62.f;
+	server->protocol.ctf.intel[0] = SetIntelTentSpawnPoint(server, 0);
+	server->protocol.ctf.intel[1] = SetIntelTentSpawnPoint(server, 1);
 	// bases
-	server->protocol.ctf.baseTeamA.x = 120.f;
-	server->protocol.ctf.baseTeamA.y = 250.f;
-	server->protocol.ctf.baseTeamA.z = 62.f;
-	server->protocol.ctf.baseTeamB.x = 110.f;
-	server->protocol.ctf.baseTeamB.y = 250.f;
-	server->protocol.ctf.baseTeamB.z = 62.f;
+	server->protocol.ctf.base[0] = SetIntelTentSpawnPoint(server, 0);
+	server->protocol.ctf.base[1] = SetIntelTentSpawnPoint(server, 1);
 
 	LoadMap(server, map);
 }

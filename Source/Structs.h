@@ -53,10 +53,8 @@ typedef struct
     uint8     scoreTeamB;
     uint8     scoreLimit;
     IntelFlag intelFlags;
-    Vector3f  intelTeamA;
-    Vector3f  intelTeamB;
-    Vector3f  baseTeamA;
-    Vector3f  baseTeamB;
+    Vector3f  intel[2];
+    Vector3f  base[2];
     uint8     playerIntelTeamA; // player ID if intel flags & 1 != 0
     uint8     playerIntelTeamB; // player ID if intel flags & 2 != 0
 } ModeCTF;
@@ -108,6 +106,7 @@ typedef struct {
     uint8     canBuild;
     Grenade   grenade[3];
     uint8     toldToMaster;
+    uint8     hasIntel;
 
     uint8     movForward;
     uint8     movBackwards;
