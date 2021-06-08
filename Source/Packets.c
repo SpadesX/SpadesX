@@ -313,6 +313,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server) {
 	uint32 length = DataLeft(data);
 	char * message = calloc(length + 1, sizeof (char));
 	ReadArray(data, message, length);
+	printf("Player %s (%ld) to %d said: %s\n", server->player[player].name, (long)server->player[player].peer->data, meantfor, message);
 			message[length] = '\0';
 			ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
 			DataStream  stream = {packet->data, packet->dataLength, 0};
