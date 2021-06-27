@@ -49,14 +49,14 @@ typedef struct {
 
 typedef struct
 {
-    uint8     scoreTeamA;
-    uint8     scoreTeamB;
+    uint8     score[2];
     uint8     scoreLimit;
     IntelFlag intelFlags;
     Vector3f  intel[2];
     Vector3f  base[2];
     uint8     playerIntelTeamA; // player ID if intel flags & 1 != 0
     uint8     playerIntelTeamB; // player ID if intel flags & 2 != 0
+    uint8     intelHeld[2];
 } ModeCTF;
 
 typedef struct {
@@ -118,6 +118,8 @@ typedef struct {
     uint8     sprinting;
     uint8     primary_fire;
     uint8     secondary_fire;
+    time_t    sinceLastBaseEnter;
+    time_t    sinceLastBaseEnterRestock;
 
     //Bellow this point is stuff used for calculating movement.
     Movement movement;

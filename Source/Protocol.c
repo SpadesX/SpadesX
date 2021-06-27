@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libvxl/libvxl.h>
+#include <time.h>
 
 #include "Enums.h"
 #include "Structs.h"
@@ -19,8 +20,59 @@ static unsigned long long get_nanos(void) {
     return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
-void handleIntel(Server* server, uint8 playerID) {
+Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
+{
+		Quad2D* spawn = server->protocol.spawns + team;
 
+		float dx = spawn->to.x - spawn->from.x;
+		float dy = spawn->to.y - spawn->from.y;
+		Vector3f position;
+		position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
+		position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
+		position.z = 62.f;
+		return position;
+}
+
+void handleIntel(Server* server, uint8 playerID) {
+	uint8 team;
+	if (server->player[playerID].team == 0) {
+		team = 1;
+	}
+	else {
+		team = 0;
+	}
+	if (server->player[playerID].team != TEAM_SPECTATOR) {
+		Vector3f playerPos = server->player[playerID].movement.position;
+		Vector3f tentPos = server->protocol.ctf.base[server->player[playerID].team];
+		time_t timeNow = time(NULL);
+		if (server->player[playerID].hasIntel == 0) {
+			Vector3f intelPos = server->protocol.ctf.intel[team];
+			if ((int)playerPos.y == (int)intelPos.y && ((int)playerPos.z + 3 == (int)intelPos.z || (server->player[playerID].crouching && (int)playerPos.z + 2 == (int)intelPos.z)) && (int)playerPos.x == (int)intelPos.x && (!server->protocol.ctf.intelHeld[team])) {
+				SendIntelPickup(server, playerID);
+				server->protocol.ctf.intelHeld[team] = 1;
+				server->player[playerID].hasIntel = 1;
+			}
+			else if (((int)playerPos.z + 3 == (int)tentPos.z || (server->player[playerID].crouching && (int)playerPos.z + 2 == (int)tentPos.z)) && ((int)playerPos.x >= (int)tentPos.x - 1 && (int)playerPos.x <= (int)tentPos.x) && ((int)playerPos.y >= (int)tentPos.y - 1 && (int)playerPos.y <= (int)tentPos.y) && timeNow - server->player[playerID].sinceLastBaseEnterRestock >= 15) {
+					SendRestock(server, playerID);
+					server->player[playerID].sinceLastBaseEnterRestock = time(NULL);
+			}
+		}
+		else if (server->player[playerID].hasIntel) {
+			if (((int)playerPos.z + 3 == (int)tentPos.z || (server->player[playerID].crouching && (int)playerPos.z + 2 == (int)tentPos.z)) && ((int)playerPos.x >= (int)tentPos.x - 1 && (int)playerPos.x <= (int)tentPos.x) && ((int)playerPos.y >= (int)tentPos.y - 1 && (int)playerPos.y <= (int)tentPos.y) && timeNow - server->player[playerID].sinceLastBaseEnter >= 5) {
+				server->protocol.ctf.score[server->player[playerID].team]++;
+				uint8 winning = 0;
+				if (server->protocol.ctf.score[server->player[playerID].team] >= server->protocol.ctf.scoreLimit) {
+					winning = 1;
+				}
+				SendIntelCapture(server, playerID, winning);
+				server->player[playerID].hasIntel = 0;
+				server->protocol.ctf.intelHeld[team] = 0;
+				server->player[playerID].sinceLastBaseEnter = time(NULL);
+				server->protocol.ctf.intel[team] = SetIntelTentSpawnPoint(server, team);
+				SendMoveObject(server, team, team, server->protocol.ctf.intel[team]);
+			}
+		}
+	}
 }
 
 void handleGrenade(Server* server, uint8 playerID) {
@@ -90,19 +142,6 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
 
 		printf("respawn: %f %f %f\n", server->player[playerID].movement.position.x, server->player[playerID].movement.position.y, server->player[playerID].movement.position.z);
 	}
-}
-
-Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
-{
-		Quad2D* spawn = server->protocol.spawns + team;
-
-		float dx = spawn->to.x - spawn->from.x;
-		float dy = spawn->to.y - spawn->from.y;
-		Vector3f position;
-		position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
-		position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-		position.z = 62.f;
-		return position;
 }
 
 void sendServerNotice(Server* server, uint8 playerID, char *message) {

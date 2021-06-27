@@ -18,6 +18,7 @@
 #include <Queue.h>
 #include <enet/enet.h>
 #include <libvxl/libvxl.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,6 +95,8 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 		server->player[i].allowTeamKilling = 0;
 		server->player[i].muted = 0;
 		server->player[i].toldToMaster = 0;
+		server->player[i].sinceLastBaseEnter = time(NULL);
+		server->player[i].sinceLastBaseEnterRestock = time(NULL);
 		memset(server->player[i].name, 0, 17);
 	}
 
@@ -131,9 +134,9 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 
 	// Init CTF
 
-	server->protocol.ctf.scoreTeamA = 0;
-	server->protocol.ctf.scoreTeamB = 0;
-	server->protocol.ctf.scoreLimit = 10;
+	server->protocol.ctf.score[0] = 0;
+	server->protocol.ctf.score[1] = 0;
+	server->protocol.ctf.scoreLimit = 1;
 	server->protocol.ctf.intelFlags = 0;
 	// intel
 	server->protocol.ctf.intel[0] = SetIntelTentSpawnPoint(server, 0);
@@ -141,6 +144,12 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 	// bases
 	server->protocol.ctf.base[0] = SetIntelTentSpawnPoint(server, 0);
 	server->protocol.ctf.base[1] = SetIntelTentSpawnPoint(server, 1);
+
+	server->protocol.ctf.base[0].x = floorf(server->protocol.ctf.base[0].x);
+	server->protocol.ctf.base[0].y = floorf(server->protocol.ctf.base[0].y);
+	server->protocol.ctf.base[1].x = floorf(server->protocol.ctf.base[1].x);
+	server->protocol.ctf.base[1].y = floorf(server->protocol.ctf.base[1].y);
+	
 
 	LoadMap(server, map);
 }
@@ -311,6 +320,7 @@ static void ServerUpdate(Server* server, int timeout)
 				server->player[playerID].allowTeamKilling = 0;
 				server->player[playerID].muted = 0;
 				server->player[playerID].toldToMaster = 0;
+				server->player[playerID].hasIntel = 0;
 				memset(server->player[playerID].name, 0, 17);
 				server->protocol.numPlayers--;
 				if (server->master.enableMasterConnection == 1) {
