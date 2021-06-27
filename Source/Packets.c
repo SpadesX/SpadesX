@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
 #include "Enums.h"
 #include "Structs.h"
 #include "Queue.h"
@@ -10,6 +11,26 @@
 #include "DataStream.h"
 #include "Protocol.h"
 #include "enet/enet.h"
+
+void SendRestock(Server* server, uint8 playerID) {
+	ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_RESTOCK);
+	WriteByte(&stream, playerID);
+	enet_peer_send(server->player[playerID].peer, 0, packet);
+}
+
+void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos) {
+	ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+	DataStream  stream = {packet->data, packet->dataLength, 0};
+	WriteByte(&stream, PACKET_TYPE_MOVE_OBJECT);
+	WriteByte(&stream, object);
+	WriteByte(&stream, team);
+	WriteFloat(&stream, pos.x);
+	WriteFloat(&stream, pos.y);
+	WriteFloat(&stream, pos.z);
+	enet_host_broadcast(server->host, 0, packet);
+}
 
 void SendIntelCapture(Server* server, uint8 playerID, uint8 winning) {
 	ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
@@ -29,14 +50,26 @@ void SendIntelPickup(Server* server, uint8 playerID) {
 }
 
 void SendIntelDrop(Server* server, uint8 playerID) {
-	ENetPacket* packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
+	uint8 team;
+	if (server->player[playerID].team == 0) {
+		team = 1;
+	}
+	else {
+		team = 0;
+	}
+	ENetPacket* packet = enet_packet_create(NULL, 14, ENET_PACKET_FLAG_RELIABLE);
 	DataStream  stream = {packet->data, packet->dataLength, 0};
 	WriteByte(&stream, PACKET_TYPE_INTEL_DROP);
 	WriteByte(&stream, playerID);
-	WriteInt(&stream, server->player[playerID].movement.position.x);
-	WriteInt(&stream, server->player[playerID].movement.position.y);
-	WriteInt(&stream, server->player[playerID].movement.position.z);
+	WriteFloat(&stream, server->player[playerID].movement.position.x);
+	WriteFloat(&stream, server->player[playerID].movement.position.y);
+	WriteFloat(&stream, floor(server->player[playerID].movement.position.z + 3));
+	server->protocol.ctf.intel[team].x = (int)server->player[playerID].movement.position.x;
+	server->protocol.ctf.intel[team].y = (int)server->player[playerID].movement.position.y;
+	server->protocol.ctf.intel[team].z = (int)server->player[playerID].movement.position.z + 3;
+	printf("Dropping intel at X: %d, Y: %d, Z: %d\n", (int)server->protocol.ctf.intel[team].x, (int)server->protocol.ctf.intel[team].y, (int)server->protocol.ctf.intel[team].z);
 	enet_host_broadcast(server->host, 0, packet);
+	
 }
 
 void SendGrenade(Server *server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity) {
@@ -150,8 +183,8 @@ void SendStateData(Server* server, uint8 playerID)
 
 	// MODE CTF:
 
-	WriteByte(&stream, server->protocol.ctf.scoreTeamA); // SCORE TEAM A
-	WriteByte(&stream, server->protocol.ctf.scoreTeamB); // SCORE TEAM B
+	WriteByte(&stream, server->protocol.ctf.score[0]); // SCORE TEAM A
+	WriteByte(&stream, server->protocol.ctf.score[1]); // SCORE TEAM B
 	WriteByte(&stream, server->protocol.ctf.scoreLimit); // SCORE LIMIT
 	WriteByte(&stream, server->protocol.ctf.intelFlags); // INTEL FLAGS
 
@@ -200,6 +233,10 @@ void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killRe
 	server->player[playerID].respawnTime = respawnTime;
 	server->player[playerID].startOfRespawnWait = time(NULL);
 	server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
+	if (server->player[playerID].hasIntel) {
+		server->player[playerID].hasIntel = 0;
+		SendIntelDrop(server, playerID);
+	}
 }
 
 void sendHP(Server* server, uint8 hitPlayerID, uint8 playerID, long HPChange, uint8 type, uint8 killReason, uint8 respawnTime) {

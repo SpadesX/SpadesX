@@ -8,6 +8,8 @@
 #include "Types.h"
 #include "DataStream.h"
 
+void SendRestock(Server* server, uint8 playerID);
+void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos);
 void SendIntelCapture(Server* server, uint8 playerID, uint8 winning);
 void SendIntelPickup(Server* server, uint8 playerID);
 void SendIntelDrop(Server* server, uint8 playerID);
