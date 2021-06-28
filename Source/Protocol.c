@@ -44,7 +44,7 @@ uint8 checkPlayerInTent(Server* server, uint8 playerID) {
 uint8 checkItemOnIntel(Server* server, uint8 team, Vector3f itemPos) {
 	uint8 ret = 0;
 	Vector3f intelPos = server->protocol.ctf.intel[team];
-	if ((int)itemPos.y == (int)intelPos.y && ((int)itemPos.z + 3 == (int)intelPos.z) && (int)itemPos.x == (int)intelPos.x) {
+	if ((int)itemPos.y == (int)intelPos.y && ((int)itemPos.z == (int)intelPos.z) && (int)itemPos.x == (int)intelPos.x) {
 		ret = 1;
 	}
 	return ret;
@@ -53,7 +53,7 @@ uint8 checkItemOnIntel(Server* server, uint8 team, Vector3f itemPos) {
 uint8 checkItemInTent(Server* server, uint8 team, Vector3f itemPos) {
 	uint8 ret = 0;
 	Vector3f tentPos = server->protocol.ctf.base[team];
-	if (((int)itemPos.z + 3 == (int)tentPos.z) && ((int)itemPos.x >= (int)tentPos.x - 1 && (int)itemPos.x <= (int)tentPos.x) && ((int)itemPos.y >= (int)tentPos.y - 1 && (int)itemPos.y <= (int)tentPos.y)) {
+	if (((int)itemPos.z == (int)tentPos.z) && ((int)itemPos.x >= (int)tentPos.x - 1 && (int)itemPos.x <= (int)tentPos.x) && ((int)itemPos.y >= (int)tentPos.y - 1 && (int)itemPos.y <= (int)tentPos.y)) {
 		ret = 1;
 	}
 	return ret;
