@@ -41,6 +41,24 @@ uint8 checkPlayerInTent(Server* server, uint8 playerID) {
 	return ret;
 }
 
+uint8 checkItemOnIntel(Server* server, uint8 team, Vector3f itemPos) {
+	uint8 ret = 0;
+	Vector3f intelPos = server->protocol.ctf.intel[team];
+	if ((int)itemPos.y == (int)intelPos.y && ((int)itemPos.z + 3 == (int)intelPos.z) && (int)itemPos.x == (int)intelPos.x) {
+		ret = 1;
+	}
+	return ret;
+}
+
+uint8 checkItemInTent(Server* server, uint8 team, Vector3f itemPos) {
+	uint8 ret = 0;
+	Vector3f tentPos = server->protocol.ctf.base[team];
+	if (((int)itemPos.z + 3 == (int)tentPos.z) && ((int)itemPos.x >= (int)tentPos.x - 1 && (int)itemPos.x <= (int)tentPos.x) && ((int)itemPos.y >= (int)tentPos.y - 1 && (int)itemPos.y <= (int)tentPos.y)) {
+		ret = 1;
+	}
+	return ret;
+}
+
 Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
 {
 		Quad2D* spawn = server->protocol.spawns + team;
@@ -89,6 +107,14 @@ void handleIntel(Server* server, uint8 playerID) {
 				server->player[playerID].sinceLastBaseEnter = time(NULL);
 				server->protocol.ctf.intel[team] = SetIntelTentSpawnPoint(server, team);
 				SendMoveObject(server, team, team, server->protocol.ctf.intel[team]);
+				if (winning) {
+					for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
+						if (server->player[i].state != STATE_DISCONNECTED) {
+						server->player[i].state = STATE_STARTING_MAP;
+						}
+					}
+					ServerReset(server, "hallway.vxl");
+				}
 			}
 		}
 	}
