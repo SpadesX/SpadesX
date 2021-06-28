@@ -136,7 +136,7 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 
 	server->protocol.ctf.score[0] = 0;
 	server->protocol.ctf.score[1] = 0;
-	server->protocol.ctf.scoreLimit = 1;
+	server->protocol.ctf.scoreLimit = 10;
 	server->protocol.ctf.intelFlags = 0;
 	// intel
 	server->protocol.ctf.intel[0] = SetIntelTentSpawnPoint(server, 0);
@@ -241,7 +241,7 @@ void ServerReset(Server* server, char* map)
 
 	server->protocol.ctf.score[0] = 0;
 	server->protocol.ctf.score[1] = 0;
-	server->protocol.ctf.scoreLimit = 1;
+	server->protocol.ctf.scoreLimit = 10;
 	server->protocol.ctf.intelFlags = 0;
 	// intel
 	server->protocol.ctf.intel[0] = SetIntelTentSpawnPoint(server, 0);
