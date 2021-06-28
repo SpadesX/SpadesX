@@ -148,6 +148,7 @@ void handleGrenade(Server* server, uint8 playerID) {
 						}
 					}
 				}
+				SendBlockAction(server, playerID, 3, server->player[playerID].grenade[i].position.x, server->player[playerID].grenade[i].position.y, server->player[playerID].grenade[i].position.z);
 				server->player[playerID].grenade[i].sent = 0;
 			}
 		}
