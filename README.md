@@ -32,7 +32,7 @@ Rather simple. Are you on Unix based system ? You are in luck.
  
 > make -jX (Replace X with number of threads you have on your system)
 
-Some of you maybe arent on Linux. We understand but for the time being we do not offer Windows build instructions.
+Windows users will have to use WSL.
 
 ## HEY DEVELOPERS I HAVE A BUG. WHERE DO I REPORT IT ?
 Ok Ok calm down first of all.
