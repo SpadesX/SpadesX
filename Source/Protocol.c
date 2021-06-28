@@ -21,19 +21,21 @@ static unsigned long long get_nanos(void) {
     return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
-uint8 checkItemOnIntel(Server* server, uint8 playerID, uint8 team, Vector3f itemPos) {
+uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team) {
 	uint8 ret = 0;
+	Vector3f playerPos = server->player[playerID].movement.position;
 	Vector3f intelPos = server->protocol.ctf.intel[team];
-	if ((int)itemPos.y == (int)intelPos.y && ((int)itemPos.z + 3 == (int)intelPos.z || (server->player[playerID].crouching && (int)itemPos.z + 2 == (int)intelPos.z)) && (int)itemPos.x == (int)intelPos.x) {
+	if ((int)playerPos.y == (int)intelPos.y && ((int)playerPos.z + 3 == (int)intelPos.z || (server->player[playerID].crouching && (int)playerPos.z + 2 == (int)intelPos.z)) && (int)playerPos.x == (int)intelPos.x) {
 		ret = 1;
 	}
 	return ret;
 }
 
-uint8 checkItemInTent(Server* server, uint8 playerID, Vector3f itemPos) {
+uint8 checkPlayerInTent(Server* server, uint8 playerID) {
 	uint8 ret = 0;
+	Vector3f playerPos = server->player[playerID].movement.position;
 	Vector3f tentPos = server->protocol.ctf.base[server->player[playerID].team];
-	if (((int)itemPos.z + 3 == (int)tentPos.z || (server->player[playerID].crouching && (int)itemPos.z + 2 == (int)tentPos.z)) && ((int)itemPos.x >= (int)tentPos.x - 1 && (int)itemPos.x <= (int)tentPos.x) && ((int)itemPos.y >= (int)tentPos.y - 1 && (int)itemPos.y <= (int)tentPos.y)) {
+	if (((int)playerPos.z + 3 == (int)tentPos.z || (server->player[playerID].crouching && (int)playerPos.z + 2 == (int)tentPos.z)) && ((int)playerPos.x >= (int)tentPos.x - 1 && (int)playerPos.x <= (int)tentPos.x) && ((int)playerPos.y >= (int)tentPos.y - 1 && (int)playerPos.y <= (int)tentPos.y)) {
 		ret = 1;
 	}
 	return ret;
@@ -64,18 +66,18 @@ void handleIntel(Server* server, uint8 playerID) {
 		time_t timeNow = time(NULL);
 		if (server->player[playerID].hasIntel == 0) {
 			
-			if (checkItemOnIntel(server, playerID, team, server->player[playerID].movement.position) && (!server->protocol.ctf.intelHeld[team])) {
+			if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.ctf.intelHeld[team])) {
 				SendIntelPickup(server, playerID);
 				server->protocol.ctf.intelHeld[team] = 1;
 				server->player[playerID].hasIntel = 1;
 			}
-			else if (checkItemInTent(server, playerID, server->player[playerID].movement.position) && timeNow - server->player[playerID].sinceLastBaseEnterRestock >= 15) {
+			else if (checkPlayerInTent(server, playerID) && timeNow - server->player[playerID].sinceLastBaseEnterRestock >= 15) {
 					SendRestock(server, playerID);
 					server->player[playerID].sinceLastBaseEnterRestock = time(NULL);
 			}
 		}
 		else if (server->player[playerID].hasIntel) {
-			if (checkItemInTent(server, playerID, server->player[playerID].movement.position) && timeNow - server->player[playerID].sinceLastBaseEnter >= 5) {
+			if (checkPlayerInTent(server, playerID) && timeNow - server->player[playerID].sinceLastBaseEnter >= 5) {
 				server->protocol.ctf.score[server->player[playerID].team]++;
 				uint8 winning = 0;
 				if (server->protocol.ctf.score[server->player[playerID].team] >= server->protocol.ctf.scoreLimit) {
