@@ -260,10 +260,10 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 					break;
 
 					case 2:
-						libvxl_map_setair(&server->map.map, X, Y, Z);
-						libvxl_map_setair(&server->map.map, X, Y, Z-1);
-						if (Z+1 < 62) {
-							libvxl_map_setair(&server->map.map, X, Y, Z+1);
+						for (int z = Z -1; z <= Z + 1; z++) {
+							if (z < 62) {
+								libvxl_map_setair(&server->map.map, X, Y, z);
+							}
 						}
 					break;
 				}
