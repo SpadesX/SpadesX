@@ -154,6 +154,111 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 	LoadMap(server, map);
 }
 
+void ServerReset(Server* server, char* map)
+{
+	char team1[] = "Team A";
+	char team2[] = "Team B";
+	updateTime = lastUpdateTime = get_nanos();
+
+	server->map.compressedMap  = NULL;
+	server->map.compressedSize = 0;
+	server->protocol.inputFlags = 0;
+	
+	for (uint8 i = 0; i < 11; i++) {
+		server->protocol.nameTeamA[i] = ' ';
+		server->protocol.nameTeamB[i] = ' ';
+	}
+	Vector3f empty = {0, 0, 0};
+	Vector3f forward = {1, 0, 0};
+	Vector3f height = {0, 0, 1};
+	Vector3f strafe = {0, 1, 0};
+	for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
+		server->player[i].ups = 60;
+		server->player[i].timeSinceLastWU = get_nanos();
+		server->player[i].input  = 0;
+		server->player[i].movement.eyePos = empty;
+		server->player[i].movement.forwardOrientation = forward;
+		server->player[i].movement.strafeOrientation = strafe;
+		server->player[i].movement.heightOrientation = height;
+		server->player[i].movement.position = empty;
+		server->player[i].movement.velocity = empty;
+		server->player[i].airborne = 0;
+		server->player[i].wade = 0;
+		server->player[i].lastclimb = 0;
+		server->player[i].movBackwards = 0;
+		server->player[i].movForward = 0;
+		server->player[i].movLeft = 0;
+		server->player[i].movRight = 0;
+		server->player[i].jumping = 0;
+		server->player[i].crouching = 0;
+		server->player[i].sneaking = 0;
+		server->player[i].sprinting = 0;
+		server->player[i].primary_fire = 0;
+		server->player[i].secondary_fire = 0;
+		server->player[i].canBuild = 1;
+		server->player[i].allowKilling = 1;
+		server->player[i].allowTeamKilling = 0;
+		server->player[i].muted = 0;
+		server->player[i].toldToMaster = 0;
+		server->player[i].sinceLastBaseEnter = time(NULL);
+		server->player[i].sinceLastBaseEnterRestock = time(NULL);
+		memset(server->player[i].name, 0, 17);
+	}
+
+	srand(time(NULL));
+	server->globalAB = 1;
+	server->globalAK = 1;
+	server->protocol.spawns[0].from.x = 64.f;
+	server->protocol.spawns[0].from.y = 224.f;
+	server->protocol.spawns[0].to.x   = 128.f;
+	server->protocol.spawns[0].to.y   = 288.f;
+
+	server->protocol.spawns[1].from.x = 382.f;
+	server->protocol.spawns[1].from.y = 224.f;
+	server->protocol.spawns[1].to.x   = 448.f;
+	server->protocol.spawns[1].to.y   = 288.f;
+
+	server->protocol.colorFog[0] = 0x80;
+	server->protocol.colorFog[1] = 0xE8;
+	server->protocol.colorFog[2] = 0xFF;
+
+	server->protocol.colorTeamA[0] = 0xff;
+	server->protocol.colorTeamA[1] = 0x00;
+	server->protocol.colorTeamA[2] = 0x00;
+
+	server->protocol.colorTeamB[0] = 0x00;
+	server->protocol.colorTeamB[1] = 0xff;
+	server->protocol.colorTeamB[2] = 0x00;
+
+	memcpy(server->protocol.nameTeamA, team1, strlen(team1));
+	memcpy(server->protocol.nameTeamB, team2, strlen(team2));
+	server->protocol.nameTeamA[strlen(team1)] = '\0';
+	server->protocol.nameTeamB[strlen(team2)] = '\0';
+	
+	server->protocol.mode = GAME_MODE_CTF;
+
+	// Init CTF
+
+	server->protocol.ctf.score[0] = 0;
+	server->protocol.ctf.score[1] = 0;
+	server->protocol.ctf.scoreLimit = 1;
+	server->protocol.ctf.intelFlags = 0;
+	// intel
+	server->protocol.ctf.intel[0] = SetIntelTentSpawnPoint(server, 0);
+	server->protocol.ctf.intel[1] = SetIntelTentSpawnPoint(server, 1);
+	// bases
+	server->protocol.ctf.base[0] = SetIntelTentSpawnPoint(server, 0);
+	server->protocol.ctf.base[1] = SetIntelTentSpawnPoint(server, 1);
+
+	server->protocol.ctf.base[0].x = floorf(server->protocol.ctf.base[0].x);
+	server->protocol.ctf.base[0].y = floorf(server->protocol.ctf.base[0].y);
+	server->protocol.ctf.base[1].x = floorf(server->protocol.ctf.base[1].x);
+	server->protocol.ctf.base[1].y = floorf(server->protocol.ctf.base[1].y);
+	
+
+	LoadMap(server, map);
+}
+
 static void SendJoiningData(Server* server, uint8 playerID)
 {
 	STATUS("sending state");

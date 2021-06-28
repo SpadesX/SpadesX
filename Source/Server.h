@@ -17,5 +17,6 @@
 #endif
 
 void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth, uint8 master, char* map);
+void ServerReset(Server* server, char* map);
 
 #endif /* SERVER_H */
