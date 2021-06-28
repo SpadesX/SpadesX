@@ -9,8 +9,8 @@
 #include "DataStream.h"
 
 #include <enet/enet.h>
-uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team);
-uint8 checkPlayerInTent(Server* server, uint8 playerID);
+uint8 checkItemOnIntel(Server* server, uint8 playerID, uint8 team, Vector3f itemPos);
+uint8 checkItemInTent(Server* server, uint8 playerID, Vector3f itemPos);
 void handleGrenade(Server* server, uint8 playerID);
 void updateMovementAndGrenades(Server* server, unsigned long long timeNow, unsigned long long timeSinceLastUpdate, unsigned long long timeSinceStart);
 void SetPlayerRespawnPoint(Server* server, uint8 playerID);
