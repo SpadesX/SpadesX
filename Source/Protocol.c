@@ -182,16 +182,21 @@ void handleGrenade(Server* server, uint8 playerID) {
 						}
 					}
 				}
+				float x = server->player[playerID].grenade[i].position.x;
+				float y = server->player[playerID].grenade[i].position.y;
 				for (int z = server->player[playerID].grenade[i].position.z - 1; z <= server->player[playerID].grenade[i].position.z + 1; ++z) {
-					for (int y = server->player[playerID].grenade[i].position.y - 1; y <= server->player[playerID].grenade[i].position.y + 1; ++y) {
-						for (int x = server->player[playerID].grenade[i].position.x - 1; x <= server->player[playerID].grenade[i].position.x + 1; ++x) {
-							if (z < 62 && y >= 0 && y <= 512 && x <= 512 && x >= 0) {
+							if (z < 62 && (x >= 0 && x <= 512 && x - 1 >= 0 && x - 1 <= 512 && x + 1 >= 0 && x + 1 <= 512) && (y >= 0 && y <= 512 && y - 1 >= 0 && y - 1 <= 512 && y + 1 >= 0 && y + 1 <= 512)) {
+								libvxl_map_setair(&server->map.map, x - 1, y - 1, z);
+								libvxl_map_setair(&server->map.map, x, y - 1, z);
+								libvxl_map_setair(&server->map.map, x + 1, y - 1, z);
+								libvxl_map_setair(&server->map.map, x - 1, y, z);
 								libvxl_map_setair(&server->map.map, x, y, z);
+								libvxl_map_setair(&server->map.map, x + 1, y, z);
+								libvxl_map_setair(&server->map.map, x - 1, y + 1, z);
+								libvxl_map_setair(&server->map.map, x, y + 1, z);
+								libvxl_map_setair(&server->map.map, x + 1, y + 1, z);
 							}
-						}
-					}
 				}
-				SendBlockAction(server, playerID, 3, server->player[playerID].grenade[i].position.x, server->player[playerID].grenade[i].position.y, server->player[playerID].grenade[i].position.z);
 				server->player[playerID].grenade[i].sent = 0;
 				moveIntelAndTentDown(server);
 			}
