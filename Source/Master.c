@@ -27,6 +27,7 @@ void* keepMasterAlive(void* serverVoid) {
 		server->master.timeSinceLastSend = time(NULL);
 		}
 	}
+	return 0;
 }
 
 int ConnectMaster(Server* server, uint16 port) {
