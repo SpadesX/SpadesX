@@ -50,6 +50,7 @@
 #define VSIDSQ               (VSID * VSID)
 #define CUBE_ARRAY_LENGTH    64
 
+#include <stdio.h>
 #include <math.h>
 #include <stddef.h>
 #include <libvxl/libvxl.h>
@@ -329,6 +330,7 @@ static inline void set_orientation_vectors(Vector3f* o, Vector3f* s, Vector3f* h
 
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation)
 {
+    printf("Yes");
     server->player[playerID].movement.forwardOrientation = *orientation;
     set_orientation_vectors(orientation, &server->player[playerID].movement.strafeOrientation, &server->player[playerID].movement.heightOrientation);
 }

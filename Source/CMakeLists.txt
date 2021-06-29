@@ -13,6 +13,7 @@ set(SERVER_HEADERS
     Packets.h
     PacketReceive.h
     Conversion.h
+    ColorConversion.h
 )
 
 set(SERVER_SOURCES

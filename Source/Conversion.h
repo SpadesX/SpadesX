@@ -15,10 +15,4 @@ void uint32ToUint8(Server* server, ENetEvent event, uint8 playerID) {
 	server->player[playerID].ip[3] = (uint32)(ip >> 24);
 }
 
-int color4iToInt(Color4i color) {
-	int intColor = 0;
-	intColor = ((uint64)(((uint8)color[0]) << 24) |  (uint64)(((uint8)color[1]) << 16) |  (uint64)(((uint8)color[2]) << 8) | (uint64)((uint8)color[3]));
-	return intColor;
-}
-
 #endif
