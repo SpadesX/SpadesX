@@ -42,7 +42,8 @@ static void* calculatePhysics() {
 	if (updateTime - lastUpdateTime >= (1000000000/120)) {
 		updateMovementAndGrenades(&server, updateTime, lastUpdateTime, timeSinceStart);
 		lastUpdateTime = get_nanos();
-	} 
+	}
+	return 0;
 }
 
 static void ServerInit(Server* server, uint32 connections, char* map)
@@ -337,6 +338,7 @@ static void* WorldUpdate() {
 			}
 		}
 	}
+	return 0;
 }
 
 static void ServerUpdate(Server* server, int timeout)
