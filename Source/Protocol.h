@@ -10,6 +10,9 @@
 
 #include <enet/enet.h>
 
+void moveIntelAndTentDown(Server* server);
+uint8 checkUnderTent(Server* server, uint8 team);
+uint8 checkUnderIntel(Server* server, uint8 team);
 uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team);
 uint8 checkPlayerInTent(Server* server, uint8 playerID);
 uint8 checkItemOnIntel(Server* server, uint8 team, Vector3f itemPos);

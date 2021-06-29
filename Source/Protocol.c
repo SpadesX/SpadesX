@@ -21,6 +21,49 @@ static unsigned long long get_nanos(void) {
     return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
+void moveIntelAndTentDown(Server* server) {
+	while (checkUnderIntel(server, 0)) {
+		Vector3f newPos = {server->protocol.ctf.intel[0].x, server->protocol.ctf.intel[0].y, server->protocol.ctf.intel[0].z + 1};
+		SendMoveObject(server, 0, 0, newPos);
+		server->protocol.ctf.intel[0] = newPos;
+	}
+	while (checkUnderIntel(server, 1)) {
+		Vector3f newPos = {server->protocol.ctf.intel[1].x, server->protocol.ctf.intel[1].y, server->protocol.ctf.intel[1].z + 1};
+		SendMoveObject(server, 1, 1, newPos);
+		server->protocol.ctf.intel[1] = newPos;
+	}
+	while (checkUnderTent(server, 0) == 4) {
+		Vector3f newPos = {server->protocol.ctf.base[0].x, server->protocol.ctf.base[0].y, server->protocol.ctf.base[0].z + 1};
+		SendMoveObject(server, 2, 0, newPos);
+		server->protocol.ctf.base[0] = newPos;
+	}
+	while (checkUnderTent(server, 1) == 4) {
+		Vector3f newPos = {server->protocol.ctf.base[1].x, server->protocol.ctf.base[1].y, server->protocol.ctf.base[1].z + 1};
+		SendMoveObject(server, 3, 1, newPos);
+		server->protocol.ctf.base[1] = newPos;
+	}
+}
+
+uint8 checkUnderTent(Server* server, uint8 team) {
+	uint8 count = 0;
+	for (int x = server->protocol.ctf.base[team].x - 1; x <= server->protocol.ctf.base[team].x; x++) {
+		for (int y = server->protocol.ctf.base[team].y - 1; y <= server->protocol.ctf.base[team].y; y++) {
+			if (libvxl_map_issolid(&server->map.map, x, y, server->protocol.ctf.base[team].z) == 0) {
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
+uint8 checkUnderIntel(Server* server, uint8 team) {
+	uint8 ret = 0;
+	if (libvxl_map_issolid(&server->map.map, server->protocol.ctf.intel[team].x, server->protocol.ctf.intel[team].y, server->protocol.ctf.intel[team].z) == 0) {
+		ret = 1;
+	}
+	return ret;
+}
+
 uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team) {
 	uint8 ret = 0;
 	Vector3f playerPos = server->player[playerID].movement.position;
@@ -150,6 +193,7 @@ void handleGrenade(Server* server, uint8 playerID) {
 				}
 				SendBlockAction(server, playerID, 3, server->player[playerID].grenade[i].position.x, server->player[playerID].grenade[i].position.y, server->player[playerID].grenade[i].position.z);
 				server->player[playerID].grenade[i].sent = 0;
+				moveIntelAndTentDown(server);
 			}
 		}
 	}

@@ -298,6 +298,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 					break;
 				}
 				SendBlockAction(server, playerID, actionType, X, Y, Z);
+				moveIntelAndTentDown(server);
 			}
 			else {
 				printf("Player: #%d may be using BlockExploit with Item: %d and Action: %d\n", playerID, server->player[playerID].item, actionType);
