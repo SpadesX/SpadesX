@@ -16,6 +16,7 @@
 #include "Packets.h"
 #include "Map.h"
 #include "ColorConversion.h"
+
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
 
 static unsigned long long get_nanos(void) {
