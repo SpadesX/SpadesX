@@ -244,7 +244,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		case PACKET_TYPE_BLOCK_ACTION:
 		{
 			if (server->player[playerID].canBuild && server->globalAB) {
-			uint8 player = ReadByte(data);
+			ReadByte(data);
 			uint8 actionType = ReadByte(data);
 			int X = ReadInt(data);
 			int Y = ReadInt(data);
@@ -311,7 +311,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			if (server->player[playerID].canBuild && server->globalAB) {
 			vec3i start;
 			vec3i end;
-			uint8 player = ReadByte(data);
+			ReadByte(data);
 			start.x = ReadInt(data);
 			start.y = ReadInt(data);
 			start.z = ReadInt(data);
@@ -326,7 +326,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		}
 		case PACKET_TYPE_SET_TOOL:
 		{
-			uint8 player = ReadByte(data);
+			ReadByte(data);
 			uint8 tool = ReadByte(data);
 			server->player[playerID].item = tool;
 			SendSetTool(server, playerID, tool);
@@ -334,7 +334,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		}
 		case PACKET_TYPE_SET_COLOR:
 		{
-			uint8 player = ReadByte(data);
+			ReadByte(data);
 			uint8 B = ReadByte(data);
 			uint8 G = ReadByte(data);
 			uint8 R = ReadByte(data);
@@ -352,7 +352,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		{
 			uint8 mask = 1;
 			uint8 bits[8];
-			uint8 player = ReadByte(data);
+			ReadByte(data);
 			uint8 wInput = ReadByte(data);
 			if (server->player[playerID].weaponClip >= 0) {
 				SendWeaponInput(server, playerID, wInput);
@@ -380,7 +380,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		}
 		case PACKET_TYPE_WEAPON_RELOAD:
 		{
-			uint8 player = ReadByte(data);
+			ReadByte(data);
 			uint8 reserve = ReadByte(data);
 			uint8 clip = ReadByte(data);
 			server->player[playerID].weaponReserve = 50; //Temporary
@@ -406,7 +406,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		}
 		case PACKET_TYPE_GRENADE_PACKET:
 		{
-			uint8 player = ReadByte(data);
+			ReadByte(data);
 			ReceiveGrenadePacket(server, playerID, data);
 			break;
 		}
