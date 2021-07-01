@@ -330,7 +330,7 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
 static void* WorldUpdate() {
 	for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
 		OnPlayerUpdate(&server, playerID);
-		if (server.player[playerID].state == STATE_READY) {
+		if (server.player[playerID].state == STATE_READY || server.player[playerID].state == STATE_WAITING_FOR_RESPAWN) {
 			unsigned long long time = get_nanos();
 			if (time - server.player[playerID].timeSinceLastWU >= (1000000000/server.player[playerID].ups)) {
 				SendWorldUpdate(&server, playerID);
