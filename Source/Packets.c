@@ -206,7 +206,7 @@ void SendStateData(Server* server, uint8 playerID)
 	WriteVector3f(&stream, server->protocol.ctf.base[1]);
 
 	if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
-		server->player[playerID].state = STATE_READY;
+		server->player[playerID].state = STATE_PICK_SCREEN;
 	}
 }
 
