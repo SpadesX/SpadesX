@@ -98,6 +98,9 @@ static void ServerInit(Server* server, uint32 connections, char* map)
 		server->player[i].toldToMaster = 0;
 		server->player[i].sinceLastBaseEnter = time(NULL);
 		server->player[i].sinceLastBaseEnterRestock = time(NULL);
+		server->player[i].HP = 100;
+		server->player[i].blocks = 50;
+		server->player[i].grenades = 3;
 		memset(server->player[i].name, 0, 17);
 	}
 
@@ -203,6 +206,9 @@ void ServerReset(Server* server, char* map)
 		server->player[i].toldToMaster = 0;
 		server->player[i].sinceLastBaseEnter = time(NULL);
 		server->player[i].sinceLastBaseEnterRestock = time(NULL);
+		server->player[i].HP = 100;
+		server->player[i].blocks = 50;
+		server->player[i].grenades = 3;
 		memset(server->player[i].name, 0, 17);
 	}
 
@@ -427,7 +433,11 @@ static void ServerUpdate(Server* server, int timeout)
 				server->player[playerID].allowTeamKilling = 0;
 				server->player[playerID].muted = 0;
 				server->player[playerID].toldToMaster = 0;
-				server->player[playerID].hasIntel = 0;
+				server->player[playerID].sinceLastBaseEnter = time(NULL);
+				server->player[playerID].sinceLastBaseEnterRestock = time(NULL);
+				server->player[playerID].HP = 100;
+				server->player[playerID].blocks = 50;
+				server->player[playerID].grenades = 3;
 				memset(server->player[playerID].name, 0, 17);
 				server->protocol.numPlayers--;
 				if (server->master.enableMasterConnection == 1) {

@@ -90,8 +90,10 @@ typedef struct {
     ENetPeer* peer;
     uint8     respawnTime;
     uint32    startOfRespawnWait;
-    int       HP;
     Color4i   toolColor;
+    int       HP;
+    uint8     grenades;
+    uint8     blocks;
     uint8     weaponReserve;
     short     weaponClip;
     vec3i     resultLine[50];

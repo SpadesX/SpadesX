@@ -44,6 +44,33 @@ void moveIntelAndTentDown(Server* server) {
 	}
 }
 
+void moveIntelAndTentUp(Server* server) {
+	if (checkInTent(server, 0)) {
+		Vector3f newTentPos = server->protocol.ctf.base[0];
+		newTentPos.z -= 1;
+		SendMoveObject(server, 0 + 2, 0, newTentPos);
+		server->protocol.ctf.base[0] = newTentPos;
+	}
+	else if (checkInTent(server, 1)) {
+		Vector3f newTentPos = server->protocol.ctf.base[1];
+		newTentPos.z -= 1;
+		SendMoveObject(server, 1 + 2, 1, newTentPos);
+		server->protocol.ctf.base[1] = newTentPos;
+	}
+	else if (checkInIntel(server, 1)) {
+		Vector3f newIntelPos = server->protocol.ctf.intel[1];
+		newIntelPos.z -= 1;
+		SendMoveObject(server, 1, 1, newIntelPos);
+		server->protocol.ctf.intel[1] = newIntelPos;
+	}
+	else if (checkInIntel(server, 0)) {
+		Vector3f newIntelPos = server->protocol.ctf.intel[0];
+		newIntelPos.z -= 1;
+		SendMoveObject(server, 0, 0, newIntelPos);
+		server->protocol.ctf.intel[0] = newIntelPos;
+	}
+}
+
 uint8 checkUnderTent(Server* server, uint8 team) {
 	uint8 count = 0;
 	for (int x = server->protocol.ctf.base[team].x - 1; x <= server->protocol.ctf.base[team].x; x++) {
@@ -102,6 +129,36 @@ uint8 checkItemInTent(Server* server, uint8 team, Vector3f itemPos) {
 	return ret;
 }
 
+uint8 checkInTent(Server* server, uint8 team) {
+	uint8 ret = 0;
+	Vector3f checkPos = server->protocol.ctf.base[team];
+	checkPos.z--;
+	if (libvxl_map_issolid(&server->map.map, (int)checkPos.x, (int)checkPos.y, (int)checkPos.z)) {
+		ret = 1;
+	}
+	else if (libvxl_map_issolid(&server->map.map, (int)checkPos.x - 1, (int)checkPos.y, (int)checkPos.z)) {
+		ret = 1;
+	}
+	else if (libvxl_map_issolid(&server->map.map, (int)checkPos.x, (int)checkPos.y - 1, (int)checkPos.z)) {
+		ret = 1;
+	}
+	else if (libvxl_map_issolid(&server->map.map, (int)checkPos.x - 1, (int)checkPos.y - 1, (int)checkPos.z)) {
+		ret = 1;
+	}
+
+	return ret;
+}
+
+uint8 checkInIntel(Server* server, uint8 team) {
+	uint8 ret = 0;
+	Vector3f checkPos = server->protocol.ctf.intel[team];
+	checkPos.z--;
+	if (libvxl_map_issolid(&server->map.map, (int)checkPos.x, (int)checkPos.y, (int)checkPos.z)) {
+		ret = 1;
+	}
+	return ret;
+}
+
 Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
 {
 		Quad2D* spawn = server->protocol.spawns + team;
@@ -134,6 +191,9 @@ void handleIntel(Server* server, uint8 playerID) {
 			}
 			else if (checkPlayerInTent(server, playerID) && timeNow - server->player[playerID].sinceLastBaseEnterRestock >= 15) {
 					SendRestock(server, playerID);
+					server->player[playerID].HP = 100;
+					server->player[playerID].grenades = 3;
+					server->player[playerID].blocks = 50;
 					server->player[playerID].sinceLastBaseEnterRestock = time(NULL);
 			}
 		}
@@ -145,6 +205,7 @@ void handleIntel(Server* server, uint8 playerID) {
 					winning = 1;
 				}
 				SendIntelCapture(server, playerID, winning);
+				SendRestock(server, playerID);
 				server->player[playerID].hasIntel = 0;
 				server->protocol.ctf.intelHeld[team] = 0;
 				server->player[playerID].sinceLastBaseEnter = time(NULL);

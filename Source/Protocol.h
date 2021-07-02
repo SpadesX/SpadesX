@@ -11,12 +11,15 @@
 #include <enet/enet.h>
 
 void moveIntelAndTentDown(Server* server);
+void moveIntelAndTentUp(Server* server);
 uint8 checkUnderTent(Server* server, uint8 team);
 uint8 checkUnderIntel(Server* server, uint8 team);
 uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team);
 uint8 checkPlayerInTent(Server* server, uint8 playerID);
 uint8 checkItemOnIntel(Server* server, uint8 team, Vector3f itemPos);
 uint8 checkItemInTent(Server* server, uint8 team, Vector3f itemPos);
+uint8 checkInTent(Server* server, uint8 team);
+uint8 checkInIntel(Server* server, uint8 team);
 void handleGrenade(Server* server, uint8 playerID);
 void updateMovementAndGrenades(Server* server, unsigned long long timeNow, unsigned long long timeSinceLastUpdate, unsigned long long timeSinceStart);
 void SetPlayerRespawnPoint(Server* server, uint8 playerID);

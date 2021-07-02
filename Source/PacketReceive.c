@@ -251,40 +251,12 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			int X = ReadInt(data);
 			int Y = ReadInt(data);
 			int Z = ReadInt(data);
-			uint8 team = 0;
-			if (server->player[playerID].team == 0) {
-				team = 1;
-			}
-			if (((server->player[playerID].item == 0)  && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1)) {
+			if (((server->player[playerID].blocks > 0) && (server->player[playerID].item == 0)  && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1)) {
 				switch (actionType) {
 					case 0:
 						libvxl_map_set(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
-						Vector3f itemPos = {X, Y, Z+1};
-						
-						if (checkItemInTent(server, server->player[playerID].team, itemPos)) {
-							Vector3f newTentPos = server->protocol.ctf.base[server->player[playerID].team];
-							newTentPos.z -= 1;
-							SendMoveObject(server, server->player[playerID].team + 2, server->player[playerID].team, newTentPos);
-							server->protocol.ctf.base[server->player[playerID].team] = newTentPos;
-						}
-						else if (checkItemInTent(server, team, itemPos)) {
-							Vector3f newTentPos = server->protocol.ctf.base[team];
-							newTentPos.z -= 1;
-							SendMoveObject(server, team + 2, team, newTentPos);
-							server->protocol.ctf.base[team] = newTentPos;
-						}
-						else if (checkItemOnIntel(server, team, itemPos)) {
-							Vector3f newIntelPos = server->protocol.ctf.intel[team];
-							newIntelPos.z -= 1;
-							SendMoveObject(server, team, team, newIntelPos);
-							server->protocol.ctf.intel[team] = newIntelPos;
-						}
-						else if (checkItemOnIntel(server, server->player[playerID].team, itemPos)) {
-							Vector3f newIntelPos = server->protocol.ctf.intel[server->player[playerID].team];
-							newIntelPos.z -= 1;
-							SendMoveObject(server, server->player[playerID].team, server->player[playerID].team, newIntelPos);
-							server->protocol.ctf.intel[server->player[playerID].team] = newIntelPos;
-						}
+						server->player[playerID].blocks--;
+						moveIntelAndTentUp(server);
 					break;
 
 					case 1:
@@ -310,7 +282,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		}
 		case PACKET_TYPE_BLOCK_LINE:
 		{
-			if (server->player[playerID].canBuild && server->globalAB) {
+			if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB) {
 			vec3i start;
 			vec3i end;
 			ReadByte(data);
@@ -321,7 +293,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			end.y = ReadInt(data);
 			end.z = ReadInt(data);
 			writeBlockLine(server, playerID, &start, &end);
-
+			moveIntelAndTentUp(server);
 			SendBlockLine(server, playerID, start, end);
 			}
 			break;
@@ -408,8 +380,11 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		}
 		case PACKET_TYPE_GRENADE_PACKET:
 		{
-			ReadByte(data);
-			ReceiveGrenadePacket(server, playerID, data);
+			if (server->player[playerID].grenades > 0) {
+				ReadByte(data);
+				ReceiveGrenadePacket(server, playerID, data);
+				server->player[playerID].grenades--;
+			}
 			break;
 		}
 		default:
