@@ -254,8 +254,8 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			Vector3f vectorBlock = {X, Y, Z};
 			Vector3f playerVector = server->player[playerID].movement.position;
 			printf("%d %f %f\n", DistanceIn3D(vectorBlock, playerVector), vectorBlock.z, playerVector.z);
-			if (((server->player[playerID].blocks > 0) && (server->player[playerID].item == 0) && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1)) {
-				if (DistanceIn3D(vectorBlock, playerVector) <= 4) {
+			if ((((server->player[playerID].blocks > 0) || server->player[playerID].item == 0) && (server->player[playerID].item == 0) && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1)) {
+				if (DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) {
 					switch (actionType) {
 						case 0:
 								libvxl_map_set(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
@@ -265,7 +265,9 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 
 						case 1:
 							libvxl_map_setair(&server->map.map, X, Y, Z);
-							server->player[playerID].blocks++;
+							if (server->player[playerID].item != 2) {
+								server->player[playerID].blocks++;
+							}
 						break;
 
 						case 2:
