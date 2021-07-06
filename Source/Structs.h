@@ -122,6 +122,7 @@ typedef struct {
     uint8     secondary_fire;
     time_t    sinceLastBaseEnter;
     time_t    sinceLastBaseEnterRestock;
+    Vector3f  locAtClick;
 
     //Bellow this point is stuff used for calculating movement.
     Movement movement;

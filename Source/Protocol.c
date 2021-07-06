@@ -324,11 +324,32 @@ void broadcastServerNotice(Server* server, char *message) {
 
 uint8 playerToPlayerVisible(Server *server, uint8 playerID, uint8 playerID2) {
 	float distance = 0;
-	distance = sqrt(pow((server->player[playerID].movement.position.x - server->player[playerID2].movement.position.x), 2) + pow((server->player[playerID].movement.position.y - server->player[playerID2].movement.position.y), 2));
+	distance = sqrt(fabs(pow((server->player[playerID].movement.position.x - server->player[playerID2].movement.position.x), 2)) + fabs(pow((server->player[playerID].movement.position.y - server->player[playerID2].movement.position.y), 2)));
 	if (server->player[playerID].team == TEAM_SPECTATOR) {
 		return 1;
 	}
 	else if (distance >= 132) {
+		return 0;
+	}
+	else {
+		return 1;
+	}
+}
+
+uint32 DistanceIn3D(Vector3f vector1, Vector3f vector2) {
+	uint32 distance = 0;
+	distance = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)) + fabs(pow(vector1.z - vector2.z, 2)));
+	return distance;
+}
+
+uint32 DistanceIn2D(Vector3f vector1, Vector3f vector2) {
+	uint32 distance = 0;
+	distance = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)));
+	return distance;
+}
+
+uint8 Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance) {
+	if (fabs(vector1.x - vector2.x) < distance && fabs(vector1.y - vector2.y) < distance && fabs(vector1.x - vector2.x) < distance) {
 		return 0;
 	}
 	else {

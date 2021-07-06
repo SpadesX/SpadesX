@@ -29,5 +29,8 @@ void broadcastServerNotice(Server* server, char *message);
 void SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
 void SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
 uint8 playerToPlayerVisible(Server *server, uint8 playerID, uint8 playerID2);
+uint32 DistanceIn3D(Vector3f vector1, Vector3f vector2);
+uint32 DistanceIn2D(Vector3f vector1, Vector3f vector2);
+uint8 Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance);
 
 #endif

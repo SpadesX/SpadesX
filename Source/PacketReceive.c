@@ -251,28 +251,33 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			int X = ReadInt(data);
 			int Y = ReadInt(data);
 			int Z = ReadInt(data);
-			if (((server->player[playerID].blocks > 0) && (server->player[playerID].item == 0)  && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1)) {
-				switch (actionType) {
-					case 0:
-						libvxl_map_set(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
-						server->player[playerID].blocks--;
-						moveIntelAndTentUp(server);
-					break;
+			Vector3f vectorBlock = {X, Y, Z};
+			Vector3f playerVector = server->player[playerID].movement.position;
+			printf("%d %f %f\n", DistanceIn3D(vectorBlock, playerVector), vectorBlock.z, playerVector.z);
+			if (((server->player[playerID].blocks > 0) && (server->player[playerID].item == 0) && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1)) {
+				if (DistanceIn3D(vectorBlock, playerVector) <= 4) {
+					switch (actionType) {
+						case 0:
+								libvxl_map_set(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
+								server->player[playerID].blocks--;
+								moveIntelAndTentUp(server);
+						break;
 
-					case 1:
-						libvxl_map_setair(&server->map.map, X, Y, Z);
-					break;
+						case 1:
+							libvxl_map_setair(&server->map.map, X, Y, Z);
+						break;
 
-					case 2:
-						for (int z = Z -1; z <= Z + 1; z++) {
-							if (z < 62) {
-								libvxl_map_setair(&server->map.map, X, Y, z);
+						case 2:
+							for (int z = Z -1; z <= Z + 1; z++) {
+								if (z < 62) {
+									libvxl_map_setair(&server->map.map, X, Y, z);
+								}
 							}
-						}
-					break;
+						break;
+					}
+						SendBlockAction(server, playerID, actionType, X, Y, Z);
+						moveIntelAndTentDown(server);
 				}
-				SendBlockAction(server, playerID, actionType, X, Y, Z);
-				moveIntelAndTentDown(server);
 			}
 			else {
 				printf("Player: #%d may be using BlockExploit with Item: %d and Action: %d\n", playerID, server->player[playerID].item, actionType);
@@ -282,7 +287,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 		}
 		case PACKET_TYPE_BLOCK_LINE:
 		{
-			if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB) {
+			if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB && server->player[playerID].item == 1) {
 			vec3i start;
 			vec3i end;
 			ReadByte(data);
@@ -292,9 +297,13 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			end.x = ReadInt(data);
 			end.y = ReadInt(data);
 			end.z = ReadInt(data);
-			writeBlockLine(server, playerID, &start, &end);
-			moveIntelAndTentUp(server);
-			SendBlockLine(server, playerID, start, end);
+			Vector3f startF = {start.x, start.y, start.z};
+			Vector3f endF = {end.x, end.y, end.z};
+			if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 && DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4) {
+				writeBlockLine(server, playerID, &start, &end);
+				moveIntelAndTentUp(server);
+				SendBlockLine(server, playerID, start, end);
+			}
 			}
 			break;
 		}
@@ -337,6 +346,9 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 				server->player[playerID].secondary_fire = bits[1];
 				if (server->player[playerID].primary_fire) {
 					server->player[playerID].weaponClip--;
+				}
+				if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
+					server->player[playerID].locAtClick = server->player[playerID].movement.position;
 				}
 			}
 			else {
