@@ -21,6 +21,127 @@ static unsigned long long get_nanos(void) {
     return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
+Vector3i *getNeighbors(Vector3i pos) {
+	static Vector3i neighArray[6];
+	neighArray[0].x = pos.x;
+	neighArray[0].y = pos.y;
+	neighArray[0].z = pos.z - 1;
+
+	neighArray[1].x = pos.x;
+	neighArray[1].y = pos.y - 1;
+	neighArray[1].z = pos.z;
+
+	neighArray[2].x = pos.x;
+	neighArray[2].y = pos.y + 1;
+	neighArray[2].z = pos.z;
+
+	neighArray[3].x = pos.x - 1;
+	neighArray[3].y = pos.y;
+	neighArray[3].z = pos.z;
+
+	neighArray[4].x = pos.x + 1;
+	neighArray[4].y = pos.y;
+	neighArray[4].z = pos.z;
+
+	neighArray[5].x = pos.x;
+	neighArray[5].y = pos.y;
+	neighArray[5].z = pos.z + 1;
+
+	return neighArray;
+}
+
+#define NODE_RESERVE_SIZE 250000
+static Vector3i * nodes = NULL;
+static int nodePos;
+static int nodesSize;
+Vector3i * visitedNodes = NULL;
+int visitedSize;
+int visitedPos;
+
+inline void saveNode(int x, int y, int z)
+{
+    nodes[nodePos].x = x;
+    nodes[nodePos].y = y;
+    nodes[nodePos].z = z;
+    nodePos++;
+}
+
+inline const Vector3i * returnCurrentNode()
+{
+    return &nodes[--nodePos];
+}
+
+inline void addNode(Server* server, int x, int y, int z)
+{
+    if ((x >= 0 && x < 512) && (y >= 0 && y < 512) && (z >= 0 && z < 64)) {
+    	if (libvxl_map_issolid(&server->map.map, x, y, z)) {
+    		saveNode(x, y, z);
+		}
+	}
+}
+
+uint8 checkNode(Server* server, Vector3i position) {
+	if (nodes == NULL) {
+        nodes = (Vector3i*)malloc(sizeof(Vector3i) * NODE_RESERVE_SIZE);
+        nodesSize = NODE_RESERVE_SIZE;
+    }
+    nodePos = 0;
+
+	if (visitedNodes == NULL) {
+        visitedNodes = (Vector3i*)malloc(sizeof(Vector3i) * NODE_RESERVE_SIZE);
+        visitedSize = NODE_RESERVE_SIZE;
+    }
+    visitedPos = 0;
+    
+    saveNode(position.x, position.y, position.z);
+    
+    while (nodePos > 0) {
+        if (nodePos >= nodesSize - 6) {
+            nodesSize += NODE_RESERVE_SIZE;
+            nodes = (Vector3i*)realloc((void*)nodes, 
+                sizeof(Vector3i) * nodesSize);
+        }
+		if (visitedPos >= visitedSize - 6) {
+			visitedSize += NODE_RESERVE_SIZE;
+            visitedNodes = (Vector3i*)realloc((void*)visitedNodes, 
+                sizeof(Vector3i) * visitedSize);
+		}
+        const Vector3i * currentNode = returnCurrentNode();
+        position.z = currentNode->z;
+        if (position.z >= 62) {
+    		visitedNodes = NULL;
+            return 1;
+        }
+        position.x = currentNode->x;
+        position.y = currentNode->y;
+	
+        // already visited?
+		uint8 nodeVisited = 0;
+		for (int i = 0; i < visitedPos; ++i) {
+			if (visitedNodes[i].x == position.x && visitedNodes[i].y == position.y && visitedNodes[i].z == position.z) {
+				nodeVisited = 1;
+			}
+		}
+		if (nodeVisited == 0) {
+			visitedNodes[visitedPos] = position;
+			visitedPos++;
+			addNode(server, position.x, position.y, position.z - 1);
+			addNode(server, position.x, position.y - 1, position.z);
+            addNode(server, position.x, position.y + 1, position.z);
+            addNode(server, position.x - 1, position.y, position.z);
+            addNode(server, position.x + 1, position.y, position.z);
+			addNode(server, position.x, position.y, position.z + 1);
+	   }
+    }
+
+	for (int i = 0; i < visitedPos; ++i) {
+		libvxl_map_setair(&server->map.map, visitedNodes[i].x, visitedNodes[i].y, visitedNodes[i].z);
+	}
+    
+    visitedNodes = NULL;
+    return 0;
+}
+
 void moveIntelAndTentDown(Server* server) {
 	while (checkUnderIntel(server, 0)) {
 		Vector3f newPos = {server->protocol.ctf.intel[0].x, server->protocol.ctf.intel[0].y, server->protocol.ctf.intel[0].z + 1};
@@ -237,7 +358,8 @@ void handleGrenade(Server* server, uint8 playerID) {
 						int diffZ = fabsf(server->player[y].movement.position.z - server->player[playerID].grenade[i].position.z);
 						Vector3f playerPos = server->player[y].movement.position;
 						Vector3f grenadePos = server->player[y].grenade[i].position;
-						if (diffX < 16 && diffY < 16 && diffZ <16 && can_see(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) && server->player[playerID].grenade[i].position.z < 62) {
+						if (diffX < 16 && diffY < 16 && diffZ <16 && can_see(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
+						server->player[playerID].grenade[i].position.z < 62) {
 							int value = 4096 / ((diffX*diffX) + (diffY*diffY) + (diffZ*diffZ));
 							sendHP(server, playerID, y, value, 1, 3, 5);
 						}
@@ -246,7 +368,9 @@ void handleGrenade(Server* server, uint8 playerID) {
 				float x = server->player[playerID].grenade[i].position.x;
 				float y = server->player[playerID].grenade[i].position.y;
 				for (int z = server->player[playerID].grenade[i].position.z - 1; z <= server->player[playerID].grenade[i].position.z + 1; ++z) {
-							if (z < 62 && (x >= 0 && x <= 512 && x - 1 >= 0 && x - 1 <= 512 && x + 1 >= 0 && x + 1 <= 512) && (y >= 0 && y <= 512 && y - 1 >= 0 && y - 1 <= 512 && y + 1 >= 0 && y + 1 <= 512)) {
+							if (z < 62 && (x >= 0 && x <= 512 && x - 1 >= 0 && x - 1 <= 512 && x + 1 >= 0 && x + 1 <= 512) &&
+							(y >= 0 && y <= 512 && y - 1 >= 0 && y - 1 <= 512 && y + 1 >= 0 && y + 1 <= 512)) {
+								//TODO: Add floating block detection for grenades
 								libvxl_map_setair(&server->map.map, x - 1, y - 1, z);
 								libvxl_map_setair(&server->map.map, x, y - 1, z);
 								libvxl_map_setair(&server->map.map, x + 1, y - 1, z);

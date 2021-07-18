@@ -10,6 +10,8 @@
 
 #include <enet/enet.h>
 
+Vector3i *getNeighbors(Vector3i pos);
+uint8 checkNode(Server* server, Vector3i position);
 void moveIntelAndTentDown(Server* server);
 void moveIntelAndTentUp(Server* server);
 uint8 checkUnderTent(Server* server, uint8 team);

@@ -46,4 +46,11 @@ typedef struct
     long z;
 } Vector3l;
 
+typedef struct
+{
+    int x;
+    int y;
+    int z;
+} Vector3i;
+
 #endif /* TYPES_H */

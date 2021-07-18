@@ -253,7 +253,6 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 			int Z = ReadInt(data);
 			Vector3f vectorBlock = {X, Y, Z};
 			Vector3f playerVector = server->player[playerID].movement.position;
-			printf("%d %f %f\n", DistanceIn3D(vectorBlock, playerVector), vectorBlock.z, playerVector.z);
 			if ((((server->player[playerID].blocks > 0) || server->player[playerID].item == 0) && (server->player[playerID].item == 0) && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1)) {
 				if (DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) {
 					switch (actionType) {
@@ -264,9 +263,18 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 						break;
 
 						case 1:
-							libvxl_map_setair(&server->map.map, X, Y, Z);
-							if (server->player[playerID].item != 2) {
-								server->player[playerID].blocks++;
+							{
+								Vector3i position = {X, Y, Z};
+								Vector3i *neigh = getNeighbors(position);
+								libvxl_map_setair(&server->map.map, position.x, position.y, position.z);
+								for (int i = 0; i < 6; ++i) {
+									if (libvxl_map_issolid(&server->map.map, neigh[i].x, neigh[i].y, neigh[i].z) && neigh[i].z < 62) {
+										checkNode(server, neigh[i]);
+									}
+								}
+								if (server->player[playerID].item != 2) {
+									server->player[playerID].blocks++;
+								}
 							}
 						break;
 
@@ -275,6 +283,14 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 								if (z < 62) {
 									libvxl_map_setair(&server->map.map, X, Y, z);
 									server->player[playerID].blocks++;
+									Vector3i position = {X, Y, z};
+									Vector3i *neigh = getNeighbors(position);
+									libvxl_map_setair(&server->map.map, position.x, position.y, position.z);
+									for (int i = 0; i < 6; ++i) {
+										if (libvxl_map_issolid(&server->map.map, neigh[i].x, neigh[i].y, neigh[i].z) && neigh[i].z < 62) {
+											checkNode(server, neigh[i]);
+										}
+									}
 								}
 							}
 						break;
