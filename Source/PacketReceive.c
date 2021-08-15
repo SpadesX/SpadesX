@@ -44,7 +44,11 @@ void ReceiveGrenadePacket(Server *server, uint8 playerID, DataStream *data) {
 }
 
 void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType) {
-	if ((server->player[playerID].team != server->player[hitPlayerID].team || server->player[playerID].allowTeamKilling) && (server->player[playerID].allowKilling && server->globalAK)) {
+	Vector3f shotPos = server->player[playerID].movement.position;
+	Vector3f hitPos = server->player[hitPlayerID].movement.position;
+	Vector3f shotOrien = server->player[playerID].movement.forwardOrientation;
+	if ((server->player[playerID].team != server->player[hitPlayerID].team || server->player[playerID].allowTeamKilling) && (server->player[playerID].allowKilling && server->globalAK)
+	&& validate_hit(shotPos, shotOrien, hitPos, 5)) {
 			switch (server->player[playerID].weapon) {
 				case WEAPON_RIFLE:
 				{
@@ -176,7 +180,7 @@ void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
 {
 	uint8 id = ReadByte(data);
 	if (playerID != id) {
-		WARNING("different player id");
+		printf("Assigned ID: %d doesnt match sent ID: %d\n", playerID, id);
 	}
 
 	server->player[playerID].team   = ReadByte(data);

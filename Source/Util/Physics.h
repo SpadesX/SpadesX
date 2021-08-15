@@ -99,32 +99,27 @@ float distance3d(float x1, float y1, float z1, float x2, float y2, float z2)
     return sqrtf(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2));
 }
 
-/*int validate_hit(float shooter_x, float shooter_y, float shooter_z,
-                 float orientation_x, float orientation_y, float orientation_z,
-                 float ox, float oy, float oz,
+int validate_hit(Vector3f shooter,
+                 Vector3f orientation,
+                 Vector3f otherPos,
                  float tolerance)
 {
     float cx, cy, cz, r, x, y;
     Orientation o;
-    get_orientation(&o, orientation_x, orientation_y, orientation_z);
-    ox -= shooter_x;
-    oy -= shooter_y;
-    oz -= shooter_z;
-    cz = ox * o.f.x + oy * o.f.y + oz * o.f.z;
+    get_orientation(&o, orientation.x, orientation.y, orientation.z);
+    otherPos.x -= shooter.x;
+    otherPos.y -= shooter.y;
+    otherPos.z -= shooter.z;
+    cz = otherPos.x * o.forward.x + otherPos.y * o.forward.y + otherPos.z * o.forward.z;
     r = 1.f/cz;
-    cx = ox * o.s.x + oy * o.s.y + oz * o.s.z;
+    cx = otherPos.x * o.strafe.x + otherPos.y * o.strafe.y + otherPos.z * o.strafe.z;
     x = cx * r;
-    cy = ox * o.h.x + oy * o.h.y + oz * o.h.z;
+    cy = otherPos.x * o.height.x + otherPos.y * o.height.y + otherPos.z * o.height.z;
     y = cy * r;
     r *= tolerance;
     int ret = (x-r < 0 && x+r > 0 && y-r < 0 && y+r > 0);
-#if 0
-    if (!ret) {
-        printf("hit test failed: %f %f %f\n", x, y, r);
-    }
-#endif
     return ret;
-}*/
+}
 
 // silly VOXLAP function
 static inline void ftol(float f, long* a)
@@ -572,33 +567,6 @@ int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
     return ret;
 }
 // C interface
-
-/*PlayerType * create_player()
-{
-    PlayerType * player = new PlayerType;
-    player->s.x = 0; player->s.y = 1; player->s.z = 0;
-    player->h.x = 0; player->h.y = 0; player->h.z = 1;
-    player->f.x = 1; player->f.y = 0; player->f.z = 0;
-    player->p.x = 0; player->p.y = 0; player->p.z = 0.0f;
-    player->e = player->p;
-    player->v.x = player->v.y = player->v.z = 0;
-    player->mf = player->mb = player->ml = player->mr = player->jump =
-        player->crouch = player->sneak = 0;
-    player->airborne = player->wade = 0;
-    player->lastclimb = 0;
-    player->alive = 1;
-    return player;
-}
-
-void destroy_player(PlayerType * player)
-{
-    delete player;
-}*/
-
-/*void destroy_grenade(GrenadeType * grenade)
-{
-    delete grenade;
-}*/
 
 void set_globals(float time, float dt)
 {

@@ -224,8 +224,8 @@ void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killRe
 	ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
 	DataStream  stream = {packet->data, packet->dataLength, 0};
 	WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
-	WriteByte(&stream, playerID); //Player that shot
-	WriteByte(&stream, killerID); //playerID
+	WriteByte(&stream, playerID); //Player that died.
+	WriteByte(&stream, killerID); //Player that killed.
 	WriteByte(&stream, killReason); //Killing reason (1 is headshot)
 	WriteByte(&stream, respawnTime); //Time before respawn happens
 	enet_host_broadcast(server->host, 0, packet);
