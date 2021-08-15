@@ -102,29 +102,9 @@ float distance3d(float x1, float y1, float z1, float x2, float y2, float z2)
 int validate_hit(Vector3f shooter,
                  Vector3f orientation,
                  Vector3f otherPos,
-                 float tolerance,
-                 uint8 partOfBody)
+                 float tolerance)
 {
     float cx, cy, cz, r, x, y;
-    switch (partOfBody) {
-        case HIT_TYPE_ARMS:
-        case HIT_TYPE_TORSO:
-        case HIT_TYPE_MELEE:
-            otherPos.z += 0.9;
-        break;
-
-        case HIT_TYPE_LEGS:
-            otherPos.z += 1.8;
-        break;
-
-        case HIT_TYPE_HEAD:
-            //Do not add anything;
-        break;
-
-        default:
-            return 0;
-        break;
-    }
     Orientation o;
     get_orientation(&o, orientation.x, orientation.y, orientation.z);
     otherPos.x -= shooter.x;
