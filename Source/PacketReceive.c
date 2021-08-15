@@ -45,10 +45,13 @@ void ReceiveGrenadePacket(Server *server, uint8 playerID, DataStream *data) {
 
 void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType) {
 	Vector3f shotPos = server->player[playerID].movement.position;
+	Vector3f shotEyePos = server->player[playerID].movement.eyePos;
 	Vector3f hitPos = server->player[hitPlayerID].movement.position;
 	Vector3f shotOrien = server->player[playerID].movement.forwardOrientation;
+	float distance = DistanceIn2D(shotPos, hitPos);
+	long x, y, z;
 	if ((server->player[playerID].team != server->player[hitPlayerID].team || server->player[playerID].allowTeamKilling) && (server->player[playerID].allowKilling && server->globalAK)
-	&& validate_hit(shotPos, shotOrien, hitPos, 5)) {
+	&& validate_hit(shotPos, shotOrien, hitPos, 5, hitType) && cast_ray(server, shotEyePos.x, shotEyePos.y, shotEyePos.z, shotOrien.x, shotOrien.y, shotOrien.z, distance, &x, &y, &z) == 0) {
 			switch (server->player[playerID].weapon) {
 				case WEAPON_RIFLE:
 				{

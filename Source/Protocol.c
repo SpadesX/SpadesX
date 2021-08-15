@@ -21,6 +21,16 @@ static unsigned long long get_nanos(void) {
     return (unsigned long long)ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
+uint8 castRaysWithTolerance(Server *server, Vector3f pos, Vector3f posOrien, Vector3f othPlayerPos) {
+	//TODO Actually do the function.
+	/* Needs:
+		Cross Product,
+		3D Matrix,
+		Vector 3DMatrix multiplication
+		And possibly more im missing
+	*/
+}
+
 Vector3i *getNeighbors(Vector3i pos) {
 	static Vector3i neighArray[6];
 	neighArray[0].x = pos.x;
