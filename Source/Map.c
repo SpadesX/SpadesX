@@ -6,6 +6,8 @@
 #include "Compress.h"
 #include "DataStream.h"
 
+int color4iToInt(Color4i color);
+
 void LoadMap(Server* server, const char* path)
 {
 	STATUS("loading map");

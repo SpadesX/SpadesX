@@ -46,7 +46,7 @@ static void* calculatePhysics() {
 	return 0;
 }
 
-static void ServerInit(Server* server, uint32 connections, char* map)
+static void ServerInit(Server* server, uint32 connections, const char* map)
 {
 	char team1[] = "Team A";
 	char team2[] = "Team B";
@@ -456,7 +456,7 @@ static void ServerUpdate(Server* server, int timeout)
 	}
 }
 
-void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth, uint8 master, char* map)
+void StartServer(uint16 port, uint32 connections, uint32 channels, uint32 inBandwidth, uint32 outBandwidth, uint8 master, const char* map)
 {
 	timeSinceStart = get_nanos();
 	STATUS("Welcome to SpadesX server");

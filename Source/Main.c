@@ -6,7 +6,7 @@
 #include "Server.h"
 
 
-int main(int argc, char *argv[]) {
+int main(void) {
 	struct json_object *parsed_json;
 	struct json_object *portInConfig;
 	struct json_object *masterInConfig;
@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 		printf("Failed to find map name in config\n");
 		return -1;
 	}
-	char* map = json_object_get_string(mapInConfig);
+	const char* map = json_object_get_string(mapInConfig);
 	port = json_object_get_int(portInConfig);
 	master = json_object_get_int(masterInConfig);
 

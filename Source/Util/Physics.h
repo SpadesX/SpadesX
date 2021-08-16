@@ -178,6 +178,9 @@ long can_see(Server* server, float x0, float y0, float z0, float x1, float y1,
 {
     Vector3f f, g;
     Vector3l a, c, d, p, i;
+    d.x = 0;
+    d.y = 0;
+    d.z = 0;
     long cnt = 0;
 
     ftol(x0-.5f,&a.x); ftol(y0-.5f,&a.y); ftol(z0-.5f,&a.z);
@@ -241,6 +244,9 @@ long cast_ray(Server* server, float x0, float y0, float z0, float x1, float y1,
     z1 = z0 + z1 * length;
     Vector3f f, g;
     Vector3l a, c, d, p, i;
+    d.x = 0;
+    d.y = 0;
+    d.z = 0;
     long cnt = 0;
 
     ftol(x0-.5f,&a.x); ftol(y0-.5f,&a.y); ftol(z0-.5f,&a.z);

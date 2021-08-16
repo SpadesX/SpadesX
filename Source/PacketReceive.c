@@ -18,6 +18,9 @@
 #include "ColorConversion.h"
 
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
+int validate_hit(Vector3f shooter, Vector3f orientation, Vector3f otherPos, float tolerance);
+long cast_ray(Server* server, float x0, float y0, float z0, float x1, float y1,
+              float z1, float length, long* x, long* y, long* z);
 
 static unsigned long long get_nanos(void) {
     struct timespec ts;
@@ -51,7 +54,7 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
 	float distance = DistanceIn2D(shotPos, hitPos);
 	long x, y, z;
 	if ((server->player[playerID].team != server->player[hitPlayerID].team || server->player[playerID].allowTeamKilling) && (server->player[playerID].allowKilling && server->globalAK)
-	&& validate_hit(shotPos, shotOrien, hitPos, 5, hitType) && cast_ray(server, shotEyePos.x, shotEyePos.y, shotEyePos.z, shotOrien.x, shotOrien.y, shotOrien.z, distance, &x, &y, &z) == 0) {
+	&& validate_hit(shotPos, shotOrien, hitPos, 5) && cast_ray(server, shotEyePos.x, shotEyePos.y, shotEyePos.z, shotOrien.x, shotOrien.y, shotOrien.z, distance, &x, &y, &z) == 0) {
 			switch (server->player[playerID].weapon) {
 				case WEAPON_RIFLE:
 				{
@@ -209,7 +212,7 @@ void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
 			}
 		}
 		if (count > 0) {
-			char idChar[3];
+			char idChar[4];
 			sprintf(idChar, "%d", playerID);
 			strcat(server->player[playerID].name, idChar);
 		}
