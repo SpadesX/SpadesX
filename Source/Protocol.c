@@ -68,7 +68,7 @@ Vector3i * visitedNodes = NULL;
 int visitedSize;
 int visitedPos;
 
-inline void saveNode(int x, int y, int z)
+static inline void saveNode(int x, int y, int z)
 {
     nodes[nodePos].x = x;
     nodes[nodePos].y = y;
@@ -76,12 +76,12 @@ inline void saveNode(int x, int y, int z)
     nodePos++;
 }
 
-inline const Vector3i * returnCurrentNode()
+static inline const Vector3i * returnCurrentNode()
 {
     return &nodes[--nodePos];
 }
 
-inline void addNode(Server* server, int x, int y, int z)
+static inline void addNode(Server* server, int x, int y, int z)
 {
     if ((x >= 0 && x < 512) && (y >= 0 && y < 512) && (z >= 0 && z < 64)) {
     	if (libvxl_map_issolid(&server->map.map, x, y, z)) {
