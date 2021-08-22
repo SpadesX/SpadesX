@@ -11,6 +11,7 @@
 #include "DataStream.h"
 #include "Protocol.h"
 #include "enet/enet.h"
+#include "libmapvxl.h"
 
 void SendRestock(Server* server, uint8 playerID) {
 	ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
@@ -293,7 +294,7 @@ void SendMapStart(Server* server, uint8 playerID)
 		
 		// map
 		uint8* out = (uint8*) malloc(server->map.mapSize);
-		libvxl_write(&server->map.map, out, &server->map.mapSize);
+		mapvxlWriteMap(&server->map.map, out);
 		server->map.compressedMap = CompressData(out, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
 		server->player[playerID].queues = server->map.compressedMap;
 	}

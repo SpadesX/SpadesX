@@ -1,7 +1,7 @@
 //Copyright DarkNeutrino 2021
 #include <stdio.h>
 #include <enet/enet.h>
-#include <libvxl/libvxl.h>
+#include <libmapvxl/libmapvxl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -157,7 +157,7 @@ void ReceiveOrientationData(Server* server, uint8 playerID, DataStream* data)
 
 void ReceiveInputData(Server* server, uint8 playerID, DataStream* data)
 {
-	bool bits[8];
+	uint8 bits[8];
 	uint8 mask = 1;
 	StreamSkip(data, 1); // ID
 	server->player[playerID].input = ReadByte(data);
@@ -267,7 +267,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 				if (DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) {
 					switch (actionType) {
 						case 0:
-								libvxl_map_set(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
+								mapvxlSetColor(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
 								server->player[playerID].blocks--;
 								moveIntelAndTentUp(server);
 						break;
@@ -276,9 +276,9 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 							{
 								Vector3i position = {X, Y, Z};
 								Vector3i *neigh = getNeighbors(position);
-								libvxl_map_setair(&server->map.map, position.x, position.y, position.z);
+								mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
 								for (int i = 0; i < 6; ++i) {
-									if (libvxl_map_issolid(&server->map.map, neigh[i].x, neigh[i].y, neigh[i].z) && neigh[i].z < 62) {
+									if (mapvxlIsSolid(&server->map.map, neigh[i].x, neigh[i].y, neigh[i].z) && neigh[i].z < 62) {
 										checkNode(server, neigh[i]);
 									}
 								}
@@ -291,13 +291,13 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 						case 2:
 							for (int z = Z -1; z <= Z + 1; z++) {
 								if (z < 62) {
-									libvxl_map_setair(&server->map.map, X, Y, z);
+									mapvxlSetAir(&server->map.map, X, Y, z);
 									server->player[playerID].blocks++;
 									Vector3i position = {X, Y, z};
 									Vector3i *neigh = getNeighbors(position);
-									libvxl_map_setair(&server->map.map, position.x, position.y, position.z);
+									mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
 									for (int i = 0; i < 6; ++i) {
-										if (libvxl_map_issolid(&server->map.map, neigh[i].x, neigh[i].y, neigh[i].z) && neigh[i].z < 62) {
+										if (mapvxlIsSolid(&server->map.map, neigh[i].x, neigh[i].y, neigh[i].z) && neigh[i].z < 62) {
 											checkNode(server, neigh[i]);
 										}
 									}

@@ -10,7 +10,7 @@
 #include "Protocol.h"
 
 #include <enet/enet.h>
-#include <libvxl/libvxl.h>
+#include <libmapvxl/libmapvxl.h>
 
 #ifndef DEFAULT_SERVER_PORT
     #define DEFAULT_SERVER_PORT 32887

@@ -17,7 +17,6 @@
 #include <DataStream.h>
 #include <Queue.h>
 #include <enet/enet.h>
-#include <libvxl/libvxl.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

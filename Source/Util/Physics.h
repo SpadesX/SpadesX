@@ -52,7 +52,7 @@
 
 #include <math.h>
 #include <stddef.h>
-#include <libvxl/libvxl.h>
+#include <libmapvxl/libmapvxl.h>
 
 // SpadesX
 #include "../Structs.h"
@@ -141,7 +141,7 @@ static inline int clipbox(Server* server, float x, float y, float z)
         sz = 62;
     else if (sz >= 64)
         return 1;
-    return libvxl_map_issolid(&server->map.map, (int) x, (int) y, sz);
+    return mapvxlIsSolid(&server->map.map, (int) x, (int) y, sz);
 }
 
 // same as isvoxelsolid() but with wrapping
@@ -151,7 +151,7 @@ static inline long isvoxelsolidwrap(Server* server, long x, long y, long z)
         return 0;
     else if (z >= 64)
         return 1;
-    return libvxl_map_issolid(&server->map.map, (int) x & VSIDM, (int) y & VSIDM, z);
+    return mapvxlIsSolid(&server->map.map, (int) x & VSIDM, (int) y & VSIDM, z);
 }
 
 // same as isvoxelsolid but water is empty
@@ -170,7 +170,7 @@ static inline long clipworld(Server* server, long x, long y, long z)
         return 1;
     else if (sz < 0)
         return 0;
-    return libvxl_map_issolid(&server->map.map, (int) x, (int) y, sz);
+    return mapvxlIsSolid(&server->map.map, (int) x, (int) y, sz);
 }
 
 long can_see(Server* server, float x0, float y0, float z0, float x1, float y1,

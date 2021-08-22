@@ -4,6 +4,6 @@
 [submodule "Extern/zlib"]
 	path = Extern/zlib
 	url = https://github.com/madler/zlib.git
-[submodule "Extern/libvxl"]
-	path = Extern/libvxl
-	url = https://github.com/xtreme8000/libvxl.git
+[submodule "Extern/libmapvxl"]
+	path = Extern/libmapvxl
+	url = https://github.com/SpadesX/libmapvxl.git

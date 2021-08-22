@@ -22,7 +22,7 @@ target_link_libraries(server
     PRIVATE
         enet
         util
-        vxl
+        mapvxl
         m
         json-c
         pthread

@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libvxl/libvxl.h>
+#include <libmapvxl/libmapvxl.h>
 #include <time.h>
 
 #include "Enums.h"
@@ -84,7 +84,7 @@ static inline const Vector3i * returnCurrentNode()
 static inline void addNode(Server* server, int x, int y, int z)
 {
     if ((x >= 0 && x < 512) && (y >= 0 && y < 512) && (z >= 0 && z < 64)) {
-    	if (libvxl_map_issolid(&server->map.map, x, y, z)) {
+    	if (mapvxlIsSolid(&server->map.map, x, y, z)) {
     		saveNode(x, y, z);
 		}
 	}
@@ -145,7 +145,7 @@ uint8 checkNode(Server* server, Vector3i position) {
     }
 
 	for (int i = 0; i < visitedPos; ++i) {
-		libvxl_map_setair(&server->map.map, visitedNodes[i].x, visitedNodes[i].y, visitedNodes[i].z);
+		mapvxlSetAir(&server->map.map, visitedNodes[i].x, visitedNodes[i].y, visitedNodes[i].z);
 	}
     
     visitedNodes = NULL;
@@ -206,7 +206,7 @@ uint8 checkUnderTent(Server* server, uint8 team) {
 	uint8 count = 0;
 	for (int x = server->protocol.ctf.base[team].x - 1; x <= server->protocol.ctf.base[team].x; x++) {
 		for (int y = server->protocol.ctf.base[team].y - 1; y <= server->protocol.ctf.base[team].y; y++) {
-			if (libvxl_map_issolid(&server->map.map, x, y, server->protocol.ctf.base[team].z) == 0) {
+			if (mapvxlIsSolid(&server->map.map, x, y, server->protocol.ctf.base[team].z) == 0) {
 				count++;
 			}
 		}
@@ -216,7 +216,7 @@ uint8 checkUnderTent(Server* server, uint8 team) {
 
 uint8 checkUnderIntel(Server* server, uint8 team) {
 	uint8 ret = 0;
-	if (libvxl_map_issolid(&server->map.map, server->protocol.ctf.intel[team].x, server->protocol.ctf.intel[team].y, server->protocol.ctf.intel[team].z) == 0) {
+	if (mapvxlIsSolid(&server->map.map, server->protocol.ctf.intel[team].x, server->protocol.ctf.intel[team].y, server->protocol.ctf.intel[team].z) == 0) {
 		ret = 1;
 	}
 	return ret;
@@ -264,16 +264,16 @@ uint8 checkInTent(Server* server, uint8 team) {
 	uint8 ret = 0;
 	Vector3f checkPos = server->protocol.ctf.base[team];
 	checkPos.z--;
-	if (libvxl_map_issolid(&server->map.map, (int)checkPos.x, (int)checkPos.y, (int)checkPos.z)) {
+	if (mapvxlIsSolid(&server->map.map, (int)checkPos.x, (int)checkPos.y, (int)checkPos.z)) {
 		ret = 1;
 	}
-	else if (libvxl_map_issolid(&server->map.map, (int)checkPos.x - 1, (int)checkPos.y, (int)checkPos.z)) {
+	else if (mapvxlIsSolid(&server->map.map, (int)checkPos.x - 1, (int)checkPos.y, (int)checkPos.z)) {
 		ret = 1;
 	}
-	else if (libvxl_map_issolid(&server->map.map, (int)checkPos.x, (int)checkPos.y - 1, (int)checkPos.z)) {
+	else if (mapvxlIsSolid(&server->map.map, (int)checkPos.x, (int)checkPos.y - 1, (int)checkPos.z)) {
 		ret = 1;
 	}
-	else if (libvxl_map_issolid(&server->map.map, (int)checkPos.x - 1, (int)checkPos.y - 1, (int)checkPos.z)) {
+	else if (mapvxlIsSolid(&server->map.map, (int)checkPos.x - 1, (int)checkPos.y - 1, (int)checkPos.z)) {
 		ret = 1;
 	}
 
@@ -284,7 +284,7 @@ uint8 checkInIntel(Server* server, uint8 team) {
 	uint8 ret = 0;
 	Vector3f checkPos = server->protocol.ctf.intel[team];
 	checkPos.z--;
-	if (libvxl_map_issolid(&server->map.map, (int)checkPos.x, (int)checkPos.y, (int)checkPos.z)) {
+	if (mapvxlIsSolid(&server->map.map, (int)checkPos.x, (int)checkPos.y, (int)checkPos.z)) {
 		ret = 1;
 	}
 	return ret;
@@ -381,15 +381,15 @@ void handleGrenade(Server* server, uint8 playerID) {
 							if (z < 62 && (x >= 0 && x <= 512 && x - 1 >= 0 && x - 1 <= 512 && x + 1 >= 0 && x + 1 <= 512) &&
 							(y >= 0 && y <= 512 && y - 1 >= 0 && y - 1 <= 512 && y + 1 >= 0 && y + 1 <= 512)) {
 								//TODO: Add floating block detection for grenades
-								libvxl_map_setair(&server->map.map, x - 1, y - 1, z);
-								libvxl_map_setair(&server->map.map, x, y - 1, z);
-								libvxl_map_setair(&server->map.map, x + 1, y - 1, z);
-								libvxl_map_setair(&server->map.map, x - 1, y, z);
-								libvxl_map_setair(&server->map.map, x, y, z);
-								libvxl_map_setair(&server->map.map, x + 1, y, z);
-								libvxl_map_setair(&server->map.map, x - 1, y + 1, z);
-								libvxl_map_setair(&server->map.map, x, y + 1, z);
-								libvxl_map_setair(&server->map.map, x + 1, y + 1, z);
+								mapvxlSetAir(&server->map.map, x - 1, y - 1, z);
+								mapvxlSetAir(&server->map.map, x, y - 1, z);
+								mapvxlSetAir(&server->map.map, x + 1, y - 1, z);
+								mapvxlSetAir(&server->map.map, x - 1, y, z);
+								mapvxlSetAir(&server->map.map, x, y, z);
+								mapvxlSetAir(&server->map.map, x + 1, y, z);
+								mapvxlSetAir(&server->map.map, x - 1, y + 1, z);
+								mapvxlSetAir(&server->map.map, x, y + 1, z);
+								mapvxlSetAir(&server->map.map, x + 1, y + 1, z);
 							}
 				}
 				server->player[playerID].grenade[i].sent = 0;

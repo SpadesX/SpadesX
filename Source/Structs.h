@@ -4,7 +4,7 @@
 
 #include <bits/types/struct_timeval.h>
 #include <enet/enet.h>
-#include <libvxl/libvxl.h>
+#include <libmapvxl/libmapvxl.h>
 #include <time.h>
 
 #include "Enums.h"
@@ -44,7 +44,7 @@ typedef struct {
     uint32 compressedSize;
     vec3i resultLine[50];
     long unsigned int mapSize;
-    struct libvxl_map map;
+    MapVxl map;
 } Map;
 
 typedef struct
