@@ -20,6 +20,11 @@ There we truly a lot of great names thrown around. But SpadesX was one day throw
 ## OK thats all great but i want to test it. How do i test it ?????
 Rather simple. Are you on Unix based system ? You are in luck.
 
+First of all you need few libraries.
+zlib, json-c.
+Both of which should be available in your package manager.
+Be sure to install the development versions of it :)
+
 > git clone https://github.com/SpadesX/SpadesX
 
 > cd SpadesX
