@@ -1,4 +1,4 @@
-//Copyright CircumScriptor and DarkNeutrino 2021
+// Copyright CircumScriptor and DarkNeutrino 2021
 #ifndef DATASTREAM_H
 #define DATASTREAM_H
 
@@ -101,16 +101,16 @@ static inline void WriteShort(DataStream* stream, uint16 value)
 {
     ACCESS_CHECK_N(stream, 2);
     stream->data[stream->pos++] = (uint8) value;
-    stream->data[stream->pos++] = (uint8)(value >> 8);
+    stream->data[stream->pos++] = (uint8) (value >> 8);
 }
 
 static inline void WriteInt(DataStream* stream, uint32 value)
 {
     ACCESS_CHECK_N(stream, 4);
     stream->data[stream->pos++] = (uint8) value;
-    stream->data[stream->pos++] = (uint8)(value >> 8);
-    stream->data[stream->pos++] = (uint8)(value >> 16);
-    stream->data[stream->pos++] = (uint8)(value >> 24);
+    stream->data[stream->pos++] = (uint8) (value >> 8);
+    stream->data[stream->pos++] = (uint8) (value >> 16);
+    stream->data[stream->pos++] = (uint8) (value >> 24);
 }
 
 static inline void WriteFloat(DataStream* stream, float value)

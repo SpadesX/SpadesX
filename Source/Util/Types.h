@@ -1,4 +1,4 @@
-//Copyright CircumScriptor and DarkNeutrino 2021
+// Copyright CircumScriptor and DarkNeutrino 2021
 #ifndef TYPES_H
 #define TYPES_H
 
@@ -6,9 +6,9 @@
 #define WARNING(msg) printf("WARNING: " msg "\n")
 #define ERROR(msg)   fprintf(stderr, "ERROR: " msg "\n");
 
-typedef unsigned char  uint8;
-typedef unsigned short uint16;
-typedef unsigned int   uint32;
+typedef unsigned char          uint8;
+typedef unsigned short         uint16;
+typedef unsigned int           uint32;
 typedef unsigned long long int uint64;
 
 /**

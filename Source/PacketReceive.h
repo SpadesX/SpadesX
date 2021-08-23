@@ -1,11 +1,12 @@
-//Copyright DarkNeutrino 2021
+// Copyright DarkNeutrino 2021
 #ifndef PACKETRECEIVE_H
 #define PACKETRECEIVE_H
 
-#include <enet/enet.h>
+#include "DataStream.h"
 #include "Structs.h"
 #include "Types.h"
-#include "DataStream.h"
+
+#include <enet/enet.h>
 
 void ReceiveGrenadePacket(Server* server, uint8 playerID, DataStream* data);
 void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType);

@@ -1,4 +1,4 @@
-//Copyright DarkNeutrino 2021
+// Copyright DarkNeutrino 2021
 #ifndef ENUMS_H
 #define ENUMS_H
 
@@ -95,9 +95,9 @@ typedef enum {
 
 typedef enum {
     HIT_TYPE_TORSO = 0,
-    HIT_TYPE_HEAD = 1,
-    HIT_TYPE_ARMS = 2,
-    HIT_TYPE_LEGS = 3,
+    HIT_TYPE_HEAD  = 1,
+    HIT_TYPE_ARMS  = 2,
+    HIT_TYPE_LEGS  = 3,
     HIT_TYPE_MELEE = 4,
 } Hit;
 

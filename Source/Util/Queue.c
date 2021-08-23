@@ -1,4 +1,4 @@
-//Copyright CircumScriptor and DarkNeutrino 2021
+// Copyright CircumScriptor and DarkNeutrino 2021
 #include "Queue.h"
 
 #include <stdlib.h>
