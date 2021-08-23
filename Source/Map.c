@@ -5,7 +5,7 @@
 #include "Types.h"
 #include "Compress.h"
 #include "DataStream.h"
-#include "libmapvxl.h"
+#include <libmapvxl/libmapvxl.h>
 
 int color4iToInt(Color4i color);
 
@@ -30,11 +30,9 @@ void LoadMap(Server* server, const char* path)
 	uint8* mapOut = (uint8*) malloc(server->map.mapSize);
 	fread(buffer, server->map.mapSize, 1, file);
 	fclose(file);
-	//libvxl_create(&server->map.map, 512, 512, 64, buffer, server->map.mapSize);
 	mapvxlLoadVXL(&server->map.map, buffer);
 	STATUS("compressing map data");
 
-	//libvxl_write(&server->map.map, mapOut, &server->map.mapSize);
 	mapvxlWriteMap(&server->map.map, mapOut);
 	server->map.compressedMap = CompressData(mapOut, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
 	free(buffer);
