@@ -318,7 +318,9 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                                     }
                                 }
                                 if (server->player[playerID].item != 2) {
-                                    server->player[playerID].blocks++;
+                                    if (server->player[playerID].blocks < 50) {
+                                        server->player[playerID].blocks++;
+                                    }
                                 }
                             } break;
 
@@ -326,7 +328,9 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                                 for (int z = Z - 1; z <= Z + 1; z++) {
                                     if (z < 62) {
                                         mapvxlSetAir(&server->map.map, X, Y, z);
-                                        server->player[playerID].blocks++;
+                                        if (server->player[playerID].blocks < 50) {
+                                            server->player[playerID].blocks++;
+                                        }
                                         Vector3i  position = {X, Y, z};
                                         Vector3i* neigh    = getNeighbors(position);
                                         mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
