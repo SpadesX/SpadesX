@@ -23,7 +23,7 @@ void LoadMap(Server* server, const char* path)
 		exit(EXIT_FAILURE);
 	}
 
-	server->map.mapSize = 1024*1024*64; //The size of file wasnt enough memory for it. Lets bump it up to this for now to fix building
+	server->map.mapSize = 1024*1024*10; //The size of file wasnt enough memory for it. Lets bump it up to this for now to fix building
 	fseek(file, 0, SEEK_SET);
 
 	uint8* buffer = (uint8*) malloc(server->map.mapSize);
