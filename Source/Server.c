@@ -102,6 +102,7 @@ static void ServerInit(Server* server, uint32 connections, const char* map)
         server->player[i].HP                          = 100;
         server->player[i].blocks                      = 50;
         server->player[i].grenades                    = 3;
+        server->player[i].hasIntel                    = 0;
         memset(server->player[i].name, 0, 17);
     }
 
@@ -144,8 +145,10 @@ static void ServerInit(Server* server, uint32 connections, const char* map)
     server->protocol.ctf.scoreLimit = 10;
     server->protocol.ctf.intelFlags = 0;
     // intel
-    server->protocol.ctf.intel[0] = SetIntelTentSpawnPoint(server, 0);
-    server->protocol.ctf.intel[1] = SetIntelTentSpawnPoint(server, 1);
+    server->protocol.ctf.intel[0]     = SetIntelTentSpawnPoint(server, 0);
+    server->protocol.ctf.intel[1]     = SetIntelTentSpawnPoint(server, 1);
+    server->protocol.ctf.intelHeld[0] = 0;
+    server->protocol.ctf.intelHeld[1] = 0;
     // bases
     server->protocol.ctf.base[0] = SetIntelTentSpawnPoint(server, 0);
     server->protocol.ctf.base[1] = SetIntelTentSpawnPoint(server, 1);
@@ -209,6 +212,7 @@ void ServerReset(Server* server, char* map)
         server->player[i].HP                          = 100;
         server->player[i].blocks                      = 50;
         server->player[i].grenades                    = 3;
+        server->player[i].hasIntel                    = 0;
         memset(server->player[i].name, 0, 17);
     }
 
@@ -251,8 +255,10 @@ void ServerReset(Server* server, char* map)
     server->protocol.ctf.scoreLimit = 10;
     server->protocol.ctf.intelFlags = 0;
     // intel
-    server->protocol.ctf.intel[0] = SetIntelTentSpawnPoint(server, 0);
-    server->protocol.ctf.intel[1] = SetIntelTentSpawnPoint(server, 1);
+    server->protocol.ctf.intel[0]     = SetIntelTentSpawnPoint(server, 0);
+    server->protocol.ctf.intel[1]     = SetIntelTentSpawnPoint(server, 1);
+    server->protocol.ctf.intelHeld[0] = 0;
+    server->protocol.ctf.intelHeld[1] = 0;
     // bases
     server->protocol.ctf.base[0] = SetIntelTentSpawnPoint(server, 0);
     server->protocol.ctf.base[1] = SetIntelTentSpawnPoint(server, 1);
