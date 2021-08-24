@@ -1,5 +1,4 @@
 // Copyright DarkNeutrino 2021
-#include "DataStream.h"
 #include "Enums.h"
 #include "Packets.h"
 #include "Physics.h"
@@ -7,6 +6,7 @@
 #include "Structs.h"
 #include "Types.h"
 
+#include <DataStream.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
