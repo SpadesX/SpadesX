@@ -360,6 +360,9 @@ void handleIntel(Server* server, uint8 playerID)
                     winning = 1;
                 }
                 SendIntelCapture(server, playerID, winning);
+                server->player[playerID].HP                        = 100;
+                server->player[playerID].grenades                  = 3;
+                server->player[playerID].blocks                    = 50;
                 SendRestock(server, playerID);
                 server->player[playerID].hasIntel           = 0;
                 server->protocol.ctf.intelHeld[team]        = 0;

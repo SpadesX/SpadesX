@@ -2,12 +2,12 @@
 #include "Enums.h"
 #include "Protocol.h"
 #include "Structs.h"
-#include <enet/enet.h>
 
 #include <Compress.h>
 #include <DataStream.h>
 #include <Queue.h>
 #include <Types.h>
+#include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
 #include <stdio.h>
@@ -252,7 +252,9 @@ void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killRe
     WriteByte(&stream, respawnTime); // Time before respawn happens
     enet_host_broadcast(server->host, 0, packet);
     server->player[killerID].kills++;
-    server->player[playerID].blocks = 50;
+    server->player[playerID].HP                 = 100;
+    server->player[playerID].grenades           = 3;
+    server->player[playerID].blocks             = 50;
     server->player[playerID].respawnTime        = respawnTime;
     server->player[playerID].startOfRespawnWait = time(NULL);
     server->player[playerID].state              = STATE_WAITING_FOR_RESPAWN;
