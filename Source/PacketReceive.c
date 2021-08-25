@@ -61,6 +61,8 @@ void ReceiveGrenadePacket(Server* server, uint8 playerID, DataStream* data)
     }
 }
 
+//hitPlayerID is the player that got shot
+//playerID is the player who fired.
 void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType)
 {
     Vector3f shotPos    = server->player[playerID].movement.position;
