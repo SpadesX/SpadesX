@@ -2,12 +2,12 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
-#include "DataStream.h"
 #include "Enums.h"
 #include "Map.h"
-#include "Queue.h"
-#include "Types.h"
 
+#include <DataStream.h>
+#include <Queue.h>
+#include <Types.h>
 #include <enet/enet.h>
 
 Vector3i* getNeighbors(Vector3i pos);

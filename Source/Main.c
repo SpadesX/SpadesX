@@ -1,7 +1,7 @@
 // Copyright DarkNeutrino 2021
 #include "Server.h"
 #include "Structs.h"
-#include "Types.h"
+#include <Types.h>
 
 #include <json-c/json.h>
 #include <stdio.h>

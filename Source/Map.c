@@ -1,10 +1,10 @@
 // Copyright DarkNeutrino 2021
-#include "Compress.h"
-#include "DataStream.h"
-#include "Queue.h"
 #include "Structs.h"
-#include "Types.h"
 
+#include <Compress.h>
+#include <DataStream.h>
+#include <Queue.h>
+#include <Types.h>
 #include <libmapvxl/libmapvxl.h>
 #include <stdio.h>
 

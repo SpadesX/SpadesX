@@ -4,7 +4,7 @@
 
 #include "Enums.h"
 #include "Structs.h"
-#include "Types.h"
+#include <Types.h>
 
 void* keepMasterAlive(void* server);
 int   ConnectMaster(Server* server, uint16 port);

@@ -4,7 +4,7 @@
 #include "Physics.h"
 #include "Server.h"
 #include "Structs.h"
-#include "Types.h"
+#include <Types.h>
 
 #include <DataStream.h>
 #include <enet/enet.h>

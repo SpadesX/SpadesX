@@ -2,10 +2,10 @@
 #ifndef PACKETRECEIVE_H
 #define PACKETRECEIVE_H
 
-#include "DataStream.h"
 #include "Structs.h"
-#include "Types.h"
 
+#include <DataStream.h>
+#include <Types.h>
 #include <enet/enet.h>
 
 void ReceiveGrenadePacket(Server* server, uint8 playerID, DataStream* data);

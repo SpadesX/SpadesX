@@ -5,8 +5,8 @@
 #include "Enums.h"
 #include "Player.h"
 #include "Protocol.h"
-#include "Queue.h"
-#include "Types.h"
+#include <Queue.h>
+#include <Types.h>
 #include "Util/Line.h"
 
 #include <enet/enet.h>

@@ -3,7 +3,7 @@
 #define CONVERSION_H
 
 #include "Structs.h"
-#include "Types.h"
+#include <Types.h>
 
 #include <enet/enet.h>
 

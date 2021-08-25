@@ -1,13 +1,13 @@
 // Copyright DarkNeutrino 2021
 #include "ColorConversion.h"
-#include "DataStream.h"
+#include <DataStream.h>
 #include "Enums.h"
 #include "Map.h"
 #include "Packets.h"
 #include "Protocol.h"
-#include "Queue.h"
+#include <Queue.h>
 #include "Structs.h"
-#include "Types.h"
+#include <Types.h>
 
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
@@ -372,7 +372,6 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                 end.z           = ReadInt(data);
                 Vector3f startF = {start.x, start.y, start.z};
                 Vector3f endF   = {end.x, end.y, end.z};
-
                 if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
                     DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4)
                 {

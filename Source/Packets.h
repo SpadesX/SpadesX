@@ -2,11 +2,12 @@
 #ifndef PACKETS_H
 #define PACKETS_H
 
-#include "DataStream.h"
-#include "Line.h"
-#include "Queue.h"
 #include "Structs.h"
-#include "Types.h"
+
+#include <DataStream.h>
+#include <Line.h>
+#include <Queue.h>
+#include <Types.h>
 
 void SendRestock(Server* server, uint8 playerID);
 void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos);

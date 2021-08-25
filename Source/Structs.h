@@ -3,11 +3,11 @@
 #define STRUCTS_H
 
 #include "Enums.h"
-#include "Queue.h"
-#include "Types.h"
-#include "Util/Line.h"
 #include "enet/protocol.h"
 
+#include <Line.h>
+#include <Queue.h>
+#include <Types.h>
 #include <bits/types/struct_timeval.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>

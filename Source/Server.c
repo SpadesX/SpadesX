@@ -3,7 +3,7 @@
 
 #include "Conversion.h"
 #include "Enums.h"
-#include "Line.h"
+#include <Line.h>
 #include "Map.h"
 #include "Master.h"
 #include "PacketReceive.h"
@@ -11,7 +11,7 @@
 #include "Player.h"
 #include "Protocol.h"
 #include "Structs.h"
-#include "Types.h"
+#include <Types.h>
 
 #include <Compress.h>
 #include <DataStream.h>

@@ -3,7 +3,7 @@
 #define COLORCONVERSION_H
 
 #include "Structs.h"
-#include "Types.h"
+#include <Types.h>
 
 int color4iToInt(Color4i color)
 {
