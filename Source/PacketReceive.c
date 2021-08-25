@@ -1,14 +1,14 @@
 // Copyright DarkNeutrino 2021
 #include "ColorConversion.h"
-#include <DataStream.h>
 #include "Enums.h"
 #include "Map.h"
 #include "Packets.h"
 #include "Protocol.h"
-#include <Queue.h>
 #include "Structs.h"
-#include <Types.h>
 
+#include <DataStream.h>
+#include <Queue.h>
+#include <Types.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
@@ -292,10 +292,10 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                 int      Z            = ReadInt(data);
                 Vector3f vectorBlock  = {X, Y, Z};
                 Vector3f playerVector = server->player[playerID].movement.position;
-                if ((((server->player[playerID].blocks > 0) || server->player[playerID].item == 0) &&
-                     (server->player[playerID].item == 0) && (actionType == 1 || actionType == 2)) ||
-                    (server->player[playerID].item == 1 && actionType == 0) ||
-                    (server->player[playerID].item == 2 && actionType == 1))
+                if ((server->player[playerID].blocks > 0) &&
+                    ((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) ||
+                     (server->player[playerID].item == 1 && actionType == 0) ||
+                     (server->player[playerID].item == 2 && actionType == 1)))
                 {
                     if (DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) {
                         switch (actionType) {
@@ -358,6 +358,11 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
         }
         case PACKET_TYPE_BLOCK_LINE:
         {
+            /*printf("Blocks: %d, canBuild: %d, globalAB: %d, Item: %d\n",
+                   server->player[playerID].blocks,
+                   server->player[playerID].canBuild,
+                   server->globalAB,
+                   server->player[playerID].item);*/
             if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
                 server->player[playerID].item == 1)
             {
@@ -372,6 +377,9 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                 end.z           = ReadInt(data);
                 Vector3f startF = {start.x, start.y, start.z};
                 Vector3f endF   = {end.x, end.y, end.z};
+                /*printf("StartDist: %d, EndDist: %d\n",
+                       DistanceIn3D(endF, server->player[playerID].movement.position),
+                       DistanceIn3D(startF, server->player[playerID].locAtClick));*/
                 if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
                     DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4)
                 {
@@ -412,18 +420,23 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             uint8 bits[8];
             ReadByte(data);
             uint8 wInput = ReadByte(data);
-            if (server->player[playerID].weaponClip >= 0) {
+
+            for (int i = 0; i < 8; i++) {
+                bits[i] = (wInput >> i) & mask;
+            }
+            server->player[playerID].primary_fire   = bits[0];
+            server->player[playerID].secondary_fire = bits[1];
+
+            if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
+                server->player[playerID].locAtClick = server->player[playerID].movement.position;
+            }
+
+            else if (server->player[playerID].weaponClip >= 0)
+            {
                 SendWeaponInput(server, playerID, wInput);
-                for (int i = 0; i < 8; i++) {
-                    bits[i] = (wInput >> i) & mask;
-                }
-                server->player[playerID].primary_fire   = bits[0];
-                server->player[playerID].secondary_fire = bits[1];
+
                 if (server->player[playerID].primary_fire) {
                     server->player[playerID].weaponClip--;
-                }
-                if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
-                    server->player[playerID].locAtClick = server->player[playerID].movement.position;
                 }
             } else {
                 // sendKillPacket(server, playerID, playerID, 0, 30);
