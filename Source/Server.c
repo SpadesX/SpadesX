@@ -3,7 +3,6 @@
 
 #include "Conversion.h"
 #include "Enums.h"
-#include <Line.h>
 #include "Map.h"
 #include "Master.h"
 #include "PacketReceive.h"
@@ -11,11 +10,12 @@
 #include "Player.h"
 #include "Protocol.h"
 #include "Structs.h"
-#include <Types.h>
 
 #include <Compress.h>
 #include <DataStream.h>
+#include <Line.h>
 #include <Queue.h>
+#include <Types.h>
 #include <enet/enet.h>
 #include <math.h>
 #include <pthread.h>
@@ -311,8 +311,10 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
             SendJoiningData(server, playerID);
             break;
         case STATE_SPAWNING:
-            server->player[playerID].HP    = 100;
-            server->player[playerID].alive = 1;
+            server->player[playerID].HP       = 100;
+            server->player[playerID].grenades = 3;
+            server->player[playerID].blocks   = 50;
+            server->player[playerID].alive    = 1;
             SetPlayerRespawnPoint(server, playerID);
             SendRespawn(server, playerID);
             break;
