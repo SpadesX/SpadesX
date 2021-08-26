@@ -275,7 +275,7 @@ static void SendJoiningData(Server* server, uint8 playerID)
 {
     STATUS("sending state");
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (i != playerID && server->player[i].state != STATE_DISCONNECTED) {
+        if (i != playerID && (server->player[i].state == STATE_READY || server->player[i].state == STATE_SPAWNING)) {
             SendPlayerState(server, playerID, i);
         }
     }
