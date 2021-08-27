@@ -5,10 +5,10 @@
 #include "Enums.h"
 #include "Player.h"
 #include "Protocol.h"
-#include <Queue.h>
-#include <Types.h>
 #include "Util/Line.h"
 
+#include <Queue.h>
+#include <Types.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 
@@ -22,7 +22,12 @@ void StartServer(uint16      port,
                  uint32      inBandwidth,
                  uint32      outBandwidth,
                  uint8       master,
-                 const char* map);
+                 const char* map,
+                 const char* managerPasswd,
+                 const char* adminPasswd,
+                 const char* modPasswd,
+                 const char* guardPasswd,
+                 const char* trustedPasswd);
 void ServerReset(Server* server, char* map);
 
 #endif /* SERVER_H */

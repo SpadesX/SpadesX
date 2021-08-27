@@ -1,5 +1,10 @@
 {
 	"port": 32887,
 	"master": 0,
-	"map": "hallway.vxl"
+	"map": "hallway.vxl",
+	"manager_password": "changeme1",
+	"admin_password": "changeme2",
+	"moderator_password": "changeme3",
+	"guard_password": "changeme4",
+	"trusted_password": "changeme5"
 }

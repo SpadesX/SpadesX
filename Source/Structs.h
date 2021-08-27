@@ -115,6 +115,11 @@ typedef struct
     Grenade            grenade[3];
     uint8              toldToMaster;
     uint8              hasIntel;
+    uint8              isManager;
+    uint8              isAdmin;
+    uint8              isMod;
+    uint8              isGuard;
+    uint8              isTrusted;
 
     uint8    movForward;
     uint8    movBackwards;
@@ -149,13 +154,18 @@ typedef struct
 
 typedef struct
 {
-    ENetHost* host;
-    Player    player[32];
-    Protocol  protocol;
-    Master    master;
-    Map       map;
-    uint8     globalAK;
-    uint8     globalAB;
+    ENetHost*   host;
+    Player      player[32];
+    Protocol    protocol;
+    Master      master;
+    Map         map;
+    uint8       globalAK;
+    uint8       globalAB;
+    const char* managerPasswd;
+    const char* adminPasswd;
+    const char* modPasswd;
+    const char* guardPasswd;
+    const char* trustedPasswd;
 } Server;
 
 #endif

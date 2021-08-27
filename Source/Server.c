@@ -213,6 +213,11 @@ void ServerReset(Server* server, char* map)
         server->player[i].blocks                      = 50;
         server->player[i].grenades                    = 3;
         server->player[i].hasIntel                    = 0;
+        server->player[i].isManager                   = 0;
+        server->player[i].isAdmin                     = 0;
+        server->player[i].isMod                       = 0;
+        server->player[i].isGuard                     = 0;
+        server->player[i].isTrusted                   = 0;
         memset(server->player[i].name, 0, 17);
     }
 
@@ -455,6 +460,11 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].HP                          = 100;
                 server->player[playerID].blocks                      = 50;
                 server->player[playerID].grenades                    = 3;
+                server->player[playerID].isManager                   = 0;
+                server->player[playerID].isAdmin                     = 0;
+                server->player[playerID].isMod                       = 0;
+                server->player[playerID].isGuard                     = 0;
+                server->player[playerID].isTrusted                   = 0;
                 memset(server->player[playerID].name, 0, 17);
                 server->protocol.numPlayers--;
                 if (server->master.enableMasterConnection == 1) {
@@ -479,7 +489,12 @@ void StartServer(uint16      port,
                  uint32      inBandwidth,
                  uint32      outBandwidth,
                  uint8       master,
-                 const char* map)
+                 const char* map,
+                 const char* managerPasswd,
+                 const char* adminPasswd,
+                 const char* modPasswd,
+                 const char* guardPasswd,
+                 const char* trustedPasswd)
 {
     timeSinceStart = get_nanos();
     STATUS("Welcome to SpadesX server");
@@ -512,9 +527,14 @@ void StartServer(uint16      port,
     STATUS("Intializing server");
 
     ServerInit(&server, connections, map);
+    server.master.enableMasterConnection = master;
+    server.managerPasswd                 = managerPasswd;
+    server.adminPasswd                   = adminPasswd;
+    server.modPasswd                     = modPasswd;
+    server.guardPasswd                   = guardPasswd;
+    server.trustedPasswd                 = trustedPasswd;
 
     STATUS("Server started");
-    server.master.enableMasterConnection = master;
     if (server.master.enableMasterConnection == 1) {
         ConnectMaster(&server, port);
     }

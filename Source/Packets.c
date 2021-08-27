@@ -7,6 +7,7 @@
 #include <DataStream.h>
 #include <Queue.h>
 #include <Types.h>
+#include <ctype.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
@@ -406,20 +407,25 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
     WriteByte(&stream, meantfor);
     WriteArray(&stream, message, length);
     if (message[0] == '/') {
+        Player srvPlayer = server->player[player];
         char command[30];
         sscanf(message, "%s", command);
+        uint8 strLenght = strlen(command);
+        for (uint8 i = 1; i < strLenght; ++i) {
+            message[i] = command[i] = tolower(command[i]);
+        }
         if (strcmp(command, "/killp") == 0) {
             int id = 0;
             if (sscanf(message, "%s #%d", command, &id) == 1) {
                 sendKillPacket(server, player, player, 0, 5);
             } else {
-                if (server->player[id].state == STATE_READY) {
+                if (server->player[id].state == STATE_READY && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
                     sendKillPacket(server, id, id, 0, 5);
                 } else {
                     sendServerNotice(server, player, "Player does not exist or isnt spawned yet");
                 }
             }
-        } else if (strcmp(command, "/tk") == 0) {
+        } else if (strcmp(command, "/tk") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
             int ID;
             if (sscanf(message, "%s #%d", command, &ID) == 1) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -446,7 +452,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
                     broadcastServerNotice(server, broadcastEna);
                 }
             }
-        } else if (strcmp(command, "/ttk") == 0) {
+        } else if (strcmp(command, "/ttk") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -467,7 +473,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
             } else {
                 sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
             }
-        } else if (strcmp(command, "/tb") == 0) {
+        } else if (strcmp(command, "/tb") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
             int ID;
             if (sscanf(message, "%s #%d", command, &ID) == 1) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -494,7 +500,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
                     broadcastServerNotice(server, broadcastEna);
                 }
             }
-        } else if (strcmp(command, "/kick") == 0) {
+        } else if (strcmp(command, "/kick") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -509,7 +515,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
             } else {
                 sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
             }
-        } else if (strcmp(command, "/mute") == 0) {
+        } else if (strcmp(command, "/mute") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -543,7 +549,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
             } else {
                 sendServerNotice(server, player, "Changing UPS failed. Please select value between 1 and 300");
             }
-        } else if (strcmp(command, "/banp") == 0) {
+        } else if (strcmp(command, "/banp") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -565,6 +571,61 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
                 }
             } else {
                 sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
+            }
+        } else if (strcmp(command, "/login") == 0) {
+            if (!server->player[player].isManager && !server->player[player].isAdmin && !server->player[player].isMod &&
+                !server->player[player].isGuard && !server->player[player].isTrusted)
+            {
+                char level[32];
+                char password[64];
+                if (sscanf(message, "%s %s %s", command, level, password) == 3) {
+                    uint8 levelLen = strlen(level);
+                    for (uint8 j = 0; j < levelLen; ++j) {
+                        level[j] = tolower(level[j]);
+                    }
+                    if (strcmp(level, "manager") == 0) {
+                        if (strcmp(password, server->managerPasswd) == 0) {
+                            server->player[player].isManager = 1;
+                            sendServerNotice(server, player, "You have logged in as manager");
+                        } else {
+                            sendServerNotice(server, player, "Incorrect password");
+                        }
+                    } else if (strcmp(level, "admin") == 0) {
+                        if (strcmp(password, server->adminPasswd) == 0) {
+                            server->player[player].isAdmin = 1;
+                            sendServerNotice(server, player, "You have logged in as admin");
+                        } else {
+                            sendServerNotice(server, player, "Incorrect password");
+                        }
+                    } else if (strcmp(level, "mod") == 0 || strcmp(level, "moderator") == 0) {
+                        if (strcmp(password, server->modPasswd) == 0) {
+                            server->player[player].isMod = 1;
+                            sendServerNotice(server, player, "You have logged in as moderator");
+                        } else {
+                            sendServerNotice(server, player, "Incorrect password");
+                        }
+                    } else if (strcmp(level, "guard") == 0) {
+                        if (strcmp(password, server->guardPasswd) == 0) {
+                            server->player[player].isGuard = 1;
+                            sendServerNotice(server, player, "You have logged in as guard");
+                        } else {
+                            sendServerNotice(server, player, "Incorrect password");
+                        }
+                    } else if (strcmp(level, "trusted") == 0) {
+                        if (strcmp(password, server->trustedPasswd) == 0) {
+                            server->player[player].isTrusted = 1;
+                            sendServerNotice(server, player, "You have logged in as trsuted");
+                        } else {
+                            sendServerNotice(server, player, "Incorrect password");
+                        }
+                    } else {
+                        sendServerNotice(server, player, "Incorrect role");
+                    }
+                } else {
+                    sendServerNotice(server, player, "Incorrect number of arguments to login");
+                }
+            } else {
+                sendServerNotice(server, player, "You are already logged in");
             }
         }
     } else {
