@@ -314,8 +314,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                                 Vector3i* neigh    = getNeighbors(position);
                                 mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
                                 for (int i = 0; i < 6; ++i) {
-                                    if (mapvxlIsSolid(&server->map.map, neigh[i].x, neigh[i].y, neigh[i].z) &&
-                                        neigh[i].z < 62) {
+                                    if (neigh[i].z < 62) {
                                         checkNode(server, neigh[i]);
                                     }
                                 }
@@ -337,8 +336,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                                         Vector3i* neigh    = getNeighbors(position);
                                         mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
                                         for (int i = 0; i < 6; ++i) {
-                                            if (mapvxlIsSolid(&server->map.map, neigh[i].x, neigh[i].y, neigh[i].z) &&
-                                                neigh[i].z < 62) {
+                                            if (neigh[i].z < 62) {
                                                 checkNode(server, neigh[i]);
                                             }
                                         }
