@@ -47,10 +47,8 @@ static void* calculatePhysics()
     return 0;
 }
 
-static void ServerInit(Server* server, uint32 connections, const char* map)
+static void ServerInit(Server* server, uint32 connections, const char* map, char* serverName, char* team1Name, char* team2Name, uint8* team1Color, uint8* team2Color)
 {
-    char team1[] = "Team A";
-    char team2[] = "Team B";
     updateTime = lastUpdateTime = get_nanos();
     server->protocol.numPlayers = 0;
     server->protocol.maxPlayers = (connections <= 32) ? connections : 32;
@@ -59,10 +57,6 @@ static void ServerInit(Server* server, uint32 connections, const char* map)
     server->map.compressedSize  = 0;
     server->protocol.inputFlags = 0;
 
-    for (uint8 i = 0; i < 11; i++) {
-        server->protocol.nameTeamA[i] = ' ';
-        server->protocol.nameTeamB[i] = ' ';
-    }
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
     Vector3f height  = {0, 0, 1};
@@ -125,18 +119,20 @@ static void ServerInit(Server* server, uint32 connections, const char* map)
     server->protocol.colorFog[1] = 0xE8;
     server->protocol.colorFog[2] = 0xFF;
 
-    server->protocol.colorTeamA[0] = 0xff;
-    server->protocol.colorTeamA[1] = 0x00;
-    server->protocol.colorTeamA[2] = 0x00;
+    server->protocol.colorTeamA[0] = team1Color[0];
+    server->protocol.colorTeamA[1] = team1Color[1];
+    server->protocol.colorTeamA[2] = team1Color[2];
 
-    server->protocol.colorTeamB[0] = 0x00;
-    server->protocol.colorTeamB[1] = 0xff;
-    server->protocol.colorTeamB[2] = 0x00;
+    server->protocol.colorTeamB[0] = team2Color[0];
+    server->protocol.colorTeamB[1] = team2Color[1];
+    server->protocol.colorTeamB[2] = team2Color[2];
 
-    memcpy(server->protocol.nameTeamA, team1, strlen(team1));
-    memcpy(server->protocol.nameTeamB, team2, strlen(team2));
-    server->protocol.nameTeamA[strlen(team1)] = '\0';
-    server->protocol.nameTeamB[strlen(team2)] = '\0';
+    memcpy(server->protocol.nameTeamA, team1Name, strlen(team1Name));
+    memcpy(server->protocol.nameTeamB, team2Name, strlen(team2Name));
+    server->protocol.nameTeamA[strlen(team1Name)] = '\0';
+    server->protocol.nameTeamB[strlen(team2Name)] = '\0';
+    memcpy(server->serverName, serverName, strlen(serverName));
+    server->serverName[strlen(serverName)] = '\0';
 
     server->protocol.mode = GAME_MODE_CTF;
 
@@ -165,18 +161,12 @@ static void ServerInit(Server* server, uint32 connections, const char* map)
 
 void ServerReset(Server* server, char* map)
 {
-    char team1[] = "Team A";
-    char team2[] = "Team B";
     updateTime = lastUpdateTime = get_nanos();
 
     server->map.compressedMap   = NULL;
     server->map.compressedSize  = 0;
     server->protocol.inputFlags = 0;
 
-    for (uint8 i = 0; i < 11; i++) {
-        server->protocol.nameTeamA[i] = ' ';
-        server->protocol.nameTeamB[i] = ' ';
-    }
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
     Vector3f height  = {0, 0, 1};
@@ -241,19 +231,6 @@ void ServerReset(Server* server, char* map)
     server->protocol.colorFog[0] = 0x80;
     server->protocol.colorFog[1] = 0xE8;
     server->protocol.colorFog[2] = 0xFF;
-
-    server->protocol.colorTeamA[0] = 0xff;
-    server->protocol.colorTeamA[1] = 0x00;
-    server->protocol.colorTeamA[2] = 0x00;
-
-    server->protocol.colorTeamB[0] = 0x00;
-    server->protocol.colorTeamB[1] = 0xff;
-    server->protocol.colorTeamB[2] = 0x00;
-
-    memcpy(server->protocol.nameTeamA, team1, strlen(team1));
-    memcpy(server->protocol.nameTeamB, team2, strlen(team2));
-    server->protocol.nameTeamA[strlen(team1)] = '\0';
-    server->protocol.nameTeamB[strlen(team2)] = '\0';
 
     server->protocol.mode = GAME_MODE_CTF;
 
@@ -498,7 +475,12 @@ void StartServer(uint16      port,
                  const char* adminPasswd,
                  const char* modPasswd,
                  const char* guardPasswd,
-                 const char* trustedPasswd)
+                 const char* trustedPasswd,
+                 char* serverName,
+                 char* team1Name,
+                 char* team2Name,
+                 uint8*         team1Color,
+                 uint8*         team2Color)
 {
     timeSinceStart = get_nanos();
     STATUS("Welcome to SpadesX server");
@@ -530,7 +512,7 @@ void StartServer(uint16      port,
 
     STATUS("Intializing server");
 
-    ServerInit(&server, connections, map);
+    ServerInit(&server, connections, map, serverName, team1Name, team2Name, team1Color, team2Color);
     server.master.enableMasterConnection = master;
     server.managerPasswd                 = managerPasswd;
     server.adminPasswd                   = adminPasswd;

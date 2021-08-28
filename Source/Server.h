@@ -27,7 +27,12 @@ void StartServer(uint16      port,
                  const char* adminPasswd,
                  const char* modPasswd,
                  const char* guardPasswd,
-                 const char* trustedPasswd);
+                 const char* trustedPasswd,
+                 char* serverName,
+                 char* team1Name,
+                 char* team2Name,
+                 uint8*         team1Color,
+                 uint8*         team2Color);
 void ServerReset(Server* server, char* map);
 
 #endif /* SERVER_H */

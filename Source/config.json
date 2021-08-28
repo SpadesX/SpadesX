@@ -6,5 +6,10 @@
 	"admin_password": "changeme2",
 	"moderator_password": "changeme3",
 	"guard_password": "changeme4",
-	"trusted_password": "changeme5"
+	"trusted_password": "changeme5",
+	"server_name": "SpadesX Server",
+	"team1_name": "Red Team",
+	"team2_name": "Blue Team",
+	"team1_color": [255, 0, 0],
+	"team2_color": [0, 0, 255]
 }
