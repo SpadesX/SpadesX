@@ -10,6 +10,9 @@
 #include <Types.h>
 #include <enet/enet.h>
 
+uint8 vecValidPos(Vector3i pos);
+uint8 vecfValidPos(Vector3f pos);
+uint8 validPos(int x, int y, int z);
 Vector3i* getNeighbors(Vector3i pos);
 uint8     checkNode(Server* server, Vector3i position);
 void      moveIntelAndTentDown(Server* server);

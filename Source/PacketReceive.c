@@ -49,20 +49,22 @@ void ReceiveGrenadePacket(Server* server, uint8 playerID, DataStream* data)
             server->player[playerID].grenade[i].velocity.x = ReadFloat(data);
             server->player[playerID].grenade[i].velocity.y = ReadFloat(data);
             server->player[playerID].grenade[i].velocity.z = ReadFloat(data);
-            SendGrenade(server,
-                        playerID,
-                        server->player[playerID].grenade[i].fuse,
-                        server->player[playerID].grenade[i].position,
-                        server->player[playerID].grenade[i].velocity);
-            server->player[playerID].grenade[i].sent          = 1;
-            server->player[playerID].grenade[i].timeSinceSent = get_nanos();
+            if (vecfValidPos(server->player[playerID].grenade[i].position)) {
+                SendGrenade(server,
+                            playerID,
+                            server->player[playerID].grenade[i].fuse,
+                            server->player[playerID].grenade[i].position,
+                            server->player[playerID].grenade[i].velocity);
+                server->player[playerID].grenade[i].sent          = 1;
+                server->player[playerID].grenade[i].timeSinceSent = get_nanos();
+            }
             break;
         }
     }
 }
 
-//hitPlayerID is the player that got shot
-//playerID is the player who fired.
+// hitPlayerID is the player that got shot
+// playerID is the player who fired.
 void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType)
 {
     Vector3f shotPos    = server->player[playerID].movement.position;
@@ -208,9 +210,15 @@ void ReceiveInputData(Server* server, uint8 playerID, DataStream* data)
 
 void ReceivePositionData(Server* server, uint8 playerID, DataStream* data)
 {
-    server->player[playerID].movement.position.x = ReadFloat(data);
-    server->player[playerID].movement.position.y = ReadFloat(data);
-    server->player[playerID].movement.position.z = ReadFloat(data);
+    float x, y, z;
+    x = ReadFloat(data);
+    y = ReadFloat(data);
+    z = ReadFloat(data);
+    if (validPos(x, y, z)) {
+        server->player[playerID].movement.position.x = x;
+        server->player[playerID].movement.position.y = y;
+        server->player[playerID].movement.position.z = z;
+    }
 }
 
 void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
@@ -299,7 +307,8 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                      (server->player[playerID].item == 1 && actionType == 0) ||
                      (server->player[playerID].item == 2 && actionType == 1)))
                 {
-                    if (DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) {
+                    if ((DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) &&
+                        vecfValidPos(vectorBlock)) {
                         switch (actionType) {
                             case 0:
                                 mapvxlSetColor(
@@ -381,7 +390,8 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                        DistanceIn3D(endF, server->player[playerID].movement.position),
                        DistanceIn3D(startF, server->player[playerID].locAtClick));*/
                 if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
-                    DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4)
+                    DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4 && vecfValidPos(startF) &&
+                    vecfValidPos(endF))
                 {
                     writeBlockLine(server, playerID, &start, &end);
                     moveIntelAndTentUp(server);

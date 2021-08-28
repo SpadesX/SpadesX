@@ -4,9 +4,9 @@
 #include "Physics.h"
 #include "Server.h"
 #include "Structs.h"
-#include <Types.h>
 
 #include <DataStream.h>
+#include <Types.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
@@ -31,6 +31,32 @@ static unsigned long long get_nanos(void)
         And possibly more im missing
 
 }*/
+
+uint8 vecValidPos(Vector3i pos)
+{
+    if (pos.x < 512 && pos.x >= 0 && pos.y < 512 && pos.y >= 0 && pos.z < 64 && pos.z >= 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+uint8 vecfValidPos(Vector3f pos)
+{
+    if (pos.x < 512 && pos.x >= 0 && pos.y < 512 && pos.y >= 0 && pos.z < 64 && pos.z >= 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+uint8 validPos(int x, int y, int z)
+{
+    if (x < 512 && x >= 0 && y < 512 && y >= 0 && z < 64 && z >= 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
 Vector3i* getNeighbors(Vector3i pos)
 {
@@ -62,11 +88,12 @@ Vector3i* getNeighbors(Vector3i pos)
     return neighArray;
 }
 
-Vector3i* getGrenadeNeighbors(Vector3i pos) {
+Vector3i* getGrenadeNeighbors(Vector3i pos)
+{
     static Vector3i neighArray[54];
     // This is nasty but fast.
     uint8 index = 0;
-//-z size
+    //-z size
     neighArray[index].x = pos.x;
     neighArray[index].y = pos.y;
     neighArray[index].z = pos.z - 2;
@@ -103,7 +130,7 @@ Vector3i* getGrenadeNeighbors(Vector3i pos) {
     neighArray[index].y = pos.y - 1;
     neighArray[index].z = pos.z - 2;
     index++;
-//-y side
+    //-y side
     neighArray[index].x = pos.x;
     neighArray[index].y = pos.y - 2;
     neighArray[index].z = pos.z;
@@ -140,7 +167,7 @@ Vector3i* getGrenadeNeighbors(Vector3i pos) {
     neighArray[index].y = pos.y - 2;
     neighArray[index].z = pos.z - 1;
     index++;
-//+y side
+    //+y side
     neighArray[index].x = pos.x;
     neighArray[index].y = pos.y + 2;
     neighArray[index].z = pos.z;
@@ -177,7 +204,7 @@ Vector3i* getGrenadeNeighbors(Vector3i pos) {
     neighArray[index].y = pos.y + 2;
     neighArray[index].z = pos.z - 1;
     index++;
-//-x side
+    //-x side
     neighArray[index].x = pos.x - 2;
     neighArray[index].y = pos.y;
     neighArray[index].z = pos.z;
@@ -214,7 +241,7 @@ Vector3i* getGrenadeNeighbors(Vector3i pos) {
     neighArray[index].y = pos.y - 1;
     neighArray[index].z = pos.z + 1;
     index++;
-//+x side
+    //+x side
     neighArray[index].x = pos.x + 2;
     neighArray[index].y = pos.y;
     neighArray[index].z = pos.z;
@@ -251,7 +278,7 @@ Vector3i* getGrenadeNeighbors(Vector3i pos) {
     neighArray[index].y = pos.y - 1;
     neighArray[index].z = pos.z + 1;
     index++;
-//+z side
+    //+z side
     neighArray[index].x = pos.x;
     neighArray[index].y = pos.y;
     neighArray[index].z = pos.z + 2;
@@ -593,9 +620,9 @@ void handleIntel(Server* server, uint8 playerID)
                     winning = 1;
                 }
                 SendIntelCapture(server, playerID, winning);
-                server->player[playerID].HP                        = 100;
-                server->player[playerID].grenades                  = 3;
-                server->player[playerID].blocks                    = 50;
+                server->player[playerID].HP       = 100;
+                server->player[playerID].grenades = 3;
+                server->player[playerID].blocks   = 50;
                 SendRestock(server, playerID);
                 server->player[playerID].hasIntel           = 0;
                 server->protocol.ctf.intelHeld[team]        = 0;
@@ -673,9 +700,11 @@ void handleGrenade(Server* server, uint8 playerID)
                         pos.y = server->player[playerID].grenade[i].position.y;
                         pos.z = server->player[playerID].grenade[i].position.z;
 
-                        Vector3i *neigh = getGrenadeNeighbors(pos);
+                        Vector3i* neigh = getGrenadeNeighbors(pos);
                         for (int index = 0; index < 54; ++index) {
-                            checkNode(server, neigh[index]);
+                            if (vecValidPos(neigh[index])) {
+                                checkNode(server, neigh[index]);
+                            }
                         }
                     }
                 }
