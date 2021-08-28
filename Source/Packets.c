@@ -252,7 +252,10 @@ void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killRe
     WriteByte(&stream, killReason);  // Killing reason (1 is headshot)
     WriteByte(&stream, respawnTime); // Time before respawn happens
     enet_host_broadcast(server->host, 0, packet);
-    server->player[killerID].kills++;
+    if (killerID != playerID) {
+        server->player[killerID].kills++;
+    }
+    server->player[playerID].deaths++;
     server->player[playerID].respawnTime        = respawnTime;
     server->player[playerID].startOfRespawnWait = time(NULL);
     server->player[playerID].state              = STATE_WAITING_FOR_RESPAWN;
@@ -385,6 +388,11 @@ void SendRespawn(Server* server, uint8 playerID)
     server->player[playerID].state = STATE_READY;
 }
 
+float max(float num1, float num2)
+{
+    return (num1 > num2) ? num1 : num2;
+}
+
 void sendMessage(ENetEvent event, DataStream* data, Server* server)
 {
     uint32 packetSize = event.packet->dataLength + 1;
@@ -408,7 +416,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
     WriteArray(&stream, message, length);
     if (message[0] == '/') {
         Player srvPlayer = server->player[player];
-        char command[30];
+        char   command[30];
         sscanf(message, "%s", command);
         uint8 strLenght = strlen(command);
         for (uint8 i = 1; i < strLenght; ++i) {
@@ -419,13 +427,17 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
             if (sscanf(message, "%s #%d", command, &id) == 1) {
                 sendKillPacket(server, player, player, 0, 5);
             } else {
-                if (server->player[id].state == STATE_READY && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+                if (server->player[id].state == STATE_READY &&
+                    (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+                {
                     sendKillPacket(server, id, id, 0, 5);
                 } else {
                     sendServerNotice(server, player, "Player does not exist or isnt spawned yet");
                 }
             }
-        } else if (strcmp(command, "/tk") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+        } else if (strcmp(command, "/tk") == 0 &&
+                   (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+        {
             int ID;
             if (sscanf(message, "%s #%d", command, &ID) == 1) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -452,7 +464,9 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
                     broadcastServerNotice(server, broadcastEna);
                 }
             }
-        } else if (strcmp(command, "/ttk") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+        } else if (strcmp(command, "/ttk") == 0 &&
+                   (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+        {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -473,7 +487,9 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
             } else {
                 sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
             }
-        } else if (strcmp(command, "/tb") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+        } else if (strcmp(command, "/tb") == 0 &&
+                   (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+        {
             int ID;
             if (sscanf(message, "%s #%d", command, &ID) == 1) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -500,7 +516,9 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
                     broadcastServerNotice(server, broadcastEna);
                 }
             }
-        } else if (strcmp(command, "/kick") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+        } else if (strcmp(command, "/kick") == 0 &&
+                   (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+        {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -515,7 +533,9 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
             } else {
                 sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
             }
-        } else if (strcmp(command, "/mute") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+        } else if (strcmp(command, "/mute") == 0 &&
+                   (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+        {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -549,7 +569,9 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
             } else {
                 sendServerNotice(server, player, "Changing UPS failed. Please select value between 1 and 300");
             }
-        } else if (strcmp(command, "/banp") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+        } else if (strcmp(command, "/banp") == 0 &&
+                   (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+        {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
                 if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
@@ -626,6 +648,50 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server)
                 }
             } else {
                 sendServerNotice(server, player, "You are already logged in");
+            }
+        } else if (strcmp(command, "/ratio") == 0) {
+            int ID = 33;
+            if (sscanf(message, "%s #%d", command, &ID) == 2) {
+                if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+                    char sendingMessage[100];
+                    char ratioInString[12];
+                    char killsInString[4];
+                    char deathsInString[4];
+                    gcvt(
+                    ((float) server->player[ID].kills / max(1, (float) server->player[ID].deaths)), 7, ratioInString);
+                    sprintf(killsInString, "%d", server->player[ID].kills);
+                    sprintf(deathsInString, "%d", server->player[ID].deaths);
+                    strcpy(sendingMessage, server->player[ID].name);
+                    strcat(sendingMessage, " has kill to death ratio of: ");
+                    strcat(sendingMessage, ratioInString);
+                    strcat(sendingMessage, " (Kills: ");
+                    strcat(sendingMessage, killsInString);
+                    strcat(sendingMessage, ", Deaths: ");
+                    strcat(sendingMessage, deathsInString);
+                    strcat(sendingMessage, ")");
+                    sendServerNotice(server, player, sendingMessage);
+                } else {
+                    sendServerNotice(server, player, "ID not in range or player doesnt exist");
+                }
+            } else {
+                char sendingMessage[100];
+                char ratioInString[12];
+                char killsInString[4];
+                char deathsInString[4];
+                gcvt(((float) server->player[player].kills / max(1, (float) server->player[player].deaths)),
+                     7,
+                     ratioInString);
+                sprintf(killsInString, "%d", server->player[player].kills);
+                sprintf(deathsInString, "%d", server->player[player].deaths);
+                strcpy(sendingMessage, server->player[player].name);
+                strcat(sendingMessage, " has kill to death ratio of: ");
+                strcat(sendingMessage, ratioInString);
+                strcat(sendingMessage, " (Kills: ");
+                strcat(sendingMessage, killsInString);
+                strcat(sendingMessage, ", Deaths: ");
+                strcat(sendingMessage, deathsInString);
+                strcat(sendingMessage, ")");
+                sendServerNotice(server, player, sendingMessage);
             }
         }
     } else {

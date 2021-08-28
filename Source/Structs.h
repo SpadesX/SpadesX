@@ -91,6 +91,7 @@ typedef struct
     Team               team;
     Tool               item;
     uint32             kills;
+    uint32             deaths;
     Color3i            color;
     char               name[17];
     ENetPeer*          peer;

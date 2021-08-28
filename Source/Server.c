@@ -103,6 +103,8 @@ static void ServerInit(Server* server, uint32 connections, const char* map)
         server->player[i].blocks                      = 50;
         server->player[i].grenades                    = 3;
         server->player[i].hasIntel                    = 0;
+        server->player[i].kills                       = 0;
+        server->player[i].deaths                      = 0;
         memset(server->player[i].name, 0, 17);
     }
 
@@ -218,6 +220,8 @@ void ServerReset(Server* server, char* map)
         server->player[i].isMod                       = 0;
         server->player[i].isGuard                     = 0;
         server->player[i].isTrusted                   = 0;
+        server->player[i].kills                       = 0;
+        server->player[i].deaths                      = 0;
         memset(server->player[i].name, 0, 17);
     }
 
