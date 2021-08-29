@@ -4,6 +4,7 @@
 #include <DataStream.h>
 #include <Types.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 void updateMaster(Server* server)
@@ -59,11 +60,11 @@ int ConnectMaster(Server* server, uint16 port)
     ENetEvent event;
     while (enet_host_service(server->master.client, &event, 2000) > 0) {
         STATUS("Connection success");
-        ENetPacket* packet = enet_packet_create(NULL, 61, ENET_PACKET_FLAG_RELIABLE);
+        ENetPacket* packet = enet_packet_create(NULL, 75, ENET_PACKET_FLAG_RELIABLE);
         DataStream  stream = {packet->data, packet->dataLength, 0};
         WriteByte(&stream, 32);
         WriteShort(&stream, port);
-        WriteArray(&stream, "SpadesX Server", 15);
+        WriteArray(&stream, server->serverName, strlen(server->serverName));
         WriteArray(&stream, "ctf", 4);
         WriteArray(&stream, "hallway", 8);
         enet_peer_send(server->master.peer, 0, packet);
