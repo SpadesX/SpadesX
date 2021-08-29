@@ -77,7 +77,7 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
         (server->player[playerID].team != server->player[hitPlayerID].team ||
          server->player[playerID].allowTeamKilling) &&
         (server->player[playerID].allowKilling && server->globalAK) && validate_hit(shotPos, shotOrien, hitPos, 5) &&
-        cast_ray(server,
+        (cast_ray(server,
                  shotEyePos.x,
                  shotEyePos.y,
                  shotEyePos.z,
@@ -87,7 +87,18 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
                  distance,
                  &x,
                  &y,
-                 &z) == 0)
+                 &z) == 0 ||
+        cast_ray(server,
+                 shotEyePos.x,
+                 shotEyePos.y,
+                 shotEyePos.z - 1,
+                 shotOrien.x,
+                 shotOrien.y,
+                 shotOrien.z,
+                 distance,
+                 &x,
+                 &y,
+                 &z) == 0))
     {
         switch (server->player[playerID].weapon) {
             case WEAPON_RIFLE:
