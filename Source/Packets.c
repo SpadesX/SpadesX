@@ -238,33 +238,31 @@ void SendInputData(Server* server, uint8 playerID)
 
 void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killReason, uint8 respawnTime)
 {
-    if (server->player[playerID].alive && server->player[killerID].alive) {
-        uint8 team;
-        if (server->player[playerID].team == 0) {
-            team = 1;
-        } else {
-            team = 0;
-        }
-        ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-        DataStream  stream = {packet->data, packet->dataLength, 0};
-        WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
-        WriteByte(&stream, playerID);    // Player that died.
-        WriteByte(&stream, killerID);    // Player that killed.
-        WriteByte(&stream, killReason);  // Killing reason (1 is headshot)
-        WriteByte(&stream, respawnTime); // Time before respawn happens
-        enet_host_broadcast(server->host, 0, packet);
-        if (killerID != playerID) {
-            server->player[killerID].kills++;
-        }
-        server->player[playerID].deaths++;
-        server->player[playerID].respawnTime        = respawnTime;
-        server->player[playerID].startOfRespawnWait = time(NULL);
-        server->player[playerID].state              = STATE_WAITING_FOR_RESPAWN;
-        if (server->player[playerID].hasIntel) {
-            server->player[playerID].hasIntel    = 0;
-            server->protocol.ctf.intelHeld[team] = 0;
-            SendIntelDrop(server, playerID);
-        }
+    uint8 team;
+    if (server->player[playerID].team == 0) {
+        team = 1;
+    } else {
+        team = 0;
+    }
+    ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
+    WriteByte(&stream, playerID);    // Player that died.
+    WriteByte(&stream, killerID);    // Player that killed.
+    WriteByte(&stream, killReason);  // Killing reason (1 is headshot)
+    WriteByte(&stream, respawnTime); // Time before respawn happens
+    enet_host_broadcast(server->host, 0, packet);
+    if (killerID != playerID) {
+        server->player[killerID].kills++;
+    }
+    server->player[playerID].deaths++;
+    server->player[playerID].respawnTime        = respawnTime;
+    server->player[playerID].startOfRespawnWait = time(NULL);
+    server->player[playerID].state              = STATE_WAITING_FOR_RESPAWN;
+    if (server->player[playerID].hasIntel) {
+        server->player[playerID].hasIntel    = 0;
+        server->protocol.ctf.intelHeld[team] = 0;
+        SendIntelDrop(server, playerID);
     }
 }
 
