@@ -28,11 +28,12 @@ void StartServer(uint16      port,
                  const char* modPasswd,
                  const char* guardPasswd,
                  const char* trustedPasswd,
-                 char* serverName,
-                 char* team1Name,
-                 char* team2Name,
-                 uint8*         team1Color,
-                 uint8*         team2Color);
+                 char*       serverName,
+                 char*       team1Name,
+                 char*       team2Name,
+                 uint8*      team1Color,
+                 uint8*      team2Color,
+                 uint8       gamemode);
 void ServerReset(Server* server, char* map);
 
 #endif /* SERVER_H */

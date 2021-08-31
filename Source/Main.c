@@ -5,6 +5,7 @@
 #include <Types.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
+#include <json-c/json_types.h>
 #include <stdio.h>
 
 int main(void)
@@ -25,6 +26,7 @@ int main(void)
     struct json_object* team2ColorInConfig;
     struct json_object* team1ColorTemp;
     struct json_object* team2ColorTemp;
+    struct json_object* gamemodeInConfig;
 
     uint16 port   = DEFAULT_SERVER_PORT;
     uint8  master = 1;
@@ -82,6 +84,10 @@ int main(void)
         printf("Failed to find team2 color in config\n");
         return -1;
     }
+    if (json_object_object_get_ex(parsed_json, "gamemode", &gamemodeInConfig) == 0) {
+        printf("Failed to find gamemode in config\n");
+        return -1;
+    }
     const char* map           = json_object_get_string(mapInConfig);
     port                      = json_object_get_int(portInConfig);
     master                    = json_object_get_int(masterInConfig);
@@ -95,6 +101,7 @@ int main(void)
     char*       team2Name     = (char*) json_object_get_string(team2NameInConfig);
     uint8       team1Color[3];
     uint8       team2Color[3];
+    uint8       gamemode = json_object_get_int(gamemodeInConfig);
     for (int i = 0; i < 3; ++i) {
         team1ColorTemp = json_object_array_get_idx(team1ColorInConfig, i);
         team2ColorTemp = json_object_array_get_idx(team2ColorInConfig, i);
@@ -118,6 +125,7 @@ int main(void)
                 team1Name,
                 team2Name,
                 team1Color,
-                team2Color);
+                team2Color,
+                gamemode);
     return 0;
 }

@@ -11,5 +11,6 @@
 	"team1_name": "Red Team",
 	"team2_name": "Blue Team",
 	"team1_color": [255, 0, 0],
-	"team2_color": [0, 0, 255]
+	"team2_color": [0, 0, 255],
+	"gamemode": 0
 }

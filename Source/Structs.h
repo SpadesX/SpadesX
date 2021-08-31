@@ -167,7 +167,9 @@ typedef struct
     const char* modPasswd;
     const char* guardPasswd;
     const char* trustedPasswd;
-    char serverName[31];
+    char        serverName[31];
+    char        mapName[20];
+    char        gamemodeName[7];
 } Server;
 
 #endif

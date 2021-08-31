@@ -47,7 +47,15 @@ static void* calculatePhysics()
     return 0;
 }
 
-static void ServerInit(Server* server, uint32 connections, const char* map, char* serverName, char* team1Name, char* team2Name, uint8* team1Color, uint8* team2Color)
+static void ServerInit(Server*     server,
+                       uint32      connections,
+                       const char* map,
+                       char*       serverName,
+                       char*       team1Name,
+                       char*       team2Name,
+                       uint8*      team1Color,
+                       uint8*      team2Color,
+                       uint8       gamemode)
 {
     updateTime = lastUpdateTime = get_nanos();
     server->protocol.numPlayers = 0;
@@ -133,8 +141,21 @@ static void ServerInit(Server* server, uint32 connections, const char* map, char
     server->protocol.nameTeamB[strlen(team2Name)] = '\0';
     memcpy(server->serverName, serverName, strlen(serverName));
     server->serverName[strlen(serverName)] = '\0';
+    strncpy(server->mapName, map, strlen(map) - 4);
 
-    server->protocol.mode = GAME_MODE_CTF;
+    if (gamemode == 0) {
+        server->protocol.mode = GAME_MODE_CTF;
+    } else if (gamemode == 1) {
+        server->protocol.mode = GAME_MODE_TC;
+    }
+
+    if (server->protocol.mode == GAME_MODE_CTF) {
+        strncpy(server->gamemodeName, "ctf", strlen("ctf"));
+    } else if (server->protocol.mode == GAME_MODE_TC) {
+        strncpy(server->gamemodeName, "tc", strlen("tc"));
+    } else {
+        strncpy(server->gamemodeName, "IDK", strlen("IDK"));
+    }
 
     // Init CTF
 
@@ -476,11 +497,12 @@ void StartServer(uint16      port,
                  const char* modPasswd,
                  const char* guardPasswd,
                  const char* trustedPasswd,
-                 char* serverName,
-                 char* team1Name,
-                 char* team2Name,
-                 uint8*         team1Color,
-                 uint8*         team2Color)
+                 char*       serverName,
+                 char*       team1Name,
+                 char*       team2Name,
+                 uint8*      team1Color,
+                 uint8*      team2Color,
+                 uint8       gamemode)
 {
     timeSinceStart = get_nanos();
     STATUS("Welcome to SpadesX server");
@@ -512,7 +534,7 @@ void StartServer(uint16      port,
 
     STATUS("Intializing server");
 
-    ServerInit(&server, connections, map, serverName, team1Name, team2Name, team1Color, team2Color);
+    ServerInit(&server, connections, map, serverName, team1Name, team2Name, team1Color, team2Color, gamemode);
     server.master.enableMasterConnection = master;
     server.managerPasswd                 = managerPasswd;
     server.adminPasswd                   = adminPasswd;
