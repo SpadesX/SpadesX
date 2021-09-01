@@ -5,7 +5,6 @@
 #include <Types.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
-#include <json-c/json_types.h>
 #include <stdio.h>
 
 int main(void)
