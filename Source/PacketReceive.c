@@ -460,11 +460,8 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                 return;
             }
 
-            for (int i = 0; i < 8; i++) {
-                bits[i] = (wInput >> i) & mask;
-            }
-            server->player[playerID].primary_fire   = bits[0];
-            server->player[playerID].secondary_fire = bits[1];
+            server->player[playerID].primary_fire   = wInput & mask;
+            server->player[playerID].secondary_fire = (wInput >> 1) & mask;
 
             if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
                 server->player[playerID].locAtClick = server->player[playerID].movement.position;
