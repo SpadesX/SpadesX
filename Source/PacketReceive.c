@@ -392,11 +392,6 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             if (playerID != ID) {
                 printf("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
             }
-            /*printf("Blocks: %d, canBuild: %d, globalAB: %d, Item: %d\n",
-                   server->player[playerID].blocks,
-                   server->player[playerID].canBuild,
-                   server->globalAB,
-                   server->player[playerID].item);*/
             if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
                 server->player[playerID].item == 1)
             {
@@ -410,9 +405,6 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                 end.z           = ReadInt(data);
                 Vector3f startF = {start.x, start.y, start.z};
                 Vector3f endF   = {end.x, end.y, end.z};
-                /*printf("StartDist: %d, EndDist: %d\n",
-                       DistanceIn3D(endF, server->player[playerID].movement.position),
-                       DistanceIn3D(startF, server->player[playerID].locAtClick));*/
                 if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
                     DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4 && vecfValidPos(startF) &&
                     vecfValidPos(endF))
