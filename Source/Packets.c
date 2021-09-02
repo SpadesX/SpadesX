@@ -99,7 +99,7 @@ void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, 
 
 void SendPlayerLeft(Server* server, uint8 playerID)
 {
-    STATUS("sending player left event");
+    printf("Player %s disconnected\n", server->player[playerID].name);
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && server->player[i].state != STATE_DISCONNECTED) {
             ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
