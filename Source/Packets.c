@@ -381,7 +381,7 @@ void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
 void SendRespawn(Server* server, uint8 playerID)
 {
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (server->player[i].state != STATE_DISCONNECTED) {
+        if (server->player[i].state == STATE_READY || server->player[i].state == STATE_SPAWNING || server->player[i].state == STATE_WAITING_FOR_RESPAWN) {
             SendRespawnState(server, i, playerID);
         }
     }
