@@ -464,6 +464,9 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             if (playerID != ID) {
                 printf("Assigned ID: %d doesnt match sent ID: %d in weapon input packet\n", playerID, ID);
             }
+            else if (server->player[playerID].state != STATE_READY) {
+                return;
+            }
 
             for (int i = 0; i < 8; i++) {
                 bits[i] = (wInput >> i) & mask;
