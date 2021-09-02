@@ -37,7 +37,7 @@ void SendMapStart(Server* server, uint8 playerID);
 void SendMapChunks(Server* server, uint8 playerID);
 void SendRespawnState(Server* server, uint8 playerID, uint8 otherID);
 void SendRespawn(Server* server, uint8 playerID);
-void sendMessage(ENetEvent event, DataStream* data, Server* server);
+void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 playerID);
 void SendWorldUpdate(Server* server, uint8 playerID);
 
 #endif

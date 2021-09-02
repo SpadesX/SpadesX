@@ -393,15 +393,17 @@ float max(float num1, float num2)
     return (num1 > num2) ? num1 : num2;
 }
 
-void sendMessage(ENetEvent event, DataStream* data, Server* server)
+void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player)
 {
     uint32 packetSize = event.packet->dataLength + 1;
-    uint8  player     = ReadByte(data);
-    player            = (long) server->player[player].peer->data;
+    uint8  ID         = ReadByte(data);
     int    meantfor   = ReadByte(data);
     uint32 length     = DataLeft(data);
     char*  message    = calloc(length + 1, sizeof(char));
     ReadArray(data, message, length);
+    if (player != ID) {
+                printf("Assigned ID: %d doesnt match sent ID: %d\n in message packet", player, ID);
+            }
     printf("Player %s (%ld) to %d said: %s\n",
            server->player[player].name,
            (long) server->player[player].peer->data,
