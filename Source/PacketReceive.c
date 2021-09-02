@@ -207,7 +207,7 @@ void ReceiveInputData(Server* server, uint8 playerID, DataStream* data)
     uint8 ID;
     ID = ReadByte(data);
     if (playerID != ID) {
-        printf("Assigned ID: %d doesnt match sent ID: %d\n in Input packet", playerID, ID);
+        printf("Assigned ID: %d doesnt match sent ID: %d in Input packet\n", playerID, ID);
     } else if (server->player[playerID].state == STATE_READY) {
         server->player[playerID].input = ReadByte(data);
         for (int i = 0; i < 8; i++) {
@@ -242,7 +242,7 @@ void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID = ReadByte(data);
     if (playerID != ID) {
-        printf("Assigned ID: %d doesnt match sent ID: %d\n in existing player packet", playerID, ID);
+        printf("Assigned ID: %d doesnt match sent ID: %d in existing player packet\n", playerID, ID);
     }
 
     server->player[playerID].team   = ReadByte(data);
@@ -314,7 +314,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
         {
             uint8 ID = ReadByte(data);
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in block action packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in block action packet\n", playerID, ID);
             }
             if (server->player[playerID].canBuild && server->globalAB) {
                 uint8    actionType   = ReadByte(data);
@@ -390,7 +390,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
         {
             uint8 ID = ReadByte(data);
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in blockline packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
             }
             /*printf("Blocks: %d, canBuild: %d, globalAB: %d, Item: %d\n",
                    server->player[playerID].blocks,
@@ -429,7 +429,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             uint8 ID   = ReadByte(data);
             uint8 tool = ReadByte(data);
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in set tool packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in set tool packet\n", playerID, ID);
             }
             server->player[playerID].item = tool;
             SendSetTool(server, playerID, tool);
@@ -444,7 +444,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             uint8 A  = 0;
 
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in set color packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in set color packet\n", playerID, ID);
             }
 
             server->player[playerID].toolColor[0] = A;
@@ -462,7 +462,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             uint8 ID     = ReadByte(data);
             uint8 wInput = ReadByte(data);
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in weapon input packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in weapon input packet\n", playerID, ID);
             }
 
             for (int i = 0; i < 8; i++) {
@@ -501,7 +501,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             uint8 reserve = ReadByte(data);
             uint8 clip    = ReadByte(data);
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in weapon reload packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
             }
             server->player[playerID].weaponReserve = 50; // Temporary
             server->player[playerID].weaponClip    = 10;
@@ -513,7 +513,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             uint8 ID                      = ReadByte(data);
             server->player[playerID].team = ReadByte(data);
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in change team packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
             }
             sendKillPacket(server, playerID, playerID, 5, 5);
             server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
@@ -524,7 +524,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             uint8 ID                        = ReadByte(data);
             server->player[playerID].weapon = ReadByte(data);
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in change weapon packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in change weapon packet\n", playerID, ID);
             }
             sendKillPacket(server, playerID, playerID, 6, 5);
             server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
@@ -534,7 +534,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
         {
             uint8 ID = ReadByte(data);
             if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d\n in grenade packet", playerID, ID);
+                printf("Assigned ID: %d doesnt match sent ID: %d in grenade packet\n", playerID, ID);
             }
             if (server->player[playerID].grenades > 0) {
                 ReceiveGrenadePacket(server, playerID, data);

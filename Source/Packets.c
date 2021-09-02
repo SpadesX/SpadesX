@@ -402,7 +402,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
     char*  message    = calloc(length + 1, sizeof(char));
     ReadArray(data, message, length);
     if (player != ID) {
-        printf("Assigned ID: %d doesnt match sent ID: %d\n in message packet", player, ID);
+        printf("Assigned ID: %d doesnt match sent ID: %d in message packet\n", player, ID);
     }
     printf("Player %s (%ld) to %d said: %s\n",
            server->player[player].name,
