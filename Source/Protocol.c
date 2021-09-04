@@ -32,6 +32,24 @@ static unsigned long long get_nanos(void)
 
 }*/
 
+uint8 isPastStateData(Server* server, uint8 playerID) {
+    Player player = server->player[playerID];
+    if (player.state == STATE_PICK_SCREEN || player.state == STATE_SPAWNING || player.state == STATE_WAITING_FOR_RESPAWN || player.state == STATE_READY) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+uint8 isPastJoinScreen(Server* server, uint8 playerID) {
+    Player player = server->player[playerID];
+    if (player.state == STATE_SPAWNING || player.state == STATE_WAITING_FOR_RESPAWN || player.state == STATE_READY) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 uint8 vecValidPos(Vector3i pos)
 {
     if (pos.x < 512 && pos.x >= 0 && pos.y < 512 && pos.y >= 0 && pos.z < 64 && pos.z >= 0) {
@@ -728,8 +746,10 @@ void updateMovementAndGrenades(Server*            server,
             if (falldamage > 0) {
                 sendHP(server, playerID, playerID, falldamage, 0, 4, 5);
             }
-            handleGrenade(server, playerID);
             handleIntel(server, playerID);
+        }
+        if (isPastJoinScreen(server, playerID)) {
+            handleGrenade(server, playerID);
         }
     }
 }

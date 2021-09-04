@@ -287,7 +287,7 @@ static void SendJoiningData(Server* server, uint8 playerID)
 {
     STATUS("sending state");
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (i != playerID && (server->player[i].state == STATE_READY || server->player[i].state == STATE_SPAWNING)) {
+        if (i != playerID && isPastJoinScreen(server, i)) {
             SendPlayerState(server, playerID, i);
         }
     }
@@ -356,7 +356,7 @@ static void* WorldUpdate()
 {
     for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         OnPlayerUpdate(&server, playerID);
-        if (server.player[playerID].state == STATE_READY || server.player[playerID].state == STATE_WAITING_FOR_RESPAWN)
+        if (isPastJoinScreen(&server, playerID))
         {
             unsigned long long time = get_nanos();
             if (time - server.player[playerID].timeSinceLastWU >= (1000000000 / server.player[playerID].ups)) {

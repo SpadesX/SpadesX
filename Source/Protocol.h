@@ -10,6 +10,8 @@
 #include <Types.h>
 #include <enet/enet.h>
 
+uint8 isPastStateData(Server* server, uint8 playerID);
+uint8 isPastJoinScreen(Server* server, uint8 playerID);
 uint8 vecValidPos(Vector3i pos);
 uint8 vecfValidPos(Vector3f pos);
 uint8 validPos(int x, int y, int z);

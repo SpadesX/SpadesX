@@ -101,7 +101,7 @@ void SendPlayerLeft(Server* server, uint8 playerID)
 {
     printf("Player %s disconnected\n", server->player[playerID].name);
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (i != playerID && server->player[i].state != STATE_DISCONNECTED) {
+        if (i != playerID && isPastStateData(server, i)) {
             ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
             packet->data[0]    = PACKET_TYPE_PLAYER_LEFT;
             packet->data[1]    = playerID;
@@ -381,7 +381,7 @@ void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
 void SendRespawn(Server* server, uint8 playerID)
 {
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (server->player[i].state == STATE_READY || server->player[i].state == STATE_SPAWNING || server->player[i].state == STATE_WAITING_FOR_RESPAWN) {
+        if (isPastJoinScreen(server, i)) {
             SendRespawnState(server, i, playerID);
         }
     }
@@ -442,7 +442,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         {
             int ID;
             if (sscanf(message, "%s #%d", command, &ID) == 1) {
-                if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+                if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
                     if (server->globalAK == 1) {
                         server->globalAK = 0;
                         broadcastServerNotice(server, "Killing has been disabled");
@@ -471,7 +471,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
-                if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+                if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
                     char broadcastDis[100] = "Team Killing has been disabled for player: ";
                     char broadcastEna[100] = "Team Killing has been enabled for player: ";
                     strcat(broadcastDis, server->player[ID].name);
@@ -494,7 +494,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         {
             int ID;
             if (sscanf(message, "%s #%d", command, &ID) == 1) {
-                if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+                if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
                     if (server->globalAB == 1) {
                         server->globalAB = 0;
                         broadcastServerNotice(server, "Building has been disabled");
@@ -523,7 +523,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
-                if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+                if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
                     char sendingMessage[100];
                     strcpy(sendingMessage, server->player[ID].name);
                     strcat(sendingMessage, " has been kicked");
@@ -540,7 +540,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
-                if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+                if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
                     char sendingMessage[100];
                     strcpy(sendingMessage, server->player[ID].name);
                     if (server->player[ID].muted) {
@@ -576,7 +576,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
-                if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+                if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
                     char sendingMessage[100];
                     strcpy(sendingMessage, server->player[ID].name);
                     strcat(sendingMessage, " has been banned");
@@ -654,7 +654,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         } else if (strcmp(command, "/ratio") == 0) {
             int ID = 33;
             if (sscanf(message, "%s #%d", command, &ID) == 2) {
-                if (ID >= 0 && ID < 31 && server->player[ID].state != STATE_DISCONNECTED) {
+                if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
                     char sendingMessage[100];
                     char ratioInString[12];
                     char killsInString[4];
@@ -698,9 +698,8 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         }
     } else {
         for (int playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
-            if (!server->player[player].muted &&
-                ((server->player[playerID].team == server->player[player].team && meantfor == 1) || meantfor == 0) &&
-                server->player[playerID].state != STATE_DISCONNECTED)
+            if (isPastJoinScreen(server, playerID) && !server->player[player].muted &&
+                ((server->player[playerID].team == server->player[player].team && meantfor == 1) || meantfor == 0))
             {
                 enet_peer_send(server->player[playerID].peer, 0, packet);
             }

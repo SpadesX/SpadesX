@@ -1,4 +1,5 @@
 // Copyright DarkNeutrino 2021
+#include "Protocol.h"
 #include "Structs.h"
 
 #include <DataStream.h>
@@ -6,12 +7,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <Protocol.h>
 
 void updateMaster(Server* server)
 {
     server->protocol.countOfUsers = 0;
     for (int i = 0; i < 32; i++) {
-        if (server->player[i].state == STATE_READY) {
+        if (isPastJoinScreen(server, i)) {
             server->protocol.countOfUsers++;
         }
     }

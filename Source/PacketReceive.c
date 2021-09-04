@@ -262,7 +262,7 @@ void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
         ReadArray(data, server->player[playerID].name, length);
         int count = 0;
         for (uint8 i = 0; i < server->protocol.maxPlayers; i++) {
-            if (server->player[i].state != STATE_DISCONNECTED && i != playerID) {
+            if (isPastJoinScreen(server, i) && i != playerID) {
                 if (strcmp(server->player[playerID].name, server->player[i].name) == 0) {
                     count++;
                 }
@@ -450,7 +450,6 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
         case PACKET_TYPE_WEAPON_INPUT:
         {
             uint8 mask = 1;
-            uint8 bits[8];
             uint8 ID     = ReadByte(data);
             uint8 wInput = ReadByte(data);
             if (playerID != ID) {
