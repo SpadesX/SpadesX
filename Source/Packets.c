@@ -424,7 +424,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
         for (uint8 i = 1; i < strLenght; ++i) {
             message[i] = command[i] = tolower(command[i]);
         }
-        if (strcmp(command, "/killp") == 0) {
+        if (strcmp(command, "/kill") == 0) {
             int id = 0;
             if (sscanf(message, "%s #%d", command, &id) == 1) {
                 sendKillPacket(server, player, player, 0, 5);
@@ -571,7 +571,7 @@ void sendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player
             } else {
                 sendServerNotice(server, player, "Changing UPS failed. Please select value between 1 and 300");
             }
-        } else if (strcmp(command, "/banp") == 0 &&
+        } else if (strcmp(command, "/pban") == 0 &&
                    (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
         {
             int ID = 33;
