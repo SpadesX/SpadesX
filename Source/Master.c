@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <Protocol.h>
 
 void updateMaster(Server* server)
 {
