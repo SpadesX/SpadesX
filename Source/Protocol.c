@@ -703,7 +703,6 @@ void handleGrenade(Server* server, uint8 playerID)
                     if (z < 62 && (x >= 0 && x <= 512 && x - 1 >= 0 && x - 1 <= 512 && x + 1 >= 0 && x + 1 <= 512) &&
                         (y >= 0 && y <= 512 && y - 1 >= 0 && y - 1 <= 512 && y + 1 >= 0 && y + 1 <= 512))
                     {
-                        // TODO: Add floating block detection for grenades
                         mapvxlSetAir(&server->map.map, x - 1, y - 1, z);
                         mapvxlSetAir(&server->map.map, x, y - 1, z);
                         mapvxlSetAir(&server->map.map, x + 1, y - 1, z);
