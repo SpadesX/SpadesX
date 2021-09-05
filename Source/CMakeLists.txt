@@ -3,7 +3,6 @@
 #
 
 set(SERVER_HEADERS
-    Player.h
     Protocol.h
     Master.h
     Enums.h
@@ -21,7 +20,6 @@ set(SERVER_SOURCES
     Main.c
     Master.c
     Map.c
-    Player.c
     Protocol.c
     Packets.c
     PacketReceive.c

@@ -3,7 +3,6 @@
 #define SERVER_H
 
 #include "Enums.h"
-#include "Player.h"
 #include "Protocol.h"
 #include "Util/Line.h"
 

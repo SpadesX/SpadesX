@@ -7,7 +7,6 @@
 #include "Master.h"
 #include "PacketReceive.h"
 #include "Packets.h"
-#include "Player.h"
 #include "Protocol.h"
 #include "Structs.h"
 
