@@ -308,7 +308,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             ReceiveInputData(server, playerID, data);
             break;
         case PACKET_TYPE_CHAT_MESSAGE:
-            sendMessage(event, data, server, playerID);
+            handleAndSendMessage(event, data, server, playerID);
             break;
         case PACKET_TYPE_BLOCK_ACTION:
         {

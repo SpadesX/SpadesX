@@ -7,6 +7,7 @@
 
 #include <DataStream.h>
 #include <Types.h>
+#include <ctype.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
@@ -32,16 +33,20 @@ static unsigned long long get_nanos(void)
 
 }*/
 
-uint8 isPastStateData(Server* server, uint8 playerID) {
+uint8 isPastStateData(Server* server, uint8 playerID)
+{
     Player player = server->player[playerID];
-    if (player.state == STATE_PICK_SCREEN || player.state == STATE_SPAWNING || player.state == STATE_WAITING_FOR_RESPAWN || player.state == STATE_READY) {
+    if (player.state == STATE_PICK_SCREEN || player.state == STATE_SPAWNING ||
+        player.state == STATE_WAITING_FOR_RESPAWN || player.state == STATE_READY)
+    {
         return 1;
     } else {
         return 0;
     }
 }
 
-uint8 isPastJoinScreen(Server* server, uint8 playerID) {
+uint8 isPastJoinScreen(Server* server, uint8 playerID)
+{
     Player player = server->player[playerID];
     if (player.state == STATE_SPAWNING || player.state == STATE_WAITING_FOR_RESPAWN || player.state == STATE_READY) {
         return 1;
@@ -821,7 +826,7 @@ uint32 DistanceIn3D(Vector3f vector1, Vector3f vector2)
 {
     uint32 distance = 0;
     distance        = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)) +
-                           fabs(pow(vector1.z - vector2.z, 2)));
+                    fabs(pow(vector1.z - vector2.z, 2)));
     return distance;
 }
 

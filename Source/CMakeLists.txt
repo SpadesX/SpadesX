@@ -13,6 +13,7 @@ set(SERVER_HEADERS
     PacketReceive.h
     Conversion.h
     ColorConversion.h
+    Commands.h
 )
 
 set(SERVER_SOURCES
@@ -23,6 +24,7 @@ set(SERVER_SOURCES
     Protocol.c
     Packets.c
     PacketReceive.c
+    Commands.c
 )
 
 target_sources(server
