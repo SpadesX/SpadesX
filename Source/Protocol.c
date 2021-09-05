@@ -748,9 +748,7 @@ void updateMovementAndGrenades(Server*            server,
             }
             handleIntel(server, playerID);
         }
-        if (isPastJoinScreen(server, playerID)) {
-            handleGrenade(server, playerID);
-        }
+        handleGrenade(server, playerID);
     }
 }
 
