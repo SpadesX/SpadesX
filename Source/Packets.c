@@ -34,7 +34,11 @@ void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
     WriteFloat(&stream, pos.x);
     WriteFloat(&stream, pos.y);
     WriteFloat(&stream, pos.z);
-    enet_host_broadcast(server->host, 0, packet);
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastStateData(server, player)) {
+            enet_peer_send(server->player[player].peer, 0, packet);
+        }
+    }
 }
 
 void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
@@ -44,7 +48,11 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
     WriteByte(&stream, PACKET_TYPE_INTEL_CAPTURE);
     WriteByte(&stream, playerID);
     WriteByte(&stream, winning);
-    enet_host_broadcast(server->host, 0, packet);
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastStateData(server, player)) {
+            enet_peer_send(server->player[player].peer, 0, packet);
+        }
+    }
 }
 
 void SendIntelPickup(Server* server, uint8 playerID)
@@ -53,7 +61,11 @@ void SendIntelPickup(Server* server, uint8 playerID)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INTEL_PICKUP);
     WriteByte(&stream, playerID);
-    enet_host_broadcast(server->host, 0, packet);
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastStateData(server, player)) {
+            enet_peer_send(server->player[player].peer, 0, packet);
+        }
+    }
 }
 
 void SendIntelDrop(Server* server, uint8 playerID)
@@ -78,7 +90,11 @@ void SendIntelDrop(Server* server, uint8 playerID)
            (int) server->protocol.ctf.intel[team].x,
            (int) server->protocol.ctf.intel[team].y,
            (int) server->protocol.ctf.intel[team].z);
-    enet_host_broadcast(server->host, 0, packet);
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastStateData(server, player)) {
+            enet_peer_send(server->player[player].peer, 0, packet);
+        }
+    }
 }
 
 void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity)
@@ -168,7 +184,11 @@ void SendBlockLine(Server* server, uint8 playerID, vec3i start, vec3i end)
     WriteInt(&stream, end.x);
     WriteInt(&stream, end.y);
     WriteInt(&stream, end.z);
-    enet_host_broadcast(server->host, 0, packet);
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastStateData(server, player)) {
+            enet_peer_send(server->player[player].peer, 0, packet);
+        }
+    }
 }
 
 void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, int Y, int Z)
@@ -181,7 +201,11 @@ void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, in
     WriteInt(&stream, X);
     WriteInt(&stream, Y);
     WriteInt(&stream, Z);
-    enet_host_broadcast(server->host, 0, packet);
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastStateData(server, player)) {
+            enet_peer_send(server->player[player].peer, 0, packet);
+        }
+    }
 }
 
 void SendStateData(Server* server, uint8 playerID)
@@ -251,7 +275,11 @@ void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killRe
     WriteByte(&stream, killerID);    // Player that killed.
     WriteByte(&stream, killReason);  // Killing reason (1 is headshot)
     WriteByte(&stream, respawnTime); // Time before respawn happens
-    enet_host_broadcast(server->host, 0, packet);
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastStateData(server, player)) {
+            enet_peer_send(server->player[player].peer, 0, packet);
+        }
+    }
     if (killerID != playerID) {
         server->player[killerID].kills++;
     }

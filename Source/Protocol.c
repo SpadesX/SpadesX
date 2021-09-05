@@ -798,7 +798,11 @@ void broadcastServerNotice(Server* server, char* message)
     WriteByte(&stream, 33);
     WriteByte(&stream, 0);
     WriteArray(&stream, message, strlen(message));
-    enet_host_broadcast(server->host, 0, packet);
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastJoinScreen(server, player)) {
+            enet_peer_send(server->player[player].peer, 0, packet);
+        }
+    }
 }
 
 uint8 playerToPlayerVisible(Server* server, uint8 playerID, uint8 playerID2)
@@ -845,7 +849,7 @@ uint8 Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance)
 void SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID)
 {
     for (uint8 i = 0; i < 32; ++i) {
-        if (playerID != i && server->player[i].state != STATE_DISCONNECTED) {
+        if (playerID != i && isPastStateData(server, i)) {
             enet_peer_send(server->player[i].peer, 0, packet);
         }
     }
@@ -854,7 +858,7 @@ void SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID)
 void SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID)
 {
     for (uint8 i = 0; i < 32; ++i) {
-        if (playerID != i && server->player[i].state != STATE_DISCONNECTED) {
+        if (playerID != i && isPastStateData(server, i)) {
             if (playerToPlayerVisible(server, playerID, i)) {
                 enet_peer_send(server->player[i].peer, 0, packet);
             }
