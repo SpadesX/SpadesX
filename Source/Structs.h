@@ -121,6 +121,7 @@ typedef struct
     uint8              isMod;
     uint8              isGuard;
     uint8              isTrusted;
+    uint8              isInvisible;
 
     uint8    movForward;
     uint8    movBackwards;

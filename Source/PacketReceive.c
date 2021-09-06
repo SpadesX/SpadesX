@@ -106,7 +106,7 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
                 switch (hitType) {
                     case HIT_TYPE_HEAD:
                     {
-                        sendKillPacket(server, playerID, hitPlayerID, 1, 5);
+                        sendKillPacket(server, playerID, hitPlayerID, 1, 5, 0);
                         break;
                     }
                     case HIT_TYPE_TORSO:
@@ -474,7 +474,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                     server->player[playerID].weaponClip--;
                 }
             } else {
-                // sendKillPacket(server, playerID, playerID, 0, 30);
+                // sendKillPacket(server, playerID, playerID, 0, 30, 0);
             }
             break;
         }
@@ -506,7 +506,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             if (playerID != ID) {
                 printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
             }
-            sendKillPacket(server, playerID, playerID, 5, 5);
+            sendKillPacket(server, playerID, playerID, 5, 5, 0);
             server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
             break;
         }
@@ -517,7 +517,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             if (playerID != ID) {
                 printf("Assigned ID: %d doesnt match sent ID: %d in change weapon packet\n", playerID, ID);
             }
-            sendKillPacket(server, playerID, playerID, 6, 5);
+            sendKillPacket(server, playerID, playerID, 6, 5, 0);
             server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
             break;
         }

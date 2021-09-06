@@ -261,7 +261,12 @@ void SendInputData(Server* server, uint8 playerID)
     SendPacketExceptSenderDistCheck(server, packet, playerID);
 }
 
-void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killReason, uint8 respawnTime)
+void sendKillPacket(Server* server,
+                    uint8   killerID,
+                    uint8   playerID,
+                    uint8   killReason,
+                    uint8   respawnTime,
+                    uint8   makeInvisible)
 {
     uint8 team;
     if (server->player[playerID].team == 0) {
@@ -277,17 +282,20 @@ void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killRe
     WriteByte(&stream, killReason);  // Killing reason (1 is headshot)
     WriteByte(&stream, respawnTime); // Time before respawn happens
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player)) {
+        uint8 isPast = isPastStateData(server, player);
+        if ((makeInvisible && player != playerID && isPast) || (isPast && !makeInvisible)) {
             enet_peer_send(server->player[player].peer, 0, packet);
         }
     }
-    if (killerID != playerID) {
-        server->player[killerID].kills++;
+    if (!makeInvisible) {
+        if (killerID != playerID) {
+            server->player[killerID].kills++;
+        }
+        server->player[playerID].deaths++;
+        server->player[playerID].respawnTime        = respawnTime;
+        server->player[playerID].startOfRespawnWait = time(NULL);
+        server->player[playerID].state              = STATE_WAITING_FOR_RESPAWN;
     }
-    server->player[playerID].deaths++;
-    server->player[playerID].respawnTime        = respawnTime;
-    server->player[playerID].startOfRespawnWait = time(NULL);
-    server->player[playerID].state              = STATE_WAITING_FOR_RESPAWN;
     if (server->player[playerID].hasIntel) {
         server->player[playerID].hasIntel    = 0;
         server->protocol.ctf.intelHeld[team] = 0;
@@ -319,7 +327,7 @@ void sendHP(Server* server,
 
         if (server->player[hitPlayerID].HP == 0) {
             server->player[hitPlayerID].alive = 0;
-            sendKillPacket(server, playerID, hitPlayerID, killReason, respawnTime);
+            sendKillPacket(server, playerID, hitPlayerID, killReason, respawnTime, 0);
         }
 
         else if (server->player[hitPlayerID].HP > 0 && server->player[hitPlayerID].HP < 100)
@@ -441,7 +449,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     WriteByte(&stream, meantfor);
     WriteArray(&stream, message, length);
     if (message[0] == '/') {
-       handleCommands(server, player, message);
+        handleCommands(server, player, message);
     } else {
         for (int playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
             if (isPastJoinScreen(server, playerID) && !server->player[player].muted &&
@@ -461,7 +469,7 @@ void SendWorldUpdate(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_WORLD_UPDATE);
 
     for (uint8 j = 0; j < 32; ++j) {
-        if (playerToPlayerVisible(server, playerID, j)) {
+        if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0) {
             WriteVector3f(&stream, server->player[j].movement.position);
             WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
         } else {

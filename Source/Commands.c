@@ -17,12 +17,12 @@ static void killCommand(Server* server, char command[30], char* message, uint8 p
 {
     int id = 0;
     if (sscanf(message, "%s #%d", command, &id) == 1) {
-        sendKillPacket(server, player, player, 0, 5);
+        sendKillPacket(server, player, player, 0, 5, 0);
     } else {
         if (server->player[id].state == STATE_READY &&
             (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
         {
-            sendKillPacket(server, id, id, 0, 5);
+            sendKillPacket(server, id, id, 0, 5, 0);
         } else {
             sendServerNotice(server, player, "Player does not exist or isnt spawned yet");
         }
@@ -306,19 +306,39 @@ static void adminCommand(Server* server, char* message, uint8 player, Player srv
     char sendingMessage[strlen(server->player[player].name) + 1037];
     char staffMessage[1024];
     if (sscanf(message, "/admin %[^\n]", staffMessage) == 1) {
-            snprintf(sendingMessage,
-                     strlen(server->player[player].name) + 1037,
-                     "Staff from %s: %s",
-                     server->player[player].name,
-                     staffMessage);
-            for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
-                if (isPastJoinScreen(server, ID) && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
-                    sendServerNotice(server, ID, sendingMessage);
-                }
+        snprintf(sendingMessage,
+                 strlen(server->player[player].name) + 1037,
+                 "Staff from %s: %s",
+                 server->player[player].name,
+                 staffMessage);
+        for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
+            if (isPastJoinScreen(server, ID) &&
+                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+                sendServerNotice(server, ID, sendingMessage);
             }
-            sendServerNotice(server, player, "Message sent to all staff members online");
+        }
+        sendServerNotice(server, player, "Message sent to all staff members online");
     } else {
         sendServerNotice(server, player, "Invalid message");
+    }
+}
+
+static void invCommand(Server* server, uint8 player)
+{
+    if (server->player[player].isInvisible == 1) {
+        server->player[player].isInvisible  = 0;
+        server->player[player].allowKilling = 1;
+        for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
+            if (isPastJoinScreen(server, i) && i != player) {
+                SendRespawnState(server, i, player);
+            }
+        }
+        sendServerNotice(server, player, "You are no longer invisible");
+    } else if (server->player[player].isInvisible == 0) {
+        server->player[player].isInvisible  = 1;
+        server->player[player].allowKilling = 0;
+        sendKillPacket(server, player, player, 0, 0, 1);
+        sendServerNotice(server, player, "You are now invisible");
     }
 }
 
@@ -367,5 +387,9 @@ void handleCommands(Server* server, uint8 player, char* message)
         pmCommand(server, message, player);
     } else if (strcmp(command, "/admin") == 0) {
         adminCommand(server, message, player, srvPlayer);
+    } else if (strcmp(command, "/inv") == 0 &&
+               (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+    {
+        invCommand(server, player);
     }
 }
