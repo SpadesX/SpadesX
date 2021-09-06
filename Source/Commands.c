@@ -278,14 +278,14 @@ static void ratioCommand(Server* server, char command[30], char* message, uint8 
 
 static void pmCommand(Server* server, char* message, uint8 player)
 {
-    char sendingMessage[strlen(server->player[player].name) + 1033];
+    char sendingMessage[strlen(server->player[player].name) + 1034];
     char returnMessage[100];
     char PM[1024];
     int  ID = 33;
     if (sscanf(message, "/pm #%d %[^\n]", &ID, PM) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             snprintf(sendingMessage,
-                     strlen(server->player[player].name) + 1033,
+                     strlen(server->player[player].name) + 1034,
                      "PM from %s: %s",
                      server->player[player].name,
                      PM);
