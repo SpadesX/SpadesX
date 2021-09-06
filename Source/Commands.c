@@ -301,6 +301,27 @@ static void pmCommand(Server* server, char* message, uint8 player)
     }
 }
 
+static void adminCommand(Server* server, char* message, uint8 player, Player srvPlayer)
+{
+    char sendingMessage[strlen(server->player[player].name) + 1037];
+    char staffMessage[1024];
+    if (sscanf(message, "/admin %[^\n]", staffMessage) == 1) {
+            snprintf(sendingMessage,
+                     strlen(server->player[player].name) + 1037,
+                     "Staff from %s: %s",
+                     server->player[player].name,
+                     staffMessage);
+            for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
+                if (isPastJoinScreen(server, ID) && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
+                    sendServerNotice(server, ID, sendingMessage);
+                }
+            }
+            sendServerNotice(server, player, "Message sent to all staff members online");
+    } else {
+        sendServerNotice(server, player, "Invalid message");
+    }
+}
+
 void handleCommands(Server* server, uint8 player, char* message)
 {
     Player srvPlayer = server->player[player];
@@ -344,5 +365,7 @@ void handleCommands(Server* server, uint8 player, char* message)
         ratioCommand(server, command, message, player);
     } else if (strcmp(command, "/pm") == 0) {
         pmCommand(server, message, player);
+    } else if (strcmp(command, "/admin") == 0) {
+        adminCommand(server, message, player, srvPlayer);
     }
 }
