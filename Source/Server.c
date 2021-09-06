@@ -109,6 +109,7 @@ static void ServerInit(Server*     server,
         server->player[i].isMod                       = 0;
         server->player[i].isGuard                     = 0;
         server->player[i].isTrusted                   = 0;
+        server->player[i].isInvisible                 = 0;
         server->player[i].kills                       = 0;
         server->player[i].deaths                      = 0;
         memset(server->player[i].name, 0, 17);
@@ -235,6 +236,7 @@ void ServerReset(Server* server, char* map)
         server->player[i].isMod                       = 0;
         server->player[i].isGuard                     = 0;
         server->player[i].isTrusted                   = 0;
+        server->player[i].isInvisible                 = 0;
         server->player[i].kills                       = 0;
         server->player[i].deaths                      = 0;
         memset(server->player[i].name, 0, 17);
@@ -355,8 +357,7 @@ static void* WorldUpdate()
 {
     for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         OnPlayerUpdate(&server, playerID);
-        if (isPastJoinScreen(&server, playerID))
-        {
+        if (isPastJoinScreen(&server, playerID)) {
             unsigned long long time = get_nanos();
             if (time - server.player[playerID].timeSinceLastWU >= (1000000000 / server.player[playerID].ups)) {
                 SendWorldUpdate(&server, playerID);
@@ -471,6 +472,9 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].isMod                       = 0;
                 server->player[playerID].isGuard                     = 0;
                 server->player[playerID].isTrusted                   = 0;
+                server->player[playerID].isInvisible                 = 0;
+                server->player[playerID].kills                       = 0;
+                server->player[playerID].deaths                      = 0;
                 memset(server->player[playerID].name, 0, 17);
                 server->protocol.numPlayers--;
                 if (server->master.enableMasterConnection == 1) {
