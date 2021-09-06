@@ -468,7 +468,7 @@ void SendWorldUpdate(Server* server, uint8 playerID)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WORLD_UPDATE);
 
-    for (uint8 j = 0; j < 32; ++j) {
+    for (uint8 j = 0; j < server->protocol.maxPlayers; ++j) {
         if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0) {
             WriteVector3f(&stream, server->player[j].movement.position);
             WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
