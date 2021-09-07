@@ -287,7 +287,7 @@ void sendKillPacket(Server* server,
             enet_peer_send(server->player[player].peer, 0, packet);
         }
     }
-    if (!makeInvisible) {
+    if (!makeInvisible && server->player[playerID].isInvisible == 0) {
         if (killerID != playerID) {
             server->player[killerID].kills++;
         }
