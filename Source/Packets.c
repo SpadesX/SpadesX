@@ -464,7 +464,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
 
 void SendWorldUpdate(Server* server, uint8 playerID)
 {
-    ENetPacket* packet = enet_packet_create(NULL, 1 + (32 * 24), ENET_PACKET_FLAG_UNSEQUENCED);
+    ENetPacket* packet = enet_packet_create(NULL, 1 + (32 * 24), 0);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WORLD_UPDATE);
 
