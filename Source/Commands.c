@@ -156,7 +156,7 @@ static void upsCommand(Server* server, char command[30], char* message, uint8 pl
     if (ups >= 1 && ups <= 300) {
         server->player[player].ups = ups;
         char fullString[32];
-        snprintf(fullString, 32, "UPS changed to %f successfully", ups);
+        snprintf(fullString, 32, "UPS changed to %.2f successfully", ups);
         sendServerNotice(server, player, fullString);
     } else {
         sendServerNotice(server, player, "Changing UPS failed. Please select value between 1 and 300");
