@@ -390,7 +390,7 @@ static void banIPCommand(Server* server, char command[30], char* message, uint8 
                     enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
                 }
             }
-            broadcastServerNotice(server, sendingMessage);
+            sendServerNotice(server, player, sendingMessage);
         } else {
             sendServerNotice(server, player, "Invalid IP format");
         }
