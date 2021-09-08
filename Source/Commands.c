@@ -278,13 +278,13 @@ static void ratioCommand(Server* server, char command[30], char* message, uint8 
     }
 }
 
-static void pmCommand(Server* server, char* message, uint8 player)
+static void pmCommand(Server* server, char command[30], char* message, uint8 player)
 {
     char sendingMessage[strlen(server->player[player].name) + 1034];
     char returnMessage[100];
     char PM[1024];
     int  ID = 33;
-    if (sscanf(message, "/pm #%d %[^\n]", &ID, PM) == 2) {
+    if (sscanf(message, "%s #%d %[^\n]", command, &ID, PM) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             snprintf(sendingMessage,
                      strlen(server->player[player].name) + 1034,
@@ -303,11 +303,11 @@ static void pmCommand(Server* server, char* message, uint8 player)
     }
 }
 
-static void adminCommand(Server* server, char* message, uint8 player, Player srvPlayer)
+static void adminCommand(Server* server, char command[30], char* message, uint8 player, Player srvPlayer)
 {
     char sendingMessage[strlen(server->player[player].name) + 1037];
     char staffMessage[1024];
-    if (sscanf(message, "/admin %[^\n]", staffMessage) == 1) {
+    if (sscanf(message, "%s %[^\n]", command, staffMessage) == 1) {
         snprintf(sendingMessage,
                  strlen(server->player[player].name) + 1037,
                  "Staff from %s: %s",
@@ -344,10 +344,10 @@ static void invCommand(Server* server, uint8 player)
     }
 }
 
-static void sayCommand(Server* server, char* message, uint8 player)
+static void sayCommand(Server* server, char command[30], char* message, uint8 player)
 {
     char staffMessage[1024];
-    if (sscanf(message, "/say %[^\n]", staffMessage) == 1) {
+    if (sscanf(message, "%s %[^\n]", command, staffMessage) == 1) {
         for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
             if (isPastJoinScreen(server, ID)) {
                 sendServerNotice(server, ID, staffMessage);
@@ -441,9 +441,9 @@ void handleCommands(Server* server, uint8 player, char* message)
     } else if (strcmp(command, "/ratio") == 0) {
         ratioCommand(server, command, message, player);
     } else if (strcmp(command, "/pm") == 0) {
-        pmCommand(server, message, player);
+        pmCommand(server, command, message, player);
     } else if (strcmp(command, "/admin") == 0) {
-        adminCommand(server, message, player, srvPlayer);
+        adminCommand(server, command, message, player, srvPlayer);
     } else if (strcmp(command, "/inv") == 0 &&
                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
     {
@@ -451,7 +451,7 @@ void handleCommands(Server* server, uint8 player, char* message)
     } else if (strcmp(command, "/say") == 0 &&
                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
     {
-        sayCommand(server, message, player);
+        sayCommand(server, command, message, player);
     } else if (strcmp(command, "/banip") == 0 &&
                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
     {
