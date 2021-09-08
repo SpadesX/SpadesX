@@ -342,6 +342,20 @@ static void invCommand(Server* server, uint8 player)
     }
 }
 
+static void sayCommand(Server* server, char* message, uint8 player)
+{
+    char staffMessage[1024];
+    if (sscanf(message, "/say %[^\n]", staffMessage) == 1) {
+        for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
+            if (isPastJoinScreen(server, ID)) {
+                sendServerNotice(server, ID, staffMessage);
+            }
+        }
+    } else {
+        sendServerNotice(server, player, "Invalid message");
+    }
+}
+
 void handleCommands(Server* server, uint8 player, char* message)
 {
     Player srvPlayer = server->player[player];
@@ -391,5 +405,9 @@ void handleCommands(Server* server, uint8 player, char* message)
                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
     {
         invCommand(server, player);
-    }
+    } else if (strcmp(command, "/say") == 0 &&
+               (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+        {
+            sayCommand(server, message, player);
+        }
 }
