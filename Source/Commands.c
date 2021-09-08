@@ -1,10 +1,12 @@
 #include "Commands.h"
 
+#include "Enums.h"
 #include "Packets.h"
 #include "Protocol.h"
 #include "Structs.h"
 
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -356,6 +358,47 @@ static void sayCommand(Server* server, char* message, uint8 player)
     }
 }
 
+static void banIPCommand(Server* server, char command[30], char* message, uint8 player)
+{
+    char         ipString[16];
+    int ip[4]; // Yes i know waste of memory. Shush for now.
+    unsigned int          ip64;
+    if (sscanf(message, "%s %s", command, ipString) == 2) {
+        printf("%s\n", ipString);
+        if (sscanf(ipString, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] < 256) &&
+            (ip[1] >= 0 && ip[1] < 256) && (ip[2] >= 0 && ip[2] < 256) && (ip[3] >= 0 && ip[3] < 256))
+        {
+            ip64 = ((uint64) (((uint8) ip[0])) | (uint64) (((uint8) ip[1]) << 8) |
+                    (uint64) (((uint8) ip[2]) << 16) | (uint64) ((uint8) ip[3]) << 24);
+            printf("%d\n", ip64);
+            char sendingMessage[100];
+            snprintf(sendingMessage, 100, "IP %s has been permanently banned", ipString);
+            FILE* fp;
+            fp = fopen("BanList.txt", "a");
+            if (fp == NULL) {
+                sendServerNotice(server, player, "IP could not be banned. File failed to open");
+                return;
+            }
+            uint8 banned = 0;
+            for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
+                if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].peer->address.host == ip64) {
+                    if (banned == 0) {
+                        fprintf(fp, "%d %s\n", ip64, server->player[ID].name);
+                        fclose(fp);
+                        banned = 1; // Do not add multiples of the same IP. Its pointless.
+                    }
+                    enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
+                }
+            }
+            broadcastServerNotice(server, sendingMessage);
+        } else {
+            sendServerNotice(server, player, "Invalid IP format");
+        }
+    } else {
+        sendServerNotice(server, player, "You did not enter ID or entered incorrect argument");
+    }
+}
+
 void handleCommands(Server* server, uint8 player, char* message)
 {
     Player srvPlayer = server->player[player];
@@ -407,7 +450,11 @@ void handleCommands(Server* server, uint8 player, char* message)
         invCommand(server, player);
     } else if (strcmp(command, "/say") == 0 &&
                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
-        {
-            sayCommand(server, message, player);
-        }
+    {
+        sayCommand(server, message, player);
+    } else if (strcmp(command, "/banip") == 0 &&
+               (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
+    {
+        banIPCommand(server, command, message, player);
+    }
 }

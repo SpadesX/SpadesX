@@ -528,8 +528,6 @@ void StartServer(uint16      port,
 
     printf("Creating server at port %d\n", port);
 
-    // Server server;
-
     server.host = enet_host_create(&address, connections, channels, inBandwidth, outBandwidth);
     if (server.host == NULL) {
         ERROR("Failed to create server");
