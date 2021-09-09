@@ -29,7 +29,9 @@ void LoadMap(Server* server, const char* path)
 
     uint8* buffer = (uint8*) malloc(server->map.mapSize);
     uint8* mapOut = (uint8*) malloc(server->map.mapSize);
-    fread(buffer, server->map.mapSize, 1, file);
+    if (fread(buffer, server->map.mapSize, 1, file) < server->map.mapSize) {
+        STATUS("Finished loading map");
+    }
     fclose(file);
     mapvxlLoadVXL(&server->map.map, buffer);
     STATUS("compressing map data");
