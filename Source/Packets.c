@@ -16,6 +16,8 @@
 #include <string.h>
 #include <time.h>
 
+int can_see(Server* server, float x0, float y0, float z0, float x1, float y1, float z1);
+
 void SendRestock(Server* server, uint8 playerID)
 {
     ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
@@ -469,7 +471,22 @@ void SendWorldUpdate(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_WORLD_UPDATE);
 
     for (uint8 j = 0; j < server->protocol.maxPlayers; ++j) {
-        if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0) {
+        if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0 &&
+            can_see(server,
+                    server->player[playerID].movement.eyePos.x,
+                    server->player[playerID].movement.eyePos.y,
+                    server->player[playerID].movement.eyePos.z,
+                    server->player[j].movement.eyePos.x,
+                    server->player[j].movement.eyePos.y,
+                    server->player[j].movement.eyePos.z) &&
+            can_see(server,
+                    server->player[playerID].movement.eyePos.x,
+                    server->player[playerID].movement.eyePos.y,
+                    server->player[playerID].movement.eyePos.z,
+                    server->player[j].movement.position.x,
+                    server->player[j].movement.position.y,
+                    server->player[j].movement.position.z))
+        {
             WriteVector3f(&stream, server->player[j].movement.position);
             WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
         } else {
