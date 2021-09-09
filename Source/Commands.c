@@ -361,15 +361,15 @@ static void sayCommand(Server* server, char command[30], char* message, uint8 pl
 static void banIPCommand(Server* server, char command[30], char* message, uint8 player)
 {
     char         ipString[16];
-    int ip[4]; // Yes i know waste of memory. Shush for now.
-    unsigned int          ip64;
+    int          ip[4]; // Yes i know waste of memory. Shush for now.
+    unsigned int ip64;
     if (sscanf(message, "%s %s", command, ipString) == 2) {
         printf("%s\n", ipString);
         if (sscanf(ipString, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] < 256) &&
             (ip[1] >= 0 && ip[1] < 256) && (ip[2] >= 0 && ip[2] < 256) && (ip[3] >= 0 && ip[3] < 256))
         {
-            ip64 = ((uint64) (((uint8) ip[0])) | (uint64) (((uint8) ip[1]) << 8) |
-                    (uint64) (((uint8) ip[2]) << 16) | (uint64) ((uint8) ip[3]) << 24);
+            ip64 = ((uint64) (((uint8) ip[0])) | (uint64) (((uint8) ip[1]) << 8) | (uint64) (((uint8) ip[2]) << 16) |
+                    (uint64) ((uint8) ip[3]) << 24);
             printf("%d\n", ip64);
             char sendingMessage[100];
             snprintf(sendingMessage, 100, "IP %s has been permanently banned", ipString);
