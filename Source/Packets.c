@@ -148,7 +148,7 @@ void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
     WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
     WriteByte(&stream, playerID);
     WriteByte(&stream, wInput);
-    SendPacketExceptSender(server, packet, playerID);
+    SendPacketExceptSenderDistCheck(server, packet, playerID);
 }
 
 void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
