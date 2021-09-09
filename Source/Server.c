@@ -146,7 +146,7 @@ static void ServerInit(Server*     server,
     server->protocol.nameTeamB[strlen(team2Name)] = '\0';
     memcpy(server->serverName, serverName, strlen(serverName));
     server->serverName[strlen(serverName)] = '\0';
-    strncpy(server->mapName, map, strlen(map) - 4);
+    memcpy(server->mapName, map, strlen(map) - 4);
 
     if (gamemode == 0) {
         server->protocol.mode = GAME_MODE_CTF;
@@ -155,11 +155,11 @@ static void ServerInit(Server*     server,
     }
 
     if (server->protocol.mode == GAME_MODE_CTF) {
-        strncpy(server->gamemodeName, "ctf", strlen("ctf"));
+        memcpy(server->gamemodeName, "ctf", strlen("ctf") + 1);
     } else if (server->protocol.mode == GAME_MODE_TC) {
-        strncpy(server->gamemodeName, "tc", strlen("tc"));
+        memcpy(server->gamemodeName, "tc", strlen("tc") + 1);
     } else {
-        strncpy(server->gamemodeName, "IDK", strlen("IDK"));
+        memcpy(server->gamemodeName, "IDK", strlen("IDK") + 1);
     }
 
     // Init CTF
@@ -392,7 +392,7 @@ static void ServerUpdate(Server* server, int timeout)
                 }
                 unsigned int IP = 0;
                 char         nameOfPlayer[20];
-                while (fscanf(fp, "%d %s", &IP, nameOfPlayer) != EOF) {
+                while (fscanf(fp, "%u %s", &IP, nameOfPlayer) != EOF) {
                     if (IP == event.peer->address.host) {
                         enet_peer_disconnect_now(event.peer, REASON_BANNED);
                         printf("WARNING: Banned user %s tried to join. IP: %d\n", nameOfPlayer, IP);

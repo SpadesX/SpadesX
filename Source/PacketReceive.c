@@ -494,8 +494,8 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             if (playerID != ID) {
                 printf("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
             }
-            server->player[playerID].weaponReserve = 50; // Temporary
-            server->player[playerID].weaponClip    = 10;
+            server->player[playerID].weaponReserve = reserve; // Temporary
+            server->player[playerID].weaponClip    = clip;
             SendWeaponReload(server, playerID);
             break;
         }
