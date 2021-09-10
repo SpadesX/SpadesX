@@ -159,6 +159,7 @@ static void ServerInit(Server*     server,
     memcpy(server->serverName, serverName, strlen(serverName));
     server->serverName[strlen(serverName)] = '\0';
     memcpy(server->mapName, map, strlen(map) - 4);
+    server->mapName[strlen(server->mapName)] = '\0';
 
     if (gamemode == 0) {
         server->protocol.mode = GAME_MODE_CTF;
@@ -255,6 +256,7 @@ void ServerReset(Server* server)
         memset(server->player[i].name, 0, 17);
     }
     memcpy(server->mapName, map, strlen(map) - 4);
+    server->mapName[strlen(server->mapName)] = '\0';
 
     server->globalAB                  = 1;
     server->globalAK                  = 1;
