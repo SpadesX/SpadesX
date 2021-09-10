@@ -43,12 +43,15 @@ typedef struct
 
 typedef struct
 {
+    uint8 mapCount;
+    uint8 mapIndex;
     // compressed map
     Queue*            compressedMap;
     uint32            compressedSize;
     vec3i             resultLine[50];
     long unsigned int mapSize;
     MapVxl            map;
+    char mapArray[255][64]; //Dont be crazy. Dont try to have more then 255 maps. I mean come on.
 } Map;
 
 typedef struct

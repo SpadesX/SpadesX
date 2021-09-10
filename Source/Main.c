@@ -3,6 +3,7 @@
 #include "Structs.h"
 
 #include <Types.h>
+#include <string.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
 #include <stdio.h>
@@ -13,6 +14,7 @@ int main(void)
     struct json_object* portInConfig;
     struct json_object* masterInConfig;
     struct json_object* mapInConfig;
+    struct json_object* mapArrayTemp;
     struct json_object* managerPasswdInConfig;
     struct json_object* adminPasswdInConfig;
     struct json_object* modPasswdInConfig;
@@ -87,7 +89,6 @@ int main(void)
         printf("Failed to find gamemode in config\n");
         return -1;
     }
-    const char* map           = json_object_get_string(mapInConfig);
     port                      = json_object_get_int(portInConfig);
     master                    = json_object_get_int(masterInConfig);
     const char* managerPasswd = json_object_get_string(managerPasswdInConfig);
@@ -107,6 +108,17 @@ int main(void)
         team1Color[i]  = json_object_get_int(team1ColorTemp);
         team2Color[i]  = json_object_get_int(team2ColorTemp);
     }
+    uint8 mapArrayLen = json_object_array_length(mapInConfig);
+    char mapArray[mapArrayLen][64];
+
+    for (int i = 0; i < mapArrayLen; ++i) {
+        mapArrayTemp = json_object_array_get_idx(mapInConfig, i);
+        uint8 stringLen = json_object_get_string_len(mapArrayTemp);
+        if (stringLen > 64) {
+            continue;
+        }
+        memcpy(mapArray[i], json_object_get_string(mapArrayTemp), stringLen + 1);
+    }
 
     StartServer(port,
                 64,
@@ -114,7 +126,8 @@ int main(void)
                 0,
                 0,
                 master,
-                map,
+                mapArray,
+                mapArrayLen,
                 managerPasswd,
                 adminPasswd,
                 modPasswd,

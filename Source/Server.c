@@ -48,7 +48,8 @@ static void* calculatePhysics()
 
 static void ServerInit(Server*     server,
                        uint32      connections,
-                       const char* map,
+                       char        mapArray[][64],
+                       uint8       mapCount,
                        char*       serverName,
                        char*       team1Name,
                        char*       team2Name,
@@ -63,6 +64,18 @@ static void ServerInit(Server*     server,
     server->map.compressedMap   = NULL;
     server->map.compressedSize  = 0;
     server->protocol.inputFlags = 0;
+
+    for (int i = 0; i < mapCount; ++i) {
+        memcpy(server->map.mapArray, mapArray[i], strlen(mapArray[i]));
+    }
+    server->map.mapCount = mapCount;
+
+    char map[64];
+    srand(time(0));
+    uint8 index = rand() % mapCount;
+    server->map.mapIndex = index;
+    memcpy(map, mapArray[index], strlen(mapArray[index]) + 1);
+    printf("STATUS: Selecting %s as map\n", map);
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
@@ -115,7 +128,6 @@ static void ServerInit(Server*     server,
         memset(server->player[i].name, 0, 17);
     }
 
-    srand(time(NULL));
     server->globalAB                  = 1;
     server->globalAK                  = 1;
     server->protocol.spawns[0].from.x = 64.f;
@@ -185,13 +197,19 @@ static void ServerInit(Server*     server,
     LoadMap(server, map);
 }
 
-void ServerReset(Server* server, char* map)
+void ServerReset(Server* server)
 {
     updateTime = lastUpdateTime = get_nanos();
 
     server->map.compressedMap   = NULL;
     server->map.compressedSize  = 0;
     server->protocol.inputFlags = 0;
+
+    char map[64];
+    uint8 index = rand() % server->map.mapCount;
+    server->map.mapIndex = index;
+    memcpy(map, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
+    printf("STATUS: Selecting %s as map\n", map);
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
@@ -236,8 +254,8 @@ void ServerReset(Server* server, char* map)
         server->player[i].deaths                      = 0;
         memset(server->player[i].name, 0, 17);
     }
+    memcpy(server->mapName, map, strlen(map) - 4);
 
-    srand(time(NULL));
     server->globalAB                  = 1;
     server->globalAK                  = 1;
     server->protocol.spawns[0].from.x = 64.f;
@@ -276,7 +294,7 @@ void ServerReset(Server* server, char* map)
     server->protocol.ctf.base[1].x = floorf(server->protocol.ctf.base[1].x);
     server->protocol.ctf.base[1].y = floorf(server->protocol.ctf.base[1].y);
 
-    LoadMap(server, map);
+    LoadMap(server, server->mapName);
 }
 
 static void SendJoiningData(Server* server, uint8 playerID)
@@ -494,7 +512,8 @@ void StartServer(uint16      port,
                  uint32      inBandwidth,
                  uint32      outBandwidth,
                  uint8       master,
-                 const char* map,
+                 char        mapArray[][64],
+                 uint8       mapCount,
                  const char* managerPasswd,
                  const char* adminPasswd,
                  const char* modPasswd,
@@ -535,7 +554,7 @@ void StartServer(uint16      port,
 
     STATUS("Intializing server");
 
-    ServerInit(&server, connections, map, serverName, team1Name, team2Name, team1Color, team2Color, gamemode);
+    ServerInit(&server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode);
     server.master.enableMasterConnection = master;
     server.managerPasswd                 = managerPasswd;
     server.adminPasswd                   = adminPasswd;

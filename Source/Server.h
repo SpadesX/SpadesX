@@ -21,7 +21,8 @@ void StartServer(uint16      port,
                  uint32      inBandwidth,
                  uint32      outBandwidth,
                  uint8       master,
-                 const char* map,
+                 char        mapArray[][64],
+                 uint8       mapCount,
                  const char* managerPasswd,
                  const char* adminPasswd,
                  const char* modPasswd,
@@ -33,6 +34,6 @@ void StartServer(uint16      port,
                  uint8*      team1Color,
                  uint8*      team2Color,
                  uint8       gamemode);
-void ServerReset(Server* server, char* map);
+void ServerReset(Server* server);
 
 #endif /* SERVER_H */

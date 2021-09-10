@@ -658,7 +658,7 @@ void handleIntel(Server* server, uint8 playerID)
                             server->player[i].state = STATE_STARTING_MAP;
                         }
                     }
-                    ServerReset(server, "hallway.vxl");
+                    ServerReset(server);
                 }
             }
         }
