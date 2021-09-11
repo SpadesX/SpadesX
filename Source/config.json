@@ -1,7 +1,7 @@
 {
 	"port": 32887,
 	"master": 0,
-	"map": ["hallway.vxl"],
+	"map": ["hallway"],
 	"manager_password": "changeme1",
 	"admin_password": "changeme2",
 	"moderator_password": "changeme3",
