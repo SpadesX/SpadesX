@@ -70,12 +70,12 @@ static void ServerInit(Server*     server,
     }
     server->map.mapCount = mapCount;
 
-    char map[64];
+    char vxlMap[64];
     srand(time(0));
     uint8 index = rand() % mapCount;
     server->map.mapIndex = index;
-    memcpy(map, mapArray[index], strlen(mapArray[index]) + 1);
-    printf("STATUS: Selecting %s as map\n", map);
+    memcpy(server->mapName, mapArray[index], strlen(mapArray[index]) + 1);
+    printf("STATUS: Selecting %s as map\n", server->mapName);
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
@@ -158,8 +158,7 @@ static void ServerInit(Server*     server,
     server->protocol.nameTeamB[strlen(team2Name)] = '\0';
     memcpy(server->serverName, serverName, strlen(serverName));
     server->serverName[strlen(serverName)] = '\0';
-    memcpy(server->mapName, map, strlen(map) - 4);
-    server->mapName[strlen(server->mapName)] = '\0';
+    snprintf(vxlMap, 64, "%s.vxl", server->mapName);
 
     if (gamemode == 0) {
         server->protocol.mode = GAME_MODE_CTF;
@@ -195,7 +194,7 @@ static void ServerInit(Server*     server,
     server->protocol.ctf.base[1].x = floorf(server->protocol.ctf.base[1].x);
     server->protocol.ctf.base[1].y = floorf(server->protocol.ctf.base[1].y);
 
-    LoadMap(server, map);
+    LoadMap(server, vxlMap);
 }
 
 void ServerReset(Server* server)
@@ -206,11 +205,11 @@ void ServerReset(Server* server)
     server->map.compressedSize  = 0;
     server->protocol.inputFlags = 0;
 
-    char map[64];
+    char vxlMap[64];
     uint8 index = rand() % server->map.mapCount;
     server->map.mapIndex = index;
-    memcpy(map, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
-    printf("STATUS: Selecting %s as map\n", map);
+    memcpy(server->mapName, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
+    printf("STATUS: Selecting %s as map\n", server->mapName);
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
@@ -255,8 +254,7 @@ void ServerReset(Server* server)
         server->player[i].deaths                      = 0;
         memset(server->player[i].name, 0, 17);
     }
-    memcpy(server->mapName, map, strlen(map) - 4);
-    server->mapName[strlen(server->mapName)] = '\0';
+    snprintf(vxlMap, 64, "%s.vxl", server->mapName);
 
     server->globalAB                  = 1;
     server->globalAK                  = 1;
@@ -296,7 +294,7 @@ void ServerReset(Server* server)
     server->protocol.ctf.base[1].x = floorf(server->protocol.ctf.base[1].x);
     server->protocol.ctf.base[1].y = floorf(server->protocol.ctf.base[1].y);
 
-    LoadMap(server, server->mapName);
+    LoadMap(server, vxlMap);
 }
 
 static void SendJoiningData(Server* server, uint8 playerID)
