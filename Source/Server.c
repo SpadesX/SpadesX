@@ -668,13 +668,14 @@ void StartServer(uint16      port,
         ConnectMaster(&server, port);
     }
     server.master.timeSinceLastSend = time(NULL);
-    while (1) {
+    server.running = 1;
+    while (server.running) {
         calculatePhysics();
         ServerUpdate(&server, 0);
         WorldUpdate();
         keepMasterAlive(&server);
     }
 
-    STATUS("Destroying server");
+    STATUS("Exiting");
     enet_host_destroy(server.host);
 }
