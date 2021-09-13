@@ -16,6 +16,8 @@
 #include <Queue.h>
 #include <Types.h>
 #include <enet/enet.h>
+#include <json-c/json.h>
+#include <json-c/json_object.h>
 #include <math.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -46,16 +48,16 @@ static void* calculatePhysics()
     return 0;
 }
 
-static void ServerInit(Server*     server,
-                       uint32      connections,
-                       char        mapArray[][64],
-                       uint8       mapCount,
-                       char*       serverName,
-                       char*       team1Name,
-                       char*       team2Name,
-                       uint8*      team1Color,
-                       uint8*      team2Color,
-                       uint8       gamemode)
+static void ServerInit(Server* server,
+                       uint32  connections,
+                       char    mapArray[][64],
+                       uint8   mapCount,
+                       char*   serverName,
+                       char*   team1Name,
+                       char*   team2Name,
+                       uint8*  team1Color,
+                       uint8*  team2Color,
+                       uint8   gamemode)
 {
     updateTime = lastUpdateTime = get_nanos();
     server->protocol.numPlayers = 0;
@@ -72,10 +74,54 @@ static void ServerInit(Server*     server,
 
     char vxlMap[64];
     srand(time(0));
-    uint8 index = rand() % mapCount;
+    uint8 index          = rand() % mapCount;
     server->map.mapIndex = index;
     memcpy(server->mapName, mapArray[index], strlen(mapArray[index]) + 1);
     printf("STATUS: Selecting %s as map\n", server->mapName);
+
+    STATUS("Loading spawn ranges from map file");
+    struct json_object* parsed_json;
+    char                mapConfig[64];
+    snprintf(mapConfig, 64, "%s.json", server->mapName);
+    parsed_json = json_object_from_file(mapConfig);
+
+    struct json_object* team1StartInConfig;
+    struct json_object* team1EndInConfig;
+    struct json_object* team2StartInConfig;
+    struct json_object* team2EndInConfig;
+    struct json_object* authorInConfig;
+    int                 team1Start[3];
+    int                 team2Start[3];
+    int                 team1End[3];
+    int                 team2End[3];
+
+    if (json_object_object_get_ex(parsed_json, "team1_start", &team1StartInConfig) == 0) {
+        printf("Failed to find team1 start in map config\n");
+        return;
+    }
+    if (json_object_object_get_ex(parsed_json, "team1_end", &team1EndInConfig) == 0) {
+        printf("Failed to find team1 end in map config\n");
+        return;
+    }
+    if (json_object_object_get_ex(parsed_json, "team2_start", &team2StartInConfig) == 0) {
+        printf("Failed to find team2 start in map config\n");
+        return;
+    }
+    if (json_object_object_get_ex(parsed_json, "team2_end", &team2EndInConfig) == 0) {
+        printf("Failed to find team2 start in map config\n");
+        return;
+    }
+    if (json_object_object_get_ex(parsed_json, "author", &authorInConfig) == 0) {
+        printf("Failed to find author in map config\n");
+        return;
+    }
+
+    for (uint8 i = 0; i < 3; ++i) {
+        team1Start[i] = json_object_get_int(json_object_array_get_idx(team1StartInConfig, i));
+        team2Start[i] = json_object_get_int(json_object_array_get_idx(team2StartInConfig, i));
+        team1End[i]   = json_object_get_int(json_object_array_get_idx(team1EndInConfig, i));
+        team2End[i]   = json_object_get_int(json_object_array_get_idx(team2EndInConfig, i));
+    }
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
@@ -128,17 +174,22 @@ static void ServerInit(Server*     server,
         memset(server->player[i].name, 0, 17);
     }
 
-    server->globalAB                  = 1;
-    server->globalAK                  = 1;
-    server->protocol.spawns[0].from.x = 64.f;
-    server->protocol.spawns[0].from.y = 224.f;
-    server->protocol.spawns[0].to.x   = 128.f;
-    server->protocol.spawns[0].to.y   = 288.f;
+    server->globalAB = 1;
+    server->globalAK = 1;
 
-    server->protocol.spawns[1].from.x = 382.f;
-    server->protocol.spawns[1].from.y = 224.f;
-    server->protocol.spawns[1].to.x   = 448.f;
-    server->protocol.spawns[1].to.y   = 288.f;
+    server->protocol.spawns[0].from.x = team1Start[0];
+    server->protocol.spawns[0].from.y = team1Start[1];
+    server->protocol.spawns[0].from.z = team1Start[2];
+    server->protocol.spawns[0].to.x   = team1End[0];
+    server->protocol.spawns[0].to.y   = team1End[1];
+    server->protocol.spawns[0].to.z   = team1End[2];
+
+    server->protocol.spawns[1].from.x = team2Start[0];
+    server->protocol.spawns[1].from.y = team2Start[1];
+    server->protocol.spawns[1].from.z = team2Start[2];
+    server->protocol.spawns[1].to.x   = team2End[0];
+    server->protocol.spawns[1].to.y   = team2End[1];
+    server->protocol.spawns[1].to.z   = team2End[2];
 
     server->protocol.colorFog[0] = 0x80;
     server->protocol.colorFog[1] = 0xE8;
@@ -205,11 +256,55 @@ void ServerReset(Server* server)
     server->map.compressedSize  = 0;
     server->protocol.inputFlags = 0;
 
-    char vxlMap[64];
-    uint8 index = rand() % server->map.mapCount;
+    char  vxlMap[64];
+    uint8 index          = rand() % server->map.mapCount;
     server->map.mapIndex = index;
     memcpy(server->mapName, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
     printf("STATUS: Selecting %s as map\n", server->mapName);
+
+    STATUS("Loading spawn ranges from map file");
+    struct json_object* parsed_json;
+    char                mapConfig[64];
+    snprintf(mapConfig, 64, "%s.json", server->mapName);
+    parsed_json = json_object_from_file(mapConfig);
+
+    struct json_object* team1StartInConfig;
+    struct json_object* team1EndInConfig;
+    struct json_object* team2StartInConfig;
+    struct json_object* team2EndInConfig;
+    struct json_object* authorInConfig;
+    int                 team1Start[3];
+    int                 team2Start[3];
+    int                 team1End[3];
+    int                 team2End[3];
+
+    if (json_object_object_get_ex(parsed_json, "team1_start", &team1StartInConfig) == 0) {
+        printf("Failed to find team1 start in map config\n");
+        return;
+    }
+    if (json_object_object_get_ex(parsed_json, "team1_end", &team1EndInConfig) == 0) {
+        printf("Failed to find team1 end in map config\n");
+        return;
+    }
+    if (json_object_object_get_ex(parsed_json, "team2_start", &team2StartInConfig) == 0) {
+        printf("Failed to find team2 start in map config\n");
+        return;
+    }
+    if (json_object_object_get_ex(parsed_json, "team2_end", &team2EndInConfig) == 0) {
+        printf("Failed to find team2 start in map config\n");
+        return;
+    }
+    if (json_object_object_get_ex(parsed_json, "author", &authorInConfig) == 0) {
+        printf("Failed to find author in map config\n");
+        return;
+    }
+
+    for (uint8 i = 0; i < 3; ++i) {
+        team1Start[i] = json_object_get_int(json_object_array_get_idx(team1StartInConfig, i));
+        team2Start[i] = json_object_get_int(json_object_array_get_idx(team2StartInConfig, i));
+        team1End[i]   = json_object_get_int(json_object_array_get_idx(team1EndInConfig, i));
+        team2End[i]   = json_object_get_int(json_object_array_get_idx(team2EndInConfig, i));
+    }
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
@@ -256,17 +351,22 @@ void ServerReset(Server* server)
     }
     snprintf(vxlMap, 64, "%s.vxl", server->mapName);
 
-    server->globalAB                  = 1;
-    server->globalAK                  = 1;
-    server->protocol.spawns[0].from.x = 64.f;
-    server->protocol.spawns[0].from.y = 224.f;
-    server->protocol.spawns[0].to.x   = 128.f;
-    server->protocol.spawns[0].to.y   = 288.f;
+    server->globalAB = 1;
+    server->globalAK = 1;
 
-    server->protocol.spawns[1].from.x = 382.f;
-    server->protocol.spawns[1].from.y = 224.f;
-    server->protocol.spawns[1].to.x   = 448.f;
-    server->protocol.spawns[1].to.y   = 288.f;
+    server->protocol.spawns[0].from.x = team1Start[0];
+    server->protocol.spawns[0].from.y = team1Start[1];
+    server->protocol.spawns[0].from.z = team1Start[2];
+    server->protocol.spawns[0].to.x   = team1End[0];
+    server->protocol.spawns[0].to.y   = team1End[1];
+    server->protocol.spawns[0].to.z   = team1End[2];
+
+    server->protocol.spawns[1].from.x = team2Start[0];
+    server->protocol.spawns[1].from.y = team2Start[1];
+    server->protocol.spawns[1].from.z = team2Start[2];
+    server->protocol.spawns[1].to.x   = team2End[0];
+    server->protocol.spawns[1].to.y   = team2End[1];
+    server->protocol.spawns[1].to.z   = team2End[2];
 
     server->protocol.colorFog[0] = 0x80;
     server->protocol.colorFog[1] = 0xE8;
@@ -554,7 +654,8 @@ void StartServer(uint16      port,
 
     STATUS("Intializing server");
 
-    ServerInit(&server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode);
+    ServerInit(
+    &server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode);
     server.master.enableMasterConnection = master;
     server.managerPasswd                 = managerPasswd;
     server.adminPasswd                   = adminPasswd;

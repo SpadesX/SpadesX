@@ -600,14 +600,15 @@ uint8 checkInIntel(Server* server, uint8 team)
 
 Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
 {
-    Quad2D* spawn = server->protocol.spawns + team;
+    Quad3D* spawn = server->protocol.spawns + team;
 
     float    dx = spawn->to.x - spawn->from.x;
     float    dy = spawn->to.y - spawn->from.y;
+    float    dz = spawn->to.z - spawn->from.z;
     Vector3f position;
     position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
     position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-    position.z = 62.f;
+    position.z = spawn->from.z + dz * ((float) rand() / (float) RAND_MAX);
     return position;
 }
 
@@ -759,14 +760,15 @@ void updateMovementAndGrenades(Server*            server,
 void SetPlayerRespawnPoint(Server* server, uint8 playerID)
 {
     if (server->player[playerID].team != TEAM_SPECTATOR) {
-        Quad2D* spawn = server->protocol.spawns + server->player[playerID].team;
+        Quad3D* spawn = server->protocol.spawns + server->player[playerID].team;
 
         float dx = spawn->to.x - spawn->from.x;
         float dy = spawn->to.y - spawn->from.y;
+        float dz = spawn->to.z - spawn->from.z;
 
         server->player[playerID].movement.position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
         server->player[playerID].movement.position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-        server->player[playerID].movement.position.z = 62.f - 2.36f;
+        server->player[playerID].movement.position.z = spawn->from.z + dz * ((float) rand() / (float) RAND_MAX) - 2.36f;
 
         server->player[playerID].movement.forwardOrientation.x = 0.f;
         server->player[playerID].movement.forwardOrientation.y = 0.f;

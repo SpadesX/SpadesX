@@ -51,7 +51,7 @@ typedef struct
     vec3i             resultLine[50];
     long unsigned int mapSize;
     MapVxl            map;
-    char mapArray[255][64]; //Dont be crazy. Dont try to have more then 255 maps. I mean come on.
+    char              mapArray[255][64]; // Dont be crazy. Dont try to have more then 255 maps. I mean come on.
 } Map;
 
 typedef struct
@@ -82,7 +82,7 @@ typedef struct
     // mode
     ModeCTF ctf;
     // respawn area
-    Quad2D spawns[2];
+    Quad3D spawns[2];
     uint32 inputFlags;
 } Protocol;
 
@@ -174,6 +174,7 @@ typedef struct
     char        serverName[31];
     char        mapName[20];
     char        gamemodeName[7];
+    uint8       running;
 } Server;
 
 #endif

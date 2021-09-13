@@ -14,7 +14,6 @@ int main(void)
     struct json_object* portInConfig;
     struct json_object* masterInConfig;
     struct json_object* mapInConfig;
-    struct json_object* mapArrayTemp;
     struct json_object* managerPasswdInConfig;
     struct json_object* adminPasswdInConfig;
     struct json_object* modPasswdInConfig;
@@ -25,8 +24,6 @@ int main(void)
     struct json_object* team2NameInConfig;
     struct json_object* team1ColorInConfig;
     struct json_object* team2ColorInConfig;
-    struct json_object* team1ColorTemp;
-    struct json_object* team2ColorTemp;
     struct json_object* gamemodeInConfig;
 
     uint16 port   = DEFAULT_SERVER_PORT;
@@ -103,21 +100,18 @@ int main(void)
     uint8       team2Color[3];
     uint8       gamemode = json_object_get_int(gamemodeInConfig);
     for (int i = 0; i < 3; ++i) {
-        team1ColorTemp = json_object_array_get_idx(team1ColorInConfig, i);
-        team2ColorTemp = json_object_array_get_idx(team2ColorInConfig, i);
-        team1Color[i]  = json_object_get_int(team1ColorTemp);
-        team2Color[i]  = json_object_get_int(team2ColorTemp);
+        team1Color[i]  = json_object_get_int(json_object_array_get_idx(team1ColorInConfig, i));
+        team2Color[i]  = json_object_get_int(json_object_array_get_idx(team2ColorInConfig, i));
     }
     uint8 mapArrayLen = json_object_array_length(mapInConfig);
     char mapArray[mapArrayLen][64];
 
     for (int i = 0; i < mapArrayLen; ++i) {
-        mapArrayTemp = json_object_array_get_idx(mapInConfig, i);
-        uint8 stringLen = json_object_get_string_len(mapArrayTemp);
+        uint8 stringLen = json_object_get_string_len(json_object_array_get_idx(mapInConfig, i));
         if (stringLen > 64) {
             continue;
         }
-        memcpy(mapArray[i], json_object_get_string(mapArrayTemp), stringLen + 1);
+        memcpy(mapArray[i], json_object_get_string(json_object_array_get_idx(mapInConfig, i)), stringLen + 1);
     }
 
     StartServer(port,

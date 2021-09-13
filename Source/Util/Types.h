@@ -28,12 +28,6 @@ typedef struct
 
 typedef struct
 {
-    Vector2f from;
-    Vector2f to;
-} Quad2D;
-
-typedef struct
-{
     float x;
     float y;
     float z;
@@ -52,5 +46,11 @@ typedef struct
     int y;
     int z;
 } Vector3i;
+
+typedef struct
+{
+    Vector3f from;
+    Vector3f to;
+} Quad3D;
 
 #endif /* TYPES_H */
