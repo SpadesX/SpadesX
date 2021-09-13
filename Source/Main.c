@@ -114,6 +114,10 @@ int main(void)
         memcpy(mapArray[i], json_object_get_string(json_object_array_get_idx(mapInConfig, i)), stringLen + 1);
     }
 
+    while (json_object_put(parsed_json) != 1) {
+        // keep freeing
+    }
+
     StartServer(port,
                 64,
                 2,

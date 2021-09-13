@@ -34,11 +34,12 @@ void LoadMap(Server* server, const char* path)
     }
     fclose(file);
     mapvxlLoadVXL(&server->map.map, buffer);
+    free(buffer);
     STATUS("compressing map data");
 
     mapvxlWriteMap(&server->map.map, mapOut);
+    
     server->map.compressedMap = CompressData(mapOut, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
-    free(buffer);
     free(mapOut);
 
     Queue* node                = server->map.compressedMap;
@@ -46,6 +47,9 @@ void LoadMap(Server* server, const char* path)
     while (node) {
         server->map.compressedSize += node->length;
         node = node->next;
+    }
+    while (server->map.compressedMap) {
+        server->map.compressedMap = Pop(server->map.compressedMap);
     }
 }
 

@@ -1,5 +1,6 @@
 // Copyright CircumScriptor and DarkNeutrino 2021
 #include "Compress.h"
+#include "Queue.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +76,5 @@ Queue* CompressData(uint8* data, uint32 length, uint32 chunkSize)
         node->length = chunkSize - GlobalCompressor->avail_out;
     } while (GlobalCompressor->avail_out == 0);
     CloseCompressor();
-
     return first;
 }

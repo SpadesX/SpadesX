@@ -378,12 +378,16 @@ void SendMapStart(Server* server, uint8 playerID)
         mapvxlWriteMap(&server->map.map, out);
         server->map.compressedMap       = CompressData(out, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
         server->player[playerID].queues = server->map.compressedMap;
+        free(out);
     }
 }
 
 void SendMapChunks(Server* server, uint8 playerID)
 {
     if (server->player[playerID].queues == NULL) {
+        while (server->map.compressedMap) {
+            server->map.compressedMap = Pop(server->map.compressedMap);
+        }
         server->player[playerID].state = STATE_JOINING;
         STATUS("loading chunks done");
     } else {
