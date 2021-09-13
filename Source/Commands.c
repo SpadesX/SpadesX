@@ -456,5 +456,9 @@ void handleCommands(Server* server, uint8 player, char* message)
                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
     {
         banIPCommand(server, command, message, player);
+    } else if (strcmp(command, "/shutdown") == 0 &&
+               (srvPlayer.isManager || srvPlayer.isAdmin))
+    {
+        server->running = 0;
     }
 }
