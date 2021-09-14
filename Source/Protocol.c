@@ -405,7 +405,7 @@ uint8 checkNode(Server* server, Vector3i position)
         const Vector3i* currentNode = returnCurrentNode();
         position.z                  = currentNode->z;
         if (position.z >= 62) {
-            visitedNodes = NULL;
+            free(visitedNodes);
             return 1;
         }
         position.x = currentNode->x;
