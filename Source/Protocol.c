@@ -388,10 +388,12 @@ uint8 checkNode(Server* server, Vector3i position)
         visitedSize  = NODE_RESERVE_SIZE;
     }
     visitedPos = 0;
+    printf ("We are allocating %lu\n", sizeof(Vector3i) * NODE_RESERVE_SIZE);
 
     saveNode(position.x, position.y, position.z);
 
     while (nodePos > 0) {
+        nodePos = 0;
         if (nodePos >= nodesSize - 6) {
             nodesSize += NODE_RESERVE_SIZE;
             nodes = (Vector3i*) realloc((void*) nodes, sizeof(Vector3i) * nodesSize);
@@ -432,7 +434,8 @@ uint8 checkNode(Server* server, Vector3i position)
         mapvxlSetAir(&server->map.map, visitedNodes[i].x, visitedNodes[i].y, visitedNodes[i].z);
     }
 
-    visitedNodes = NULL;
+    free(visitedNodes);
+    free(nodes);
     return 0;
 }
 
