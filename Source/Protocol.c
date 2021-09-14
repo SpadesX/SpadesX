@@ -388,7 +388,6 @@ uint8 checkNode(Server* server, Vector3i position)
         visitedSize  = NODE_RESERVE_SIZE;
     }
     visitedPos = 0;
-    printf ("We are allocating %lu\n", sizeof(Vector3i) * NODE_RESERVE_SIZE);
 
     saveNode(position.x, position.y, position.z);
 
