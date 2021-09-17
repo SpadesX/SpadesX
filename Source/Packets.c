@@ -112,6 +112,7 @@ void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, 
     WriteFloat(&stream, velocity.y);
     WriteFloat(&stream, velocity.z);
     SendPacketExceptSender(server, packet, playerID);
+    enet_packet_destroy(packet);
 }
 
 void SendPlayerLeft(Server* server, uint8 playerID)
@@ -139,6 +140,7 @@ void SendWeaponReload(Server* server, uint8 playerID)
     WriteByte(&stream, server->player[playerID].weaponReserve);
     WriteByte(&stream, server->player[playerID].weaponClip);
     SendPacketExceptSender(server, packet, playerID);
+    enet_packet_destroy(packet);
 }
 
 void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
@@ -149,6 +151,7 @@ void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
     WriteByte(&stream, playerID);
     WriteByte(&stream, wInput);
     SendPacketExceptSenderDistCheck(server, packet, playerID);
+    enet_packet_destroy(packet);
 }
 
 void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
@@ -161,6 +164,8 @@ void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
     WriteByte(&stream, G);
     WriteByte(&stream, R);
     SendPacketExceptSender(server, packet, playerID);
+    enet_packet_destroy(packet);
+
 }
 
 void SendSetTool(Server* server, uint8 playerID, uint8 tool)
@@ -171,6 +176,8 @@ void SendSetTool(Server* server, uint8 playerID, uint8 tool)
     WriteByte(&stream, playerID);
     WriteByte(&stream, tool);
     SendPacketExceptSender(server, packet, playerID);
+    enet_packet_destroy(packet);
+
 }
 
 void SendBlockLine(Server* server, uint8 playerID, vec3i start, vec3i end)
@@ -259,6 +266,7 @@ void SendInputData(Server* server, uint8 playerID)
     WriteByte(&stream, playerID);
     WriteByte(&stream, server->player[playerID].input);
     SendPacketExceptSenderDistCheck(server, packet, playerID);
+    enet_packet_destroy(packet);
 }
 
 void sendKillPacket(Server* server,
@@ -464,6 +472,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         }
     }
     free(message);
+    enet_packet_destroy(packet);
 }
 
 void SendWorldUpdate(Server* server, uint8 playerID)
