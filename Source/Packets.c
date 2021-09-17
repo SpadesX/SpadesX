@@ -23,7 +23,6 @@ void SendRestock(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_RESTOCK);
     WriteByte(&stream, playerID);
     enet_peer_send(server->player[playerID].peer, 0, packet);
-    enet_packet_destroy(packet);
 }
 
 void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
@@ -41,7 +40,6 @@ void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
             enet_peer_send(server->player[player].peer, 0, packet);
         }
     }
-    enet_packet_destroy(packet);
 }
 
 void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
@@ -56,7 +54,6 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
             enet_peer_send(server->player[player].peer, 0, packet);
         }
     }
-    enet_packet_destroy(packet);
 }
 
 void SendIntelPickup(Server* server, uint8 playerID)
@@ -70,7 +67,6 @@ void SendIntelPickup(Server* server, uint8 playerID)
             enet_peer_send(server->player[player].peer, 0, packet);
         }
     }
-    enet_packet_destroy(packet);
 }
 
 void SendIntelDrop(Server* server, uint8 playerID)
@@ -100,7 +96,6 @@ void SendIntelDrop(Server* server, uint8 playerID)
             enet_peer_send(server->player[player].peer, 0, packet);
         }
     }
-    enet_packet_destroy(packet);
 }
 
 void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity)
@@ -117,7 +112,6 @@ void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, 
     WriteFloat(&stream, velocity.y);
     WriteFloat(&stream, velocity.z);
     SendPacketExceptSender(server, packet, playerID);
-    enet_packet_destroy(packet);
 }
 
 void SendPlayerLeft(Server* server, uint8 playerID)
@@ -132,7 +126,6 @@ void SendPlayerLeft(Server* server, uint8 playerID)
             if (enet_peer_send(server->player[i].peer, 0, packet) != 0) {
                 WARNING("failed to send player left event\n");
             }
-            enet_packet_destroy(packet);
         }
     }
 }
@@ -146,7 +139,6 @@ void SendWeaponReload(Server* server, uint8 playerID)
     WriteByte(&stream, server->player[playerID].weaponReserve);
     WriteByte(&stream, server->player[playerID].weaponClip);
     SendPacketExceptSender(server, packet, playerID);
-    enet_packet_destroy(packet);
 }
 
 void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
@@ -157,7 +149,6 @@ void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
     WriteByte(&stream, playerID);
     WriteByte(&stream, wInput);
     SendPacketExceptSenderDistCheck(server, packet, playerID);
-    enet_packet_destroy(packet);
 }
 
 void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
@@ -170,7 +161,6 @@ void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
     WriteByte(&stream, G);
     WriteByte(&stream, R);
     SendPacketExceptSender(server, packet, playerID);
-    enet_packet_destroy(packet);
 }
 
 void SendSetTool(Server* server, uint8 playerID, uint8 tool)
@@ -181,7 +171,6 @@ void SendSetTool(Server* server, uint8 playerID, uint8 tool)
     WriteByte(&stream, playerID);
     WriteByte(&stream, tool);
     SendPacketExceptSender(server, packet, playerID);
-    enet_packet_destroy(packet);
 }
 
 void SendBlockLine(Server* server, uint8 playerID, vec3i start, vec3i end)
@@ -201,7 +190,6 @@ void SendBlockLine(Server* server, uint8 playerID, vec3i start, vec3i end)
             enet_peer_send(server->player[player].peer, 0, packet);
         }
     }
-    enet_packet_destroy(packet);
 }
 
 void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, int Y, int Z)
@@ -219,7 +207,6 @@ void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, in
             enet_peer_send(server->player[player].peer, 0, packet);
         }
     }
-    enet_packet_destroy(packet);
 }
 
 void SendStateData(Server* server, uint8 playerID)
@@ -262,7 +249,6 @@ void SendStateData(Server* server, uint8 playerID)
     if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
         server->player[playerID].state = STATE_PICK_SCREEN;
     }
-    enet_packet_destroy(packet);
 }
 
 void SendInputData(Server* server, uint8 playerID)
@@ -273,7 +259,6 @@ void SendInputData(Server* server, uint8 playerID)
     WriteByte(&stream, playerID);
     WriteByte(&stream, server->player[playerID].input);
     SendPacketExceptSenderDistCheck(server, packet, playerID);
-    enet_packet_destroy(packet);
 }
 
 void sendKillPacket(Server* server,
@@ -316,7 +301,6 @@ void sendKillPacket(Server* server,
         server->protocol.ctf.intelHeld[team] = 0;
         SendIntelDrop(server, playerID);
     }
-    enet_packet_destroy(packet);
 }
 
 void sendHP(Server* server,
@@ -357,7 +341,6 @@ void sendHP(Server* server,
             WriteFloat(&stream, server->player[playerID].movement.position.y);
             WriteFloat(&stream, server->player[playerID].movement.position.z);
             enet_peer_send(server->player[hitPlayerID].peer, 0, packet);
-            enet_packet_destroy(packet);
         }
     }
 }
@@ -378,7 +361,6 @@ void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         WARNING("failed to send player state\n");
     }
-    enet_packet_destroy(packet);
 }
 
 void SendMapStart(Server* server, uint8 playerID)
@@ -398,7 +380,6 @@ void SendMapStart(Server* server, uint8 playerID)
         server->player[playerID].queues = server->map.compressedMap;
         free(out);
     }
-    enet_packet_destroy(packet);
 }
 
 void SendMapChunks(Server* server, uint8 playerID)
@@ -419,7 +400,6 @@ void SendMapChunks(Server* server, uint8 playerID)
         if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
             server->player[playerID].queues = server->player[playerID].queues->next;
         }
-        enet_packet_destroy(packet);
     }
 }
 
@@ -437,7 +417,6 @@ void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         WARNING("failed to send player state\n");
     }
-    enet_packet_destroy(packet);
 }
 
 void SendRespawn(Server* server, uint8 playerID)
@@ -485,7 +464,6 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         }
     }
     free(message);
-    enet_packet_destroy(packet);
 }
 
 void SendWorldUpdate(Server* server, uint8 playerID)
@@ -508,5 +486,4 @@ void SendWorldUpdate(Server* server, uint8 playerID)
         }
     }
     enet_peer_send(server->player[playerID].peer, 0, packet);
-    enet_packet_destroy(packet);
 }
