@@ -3,13 +3,16 @@
 #include "Structs.h"
 
 #include <Types.h>
-#include <string.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(void)
 {
+    uint16 port   = DEFAULT_SERVER_PORT;
+    uint8  master = 1;
+
     struct json_object* parsed_json;
     struct json_object* portInConfig;
     struct json_object* masterInConfig;
@@ -25,9 +28,6 @@ int main(void)
     struct json_object* team1ColorInConfig;
     struct json_object* team2ColorInConfig;
     struct json_object* gamemodeInConfig;
-
-    uint16 port   = DEFAULT_SERVER_PORT;
-    uint8  master = 1;
 
     parsed_json = json_object_from_file("config.json");
     if (json_object_object_get_ex(parsed_json, "port", &portInConfig) == 0) {
@@ -93,28 +93,27 @@ int main(void)
     const char* modPasswd     = json_object_get_string(modPasswdInConfig);
     const char* guardPasswd   = json_object_get_string(guardPasswdInConfig);
     const char* trustedPasswd = json_object_get_string(trustedPasswdInConfig);
-    char*       serverName    = (char*) json_object_get_string(serverNameInConfig);
-    char*       team1Name     = (char*) json_object_get_string(team1NameInConfig);
-    char*       team2Name     = (char*) json_object_get_string(team2NameInConfig);
+    const char* serverName    = json_object_get_string(serverNameInConfig);
+    const char* team1Name     = json_object_get_string(team1NameInConfig);
+    const char* team2Name     = json_object_get_string(team2NameInConfig);
     uint8       team1Color[3];
     uint8       team2Color[3];
     uint8       gamemode = json_object_get_int(gamemodeInConfig);
     for (int i = 0; i < 3; ++i) {
-        team1Color[i]  = json_object_get_int(json_object_array_get_idx(team1ColorInConfig, i));
-        team2Color[i]  = json_object_get_int(json_object_array_get_idx(team2ColorInConfig, i));
+        team1Color[i] = json_object_get_int(json_object_array_get_idx(team1ColorInConfig, i));
+        team2Color[i] = json_object_get_int(json_object_array_get_idx(team2ColorInConfig, i));
     }
     uint8 mapArrayLen = json_object_array_length(mapInConfig);
-    char mapArray[mapArrayLen][64];
+    char  mapArray[mapArrayLen][64];
 
     for (int i = 0; i < mapArrayLen; ++i) {
-        uint8 stringLen = json_object_get_string_len(json_object_array_get_idx(mapInConfig, i));
+        json_object* temp      = json_object_array_get_idx(mapInConfig, i);
+        uint8        stringLen = json_object_get_string_len(temp);
         if (stringLen > 64) {
             continue;
         }
-        memcpy(mapArray[i], json_object_get_string(json_object_array_get_idx(mapInConfig, i)), stringLen + 1);
+        memcpy(mapArray[i], json_object_get_string(temp), stringLen + 1);
     }
-    json_object_get(parsed_json);
-    json_object_put(parsed_json);
 
     StartServer(port,
                 64,
@@ -135,5 +134,8 @@ int main(void)
                 team1Color,
                 team2Color,
                 gamemode);
+
+    json_object_put(parsed_json);
+
     return 0;
 }

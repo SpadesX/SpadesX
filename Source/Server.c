@@ -52,9 +52,9 @@ static void ServerInit(Server* server,
                        uint32  connections,
                        char    mapArray[][64],
                        uint8   mapCount,
-                       char*   serverName,
-                       char*   team1Name,
-                       char*   team2Name,
+                       const char*   serverName,
+                       const char*   team1Name,
+                       const char*   team2Name,
                        uint8*  team1Color,
                        uint8*  team2Color,
                        uint8   gamemode)
@@ -124,7 +124,6 @@ static void ServerInit(Server* server,
         team2End[i]   = json_object_get_int(json_object_array_get_idx(team2EndInConfig, i));
     }
 
-    json_object_get(parsed_map_json);
     json_object_put(parsed_map_json);
 
     Vector3f empty   = {0, 0, 0};
@@ -312,7 +311,6 @@ void ServerReset(Server* server)
         team2End[i]   = json_object_get_int(json_object_array_get_idx(team2EndInConfig, i));
     }
 
-    json_object_get(parsed_map_json);
     json_object_put(parsed_map_json);
 
     Vector3f empty   = {0, 0, 0};
@@ -628,9 +626,9 @@ void StartServer(uint16      port,
                  const char* modPasswd,
                  const char* guardPasswd,
                  const char* trustedPasswd,
-                 char*       serverName,
-                 char*       team1Name,
-                 char*       team2Name,
+                 const char*       serverName,
+                 const char*       team1Name,
+                 const char*       team2Name,
                  uint8*      team1Color,
                  uint8*      team2Color,
                  uint8       gamemode)
