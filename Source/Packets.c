@@ -121,8 +121,9 @@ void SendPlayerLeft(Server* server, uint8 playerID)
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && isPastStateData(server, i)) {
             ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
-            packet->data[0]    = PACKET_TYPE_PLAYER_LEFT;
-            packet->data[1]    = playerID;
+            DataStream  stream = {packet->data, packet->dataLength, 0};
+            WriteByte(&stream, PACKET_TYPE_PLAYER_LEFT);
+            WriteByte(&stream, playerID);
 
             if (enet_peer_send(server->player[i].peer, 0, packet) != 0) {
                 WARNING("failed to send player left event\n");
