@@ -72,11 +72,6 @@ static void ServerInit(Server* server,
     }
     server->map.mapCount = mapCount;
 
-    memcpy(server->protocol.nameTeamA, team1Name, strlen(team1Name));
-    memcpy(server->protocol.nameTeamB, team2Name, strlen(team2Name));
-    server->protocol.nameTeamA[strlen(team1Name)] = '\0';
-    server->protocol.nameTeamB[strlen(team2Name)] = '\0';
-
     char vxlMap[64];
     srand(time(0));
     uint8 index          = rand() % mapCount;
@@ -129,9 +124,8 @@ static void ServerInit(Server* server,
         team2End[i]   = json_object_get_int(json_object_array_get_idx(team2EndInConfig, i));
     }
 
-    while (json_object_put(parsed_map_json) != 1) {
-        // keep freeing
-    }
+    json_object_get(parsed_map_json);
+    json_object_put(parsed_map_json);
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
@@ -213,6 +207,11 @@ static void ServerInit(Server* server,
     server->protocol.colorTeamB[1] = team2Color[1];
     server->protocol.colorTeamB[2] = team2Color[2];
 
+    memcpy(server->protocol.nameTeamA, team1Name, strlen(team1Name));
+    memcpy(server->protocol.nameTeamB, team2Name, strlen(team2Name));
+    server->protocol.nameTeamA[strlen(team1Name)] = '\0';
+    server->protocol.nameTeamB[strlen(team2Name)] = '\0';
+
     memcpy(server->serverName, serverName, strlen(serverName));
     server->serverName[strlen(serverName)] = '\0';
     snprintf(vxlMap, 64, "%s.vxl", server->mapName);
@@ -269,10 +268,11 @@ void ServerReset(Server* server)
     printf("STATUS: Selecting %s as map\n", server->mapName);
 
     STATUS("Loading spawn ranges from map file");
-    struct json_object* parsed_json;
     char                mapConfig[64];
     snprintf(mapConfig, 64, "%s.json", server->mapName);
-    parsed_json = json_object_from_file(mapConfig);
+
+    struct json_object* parsed_map_json;
+    parsed_map_json = json_object_from_file(mapConfig);
 
     struct json_object* team1StartInConfig;
     struct json_object* team1EndInConfig;
@@ -284,23 +284,23 @@ void ServerReset(Server* server)
     int                 team1End[3];
     int                 team2End[3];
 
-    if (json_object_object_get_ex(parsed_json, "team1_start", &team1StartInConfig) == 0) {
+    if (json_object_object_get_ex(parsed_map_json, "team1_start", &team1StartInConfig) == 0) {
         printf("Failed to find team1 start in map config\n");
         return;
     }
-    if (json_object_object_get_ex(parsed_json, "team1_end", &team1EndInConfig) == 0) {
+    if (json_object_object_get_ex(parsed_map_json, "team1_end", &team1EndInConfig) == 0) {
         printf("Failed to find team1 end in map config\n");
         return;
     }
-    if (json_object_object_get_ex(parsed_json, "team2_start", &team2StartInConfig) == 0) {
+    if (json_object_object_get_ex(parsed_map_json, "team2_start", &team2StartInConfig) == 0) {
         printf("Failed to find team2 start in map config\n");
         return;
     }
-    if (json_object_object_get_ex(parsed_json, "team2_end", &team2EndInConfig) == 0) {
+    if (json_object_object_get_ex(parsed_map_json, "team2_end", &team2EndInConfig) == 0) {
         printf("Failed to find team2 start in map config\n");
         return;
     }
-    if (json_object_object_get_ex(parsed_json, "author", &authorInConfig) == 0) {
+    if (json_object_object_get_ex(parsed_map_json, "author", &authorInConfig) == 0) {
         printf("Failed to find author in map config\n");
         return;
     }
@@ -312,9 +312,8 @@ void ServerReset(Server* server)
         team2End[i]   = json_object_get_int(json_object_array_get_idx(team2EndInConfig, i));
     }
 
-    while (json_object_put(parsed_json) != 1) {
-        // keep freeing
-    }
+    json_object_get(parsed_map_json);
+    json_object_put(parsed_map_json);
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
