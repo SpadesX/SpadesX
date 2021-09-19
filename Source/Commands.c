@@ -408,7 +408,11 @@ static void tpcCommand(Server* server, char command[30], char* message, uint8 pl
             server->player[player].movement.position.x = pos.x - 0.5f;
             server->player[player].movement.position.y = pos.y - 0.5f;
             server->player[player].movement.position.z = pos.z - 2.36f;
-            SendPositionPacket(server, player, server->player[player].movement.position.x, server->player[player].movement.position.y, server->player[player].movement.position.z);
+            SendPositionPacket(server,
+                               player,
+                               server->player[player].movement.position.x,
+                               server->player[player].movement.position.y,
+                               server->player[player].movement.position.z);
         } else {
             sendServerNotice(server, player, "Invalid position");
         }
@@ -474,13 +478,9 @@ void handleCommands(Server* server, uint8 player, char* message)
                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
     {
         banIPCommand(server, command, message, player);
-    } else if (strcmp(command, "/shutdown") == 0 &&
-               (srvPlayer.isManager || srvPlayer.isAdmin))
-    {
+    } else if (strcmp(command, "/shutdown") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin)) {
         server->running = 0;
-    } else if (strcmp(command, "/tpc") == 0 &&
-               (srvPlayer.isManager || srvPlayer.isAdmin))
-    {
+    } else if (strcmp(command, "/tpc") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin)) {
         tpcCommand(server, command, message, player);
     }
 }
