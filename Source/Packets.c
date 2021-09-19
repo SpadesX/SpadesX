@@ -111,8 +111,9 @@ void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, 
     WriteFloat(&stream, velocity.x);
     WriteFloat(&stream, velocity.y);
     WriteFloat(&stream, velocity.z);
-    SendPacketExceptSender(server, packet, playerID);
-    enet_packet_destroy(packet);
+    if (SendPacketExceptSender(server, packet, playerID) == 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendPlayerLeft(Server* server, uint8 playerID)
@@ -140,8 +141,9 @@ void SendWeaponReload(Server* server, uint8 playerID)
     WriteByte(&stream, playerID);
     WriteByte(&stream, server->player[playerID].weaponReserve);
     WriteByte(&stream, server->player[playerID].weaponClip);
-    SendPacketExceptSender(server, packet, playerID);
-    enet_packet_destroy(packet);
+    if (SendPacketExceptSender(server, packet, playerID) == 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
@@ -151,8 +153,9 @@ void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
     WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
     WriteByte(&stream, playerID);
     WriteByte(&stream, wInput);
-    SendPacketExceptSenderDistCheck(server, packet, playerID);
-    enet_packet_destroy(packet);
+    if (SendPacketExceptSenderDistCheck(server, packet, playerID) == 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
@@ -164,9 +167,9 @@ void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
     WriteByte(&stream, B);
     WriteByte(&stream, G);
     WriteByte(&stream, R);
-    SendPacketExceptSender(server, packet, playerID);
-    enet_packet_destroy(packet);
-
+    if (SendPacketExceptSender(server, packet, playerID) == 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendSetTool(Server* server, uint8 playerID, uint8 tool)
@@ -176,9 +179,9 @@ void SendSetTool(Server* server, uint8 playerID, uint8 tool)
     WriteByte(&stream, PACKET_TYPE_SET_TOOL);
     WriteByte(&stream, playerID);
     WriteByte(&stream, tool);
-    SendPacketExceptSender(server, packet, playerID);
-    enet_packet_destroy(packet);
-
+    if (SendPacketExceptSender(server, packet, playerID) == 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendBlockLine(Server* server, uint8 playerID, vec3i start, vec3i end)
@@ -266,8 +269,9 @@ void SendInputData(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
     WriteByte(&stream, playerID);
     WriteByte(&stream, server->player[playerID].input);
-    SendPacketExceptSenderDistCheck(server, packet, playerID);
-    enet_packet_destroy(packet);
+    if (SendPacketExceptSenderDistCheck(server, packet, playerID) == 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void sendKillPacket(Server* server,
@@ -495,5 +499,15 @@ void SendWorldUpdate(Server* server, uint8 playerID)
             WriteVector3f(&stream, empty);
         }
     }
+    enet_peer_send(server->player[playerID].peer, 0, packet);
+}
+
+void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float z) {
+    ENetPacket* packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_POSITION_DATA);
+    WriteFloat(&stream, x);
+    WriteFloat(&stream, y);
+    WriteFloat(&stream, z);
     enet_peer_send(server->player[playerID].peer, 0, packet);
 }

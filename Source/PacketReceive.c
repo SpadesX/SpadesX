@@ -449,13 +449,12 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
 
         case PACKET_TYPE_WEAPON_INPUT:
         {
-            uint8 mask = 1;
+            uint8 mask   = 1;
             uint8 ID     = ReadByte(data);
             uint8 wInput = ReadByte(data);
             if (playerID != ID) {
                 printf("Assigned ID: %d doesnt match sent ID: %d in weapon input packet\n", playerID, ID);
-            }
-            else if (server->player[playerID].state != STATE_READY) {
+            } else if (server->player[playerID].state != STATE_READY) {
                 return;
             }
 

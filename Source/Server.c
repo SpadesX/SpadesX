@@ -48,16 +48,16 @@ static void* calculatePhysics()
     return 0;
 }
 
-static void ServerInit(Server* server,
-                       uint32  connections,
-                       char    mapArray[][64],
-                       uint8   mapCount,
-                       const char*   serverName,
-                       const char*   team1Name,
-                       const char*   team2Name,
-                       uint8*  team1Color,
-                       uint8*  team2Color,
-                       uint8   gamemode)
+static void ServerInit(Server*     server,
+                       uint32      connections,
+                       char        mapArray[][64],
+                       uint8       mapCount,
+                       const char* serverName,
+                       const char* team1Name,
+                       const char* team2Name,
+                       uint8*      team1Color,
+                       uint8*      team2Color,
+                       uint8       gamemode)
 {
     updateTime = lastUpdateTime = get_nanos();
     server->protocol.numPlayers = 0;
@@ -267,7 +267,7 @@ void ServerReset(Server* server)
     printf("STATUS: Selecting %s as map\n", server->mapName);
 
     STATUS("Loading spawn ranges from map file");
-    char                mapConfig[64];
+    char mapConfig[64];
     snprintf(mapConfig, 64, "%s.json", server->mapName);
 
     struct json_object* parsed_map_json;
@@ -626,9 +626,9 @@ void StartServer(uint16      port,
                  const char* modPasswd,
                  const char* guardPasswd,
                  const char* trustedPasswd,
-                 const char*       serverName,
-                 const char*       team1Name,
-                 const char*       team2Name,
+                 const char* serverName,
+                 const char* team1Name,
+                 const char* team2Name,
                  uint8*      team1Color,
                  uint8*      team2Color,
                  uint8       gamemode)

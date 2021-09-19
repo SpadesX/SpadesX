@@ -39,5 +39,6 @@ void SendRespawnState(Server* server, uint8 playerID, uint8 otherID);
 void SendRespawn(Server* server, uint8 playerID);
 void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uint8 playerID);
 void SendWorldUpdate(Server* server, uint8 playerID);
+void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float z);
 
 #endif
