@@ -52,16 +52,3 @@ void LoadMap(Server* server, const char* path)
         server->map.compressedMap = Pop(server->map.compressedMap);
     }
 }
-
-void writeBlockLine(Server* server, uint8 playerID, vec3i* start, vec3i* end)
-{
-    int size = blockLine(start, end, server->map.resultLine);
-    server->player[playerID].blocks -= size;
-    for (int i = 0; i < size; i++) {
-        mapvxlSetColor(&server->map.map,
-                       server->map.resultLine[i].x,
-                       server->map.resultLine[i].y,
-                       server->map.resultLine[i].z,
-                       color4iToInt(server->player[playerID].toolColor));
-    }
-}

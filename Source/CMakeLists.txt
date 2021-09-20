@@ -10,9 +10,7 @@ set(SERVER_HEADERS
     Structs.h
     Map.h
     Packets.h
-    PacketReceive.h
     Conversion.h
-    ColorConversion.h
     Commands.h
 )
 
@@ -23,7 +21,6 @@ set(SERVER_SOURCES
     Map.c
     Protocol.c
     Packets.c
-    PacketReceive.c
     Commands.c
 )
 

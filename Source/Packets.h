@@ -41,4 +41,6 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
 void SendWorldUpdate(Server* server, uint8 playerID);
 void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float z);
 
+void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEvent event);
+
 #endif
