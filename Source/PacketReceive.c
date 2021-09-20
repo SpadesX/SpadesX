@@ -38,40 +38,49 @@ static unsigned long long get_nanos(void)
     return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
-void ReceiveGrenadePacket(Server* server, uint8 playerID, DataStream* data)
+static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* data)
 {
-    for (int i = 0; i < 3; ++i) {
-        if (server->player[playerID].grenade[i].sent == 0) {
-            server->player[playerID].grenade[i].fuse       = ReadFloat(data);
-            server->player[playerID].grenade[i].position.x = ReadFloat(data);
-            server->player[playerID].grenade[i].position.y = ReadFloat(data);
-            server->player[playerID].grenade[i].position.z = ReadFloat(data);
-            server->player[playerID].grenade[i].velocity.x = ReadFloat(data);
-            server->player[playerID].grenade[i].velocity.y = ReadFloat(data);
-            server->player[playerID].grenade[i].velocity.z = ReadFloat(data);
-            if (vecfValidPos(server->player[playerID].grenade[i].position)) {
-                SendGrenade(server,
-                            playerID,
-                            server->player[playerID].grenade[i].fuse,
-                            server->player[playerID].grenade[i].position,
-                            server->player[playerID].grenade[i].velocity);
-                server->player[playerID].grenade[i].sent          = 1;
-                server->player[playerID].grenade[i].timeSinceSent = get_nanos();
+    uint8 ID = ReadByte(data);
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in grenade packet\n", playerID, ID);
+    }
+    if (server->player[playerID].grenades > 0) {
+        for (int i = 0; i < 3; ++i) {
+            if (server->player[playerID].grenade[i].sent == 0) {
+                server->player[playerID].grenade[i].fuse       = ReadFloat(data);
+                server->player[playerID].grenade[i].position.x = ReadFloat(data);
+                server->player[playerID].grenade[i].position.y = ReadFloat(data);
+                server->player[playerID].grenade[i].position.z = ReadFloat(data);
+                server->player[playerID].grenade[i].velocity.x = ReadFloat(data);
+                server->player[playerID].grenade[i].velocity.y = ReadFloat(data);
+                server->player[playerID].grenade[i].velocity.z = ReadFloat(data);
+                if (vecfValidPos(server->player[playerID].grenade[i].position)) {
+                    SendGrenade(server,
+                                playerID,
+                                server->player[playerID].grenade[i].fuse,
+                                server->player[playerID].grenade[i].position,
+                                server->player[playerID].grenade[i].velocity);
+                    server->player[playerID].grenade[i].sent          = 1;
+                    server->player[playerID].grenade[i].timeSinceSent = get_nanos();
+                }
+                break;
             }
-            break;
         }
+        server->player[playerID].grenades--;
     }
 }
 
 // hitPlayerID is the player that got shot
 // playerID is the player who fired.
-void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 hitType)
+static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
 {
-    Vector3f shotPos    = server->player[playerID].movement.position;
-    Vector3f shotEyePos = server->player[playerID].movement.eyePos;
-    Vector3f hitPos     = server->player[hitPlayerID].movement.position;
-    Vector3f shotOrien  = server->player[playerID].movement.forwardOrientation;
-    float    distance   = DistanceIn2D(shotPos, hitPos);
+    uint8    hitPlayerID = ReadByte(data);
+    Hit      hitType     = ReadByte(data);
+    Vector3f shotPos     = server->player[playerID].movement.position;
+    Vector3f shotEyePos  = server->player[playerID].movement.eyePos;
+    Vector3f hitPos      = server->player[hitPlayerID].movement.position;
+    Vector3f shotOrien   = server->player[playerID].movement.forwardOrientation;
+    float    distance    = DistanceIn2D(shotPos, hitPos);
     long     x, y, z;
     if (server->player[playerID].alive && server->player[hitPlayerID].alive &&
         (server->player[playerID].team != server->player[hitPlayerID].team ||
@@ -124,6 +133,9 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
                         sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5);
                         break;
                     }
+                    case HIT_TYPE_MELEE:
+                        //Empty so we dont have errors :)
+                        break;
                 }
                 break;
             }
@@ -150,6 +162,9 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
                         sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5);
                         break;
                     }
+                    case HIT_TYPE_MELEE:
+                        //Empty so we dont have errors :)
+                        break;
                 }
                 break;
             }
@@ -176,6 +191,9 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
                         sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5);
                         break;
                     }
+                    case HIT_TYPE_MELEE:
+                        //Empty so we dont have errors :)
+                        break;
                 }
                 break;
             }
@@ -186,7 +204,7 @@ void ReceiveHitPacket(Server* server, uint8 playerID, uint8 hitPlayerID, uint8 h
     }
 }
 
-void ReceiveOrientationData(Server* server, uint8 playerID, DataStream* data)
+static void receiveOrientationData(Server* server, uint8 playerID, DataStream* data)
 {
     float x, y, z;
     x            = ReadFloat(data);
@@ -200,7 +218,7 @@ void ReceiveOrientationData(Server* server, uint8 playerID, DataStream* data)
     reorient_player(server, playerID, &server->player[playerID].movement.forwardOrientation);
 }
 
-void ReceiveInputData(Server* server, uint8 playerID, DataStream* data)
+static void receiveInputData(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 bits[8];
     uint8 mask = 1;
@@ -225,7 +243,7 @@ void ReceiveInputData(Server* server, uint8 playerID, DataStream* data)
     }
 }
 
-void ReceivePositionData(Server* server, uint8 playerID, DataStream* data)
+static void receivePositionData(Server* server, uint8 playerID, DataStream* data)
 {
     float x, y, z;
     x = ReadFloat(data);
@@ -238,7 +256,7 @@ void ReceivePositionData(Server* server, uint8 playerID, DataStream* data)
     }
 }
 
-void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
+static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID = ReadByte(data);
     if (playerID != ID) {
@@ -291,56 +309,58 @@ void ReceiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
     server->player[playerID].state = STATE_SPAWNING;
 }
 
-void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEvent event)
+static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
 {
-    PacketID type = (PacketID) ReadByte(data);
-    switch (type) {
-        case PACKET_TYPE_EXISTING_PLAYER:
-            ReceiveExistingPlayer(server, playerID, data);
-            break;
-        case PACKET_TYPE_POSITION_DATA:
-            ReceivePositionData(server, playerID, data);
-            break;
-        case PACKET_TYPE_ORIENTATION_DATA:
-            ReceiveOrientationData(server, playerID, data);
-            break;
-        case PACKET_TYPE_INPUT_DATA:
-            ReceiveInputData(server, playerID, data);
-            break;
-        case PACKET_TYPE_CHAT_MESSAGE:
-            handleAndSendMessage(event, data, server, playerID);
-            break;
-        case PACKET_TYPE_BLOCK_ACTION:
+    uint8 ID = ReadByte(data);
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in block action packet\n", playerID, ID);
+    }
+    if (server->player[playerID].canBuild && server->globalAB) {
+        uint8    actionType   = ReadByte(data);
+        int      X            = ReadInt(data);
+        int      Y            = ReadInt(data);
+        int      Z            = ReadInt(data);
+        Vector3f vectorBlock  = {X, Y, Z};
+        Vector3f playerVector = server->player[playerID].movement.position;
+        if ((server->player[playerID].blocks > 0) &&
+            ((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) ||
+             (server->player[playerID].item == 1 && actionType == 0) ||
+             (server->player[playerID].item == 2 && actionType == 1)))
         {
-            uint8 ID = ReadByte(data);
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in block action packet\n", playerID, ID);
-            }
-            if (server->player[playerID].canBuild && server->globalAB) {
-                uint8    actionType   = ReadByte(data);
-                int      X            = ReadInt(data);
-                int      Y            = ReadInt(data);
-                int      Z            = ReadInt(data);
-                Vector3f vectorBlock  = {X, Y, Z};
-                Vector3f playerVector = server->player[playerID].movement.position;
-                if ((server->player[playerID].blocks > 0) &&
-                    ((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) ||
-                     (server->player[playerID].item == 1 && actionType == 0) ||
-                     (server->player[playerID].item == 2 && actionType == 1)))
-                {
-                    if ((DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) &&
-                        vecfValidPos(vectorBlock)) {
-                        switch (actionType) {
-                            case 0:
-                                mapvxlSetColor(
-                                &server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
-                                server->player[playerID].blocks--;
-                                moveIntelAndTentUp(server);
-                                break;
+            if ((DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) &&
+                vecfValidPos(vectorBlock)) {
+                switch (actionType) {
+                    case 0:
+                        mapvxlSetColor(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
+                        server->player[playerID].blocks--;
+                        moveIntelAndTentUp(server);
+                        break;
 
-                            case 1:
-                            {
-                                Vector3i  position = {X, Y, Z};
+                    case 1:
+                    {
+                        Vector3i  position = {X, Y, Z};
+                        Vector3i* neigh    = getNeighbors(position);
+                        mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
+                        for (int i = 0; i < 6; ++i) {
+                            if (neigh[i].z < 62) {
+                                checkNode(server, neigh[i]);
+                            }
+                        }
+                        if (server->player[playerID].item != 2) {
+                            if (server->player[playerID].blocks < 50) {
+                                server->player[playerID].blocks++;
+                            }
+                        }
+                    } break;
+
+                    case 2:
+                        for (int z = Z - 1; z <= Z + 1; z++) {
+                            if (z < 62) {
+                                mapvxlSetAir(&server->map.map, X, Y, z);
+                                if (server->player[playerID].blocks < 50) {
+                                    server->player[playerID].blocks++;
+                                }
+                                Vector3i  position = {X, Y, z};
                                 Vector3i* neigh    = getNeighbors(position);
                                 mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
                                 for (int i = 0; i < 6; ++i) {
@@ -348,190 +368,196 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
                                         checkNode(server, neigh[i]);
                                     }
                                 }
-                                if (server->player[playerID].item != 2) {
-                                    if (server->player[playerID].blocks < 50) {
-                                        server->player[playerID].blocks++;
-                                    }
-                                }
-                            } break;
-
-                            case 2:
-                                for (int z = Z - 1; z <= Z + 1; z++) {
-                                    if (z < 62) {
-                                        mapvxlSetAir(&server->map.map, X, Y, z);
-                                        if (server->player[playerID].blocks < 50) {
-                                            server->player[playerID].blocks++;
-                                        }
-                                        Vector3i  position = {X, Y, z};
-                                        Vector3i* neigh    = getNeighbors(position);
-                                        mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
-                                        for (int i = 0; i < 6; ++i) {
-                                            if (neigh[i].z < 62) {
-                                                checkNode(server, neigh[i]);
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
+                            }
                         }
-                        SendBlockAction(server, playerID, actionType, X, Y, Z);
-                        moveIntelAndTentDown(server);
-                    }
-                } else {
-                    printf("Player: #%d may be using BlockExploit with Item: %d and Action: %d\n",
-                           playerID,
-                           server->player[playerID].item,
-                           actionType);
+                        break;
                 }
+                SendBlockAction(server, playerID, actionType, X, Y, Z);
+                moveIntelAndTentDown(server);
             }
-            break;
+        } else {
+            printf("Player: #%d may be using BlockExploit with Item: %d and Action: %d\n",
+                   playerID,
+                   server->player[playerID].item,
+                   actionType);
         }
+    }
+}
+
+static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
+{
+    uint8 ID = ReadByte(data);
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
+    }
+    if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
+        server->player[playerID].item == 1)
+    {
+        vec3i start;
+        vec3i end;
+        start.x         = ReadInt(data);
+        start.y         = ReadInt(data);
+        start.z         = ReadInt(data);
+        end.x           = ReadInt(data);
+        end.y           = ReadInt(data);
+        end.z           = ReadInt(data);
+        Vector3f startF = {start.x, start.y, start.z};
+        Vector3f endF   = {end.x, end.y, end.z};
+        if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
+            DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4 && vecfValidPos(startF) &&
+            vecfValidPos(endF))
+        {
+            writeBlockLine(server, playerID, &start, &end);
+            moveIntelAndTentUp(server);
+            SendBlockLine(server, playerID, start, end);
+        }
+    }
+}
+
+static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
+{
+    uint8 ID   = ReadByte(data);
+    uint8 tool = ReadByte(data);
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in set tool packet\n", playerID, ID);
+    }
+    server->player[playerID].item = tool;
+    SendSetTool(server, playerID, tool);
+}
+
+static void receiveSetColor(Server* server, uint8 playerID, DataStream* data)
+{
+    uint8 ID = ReadByte(data);
+    uint8 B  = ReadByte(data);
+    uint8 G  = ReadByte(data);
+    uint8 R  = ReadByte(data);
+    uint8 A  = 0;
+
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in set color packet\n", playerID, ID);
+    }
+
+    server->player[playerID].toolColor[0] = A;
+    server->player[playerID].toolColor[1] = R;
+    server->player[playerID].toolColor[2] = G;
+    server->player[playerID].toolColor[3] = B;
+    SendSetColor(server, playerID, R, G, B);
+}
+
+static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
+{
+    uint8 mask   = 1;
+    uint8 ID     = ReadByte(data);
+    uint8 wInput = ReadByte(data);
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in weapon input packet\n", playerID, ID);
+    } else if (server->player[playerID].state != STATE_READY) {
+        return;
+    }
+
+    server->player[playerID].primary_fire   = wInput & mask;
+    server->player[playerID].secondary_fire = (wInput >> 1) & mask;
+
+    if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
+        server->player[playerID].locAtClick = server->player[playerID].movement.position;
+    }
+
+    else if (server->player[playerID].weaponClip >= 0)
+    {
+        SendWeaponInput(server, playerID, wInput);
+
+        if (server->player[playerID].primary_fire) {
+            server->player[playerID].weaponClip--;
+        }
+    } else {
+        // sendKillPacket(server, playerID, playerID, 0, 30, 0);
+    }
+}
+
+static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data)
+{
+    uint8 ID      = ReadByte(data);
+    uint8 reserve = ReadByte(data);
+    uint8 clip    = ReadByte(data);
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
+    }
+    server->player[playerID].weaponReserve = reserve; // Temporary
+    server->player[playerID].weaponClip    = clip;
+    SendWeaponReload(server, playerID);
+}
+
+static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
+{
+    uint8 ID                      = ReadByte(data);
+    server->player[playerID].team = ReadByte(data);
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
+    }
+    sendKillPacket(server, playerID, playerID, 5, 5, 0);
+    server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
+}
+
+static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data)
+{
+    uint8 ID                        = ReadByte(data);
+    server->player[playerID].weapon = ReadByte(data);
+    if (playerID != ID) {
+        printf("Assigned ID: %d doesnt match sent ID: %d in change weapon packet\n", playerID, ID);
+    }
+    sendKillPacket(server, playerID, playerID, 6, 5, 0);
+    server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
+}
+
+void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEvent event)
+{
+    PacketID type = (PacketID) ReadByte(data);
+    switch (type) {
+        case PACKET_TYPE_EXISTING_PLAYER:
+            receiveExistingPlayer(server, playerID, data);
+            break;
+        case PACKET_TYPE_POSITION_DATA:
+            receivePositionData(server, playerID, data);
+            break;
+        case PACKET_TYPE_ORIENTATION_DATA:
+            receiveOrientationData(server, playerID, data);
+            break;
+        case PACKET_TYPE_INPUT_DATA:
+            receiveInputData(server, playerID, data);
+            break;
+        case PACKET_TYPE_CHAT_MESSAGE:
+            handleAndSendMessage(event, data, server, playerID);
+            break;
+        case PACKET_TYPE_BLOCK_ACTION:
+            receiveBlockAction(server, playerID, data);
+            break;
         case PACKET_TYPE_BLOCK_LINE:
-        {
-            uint8 ID = ReadByte(data);
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
-            }
-            if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
-                server->player[playerID].item == 1)
-            {
-                vec3i start;
-                vec3i end;
-                start.x         = ReadInt(data);
-                start.y         = ReadInt(data);
-                start.z         = ReadInt(data);
-                end.x           = ReadInt(data);
-                end.y           = ReadInt(data);
-                end.z           = ReadInt(data);
-                Vector3f startF = {start.x, start.y, start.z};
-                Vector3f endF   = {end.x, end.y, end.z};
-                if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
-                    DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4 && vecfValidPos(startF) &&
-                    vecfValidPos(endF))
-                {
-                    writeBlockLine(server, playerID, &start, &end);
-                    moveIntelAndTentUp(server);
-                    SendBlockLine(server, playerID, start, end);
-                }
-            }
+            receiveBlockLine(server, playerID, data);
             break;
-        }
         case PACKET_TYPE_SET_TOOL:
-        {
-            uint8 ID   = ReadByte(data);
-            uint8 tool = ReadByte(data);
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in set tool packet\n", playerID, ID);
-            }
-            server->player[playerID].item = tool;
-            SendSetTool(server, playerID, tool);
+            receiveSetTool(server, playerID, data);
             break;
-        }
         case PACKET_TYPE_SET_COLOR:
-        {
-            uint8 ID = ReadByte(data);
-            uint8 B  = ReadByte(data);
-            uint8 G  = ReadByte(data);
-            uint8 R  = ReadByte(data);
-            uint8 A  = 0;
-
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in set color packet\n", playerID, ID);
-            }
-
-            server->player[playerID].toolColor[0] = A;
-            server->player[playerID].toolColor[1] = R;
-            server->player[playerID].toolColor[2] = G;
-            server->player[playerID].toolColor[3] = B;
-            SendSetColor(server, playerID, R, G, B);
+            receiveSetColor(server, playerID, data);
             break;
-        }
-
         case PACKET_TYPE_WEAPON_INPUT:
-        {
-            uint8 mask   = 1;
-            uint8 ID     = ReadByte(data);
-            uint8 wInput = ReadByte(data);
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in weapon input packet\n", playerID, ID);
-            } else if (server->player[playerID].state != STATE_READY) {
-                return;
-            }
-
-            server->player[playerID].primary_fire   = wInput & mask;
-            server->player[playerID].secondary_fire = (wInput >> 1) & mask;
-
-            if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
-                server->player[playerID].locAtClick = server->player[playerID].movement.position;
-            }
-
-            else if (server->player[playerID].weaponClip >= 0)
-            {
-                SendWeaponInput(server, playerID, wInput);
-
-                if (server->player[playerID].primary_fire) {
-                    server->player[playerID].weaponClip--;
-                }
-            } else {
-                // sendKillPacket(server, playerID, playerID, 0, 30, 0);
-            }
+            receiveWeaponInput(server, playerID, data);
             break;
-        }
-
         case PACKET_TYPE_HIT_PACKET:
-        {
-            uint8 hitPlayerID = ReadByte(data);
-            Hit   hitType     = ReadByte(data);
-            ReceiveHitPacket(server, playerID, hitPlayerID, hitType);
+            receiveHitPacket(server, playerID, data);
             break;
-        }
         case PACKET_TYPE_WEAPON_RELOAD:
-        {
-            uint8 ID      = ReadByte(data);
-            uint8 reserve = ReadByte(data);
-            uint8 clip    = ReadByte(data);
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
-            }
-            server->player[playerID].weaponReserve = reserve; // Temporary
-            server->player[playerID].weaponClip    = clip;
-            SendWeaponReload(server, playerID);
+            receiveWeaponReload(server, playerID, data);
             break;
-        }
         case PACKET_TYPE_CHANGE_TEAM:
-        {
-            uint8 ID                      = ReadByte(data);
-            server->player[playerID].team = ReadByte(data);
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
-            }
-            sendKillPacket(server, playerID, playerID, 5, 5, 0);
-            server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
+            receiveChangeTeam(server, playerID, data);
             break;
-        }
         case PACKET_TYPE_CHANGE_WEAPON:
-        {
-            uint8 ID                        = ReadByte(data);
-            server->player[playerID].weapon = ReadByte(data);
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in change weapon packet\n", playerID, ID);
-            }
-            sendKillPacket(server, playerID, playerID, 6, 5, 0);
-            server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
+            receiveChangeWeapon(server, playerID, data);
             break;
-        }
         case PACKET_TYPE_GRENADE_PACKET:
-        {
-            uint8 ID = ReadByte(data);
-            if (playerID != ID) {
-                printf("Assigned ID: %d doesnt match sent ID: %d in grenade packet\n", playerID, ID);
-            }
-            if (server->player[playerID].grenades > 0) {
-                ReceiveGrenadePacket(server, playerID, data);
-                server->player[playerID].grenades--;
-            }
+            receiveGrenadePacket(server, playerID, data);
             break;
-        }
         default:
             printf("unhandled input, id %u, code %u\n", playerID, type);
             break;
