@@ -392,7 +392,6 @@ uint8 checkNode(Server* server, Vector3i position)
     saveNode(position.x, position.y, position.z);
 
     while (nodePos > 0) {
-        nodePos = 0;
         if (nodePos >= nodesSize - 6) {
             nodesSize += NODE_RESERVE_SIZE;
             nodes = (Vector3i*) realloc((void*) nodes, sizeof(Vector3i) * nodesSize);
@@ -405,6 +404,9 @@ uint8 checkNode(Server* server, Vector3i position)
         position.z                  = currentNode->z;
         if (position.z >= 62) {
             free(visitedNodes);
+            visitedNodes = NULL;
+            free(nodes);
+            nodes = NULL;
             return 1;
         }
         position.x = currentNode->x;
@@ -434,7 +436,9 @@ uint8 checkNode(Server* server, Vector3i position)
     }
 
     free(visitedNodes);
+    visitedNodes = NULL;
     free(nodes);
+    nodes = NULL;
     return 0;
 }
 
