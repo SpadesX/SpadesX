@@ -216,8 +216,7 @@ static void loginCommand(Server* server, char command[30], char* message, uint8 
                         sendServerNotice(server, player, "Wrong password");
                         return;
                     }
-                }
-                else {
+                } else {
                     failed++;
                 }
             }
@@ -404,6 +403,16 @@ static void tpcCommand(Server* server, char command[30], char* message, uint8 pl
     }
 }
 
+static void logoutCommand(Server* server, uint8 player)
+{
+    server->player[player].isManager = 0;
+    server->player[player].isAdmin   = 0;
+    server->player[player].isMod     = 0;
+    server->player[player].isGuard   = 0;
+    server->player[player].isTrusted = 0;
+    sendServerNotice(server, player, "You logged out");
+}
+
 void handleCommands(Server* server, uint8 player, char* message)
 {
     Player srvPlayer = server->player[player];
@@ -465,5 +474,9 @@ void handleCommands(Server* server, uint8 player, char* message)
         server->running = 0;
     } else if (strcmp(command, "/tpc") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin)) {
         tpcCommand(server, command, message, player);
+    } else if (strcmp(command, "/logout") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod ||
+                                                   srvPlayer.isGuard || srvPlayer.isTrusted))
+    {
+        logoutCommand(server, player);
     }
 }
