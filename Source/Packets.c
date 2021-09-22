@@ -524,7 +524,8 @@ void SendWorldUpdate(Server* server, uint8 playerID)
     enet_peer_send(server->player[playerID].peer, 0, packet);
 }
 
-void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float z) {
+void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float z)
+{
     ENetPacket* packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_POSITION_DATA);
@@ -825,8 +826,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
         int      Z            = ReadInt(data);
         Vector3f vectorBlock  = {X, Y, Z};
         Vector3f playerVector = server->player[playerID].movement.position;
-        if ((server->player[playerID].blocks > 0) &&
-            ((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) ||
+        if (((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) ||
              (server->player[playerID].item == 1 && actionType == 0) ||
              (server->player[playerID].item == 2 && actionType == 1)))
         {
@@ -834,9 +834,11 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                 vecfValidPos(vectorBlock)) {
                 switch (actionType) {
                     case 0:
-                        mapvxlSetColor(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
-                        server->player[playerID].blocks--;
-                        moveIntelAndTentUp(server);
+                        if (server->player[playerID].blocks > 0) {
+                            mapvxlSetColor(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
+                            server->player[playerID].blocks--;
+                            moveIntelAndTentUp(server);
+                        }
                         break;
 
                     case 1:
