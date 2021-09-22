@@ -141,6 +141,14 @@ static void ServerInit(Server*     server,
         server->player[i].movement.heightOrientation  = height;
         server->player[i].movement.position           = empty;
         server->player[i].movement.velocity           = empty;
+        PermLevel roleList[5] = {{"manager", &server->managerPasswd, &server->player[i].isManager},
+                                   {"admin", &server->adminPasswd, &server->player[i].isAdmin},
+                                   {"mod", &server->modPasswd, &server->player[i].isMod},
+                                   {"guard", &server->guardPasswd, &server->player[i].isGuard},
+                                   {"trusted", &server->trustedPasswd, &server->player[i].isTrusted}};
+        for (unsigned long x = 0; x < sizeof(roleList) / sizeof(PermLevel); ++x) {
+            server->player[i].roleList[x] = roleList[x];
+        }
         server->player[i].airborne                    = 0;
         server->player[i].wade                        = 0;
         server->player[i].lastclimb                   = 0;

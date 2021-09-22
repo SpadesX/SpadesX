@@ -13,6 +13,12 @@
 #include <libmapvxl/libmapvxl.h>
 #include <time.h>
 
+typedef struct {
+    char accessLevel[32];
+    const char** accessPassword;
+    uint8* access;
+} PermLevel;
+
 typedef struct
 {
     uint8              sent;
@@ -93,6 +99,7 @@ typedef struct
     Weapon             weapon;
     Team               team;
     Tool               item;
+    PermLevel          roleList[5]; //Change me based on the number of access levels you require
     uint32             kills;
     uint32             deaths;
     Color3i            color;

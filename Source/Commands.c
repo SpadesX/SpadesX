@@ -203,43 +203,26 @@ static void loginCommand(Server* server, char command[30], char* message, uint8 
             for (uint8 j = 0; j < levelLen; ++j) {
                 level[j] = tolower(level[j]);
             }
-            if (strcmp(level, "manager") == 0) {
-                if (strcmp(password, server->managerPasswd) == 0) {
-                    server->player[player].isManager = 1;
-                    sendServerNotice(server, player, "You have logged in as manager");
-                } else {
-                    sendServerNotice(server, player, "Incorrect password");
+            uint failed = 0;
+            for (unsigned long i = 0; i < sizeof(server->player[player].roleList) / sizeof(PermLevel); ++i) {
+                if (strcmp(level, server->player[player].roleList[i].accessLevel) == 0) {
+                    if (strcmp(password, *server->player[player].roleList[i].accessPassword) == 0) {
+                        *server->player[player].roleList[i].access = 1;
+                        char success[128];
+                        snprintf(success, 128, "You logged in %s", server->player[player].roleList[i].accessLevel);
+                        sendServerNotice(server, player, success);
+                        return;
+                    } else {
+                        sendServerNotice(server, player, "Wrong password");
+                        return;
+                    }
                 }
-            } else if (strcmp(level, "admin") == 0) {
-                if (strcmp(password, server->adminPasswd) == 0) {
-                    server->player[player].isAdmin = 1;
-                    sendServerNotice(server, player, "You have logged in as admin");
-                } else {
-                    sendServerNotice(server, player, "Incorrect password");
+                else {
+                    failed++;
                 }
-            } else if (strcmp(level, "mod") == 0 || strcmp(level, "moderator") == 0) {
-                if (strcmp(password, server->modPasswd) == 0) {
-                    server->player[player].isMod = 1;
-                    sendServerNotice(server, player, "You have logged in as moderator");
-                } else {
-                    sendServerNotice(server, player, "Incorrect password");
-                }
-            } else if (strcmp(level, "guard") == 0) {
-                if (strcmp(password, server->guardPasswd) == 0) {
-                    server->player[player].isGuard = 1;
-                    sendServerNotice(server, player, "You have logged in as guard");
-                } else {
-                    sendServerNotice(server, player, "Incorrect password");
-                }
-            } else if (strcmp(level, "trusted") == 0) {
-                if (strcmp(password, server->trustedPasswd) == 0) {
-                    server->player[player].isTrusted = 1;
-                    sendServerNotice(server, player, "You have logged in as trsuted");
-                } else {
-                    sendServerNotice(server, player, "Incorrect password");
-                }
-            } else {
-                sendServerNotice(server, player, "Incorrect role");
+            }
+            if (failed >= sizeof(server->player[player].roleList) / sizeof(PermLevel)) {
+                sendServerNotice(server, player, "Invalid role");
             }
         } else {
             sendServerNotice(server, player, "Incorrect number of arguments to login");
