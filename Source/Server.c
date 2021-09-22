@@ -514,8 +514,10 @@ static void ServerUpdate(Server* server, int timeout)
                 FILE* fp;
                 fp = fopen("BanList.txt", "r");
                 if (fp == NULL) {
-                    WARNING(
+                    ERROR(
                     "BanList.txt could not be opened for checking ban. PLEASE FIX THIS NOW BY CREATING THIS FILE!!!!");
+                    server->running = 0;
+                    return;
                 }
                 unsigned int IP = 0;
                 char         nameOfPlayer[20];
