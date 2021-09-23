@@ -8,8 +8,6 @@
 #include <libmapvxl/libmapvxl.h>
 #include <stdio.h>
 
-int color4iToInt(Color4i color);
-
 void LoadMap(Server* server, const char* path)
 {
     STATUS("loading map");
