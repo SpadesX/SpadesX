@@ -548,6 +548,10 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in grenade packet\n", playerID, ID);
     }
+    time_t timeNow = get_nanos();
+    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 1000)) {
+        return;
+    }
     if (server->player[playerID].grenades > 0) {
         for (int i = 0; i < 3; ++i) {
             if (server->player[playerID].grenade[i].sent == 0) {
@@ -926,7 +930,8 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
         printf("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
     }
     if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
-        server->player[playerID].item == 1 && diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
+        server->player[playerID].item == 1 &&
+        diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
     {
         vec3i start;
         vec3i end;
