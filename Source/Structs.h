@@ -13,6 +13,9 @@
 #include <libmapvxl/libmapvxl.h>
 #include <time.h>
 
+#define NANO_IN_SECOND 1000000000
+#define NANO_IN_MILLI 1000000
+
 typedef struct
 {
     char         accessLevel[32];
@@ -99,6 +102,11 @@ typedef struct
     time_t sinceLastBaseEnter;
     time_t sinceLastBaseEnterRestock;
     time_t startOfRespawnWait;
+    time_t sinceLastShot;
+    time_t sinceLastBlockDest;
+    time_t sinceLastBlockPlac;
+    time_t sinceLast3BlockDest;
+    time_t sinceLastGrenadeThrown;
 } Timers;
 
 typedef struct

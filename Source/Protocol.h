@@ -10,11 +10,11 @@
 #include <Types.h>
 #include <enet/enet.h>
 
-uint8 isPastStateData(Server* server, uint8 playerID);
-uint8 isPastJoinScreen(Server* server, uint8 playerID);
-uint8 vecValidPos(Vector3i pos);
-uint8 vecfValidPos(Vector3f pos);
-uint8 validPos(int x, int y, int z);
+uint8     isPastStateData(Server* server, uint8 playerID);
+uint8     isPastJoinScreen(Server* server, uint8 playerID);
+uint8     vecValidPos(Vector3i pos);
+uint8     vecfValidPos(Vector3f pos);
+uint8     validPos(int x, int y, int z);
 Vector3i* getNeighbors(Vector3i pos);
 uint8     checkNode(Server* server, Vector3i position);
 void      moveIntelAndTentDown(Server* server);
@@ -28,20 +28,19 @@ uint8     checkItemInTent(Server* server, uint8 team, Vector3f itemPos);
 uint8     checkInTent(Server* server, uint8 team);
 uint8     checkInIntel(Server* server, uint8 team);
 void      handleGrenade(Server* server, uint8 playerID);
-void      updateMovementAndGrenades(Server*            server,
-                                    unsigned long long timeNow,
-                                    unsigned long long timeSinceLastUpdate,
-                                    unsigned long long timeSinceStart);
+void      updateMovementAndGrenades(Server* server, time_t timeNow, time_t timeSinceLastUpdate, time_t timeSinceStart);
 void      SetPlayerRespawnPoint(Server* server, uint8 playerID);
 Vector3f  SetIntelTentSpawnPoint(Server* server, uint8 team);
 void      sendServerNotice(Server* server, uint8 playerID, char* message);
 void      broadcastServerNotice(Server* server, char* message);
-uint8      SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
-uint8      SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
-uint8      SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
+uint8     SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
+uint8     SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
+uint8     SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
 uint8     playerToPlayerVisible(Server* server, uint8 playerID, uint8 playerID2);
 uint32    DistanceIn3D(Vector3f vector1, Vector3f vector2);
 uint32    DistanceIn2D(Vector3f vector1, Vector3f vector2);
 uint8     Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance);
+uint8     diffIsOlderThen(time_t timeNow, time_t* timeBefore, time_t timeDiff);
+uint8     diffIsOlderThenDontUpdate(time_t timeNow, time_t timeBefore, time_t timeDiff);
 
 #endif

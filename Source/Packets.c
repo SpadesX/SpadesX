@@ -327,9 +327,9 @@ void sendKillPacket(Server* server,
             server->player[killerID].kills++;
         }
         server->player[playerID].deaths++;
-        server->player[playerID].respawnTime        = respawnTime;
+        server->player[playerID].respawnTime               = respawnTime;
         server->player[playerID].timers.startOfRespawnWait = time(NULL);
-        server->player[playerID].state              = STATE_WAITING_FOR_RESPAWN;
+        server->player[playerID].state                     = STATE_WAITING_FOR_RESPAWN;
     }
     if (server->player[playerID].hasIntel) {
         server->player[playerID].hasIntel    = 0;
@@ -586,6 +586,20 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
     Vector3f shotOrien   = server->player[playerID].movement.forwardOrientation;
     float    distance    = DistanceIn2D(shotPos, hitPos);
     long     x, y, z;
+
+    time_t timeNow = get_nanos();
+    if (((server->player[playerID].item == 0 &&
+          diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
+         (server->player[playerID].item == 2 && server->player[playerID].weapon == 0 &&
+          diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 200)) ||
+         (server->player[playerID].item == 2 && server->player[playerID].weapon == 1 &&
+          diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 50)) ||
+         (server->player[playerID].item == 2 && server->player[playerID].weapon == 2 &&
+          diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 300))) == 0)
+    {
+        return;
+    }
+
     if (server->player[playerID].alive && server->player[hitPlayerID].alive &&
         (server->player[playerID].team != server->player[hitPlayerID].team ||
          server->player[playerID].allowTeamKilling) &&
@@ -834,15 +848,25 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                 vecfValidPos(vectorBlock)) {
                 switch (actionType) {
                     case 0:
-                        if (server->player[playerID].blocks > 0) {
+                    {
+                        time_t timeNow = get_nanos();
+                        if (server->player[playerID].blocks > 0 &&
+                            diffIsOlderThen(
+                            timeNow, &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
+                        {
                             mapvxlSetColor(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
                             server->player[playerID].blocks--;
                             moveIntelAndTentUp(server);
                         }
-                        break;
+                    } break;
 
                     case 1:
                     {
+                        time_t timeNow = get_nanos();
+                        if (!diffIsOlderThen(
+                            timeNow, &server->player[playerID].timers.sinceLastBlockDest, NANO_IN_MILLI * 100)) {
+                            break;
+                        }
                         Vector3i  position = {X, Y, Z};
                         Vector3i* neigh    = getNeighbors(position);
                         mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
@@ -859,6 +883,12 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                     } break;
 
                     case 2:
+                    {
+                        time_t timeNow = get_nanos();
+                        if (!diffIsOlderThen(
+                            timeNow, &server->player[playerID].timers.sinceLast3BlockDest, NANO_IN_MILLI * 300)) {
+                            break;
+                        }
                         for (int z = Z - 1; z <= Z + 1; z++) {
                             if (z < 62) {
                                 mapvxlSetAir(&server->map.map, X, Y, z);
@@ -875,7 +905,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                 }
                             }
                         }
-                        break;
+                    } break;
                 }
                 SendBlockAction(server, playerID, actionType, X, Y, Z);
                 moveIntelAndTentDown(server);
@@ -896,7 +926,7 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
         printf("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
     }
     if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
-        server->player[playerID].item == 1)
+        server->player[playerID].item == 1 && diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
     {
         vec3i start;
         vec3i end;
@@ -967,7 +997,6 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     } else if (server->player[playerID].state != STATE_READY) {
         return;
     }
-
     server->player[playerID].primary_fire   = wInput & mask;
     server->player[playerID].secondary_fire = (wInput >> 1) & mask;
 

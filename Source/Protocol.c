@@ -635,15 +635,17 @@ void handleIntel(Server* server, uint8 playerID)
                 server->protocol.ctf.intelHeld[team] = 1;
                 server->player[playerID].hasIntel    = 1;
             } else if (checkPlayerInTent(server, playerID) &&
-                       timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15) {
+                       timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15)
+            {
                 SendRestock(server, playerID);
-                server->player[playerID].HP                        = 100;
-                server->player[playerID].grenades                  = 3;
-                server->player[playerID].blocks                    = 50;
+                server->player[playerID].HP                               = 100;
+                server->player[playerID].grenades                         = 3;
+                server->player[playerID].blocks                           = 50;
                 server->player[playerID].timers.sinceLastBaseEnterRestock = time(NULL);
             }
         } else if (server->player[playerID].hasIntel) {
-            if (checkPlayerInTent(server, playerID) && timeNow - server->player[playerID].timers.sinceLastBaseEnter >= 5) {
+            if (checkPlayerInTent(server, playerID) &&
+                timeNow - server->player[playerID].timers.sinceLastBaseEnter >= 5) {
                 server->protocol.ctf.score[server->player[playerID].team]++;
                 uint8 winning = 0;
                 if (server->protocol.ctf.score[server->player[playerID].team] >= server->protocol.ctf.scoreLimit) {
@@ -654,10 +656,10 @@ void handleIntel(Server* server, uint8 playerID)
                 server->player[playerID].grenades = 3;
                 server->player[playerID].blocks   = 50;
                 SendRestock(server, playerID);
-                server->player[playerID].hasIntel           = 0;
-                server->protocol.ctf.intelHeld[team]        = 0;
+                server->player[playerID].hasIntel                  = 0;
+                server->protocol.ctf.intelHeld[team]               = 0;
                 server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
-                server->protocol.ctf.intel[team]            = SetIntelTentSpawnPoint(server, team);
+                server->protocol.ctf.intel[team]                   = SetIntelTentSpawnPoint(server, team);
                 SendMoveObject(server, team, team, server->protocol.ctf.intel[team]);
                 if (winning) {
                     for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
@@ -744,10 +746,7 @@ void handleGrenade(Server* server, uint8 playerID)
     }
 }
 
-void updateMovementAndGrenades(Server*            server,
-                               unsigned long long timeNow,
-                               unsigned long long timeSinceLastUpdate,
-                               unsigned long long timeSinceStart)
+void updateMovementAndGrenades(Server* server, time_t timeNow, time_t timeSinceLastUpdate, time_t timeSinceStart)
 {
     set_globals((timeNow - timeSinceStart) / 1000000000.f, (timeNow - timeSinceLastUpdate) / 1000000000.f);
     for (int playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
@@ -897,4 +896,23 @@ uint8 SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID)
         }
     }
     return sent;
+}
+
+uint8 diffIsOlderThen(time_t timeNow, time_t* timeBefore, time_t timeDiff)
+{
+    if (timeNow - *timeBefore >= timeDiff) {
+        *timeBefore = timeNow;
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+uint8 diffIsOlderThenDontUpdate(time_t timeNow, time_t timeBefore, time_t timeDiff)
+{
+    if (timeNow - timeBefore >= timeDiff) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
