@@ -98,6 +98,7 @@ typedef struct
     time_t timeSinceLastWU;
     time_t sinceLastBaseEnter;
     time_t sinceLastBaseEnterRestock;
+    time_t startOfRespawnWait;
 } Timers;
 
 typedef struct
@@ -115,7 +116,6 @@ typedef struct
     char      name[17];
     ENetPeer* peer;
     uint8     respawnTime;
-    uint32    startOfRespawnWait;
     Color4i   toolColor;
     int       HP;
     uint8     grenades;

@@ -460,7 +460,7 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
             break;
         case STATE_WAITING_FOR_RESPAWN:
         {
-            if (time(NULL) - server->player[playerID].startOfRespawnWait >= server->player[playerID].respawnTime) {
+            if (time(NULL) - server->player[playerID].timers.startOfRespawnWait >= server->player[playerID].respawnTime) {
                 server->player[playerID].state = STATE_SPAWNING;
             }
             break;

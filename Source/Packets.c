@@ -328,7 +328,7 @@ void sendKillPacket(Server* server,
         }
         server->player[playerID].deaths++;
         server->player[playerID].respawnTime        = respawnTime;
-        server->player[playerID].startOfRespawnWait = time(NULL);
+        server->player[playerID].timers.startOfRespawnWait = time(NULL);
         server->player[playerID].state              = STATE_WAITING_FOR_RESPAWN;
     }
     if (server->player[playerID].hasIntel) {
