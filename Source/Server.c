@@ -485,7 +485,7 @@ static void* WorldUpdate()
     for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         OnPlayerUpdate(&server, playerID);
         if (isPastJoinScreen(&server, playerID)) {
-            unsigned long long time = get_nanos();
+            time_t time = get_nanos();
             if (time - server.player[playerID].timers.timeSinceLastWU >= (1000000000 / server.player[playerID].ups)) {
                 SendWorldUpdate(&server, playerID);
                 server.player[playerID].timers.timeSinceLastWU = get_nanos();
