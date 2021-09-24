@@ -635,15 +635,15 @@ void handleIntel(Server* server, uint8 playerID)
                 server->protocol.ctf.intelHeld[team] = 1;
                 server->player[playerID].hasIntel    = 1;
             } else if (checkPlayerInTent(server, playerID) &&
-                       timeNow - server->player[playerID].sinceLastBaseEnterRestock >= 15) {
+                       timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15) {
                 SendRestock(server, playerID);
                 server->player[playerID].HP                        = 100;
                 server->player[playerID].grenades                  = 3;
                 server->player[playerID].blocks                    = 50;
-                server->player[playerID].sinceLastBaseEnterRestock = time(NULL);
+                server->player[playerID].timers.sinceLastBaseEnterRestock = time(NULL);
             }
         } else if (server->player[playerID].hasIntel) {
-            if (checkPlayerInTent(server, playerID) && timeNow - server->player[playerID].sinceLastBaseEnter >= 5) {
+            if (checkPlayerInTent(server, playerID) && timeNow - server->player[playerID].timers.sinceLastBaseEnter >= 5) {
                 server->protocol.ctf.score[server->player[playerID].team]++;
                 uint8 winning = 0;
                 if (server->protocol.ctf.score[server->player[playerID].team] >= server->protocol.ctf.scoreLimit) {
@@ -656,7 +656,7 @@ void handleIntel(Server* server, uint8 playerID)
                 SendRestock(server, playerID);
                 server->player[playerID].hasIntel           = 0;
                 server->protocol.ctf.intelHeld[team]        = 0;
-                server->player[playerID].sinceLastBaseEnter = time(NULL);
+                server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
                 server->protocol.ctf.intel[team]            = SetIntelTentSpawnPoint(server, team);
                 SendMoveObject(server, team, team, server->protocol.ctf.intel[team]);
                 if (winning) {

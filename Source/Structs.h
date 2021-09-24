@@ -13,21 +13,22 @@
 #include <libmapvxl/libmapvxl.h>
 #include <time.h>
 
-typedef struct {
-    char accessLevel[32];
+typedef struct
+{
+    char         accessLevel[32];
     const char** accessPassword;
-    uint8* access;
+    uint8*       access;
 } PermLevel;
 
 typedef struct
 {
-    uint8              sent;
-    float              fuse;
-    uint8              exploded;
-    Vector3f           position;
-    Vector3f           velocity;
-    unsigned long long timeSinceSent;
-    unsigned long long timeNow;
+    uint8    sent;
+    float    fuse;
+    uint8    exploded;
+    Vector3f position;
+    Vector3f velocity;
+    time_t   timeSinceSent;
+    time_t   timeNow;
 } Grenade;
 
 typedef struct
@@ -94,44 +95,51 @@ typedef struct
 
 typedef struct
 {
-    Queue*             queues;
-    State              state;
-    Weapon             weapon;
-    Team               team;
-    Tool               item;
-    PermLevel          roleList[5]; //Change me based on the number of access levels you require
-    uint32             kills;
-    uint32             deaths;
-    Color3i            color;
-    char               name[17];
-    ENetPeer*          peer;
-    uint8              respawnTime;
-    uint32             startOfRespawnWait;
-    Color4i            toolColor;
-    int                HP;
-    uint8              grenades;
-    uint8              blocks;
-    uint8              weaponReserve;
-    short              weaponClip;
-    vec3i              resultLine[50];
-    uint8              ip[4];
-    uint8              alive;
-    uint8              input;
-    uint8              allowKilling;
-    uint8              allowTeamKilling;
-    unsigned long long timeSinceLastWU;
-    uint16             ups;
-    uint8              muted;
-    uint8              canBuild;
-    Grenade            grenade[3];
-    uint8              toldToMaster;
-    uint8              hasIntel;
-    uint8              isManager;
-    uint8              isAdmin;
-    uint8              isMod;
-    uint8              isGuard;
-    uint8              isTrusted;
-    uint8              isInvisible;
+    time_t timeSinceLastWU;
+    time_t sinceLastBaseEnter;
+    time_t sinceLastBaseEnterRestock;
+} Timers;
+
+typedef struct
+{
+    Queue*    queues;
+    State     state;
+    Weapon    weapon;
+    Team      team;
+    Tool      item;
+    PermLevel roleList[5]; // Change me based on the number of access levels you require
+    Timers    timers;
+    uint32    kills;
+    uint32    deaths;
+    Color3i   color;
+    char      name[17];
+    ENetPeer* peer;
+    uint8     respawnTime;
+    uint32    startOfRespawnWait;
+    Color4i   toolColor;
+    int       HP;
+    uint8     grenades;
+    uint8     blocks;
+    uint8     weaponReserve;
+    short     weaponClip;
+    vec3i     resultLine[50];
+    uint8     ip[4];
+    uint8     alive;
+    uint8     input;
+    uint8     allowKilling;
+    uint8     allowTeamKilling;
+    uint16    ups;
+    uint8     muted;
+    uint8     canBuild;
+    Grenade   grenade[3];
+    uint8     toldToMaster;
+    uint8     hasIntel;
+    uint8     isManager;
+    uint8     isAdmin;
+    uint8     isMod;
+    uint8     isGuard;
+    uint8     isTrusted;
+    uint8     isInvisible;
 
     uint8    movForward;
     uint8    movBackwards;
@@ -143,8 +151,6 @@ typedef struct
     uint8    sprinting;
     uint8    primary_fire;
     uint8    secondary_fire;
-    time_t   sinceLastBaseEnter;
-    time_t   sinceLastBaseEnterRestock;
     Vector3f locAtClick;
 
     // Bellow this point is stuff used for calculating movement.
