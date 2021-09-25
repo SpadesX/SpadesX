@@ -494,12 +494,16 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
             if (isPastJoinScreen(server, playerID) && !server->player[player].muted &&
                 ((server->player[playerID].team == server->player[player].team && meantfor == 1) || meantfor == 0))
             {
-                enet_peer_send(server->player[playerID].peer, 0, packet);
+                if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
+                    sent = 1;
+                }
             }
         }
     }
     free(message);
-    enet_packet_destroy(packet);
+    if (sent == 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendWorldUpdate(Server* server, uint8 playerID)
