@@ -598,13 +598,13 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
 
     time_t timeNow = get_nanos();
     if (((server->player[playerID].item == 0 &&
-          diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 0 &&
-          diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 200)) ||
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 200)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 1 &&
-          diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 50)) ||
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 50)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 2 &&
-          diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 300))) == 0)
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 300))) == 0)
     {
         return;
     }
