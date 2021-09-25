@@ -487,6 +487,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     WriteByte(&stream, player);
     WriteByte(&stream, meantfor);
     WriteArray(&stream, message, length);
+    uint8 sent = 0;
     if (message[0] == '/') {
         handleCommands(server, player, message);
     } else {
