@@ -596,24 +596,18 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
     float    distance    = DistanceIn2D(shotPos, hitPos);
     long     x, y, z;
 
-    if (server->player[playerID].primary_fire == 0) {
-        return;
-    }
-
     time_t timeNow = get_nanos();
-    if (((server->player[playerID].item == 0 &&
+
+    if (server->player[playerID].primary_fire &&
+        ((server->player[playerID].item == 0 &&
           diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 0 &&
           diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 200)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 1 &&
           diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 50)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 2 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 300))) == 0)
-    {
-        return;
-    }
-
-    if (server->player[playerID].alive && server->player[hitPlayerID].alive &&
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 300))) &&
+        server->player[playerID].alive && server->player[hitPlayerID].alive &&
         (server->player[playerID].team != server->player[hitPlayerID].team ||
          server->player[playerID].allowTeamKilling) &&
         (server->player[playerID].allowKilling && server->globalAK) && validate_hit(shotPos, shotOrien, hitPos, 5) &&
