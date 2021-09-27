@@ -596,6 +596,10 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
     float    distance    = DistanceIn2D(shotPos, hitPos);
     long     x, y, z;
 
+    if (server->player[playerID].primary_fire == 0) {
+        return;
+    }
+
     time_t timeNow = get_nanos();
     if (((server->player[playerID].item == 0 &&
           diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
