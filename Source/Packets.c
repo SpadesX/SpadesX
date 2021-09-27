@@ -38,6 +38,61 @@ int color4iToInt(Color4i color)
     return intColor;
 }
 
+inline static uint8 allowShot(Server*  server,
+                              uint8    playerID,
+                              uint8    hitPlayerID,
+                              time_t   timeNow,
+                              float    distance,
+                              long     *x,
+                              long     *y,
+                              long     *z,
+                              Vector3f shotPos,
+                              Vector3f shotOrien,
+                              Vector3f hitPos,
+                              Vector3f shotEyePos)
+{
+    uint8 ret = 0;
+    if (server->player[playerID].primary_fire &&
+        ((server->player[playerID].item == 0 &&
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
+         (server->player[playerID].item == 2 && server->player[playerID].weapon == 0 &&
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 200)) ||
+         (server->player[playerID].item == 2 && server->player[playerID].weapon == 1 &&
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 50)) ||
+         (server->player[playerID].item == 2 && server->player[playerID].weapon == 2 &&
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 300))) &&
+        server->player[playerID].alive && server->player[hitPlayerID].alive &&
+        (server->player[playerID].team != server->player[hitPlayerID].team ||
+         server->player[playerID].allowTeamKilling) &&
+        (server->player[playerID].allowKilling && server->globalAK) && validate_hit(shotPos, shotOrien, hitPos, 5) &&
+        (cast_ray(server,
+                  shotEyePos.x,
+                  shotEyePos.y,
+                  shotEyePos.z,
+                  shotOrien.x,
+                  shotOrien.y,
+                  shotOrien.z,
+                  distance,
+                  x,
+                  y,
+                  z) == 0 ||
+         cast_ray(server,
+                  shotEyePos.x,
+                  shotEyePos.y,
+                  shotEyePos.z - 1,
+                  shotOrien.x,
+                  shotOrien.y,
+                  shotOrien.z,
+                  distance,
+                  x,
+                  y,
+                  z) == 0))
+    {
+        ret = 1;
+    }
+    return ret;
+}
+
 void SendRestock(Server* server, uint8 playerID)
 {
     ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
@@ -594,46 +649,11 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
     Vector3f hitPos      = server->player[hitPlayerID].movement.position;
     Vector3f shotOrien   = server->player[playerID].movement.forwardOrientation;
     float    distance    = DistanceIn2D(shotPos, hitPos);
-    long     x, y, z;
+    long     x = 0, y = 0, z = 0;
 
     time_t timeNow = get_nanos();
 
-    if (server->player[playerID].primary_fire &&
-        ((server->player[playerID].item == 0 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
-         (server->player[playerID].item == 2 && server->player[playerID].weapon == 0 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 200)) ||
-         (server->player[playerID].item == 2 && server->player[playerID].weapon == 1 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 50)) ||
-         (server->player[playerID].item == 2 && server->player[playerID].weapon == 2 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 300))) &&
-        server->player[playerID].alive && server->player[hitPlayerID].alive &&
-        (server->player[playerID].team != server->player[hitPlayerID].team ||
-         server->player[playerID].allowTeamKilling) &&
-        (server->player[playerID].allowKilling && server->globalAK) && validate_hit(shotPos, shotOrien, hitPos, 5) &&
-        (cast_ray(server,
-                  shotEyePos.x,
-                  shotEyePos.y,
-                  shotEyePos.z,
-                  shotOrien.x,
-                  shotOrien.y,
-                  shotOrien.z,
-                  distance,
-                  &x,
-                  &y,
-                  &z) == 0 ||
-         cast_ray(server,
-                  shotEyePos.x,
-                  shotEyePos.y,
-                  shotEyePos.z - 1,
-                  shotOrien.x,
-                  shotOrien.y,
-                  shotOrien.z,
-                  distance,
-                  &x,
-                  &y,
-                  &z) == 0))
-    {
+    if (allowShot(server, playerID, hitPlayerID, timeNow, distance, &x, &y, &z, shotPos, shotOrien, hitPos, shotEyePos)) {
         switch (server->player[playerID].weapon) {
             case WEAPON_RIFLE:
             {
