@@ -43,9 +43,9 @@ inline static uint8 allowShot(Server*  server,
                               uint8    hitPlayerID,
                               time_t   timeNow,
                               float    distance,
-                              long     *x,
-                              long     *y,
-                              long     *z,
+                              long*    x,
+                              long*    y,
+                              long*    z,
                               Vector3f shotPos,
                               Vector3f shotOrien,
                               Vector3f hitPos,
@@ -65,17 +65,9 @@ inline static uint8 allowShot(Server*  server,
         (server->player[playerID].team != server->player[hitPlayerID].team ||
          server->player[playerID].allowTeamKilling) &&
         (server->player[playerID].allowKilling && server->globalAK) && validate_hit(shotPos, shotOrien, hitPos, 5) &&
-        (cast_ray(server,
-                  shotEyePos.x,
-                  shotEyePos.y,
-                  shotEyePos.z,
-                  shotOrien.x,
-                  shotOrien.y,
-                  shotOrien.z,
-                  distance,
-                  x,
-                  y,
-                  z) == 0 ||
+        (cast_ray(
+         server, shotEyePos.x, shotEyePos.y, shotEyePos.z, shotOrien.x, shotOrien.y, shotOrien.z, distance, x, y, z) ==
+         0 ||
          cast_ray(server,
                   shotEyePos.x,
                   shotEyePos.y,
@@ -216,9 +208,18 @@ void SendWeaponReload(Server* server, uint8 playerID)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WEAPON_RELOAD);
     WriteByte(&stream, playerID);
-    WriteByte(&stream, server->player[playerID].weaponReserve);
     WriteByte(&stream, server->player[playerID].weaponClip);
-    if (SendPacketExceptSender(server, packet, playerID) == 0) {
+    WriteByte(&stream, server->player[playerID].weaponReserve);
+    uint8 sendSucc = 0;
+    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+        if (isPastStateData(server, player)) {
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sendSucc = 1;
+            }
+        }
+    }
+    if (sendSucc == 0) {
+        printf("destroying packet\n");
         enet_packet_destroy(packet);
     }
 }
@@ -653,7 +654,8 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
 
     time_t timeNow = get_nanos();
 
-    if (allowShot(server, playerID, hitPlayerID, timeNow, distance, &x, &y, &z, shotPos, shotOrien, hitPos, shotEyePos)) {
+    if (allowShot(server, playerID, hitPlayerID, timeNow, distance, &x, &y, &z, shotPos, shotOrien, hitPos, shotEyePos))
+    {
         switch (server->player[playerID].weapon) {
             case WEAPON_RIFLE:
             {
@@ -1047,13 +1049,13 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
 static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID      = ReadByte(data);
-    uint8 reserve = ReadByte(data);
     uint8 clip    = ReadByte(data);
+    uint8 reserve = ReadByte(data);
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
     }
-    server->player[playerID].weaponReserve = reserve; // Temporary
-    server->player[playerID].weaponClip    = clip;
+    server->player[playerID].weaponReserve = 50 + (reserve - reserve); // Temporary
+    server->player[playerID].weaponClip = 10 + (clip - clip);
     SendWeaponReload(server, playerID);
 }
 
