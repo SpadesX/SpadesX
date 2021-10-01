@@ -1056,6 +1056,8 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
     }
     server->player[playerID].weaponReserve = 50 + (reserve - reserve); // Temporary
     server->player[playerID].weaponClip = 10 + (clip - clip);
+    server->player[playerID].primary_fire = 0;
+    server->player[playerID].secondary_fire = 0;
     SendWeaponReload(server, playerID);
 }
 
