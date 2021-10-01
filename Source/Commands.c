@@ -413,6 +413,13 @@ static void logoutCommand(Server* server, uint8 player)
     sendServerNotice(server, player, "You logged out");
 }
 
+static void serverCommand(Server* server, uint8 player)
+{
+    char message[53];
+    snprintf(message, 53, "You are playing on SpadesX server. Version %s", VERSION);
+    sendServerNotice(server, player, message);
+}
+
 void handleCommands(Server* server, uint8 player, char* message)
 {
     Player srvPlayer = server->player[player];
@@ -478,5 +485,7 @@ void handleCommands(Server* server, uint8 player, char* message)
                                                    srvPlayer.isGuard || srvPlayer.isTrusted))
     {
         logoutCommand(server, player);
+    } else if (strcmp(command, "/server") == 0) {
+        serverCommand(server, player);
     }
 }
