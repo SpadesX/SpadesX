@@ -96,23 +96,28 @@ static void ServerInit(Server*     server,
     int                 team2End[3];
 
     if (json_object_object_get_ex(parsed_map_json, "team1_start", &team1StartInConfig) == 0) {
-        printf("Failed to find team1 start in map config\n");
+        ERROR("Failed to find team1 start in map config");
+        server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team1_end", &team1EndInConfig) == 0) {
-        printf("Failed to find team1 end in map config\n");
+        ERROR("Failed to find team1 end in map config");
+        server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team2_start", &team2StartInConfig) == 0) {
-        printf("Failed to find team2 start in map config\n");
+        ERROR("Failed to find team2 start in map config");
+        server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team2_end", &team2EndInConfig) == 0) {
-        printf("Failed to find team2 start in map config\n");
+        ERROR("Failed to find team2 start in map config");
+        server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "author", &authorInConfig) == 0) {
-        printf("Failed to find author in map config\n");
+        ERROR("Failed to find author in map config");
+        server->running = 0;
         return;
     }
 
@@ -297,23 +302,28 @@ void ServerReset(Server* server)
     int                 team2End[3];
 
     if (json_object_object_get_ex(parsed_map_json, "team1_start", &team1StartInConfig) == 0) {
-        printf("Failed to find team1 start in map config\n");
+        ERROR("Failed to find team1 start in map config");
+        server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team1_end", &team1EndInConfig) == 0) {
-        printf("Failed to find team1 end in map config\n");
+        ERROR("Failed to find team1 end in map config");
+        server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team2_start", &team2StartInConfig) == 0) {
-        printf("Failed to find team2 start in map config\n");
+        ERROR("Failed to find team2 start in map config");
+        server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team2_end", &team2EndInConfig) == 0) {
-        printf("Failed to find team2 start in map config\n");
+        ERROR("Failed to find team2 start in map config");
+        server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "author", &authorInConfig) == 0) {
-        printf("Failed to find author in map config\n");
+        ERROR("Failed to find author in map config");
+        server->running = 0;
         return;
     }
 
@@ -684,7 +694,7 @@ void StartServer(uint16      port,
     }
 
     STATUS("Intializing server");
-
+    server.running = 1;
     ServerInit(
     &server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode);
     server.master.enableMasterConnection = master;
@@ -694,12 +704,13 @@ void StartServer(uint16      port,
     server.guardPasswd                   = guardPasswd;
     server.trustedPasswd                 = trustedPasswd;
 
-    STATUS("Server started");
+    if (server.running) {
+        STATUS("Server started");
+    }
     if (server.master.enableMasterConnection == 1) {
         ConnectMaster(&server, port);
     }
     server.master.timeSinceLastSend = time(NULL);
-    server.running                  = 1;
     while (server.running) {
         calculatePhysics();
         ServerUpdate(&server, 0);
