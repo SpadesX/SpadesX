@@ -913,22 +913,21 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                     case 2:
                     {
                         time_t timeNow = get_nanos();
-                        if (!diffIsOlderThen(
+                        if (diffIsOlderThen(
                             timeNow, &server->player[playerID].timers.sinceLast3BlockDest, NANO_IN_MILLI * 300)) {
-                            break;
-                        }
-                        for (int z = Z - 1; z <= Z + 1; z++) {
-                            if (z < 62) {
-                                mapvxlSetAir(&server->map.map, X, Y, z);
-                                if (server->player[playerID].blocks < 50) {
-                                    server->player[playerID].blocks++;
-                                }
-                                Vector3i  position = {X, Y, z};
-                                Vector3i* neigh    = getNeighbors(position);
-                                mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
-                                for (int i = 0; i < 6; ++i) {
-                                    if (neigh[i].z < 62) {
-                                        checkNode(server, neigh[i]);
+                            for (int z = Z - 1; z <= Z + 1; z++) {
+                                if (z < 62) {
+                                    mapvxlSetAir(&server->map.map, X, Y, z);
+                                    if (server->player[playerID].blocks < 50) {
+                                        server->player[playerID].blocks++;
+                                    }
+                                    Vector3i  position = {X, Y, z};
+                                    Vector3i* neigh    = getNeighbors(position);
+                                    mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
+                                    for (int i = 0; i < 6; ++i) {
+                                        if (neigh[i].z < 62) {
+                                            checkNode(server, neigh[i]);
+                                        }
                                     }
                                 }
                             }
