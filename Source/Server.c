@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 unsigned long long updateTime;
 unsigned long long lastUpdateTime;
@@ -716,6 +717,7 @@ void StartServer(uint16      port,
         ServerUpdate(&server, 0);
         WorldUpdate();
         keepMasterAlive(&server);
+        sleep(0);
     }
     while (server.map.compressedMap) {
         server.map.compressedMap = Pop(server.map.compressedMap);
