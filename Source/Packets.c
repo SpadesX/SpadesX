@@ -886,6 +886,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                             mapvxlSetColor(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
                             server->player[playerID].blocks--;
                             moveIntelAndTentUp(server);
+                            SendBlockAction(server, playerID, actionType, X, Y, Z);
                         }
                     } break;
 
@@ -907,6 +908,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                     server->player[playerID].blocks++;
                                 }
                             }
+                            SendBlockAction(server, playerID, actionType, X, Y, Z);
                         }
                     } break;
 
@@ -931,10 +933,10 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                     }
                                 }
                             }
+                            SendBlockAction(server, playerID, actionType, X, Y, Z);
                         }
                     } break;
                 }
-                SendBlockAction(server, playerID, actionType, X, Y, Z);
                 moveIntelAndTentDown(server);
             }
         } else {
