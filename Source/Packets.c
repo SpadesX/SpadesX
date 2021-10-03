@@ -892,21 +892,20 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                     case 1:
                     {
                         time_t timeNow = get_nanos();
-                        if (!diffIsOlderThen(
+                        if (diffIsOlderThen(
                             timeNow, &server->player[playerID].timers.sinceLastBlockDest, NANO_IN_MILLI * 100)) {
-                            break;
-                        }
-                        Vector3i  position = {X, Y, Z};
-                        Vector3i* neigh    = getNeighbors(position);
-                        mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
-                        for (int i = 0; i < 6; ++i) {
-                            if (neigh[i].z < 62) {
-                                checkNode(server, neigh[i]);
+                            Vector3i  position = {X, Y, Z};
+                            Vector3i* neigh    = getNeighbors(position);
+                            mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
+                            for (int i = 0; i < 6; ++i) {
+                                if (neigh[i].z < 62) {
+                                    checkNode(server, neigh[i]);
+                                }
                             }
-                        }
-                        if (server->player[playerID].item != 2) {
-                            if (server->player[playerID].blocks < 50) {
-                                server->player[playerID].blocks++;
+                            if (server->player[playerID].item != 2) {
+                                if (server->player[playerID].blocks < 50) {
+                                    server->player[playerID].blocks++;
+                                }
                             }
                         }
                     } break;
@@ -1054,9 +1053,9 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
     }
-    server->player[playerID].weaponReserve = 50 + (reserve - reserve); // Temporary
-    server->player[playerID].weaponClip = 10 + (clip - clip);
-    server->player[playerID].primary_fire = 0;
+    server->player[playerID].weaponReserve  = 50 + (reserve - reserve); // Temporary
+    server->player[playerID].weaponClip     = 10 + (clip - clip);
+    server->player[playerID].primary_fire   = 0;
     server->player[playerID].secondary_fire = 0;
     SendWeaponReload(server, playerID);
 }
