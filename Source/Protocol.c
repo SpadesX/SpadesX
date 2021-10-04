@@ -33,6 +33,13 @@ static unsigned long long get_nanos(void)
 
 }*/
 
+uint8 isStaff(Server* server, uint8 playerID) {
+    if (server->player[playerID].isManager || server->player[playerID].isAdmin || server->player[playerID].isMod || server->player[playerID].isGuard) {
+        return 1;
+    }
+    return 0;
+}
+
 uint8 isPastStateData(Server* server, uint8 playerID)
 {
     Player player = server->player[playerID];

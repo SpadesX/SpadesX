@@ -44,6 +44,7 @@ typedef struct
     Vector3f strafeOrientation;
     Vector3f heightOrientation;
     Vector3f forwardOrientation;
+    Vector3f previousOrientation;
 } Movement;
 
 typedef struct

@@ -38,6 +38,18 @@ static unsigned long long get_nanos(void)
     return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
+static void forPlayers()
+{
+    for (int playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
+        if (isPastJoinScreen(&server, playerID)) {
+
+        }
+        if (isPastStateData(&server, playerID)) {
+
+        }
+    }
+}
+
 static void* calculatePhysics()
 {
     updateTime = get_nanos();
@@ -717,6 +729,7 @@ void StartServer(uint16      port,
         ServerUpdate(&server, 0);
         WorldUpdate();
         keepMasterAlive(&server);
+        forPlayers();
         sleep(0);
     }
     while (server.map.compressedMap) {

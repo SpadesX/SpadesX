@@ -762,6 +762,7 @@ static void receiveOrientationData(Server* server, uint8 playerID, DataStream* d
     server->player[playerID].movement.forwardOrientation.x = x * length;
     server->player[playerID].movement.forwardOrientation.y = y * length;
     server->player[playerID].movement.forwardOrientation.z = z * length;
+
     reorient_player(server, playerID, &server->player[playerID].movement.forwardOrientation);
 }
 
@@ -1040,6 +1041,23 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
 
         if (server->player[playerID].primary_fire) {
             server->player[playerID].weaponClip--;
+            if ((server->player[playerID].movement.previousOrientation.x ==
+                 server->player[playerID].movement.forwardOrientation.x) &&
+                (server->player[playerID].movement.previousOrientation.y ==
+                 server->player[playerID].movement.forwardOrientation.y) &&
+                (server->player[playerID].movement.previousOrientation.z ==
+                 server->player[playerID].movement.forwardOrientation.z))
+            {
+                for (int i = 0; i < server->protocol.maxPlayers; ++i) {
+                    if (isPastJoinScreen(server, i) && isStaff(server, i)) {
+                        char message[200];
+                        snprintf(message, 200, "WARNING. Player %d may be using no recoil", playerID);
+                        sendServerNotice(server, i, message);
+                    }
+                }
+            }
+            server->player[playerID].movement.previousOrientation =
+            server->player[playerID].movement.forwardOrientation;
         }
     } else {
         // sendKillPacket(server, playerID, playerID, 0, 30, 0);
