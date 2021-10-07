@@ -56,11 +56,11 @@ inline static uint8 allowShot(Server*  server,
         ((server->player[playerID].item == 0 &&
           diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 0 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 200)) ||
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 500)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 1 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 50)) ||
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 110)) ||
          (server->player[playerID].item == 2 && server->player[playerID].weapon == 2 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 300))) &&
+          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 1000))) &&
         server->player[playerID].alive && server->player[hitPlayerID].alive &&
         (server->player[playerID].team != server->player[hitPlayerID].team ||
          server->player[playerID].allowTeamKilling) &&
