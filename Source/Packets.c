@@ -1073,8 +1073,10 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
     }
-    server->player[playerID].weaponReserve  = 50 + (reserve - reserve); // Temporary
-    server->player[playerID].weaponClip     = 10 + (clip - clip);
+    if (server->player[playerID].weaponClip != clip || server->player[playerID].weaponReserve != reserve) {
+        // Do nothing for now. Voxlap is DUMB AF and sends only 0 0 and OpenSpades is sorta dumb as well and sends 255 255.
+        // How am i supposed to check for hacks dammit with this kind of info dammit ?
+    }
     server->player[playerID].primary_fire   = 0;
     server->player[playerID].secondary_fire = 0;
     SendWeaponReload(server, playerID);
