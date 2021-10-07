@@ -110,6 +110,7 @@ typedef struct
     time_t sinceLastBlockPlac;
     time_t sinceLast3BlockDest;
     time_t sinceLastGrenadeThrown;
+    time_t sinceLastWeaponInput;
 } Timers;
 
 typedef struct

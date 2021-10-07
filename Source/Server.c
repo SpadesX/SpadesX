@@ -42,10 +42,36 @@ static void forPlayers()
 {
     for (int playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         if (isPastJoinScreen(&server, playerID)) {
-
+            time_t timeNow = get_nanos();
+            if (server.player[playerID].primary_fire) {
+                if (server.player[playerID].weaponClip > 0) {
+                    switch (server.player[playerID].weapon) {
+                    case WEAPON_RIFLE:
+                    {
+                        if (diffIsOlderThen(timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 500)) {
+                            server.player[playerID].weaponClip--;
+                        }
+                        break;
+                    }
+                    case WEAPON_SMG:
+                    {
+                        if (diffIsOlderThen(timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 110)) {
+                            server.player[playerID].weaponClip--;
+                        }
+                        break;
+                    }
+                    case WEAPON_SHOTGUN:
+                    {
+                        if (diffIsOlderThen(timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 1000)) {
+                            server.player[playerID].weaponClip--;
+                        }
+                        break;
+                    }
+                    }
+                }
+            }
         }
         if (isPastStateData(&server, playerID)) {
-
         }
     }
 }
@@ -193,6 +219,7 @@ static void ServerInit(Server*     server,
         server->player[i].timers.sinceLastGrenadeThrown    = 0;
         server->player[i].timers.sinceLastShot             = 0;
         server->player[i].timers.timeSinceLastWU           = 0;
+        server->player[i].timers.sinceLastWeaponInput      = 0;
         server->player[i].HP                               = 100;
         server->player[i].blocks                           = 50;
         server->player[i].grenades                         = 3;
@@ -389,6 +416,7 @@ void ServerReset(Server* server)
         server->player[i].timers.sinceLastGrenadeThrown    = 0;
         server->player[i].timers.sinceLastShot             = 0;
         server->player[i].timers.timeSinceLastWU           = 0;
+        server->player[i].timers.sinceLastWeaponInput      = 0;
         server->player[i].HP                               = 100;
         server->player[i].blocks                           = 50;
         server->player[i].grenades                         = 3;
@@ -628,8 +656,15 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].allowTeamKilling                 = 0;
                 server->player[playerID].muted                            = 0;
                 server->player[playerID].toldToMaster                     = 0;
-                server->player[playerID].timers.sinceLastBaseEnter        = time(NULL);
-                server->player[playerID].timers.sinceLastBaseEnterRestock = time(NULL);
+                server->player[playerID].timers.sinceLastBaseEnter        = 0;
+                server->player[playerID].timers.sinceLastBaseEnterRestock = 0;
+                server->player[playerID].timers.sinceLast3BlockDest       = 0;
+                server->player[playerID].timers.sinceLastBlockDest        = 0;
+                server->player[playerID].timers.sinceLastBlockPlac        = 0;
+                server->player[playerID].timers.sinceLastGrenadeThrown    = 0;
+                server->player[playerID].timers.sinceLastShot             = 0;
+                server->player[playerID].timers.timeSinceLastWU           = 0;
+                server->player[playerID].timers.sinceLastWeaponInput      = 0;
                 server->player[playerID].HP                               = 100;
                 server->player[playerID].blocks                           = 50;
                 server->player[playerID].grenades                         = 3;

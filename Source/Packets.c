@@ -1040,6 +1040,7 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
         SendWeaponInput(server, playerID, wInput);
 
         if (server->player[playerID].primary_fire) {
+            server->player[playerID].timers.sinceLastWeaponInput = get_nanos();
             server->player[playerID].weaponClip--;
             if ((server->player[playerID].movement.previousOrientation.x ==
                  server->player[playerID].movement.forwardOrientation.x) &&
