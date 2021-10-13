@@ -122,6 +122,8 @@ typedef struct
     Tool      item;
     PermLevel roleList[5]; // Change me based on the number of access levels you require
     Timers    timers;
+    WeaponDefaultClip defaultClip;
+    WeaponDefaultReserve defaultReserve;
     uint32    kills;
     uint32    deaths;
     Color3i   color;

@@ -842,16 +842,22 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     }
     switch (server->player[playerID].weapon) {
         case 0:
-            server->player[playerID].weaponReserve = 50;
-            server->player[playerID].weaponClip    = 10;
+            server->player[playerID].weaponReserve  = 50;
+            server->player[playerID].weaponClip     = 10;
+            server->player[playerID].defaultClip    = RIFLE_DEFAULT_CLIP;
+            server->player[playerID].defaultReserve = RIFLE_DEFAULT_RESERVE;
             break;
         case 1:
-            server->player[playerID].weaponReserve = 120;
-            server->player[playerID].weaponClip    = 30;
+            server->player[playerID].weaponReserve  = 120;
+            server->player[playerID].weaponClip     = 30;
+            server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
+            server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
             break;
         case 2:
-            server->player[playerID].weaponReserve = 48;
-            server->player[playerID].weaponClip    = 6;
+            server->player[playerID].weaponReserve  = 48;
+            server->player[playerID].weaponClip     = 6;
+            server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
+            server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
             break;
     }
     server->player[playerID].state = STATE_SPAWNING;
@@ -1073,12 +1079,15 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
     }
-    if (server->player[playerID].weaponClip != clip || server->player[playerID].weaponReserve != reserve) {
-        // Do nothing for now. Voxlap is DUMB AF and sends only 0 0 and OpenSpades is sorta dumb as well and sends 255 255.
-        // How am i supposed to check for hacks dammit with this kind of info dammit ?
-    }
     server->player[playerID].primary_fire   = 0;
     server->player[playerID].secondary_fire = 0;
+
+    // TODO add here ammo reload handling.
+
+    if (server->player[playerID].weaponClip != clip || server->player[playerID].weaponReserve != reserve) {
+        // Do nothing for now. Voxlap is DUMB AF and sends only 0 0 and OpenSpades is sorta dumb as well and sends 255
+        // 255. How am i supposed to check for hacks dammit with this kind of info dammit ?
+    }
     SendWeaponReload(server, playerID);
 }
 
@@ -1099,6 +1108,26 @@ static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data
     server->player[playerID].weapon = ReadByte(data);
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in change weapon packet\n", playerID, ID);
+    }
+    switch (server->player[playerID].weapon) {
+        case 0:
+            server->player[playerID].weaponReserve  = 50;
+            server->player[playerID].weaponClip     = 10;
+            server->player[playerID].defaultClip    = RIFLE_DEFAULT_CLIP;
+            server->player[playerID].defaultReserve = RIFLE_DEFAULT_RESERVE;
+            break;
+        case 1:
+            server->player[playerID].weaponReserve  = 120;
+            server->player[playerID].weaponClip     = 30;
+            server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
+            server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
+            break;
+        case 2:
+            server->player[playerID].weaponReserve  = 48;
+            server->player[playerID].weaponClip     = 6;
+            server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
+            server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
+            break;
     }
     sendKillPacket(server, playerID, playerID, 6, 5, 0);
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;

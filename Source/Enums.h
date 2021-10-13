@@ -101,4 +101,16 @@ typedef enum {
     HIT_TYPE_MELEE = 4,
 } Hit;
 
+typedef enum {
+    RIFLE_DEFAULT_CLIP = 10,
+    SMG_DEFAULT_CLIP = 30,
+    SHOTGUN_DEFAULT_CLIP = 6,
+} WeaponDefaultClip;
+
+typedef enum {
+    RIFLE_DEFAULT_RESERVE = 50,
+    SMG_DEFAULT_RESERVE = 120,
+    SHOTGUN_DEFAULT_RESERVE = 48,
+} WeaponDefaultReserve;
+
 #endif /* ENUMS_H */
