@@ -33,8 +33,11 @@ static unsigned long long get_nanos(void)
 
 }*/
 
-uint8 isStaff(Server* server, uint8 playerID) {
-    if (server->player[playerID].isManager || server->player[playerID].isAdmin || server->player[playerID].isMod || server->player[playerID].isGuard) {
+uint8 isStaff(Server* server, uint8 playerID)
+{
+    if (server->player[playerID].isManager || server->player[playerID].isAdmin || server->player[playerID].isMod ||
+        server->player[playerID].isGuard)
+    {
         return 1;
     }
     return 0;
@@ -645,9 +648,20 @@ void handleIntel(Server* server, uint8 playerID)
                        timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15)
             {
                 SendRestock(server, playerID);
-                server->player[playerID].HP                               = 100;
-                server->player[playerID].grenades                         = 3;
-                server->player[playerID].blocks                           = 50;
+                server->player[playerID].HP       = 100;
+                server->player[playerID].grenades = 3;
+                server->player[playerID].blocks   = 50;
+                switch (server->player[playerID].weapon) {
+                    case 0:
+                        server->player[playerID].weaponReserve = 50;
+                        break;
+                    case 1:
+                        server->player[playerID].weaponReserve = 120;
+                        break;
+                    case 2:
+                        server->player[playerID].weaponReserve = 48;
+                        break;
+                }
                 server->player[playerID].timers.sinceLastBaseEnterRestock = time(NULL);
             }
         } else if (server->player[playerID].hasIntel) {
@@ -662,6 +676,17 @@ void handleIntel(Server* server, uint8 playerID)
                 server->player[playerID].HP       = 100;
                 server->player[playerID].grenades = 3;
                 server->player[playerID].blocks   = 50;
+                switch (server->player[playerID].weapon) {
+                    case 0:
+                        server->player[playerID].weaponReserve = 50;
+                        break;
+                    case 1:
+                        server->player[playerID].weaponReserve = 120;
+                        break;
+                    case 2:
+                        server->player[playerID].weaponReserve = 48;
+                        break;
+                }
                 SendRestock(server, playerID);
                 server->player[playerID].hasIntel                  = 0;
                 server->protocol.ctf.intelHeld[team]               = 0;

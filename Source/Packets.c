@@ -1082,8 +1082,17 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
     server->player[playerID].primary_fire   = 0;
     server->player[playerID].secondary_fire = 0;
 
-    // TODO add here ammo reload handling.
-
+    uint8 toRefill = server->player[playerID].defaultClip - server->player[playerID].weaponClip;
+    if (server->player[playerID].weaponReserve < toRefill) {
+        if (server->player[playerID].weaponReserve == 0) {
+            return;
+        }
+        server->player[playerID].weaponClip += server->player[playerID].weaponReserve;
+        server->player[playerID].weaponReserve = 0;
+        return;
+    }
+    server->player[playerID].weaponClip += toRefill;
+    server->player[playerID].weaponReserve -= toRefill;
     if (server->player[playerID].weaponClip != clip || server->player[playerID].weaponReserve != reserve) {
         // Do nothing for now. Voxlap is DUMB AF and sends only 0 0 and OpenSpades is sorta dumb as well and sends 255
         // 255. How am i supposed to check for hacks dammit with this kind of info dammit ?
