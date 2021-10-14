@@ -856,8 +856,8 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         case 2:
             server->player[playerID].weaponReserve  = 48;
             server->player[playerID].weaponClip     = 6;
-            server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
-            server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
+            server->player[playerID].defaultClip    = SHOTGUN_DEFAULT_CLIP;
+            server->player[playerID].defaultReserve = SHOTGUN_DEFAULT_RESERVE;
             break;
     }
     server->player[playerID].state = STATE_SPAWNING;
@@ -1134,8 +1134,8 @@ static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data
         case 2:
             server->player[playerID].weaponReserve  = 48;
             server->player[playerID].weaponClip     = 6;
-            server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
-            server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
+            server->player[playerID].defaultClip    = SHOTGUN_DEFAULT_CLIP;
+            server->player[playerID].defaultReserve = SHOTGUN_DEFAULT_RESERVE;
             break;
     }
     sendKillPacket(server, playerID, playerID, 6, 5, 0);
