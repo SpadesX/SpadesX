@@ -679,6 +679,7 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].deaths                           = 0;
                 memset(server->player[playerID].name, 0, 17);
                 server->protocol.numPlayers--;
+                server->protocol.teamUserCount[server->player[playerID].team]--;
                 if (server->master.enableMasterConnection == 1) {
                     updateMaster(server);
                 }

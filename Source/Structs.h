@@ -82,6 +82,7 @@ typedef struct
 typedef struct
 {
     uint8 countOfUsers;
+    uint8 teamUserCount[2];
     //
     uint8 numPlayers;
     uint8 maxPlayers;
