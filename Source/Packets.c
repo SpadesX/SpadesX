@@ -1110,7 +1110,6 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
         // 255. How am i supposed to check for hacks dammit with this kind of info dammit ?
     }
     SendWeaponReload(server, playerID);
-    printf("Clip: %d, Reserve: %d\n", server->player[playerID].weaponClip, server->player[playerID].weaponReserve);
 }
 
 static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
