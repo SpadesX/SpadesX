@@ -1115,20 +1115,23 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
 static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID                      = ReadByte(data);
+    server->protocol.teamUserCount[server->player[playerID].team]--;
     server->player[playerID].team = ReadByte(data);
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
     }
-    if (server->player[playerID].team == 0 && server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1] > 2)
-    {
+    if (server->player[playerID].team == 0 && abs(server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1]) > 2)
+    {   
+
         server->player[playerID].team = 1;
         sendServerNotice(server, playerID, "Team is full. Switching to other team");
     } else if (server->player[playerID].team == 1 &&
-               server->protocol.teamUserCount[1] - server->protocol.teamUserCount[0] > 2)
+               abs(server->protocol.teamUserCount[1] - server->protocol.teamUserCount[0]) > 2)
     {
         server->player[playerID].team = 0;
         sendServerNotice(server, playerID, "Team is full. Switching to other team");
     }
+    server->protocol.teamUserCount[server->player[playerID].team]++;
     sendKillPacket(server, playerID, playerID, 5, 5, 0);
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
