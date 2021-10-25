@@ -15,7 +15,7 @@
 
 #define NANO_IN_SECOND 1000000000
 #define NANO_IN_MILLI 1000000
-#define VERSION "0.0.3"
+#define VERSION "0.0.4"
 #define MAX_MAP_COUNT 64 //Change this if you have more then 64 maps. Tho ask yourself first WHY.
 
 typedef struct
