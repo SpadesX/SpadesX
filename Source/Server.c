@@ -588,7 +588,7 @@ static void ServerUpdate(Server* server, int timeout)
                 char         nameOfPlayer[20];
                 while (fscanf(fp, "%u %s", &IP, nameOfPlayer) != EOF) {
                     if (IP == event.peer->address.host) {
-                        enet_peer_disconnect_now(event.peer, REASON_BANNED);
+                        enet_peer_disconnect(event.peer, REASON_BANNED);
                         printf("WARNING: Banned user %s tried to join. IP: %d\n", nameOfPlayer, IP);
                         bannedUser = 1;
                         break;
