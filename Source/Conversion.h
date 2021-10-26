@@ -15,8 +15,8 @@ uint8* uint32ToUint8(uint32 normal)
         uint32 ip32;
     } tempIpUnion;
     tempIpUnion.ip32                      = normal;
-    uint8 *ip = malloc(32);
-    memcpy(ip, tempIpUnion.ip, 32);
+    uint8 *ip = malloc(sizeof(*ip) / sizeof(uint8));
+    memcpy(ip, tempIpUnion.ip, sizeof(*ip) / sizeof(uint8));
     return ip;
 }
 
