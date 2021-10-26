@@ -18,6 +18,11 @@
 #define VERSION "0.0.4"
 #define MAX_MAP_COUNT 64 //Change this if you have more then 64 maps. Tho ask yourself first WHY.
 
+typedef union {
+    uint8 ip[4];
+    uint32 ip32;
+} IPUnion;
+
 typedef struct
 {
     char         accessLevel[32];
@@ -138,7 +143,7 @@ typedef struct
     uint8     weaponReserve;
     short     weaponClip;
     vec3i     resultLine[50];
-    uint8     ip[4];
+    IPUnion   ipUnion;
     uint8     alive;
     uint8     input;
     uint8     allowKilling;

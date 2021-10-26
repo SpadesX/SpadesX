@@ -610,13 +610,13 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].peer = event.peer;
                 event.peer->data              = (void*) ((size_t) playerID);
                 server->player[playerID].HP   = 100;
-                uint32ToUint8(server, event, playerID);
+                server->player[playerID].ipUnion.ip64 = event.peer->address.host;
                 printf("INFO: connected %u (%d.%d.%d.%d):%u, id %u\n",
                        event.peer->address.host,
-                       server->player[playerID].ip[0],
-                       server->player[playerID].ip[1],
-                       server->player[playerID].ip[2],
-                       server->player[playerID].ip[3],
+                       server->player[playerID].ipUnion.ip[0],
+                       server->player[playerID].ipUnion.ip[1],
+                       server->player[playerID].ipUnion.ip[2],
+                       server->player[playerID].ipUnion.ip[3],
                        event.peer->address.port,
                        playerID);
                 break;

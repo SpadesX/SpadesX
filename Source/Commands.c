@@ -345,15 +345,13 @@ static void banIPCommand(Server* server, char command[30], char* message, uint8 
 {
     char         ipString[16];
     int          ip[4]; // Yes i know waste of memory. Shush for now.
-    unsigned int ip64;
+    unsigned int ip32;
     if (sscanf(message, "%s %s", command, ipString) == 2) {
-        printf("%s\n", ipString);
         if (sscanf(ipString, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] < 256) &&
             (ip[1] >= 0 && ip[1] < 256) && (ip[2] >= 0 && ip[2] < 256) && (ip[3] >= 0 && ip[3] < 256))
         {
-            ip64 = ((uint64) (((uint8) ip[0])) | (uint64) (((uint8) ip[1]) << 8) | (uint64) (((uint8) ip[2]) << 16) |
+            ip32 = ((uint64) (((uint8) ip[0])) | (uint64) (((uint8) ip[1]) << 8) | (uint64) (((uint8) ip[2]) << 16) |
                     (uint64) ((uint8) ip[3]) << 24);
-            printf("%d\n", ip64);
             char sendingMessage[100];
             snprintf(sendingMessage, 100, "IP %s has been permanently banned", ipString);
             FILE* fp;
@@ -364,7 +362,7 @@ static void banIPCommand(Server* server, char command[30], char* message, uint8 
             }
             uint8 banned = 0;
             for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
-                if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].peer->address.host == ip64) {
+                if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipUnion.ip32 == ip32) {
                     if (banned == 0) {
                         fprintf(fp, "%d %s\n", ip64, server->player[ID].name);
                         fclose(fp);
