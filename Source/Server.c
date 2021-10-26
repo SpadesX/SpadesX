@@ -584,17 +584,20 @@ static void ServerUpdate(Server* server, int timeout)
                     server->running = 0;
                     return;
                 }
-                unsigned int IP = 0;
+                uint8 IP[4];
                 char         nameOfPlayer[20];
-                while (fscanf(fp, "%u %s", &IP, nameOfPlayer) != EOF) {
-                    if (IP == event.peer->address.host) {
+                uint8 *hostIP;
+                hostIP = uint32ToUint8(event.peer->address.host);
+                while (fscanf(fp, "%hhu.%hhu.%hhu.%hhu %s", &IP[0], &IP[1], &IP[2], &IP[3], nameOfPlayer) != EOF) {
+                    if (IP[0] == hostIP[0] && IP[1] == hostIP[1] && IP[2] == hostIP[2] && IP[3] == hostIP[3]) {
                         enet_peer_disconnect(event.peer, REASON_BANNED);
-                        printf("WARNING: Banned user %s tried to join. IP: %d\n", nameOfPlayer, IP);
+                        printf("WARNING: Banned user %s tried to join. IP: %hhu.%hhu.%hhu.%hhu\n", nameOfPlayer, IP[0], IP[1], IP[2], IP[3]);
                         bannedUser = 1;
                         break;
                     }
                 }
                 fclose(fp);
+                free(hostIP);
                 if (bannedUser) {
                     break;
                 }

@@ -179,7 +179,7 @@ static void pbanCommand(Server* server, char command[30], char* message, uint8 p
                 sendServerNotice(server, player, "Player could not be banned. File failed to open");
                 return;
             }
-            fprintf(fp, "%d %s\n", server->player[ID].peer->address.host, server->player[ID].name);
+            fprintf(fp, "%hhu.%hhu.%hhu.%hhu %s\n", server->player[ID].ipUnion.ip[0], server->player[ID].ipUnion.ip[1], server->player[ID].ipUnion.ip[2], server->player[ID].ipUnion.ip[3], server->player[ID].name);
             fclose(fp);
             enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
             broadcastServerNotice(server, sendingMessage);
@@ -344,11 +344,11 @@ static void sayCommand(Server* server, char command[30], char* message, uint8 pl
 static void banIPCommand(Server* server, char command[30], char* message, uint8 player)
 {
     char         ipString[16];
-    int          ip[4]; // Yes i know waste of memory. Shush for now.
+    uint8          ip[4];
     unsigned int ip32;
     if (sscanf(message, "%s %s", command, ipString) == 2) {
-        if (sscanf(ipString, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] < 256) &&
-            (ip[1] >= 0 && ip[1] < 256) && (ip[2] >= 0 && ip[2] < 256) && (ip[3] >= 0 && ip[3] < 256))
+        if (sscanf(ipString, "%hhu.%hhu.%hhu.%hhu", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] <= 255) &&
+            (ip[1] >= 0 && ip[1] <= 255) && (ip[2] >= 0 && ip[2] <= 255) && (ip[3] >= 0 && ip[3] <= 255))
         {
             ip32 = ((uint64) (((uint8) ip[0])) | (uint64) (((uint8) ip[1]) << 8) | (uint64) (((uint8) ip[2]) << 16) |
                     (uint64) ((uint8) ip[3]) << 24);
@@ -364,7 +364,7 @@ static void banIPCommand(Server* server, char command[30], char* message, uint8 
             for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
                 if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipUnion.ip32 == ip32) {
                     if (banned == 0) {
-                        fprintf(fp, "%d %s\n", ip32, server->player[ID].name);
+                        fprintf(fp, "%s %s\n", ipString, server->player[ID].name);
                         fclose(fp);
                         banned = 1; // Do not add multiples of the same IP. Its pointless.
                     }
