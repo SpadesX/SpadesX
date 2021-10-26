@@ -344,10 +344,10 @@ static void sayCommand(Server* server, char command[30], char* message, uint8 pl
 static void banIPCommand(Server* server, char command[30], char* message, uint8 player)
 {
     char         ipString[16];
-    uint8          ip[4];
+    int          ip[4]; //Waste of memory. FIXME later
     unsigned int ip32;
     if (sscanf(message, "%s %s", command, ipString) == 2) {
-        if (sscanf(ipString, "%hhu.%hhu.%hhu.%hhu", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] <= 255) &&
+        if (sscanf(ipString, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] <= 255) &&
             (ip[1] >= 0 && ip[1] <= 255) && (ip[2] >= 0 && ip[2] <= 255) && (ip[3] >= 0 && ip[3] <= 255))
         {
             ip32 = ((uint64) (((uint8) ip[0])) | (uint64) (((uint8) ip[1]) << 8) | (uint64) (((uint8) ip[2]) << 16) |
