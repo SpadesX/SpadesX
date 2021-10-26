@@ -364,7 +364,7 @@ static void banIPCommand(Server* server, char command[30], char* message, uint8 
             for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
                 if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipUnion.ip32 == ip32) {
                     if (banned == 0) {
-                        fprintf(fp, "%d %s\n", ip64, server->player[ID].name);
+                        fprintf(fp, "%d %s\n", ip32, server->player[ID].name);
                         fclose(fp);
                         banned = 1; // Do not add multiples of the same IP. Its pointless.
                     }
