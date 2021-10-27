@@ -849,13 +849,21 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         for (uint32 i = 0; i < strlen(server->player[playerID].name); ++i)
             lowerCaseName[i] = tolower(lowerCaseName[i]);
 
-        char* strstrRes = strstr(lowerCaseName, "igger");
+        char* unwantedNames[] = {"igger", "1gger", NULL};
 
-        if (strstrRes != NULL && strcmp("igger", strstrRes) == 0) {
-            enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
-            free(lowerCaseName);
-            return;
+        int index = 0;
+
+        while (unwantedNames[index] != NULL) {
+            if (strstr(lowerCaseName, unwantedNames[index]) != NULL &&
+                strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
+            {
+                enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
+                free(lowerCaseName);
+                return;
+            }
+            index++;
         }
+
         free(lowerCaseName);
         int count = 0;
         for (uint8 i = 0; i < server->protocol.maxPlayers; i++) {
