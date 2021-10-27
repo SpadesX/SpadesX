@@ -296,12 +296,7 @@ static void adminCommand(Server* server, char command[30], char* message, uint8 
                  "Staff from %s: %s",
                  server->player[player].name,
                  staffMessage);
-        for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
-            if (isPastJoinScreen(server, ID) &&
-                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard)) {
-                sendServerNotice(server, ID, sendingMessage);
-            }
-        }
+        sendMessageToStaff(server, sendingMessage);
         sendServerNotice(server, player, "Message sent to all staff members online");
     } else {
         sendServerNotice(server, player, "Invalid message");

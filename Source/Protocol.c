@@ -43,6 +43,17 @@ uint8 isStaff(Server* server, uint8 playerID)
     return 0;
 }
 
+void sendMessageToStaff(Server* server, char* message)
+{
+    for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
+        if (isPastJoinScreen(server, ID) && (server->player[ID].isManager || server->player[ID].isAdmin ||
+                                             server->player[ID].isMod || server->player[ID].isGuard))
+        {
+            sendServerNotice(server, ID, message);
+        }
+    }
+}
+
 uint8 isPastStateData(Server* server, uint8 playerID)
 {
     Player player = server->player[playerID];

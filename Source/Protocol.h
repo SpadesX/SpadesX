@@ -43,5 +43,6 @@ uint8     Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance);
 uint8     diffIsOlderThen(time_t timeNow, time_t* timeBefore, time_t timeDiff);
 uint8     diffIsOlderThenDontUpdate(time_t timeNow, time_t timeBefore, time_t timeDiff);
 uint8 isStaff(Server* server, uint8 playerID);
+void sendMessageToStaff(Server* server, char* message);
 
 #endif
