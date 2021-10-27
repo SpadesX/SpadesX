@@ -286,7 +286,7 @@ static void pmCommand(Server* server, char command[30], char* message, uint8 pla
     }
 }
 
-static void adminCommand(Server* server, char command[30], char* message, uint8 player, Player srvPlayer)
+static void adminCommand(Server* server, char command[30], char* message, uint8 player)
 {
     char sendingMessage[strlen(server->player[player].name) + 1037];
     char staffMessage[1024];
@@ -457,7 +457,7 @@ void handleCommands(Server* server, uint8 player, char* message)
     } else if (strcmp(command, "/pm") == 0) {
         pmCommand(server, command, message, player);
     } else if (strcmp(command, "/admin") == 0) {
-        adminCommand(server, command, message, player, srvPlayer);
+        adminCommand(server, command, message, player);
     } else if (strcmp(command, "/inv") == 0 &&
                (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod || srvPlayer.isGuard))
     {
