@@ -837,6 +837,26 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     } else {
         server->player[playerID].name[length] = '\0';
         ReadArray(data, server->player[playerID].name, length);
+
+        if (strlen(server->player[playerID].name) == 0) {
+            enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
+            return;
+        }
+
+        char* lowerCaseName = malloc(sizeof(strlen(server->player[playerID].name) + 1) / sizeof(char));
+        strcpy(lowerCaseName, server->player[playerID].name);
+
+        for (uint32 i = 0; i < strlen(server->player[playerID].name); ++i)
+            lowerCaseName[i] = tolower(lowerCaseName[i]);
+
+        char* strstrRes = strstr(lowerCaseName, "igger");
+
+        if (strstrRes != NULL && strcmp("igger", strstrRes) == 0) {
+            enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
+            free(lowerCaseName);
+            return;
+        }
+        free(lowerCaseName);
         int count = 0;
         for (uint8 i = 0; i < server->protocol.maxPlayers; i++) {
             if (isPastJoinScreen(server, i) && i != playerID) {
@@ -1114,14 +1134,15 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
 
 static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
 {
-    uint8 ID                      = ReadByte(data);
+    uint8 ID = ReadByte(data);
     server->protocol.teamUserCount[server->player[playerID].team]--;
     server->player[playerID].team = ReadByte(data);
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
     }
-    if (server->player[playerID].team == 0 && abs(server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1]) > 2)
-    {   
+    if (server->player[playerID].team == 0 &&
+        abs(server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1]) > 2)
+    {
 
         server->player[playerID].team = 1;
         sendServerNotice(server, playerID, "Team is full. Switching to other team");
