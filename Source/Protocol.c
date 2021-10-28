@@ -631,11 +631,10 @@ Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
 
     float    dx = spawn->to.x - spawn->from.x;
     float    dy = spawn->to.y - spawn->from.y;
-    float    dz = spawn->to.z - spawn->from.z;
     Vector3f position;
     position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
     position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-    position.z = spawn->from.z + dz * ((float) rand() / (float) RAND_MAX);
+    position.z = mapvxlFindTopBlock(&server->map.map, position.x, position.y);
     return position;
 }
 
@@ -812,11 +811,10 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
 
         float dx = spawn->to.x - spawn->from.x;
         float dy = spawn->to.y - spawn->from.y;
-        float dz = spawn->to.z - spawn->from.z;
 
         server->player[playerID].movement.position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
         server->player[playerID].movement.position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-        server->player[playerID].movement.position.z = spawn->from.z + dz * ((float) rand() / (float) RAND_MAX) - 2.36f;
+        server->player[playerID].movement.position.z = mapvxlFindTopBlock(&server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y) - 2.36f;
 
         server->player[playerID].movement.forwardOrientation.x = 0.f;
         server->player[playerID].movement.forwardOrientation.y = 0.f;

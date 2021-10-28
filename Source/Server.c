@@ -117,6 +117,9 @@ static void ServerInit(Server*     server,
     memcpy(server->mapName, mapArray[index], strlen(mapArray[index]) + 1);
     printf("STATUS: Selecting %s as map\n", server->mapName);
 
+    snprintf(vxlMap, 64, "%s.vxl", server->mapName);
+    LoadMap(server, vxlMap);
+
     STATUS("Loading spawn ranges from map file");
     char mapConfig[64];
     snprintf(mapConfig, 64, "%s.json", server->mapName);
@@ -160,7 +163,7 @@ static void ServerInit(Server*     server,
         return;
     }
 
-    for (uint8 i = 0; i < 3; ++i) {
+    for (uint8 i = 0; i < 2; ++i) {
         team1Start[i] = json_object_get_int(json_object_array_get_idx(team1StartInConfig, i));
         team2Start[i] = json_object_get_int(json_object_array_get_idx(team2StartInConfig, i));
         team1End[i]   = json_object_get_int(json_object_array_get_idx(team1EndInConfig, i));
@@ -271,7 +274,6 @@ static void ServerInit(Server*     server,
 
     memcpy(server->serverName, serverName, strlen(serverName));
     server->serverName[strlen(serverName)] = '\0';
-    snprintf(vxlMap, 64, "%s.vxl", server->mapName);
 
     if (gamemode == 0) {
         server->protocol.mode = GAME_MODE_CTF;
@@ -306,8 +308,6 @@ static void ServerInit(Server*     server,
     server->protocol.ctf.base[0].y = floorf(server->protocol.ctf.base[0].y);
     server->protocol.ctf.base[1].x = floorf(server->protocol.ctf.base[1].x);
     server->protocol.ctf.base[1].y = floorf(server->protocol.ctf.base[1].y);
-
-    LoadMap(server, vxlMap);
 }
 
 void ServerReset(Server* server)
@@ -323,6 +323,9 @@ void ServerReset(Server* server)
     server->map.mapIndex = index;
     memcpy(server->mapName, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
     printf("STATUS: Selecting %s as map\n", server->mapName);
+
+    snprintf(vxlMap, 64, "%s.vxl", server->mapName);
+    LoadMap(server, vxlMap);
 
     STATUS("Loading spawn ranges from map file");
     char mapConfig[64];
@@ -367,7 +370,7 @@ void ServerReset(Server* server)
         return;
     }
 
-    for (uint8 i = 0; i < 3; ++i) {
+    for (uint8 i = 0; i < 2; ++i) {
         team1Start[i] = json_object_get_int(json_object_array_get_idx(team1StartInConfig, i));
         team2Start[i] = json_object_get_int(json_object_array_get_idx(team2StartInConfig, i));
         team1End[i]   = json_object_get_int(json_object_array_get_idx(team1EndInConfig, i));
@@ -426,7 +429,6 @@ void ServerReset(Server* server)
         server->player[i].deaths                           = 0;
         memset(server->player[i].name, 0, 17);
     }
-    snprintf(vxlMap, 64, "%s.vxl", server->mapName);
 
     server->globalAB = 1;
     server->globalAK = 1;
@@ -470,8 +472,6 @@ void ServerReset(Server* server)
     server->protocol.ctf.base[0].y = floorf(server->protocol.ctf.base[0].y);
     server->protocol.ctf.base[1].x = floorf(server->protocol.ctf.base[1].x);
     server->protocol.ctf.base[1].y = floorf(server->protocol.ctf.base[1].y);
-
-    LoadMap(server, vxlMap);
 }
 
 static void SendJoiningData(Server* server, uint8 playerID)

@@ -10,7 +10,7 @@
 
 void LoadMap(Server* server, const char* path)
 {
-    STATUS("loading map");
+    STATUS("Loading map");
 
     while (server->map.compressedMap) {
         server->map.compressedMap = Pop(server->map.compressedMap);
@@ -18,7 +18,7 @@ void LoadMap(Server* server, const char* path)
 
     FILE* file = fopen(path, "rb");
     if (!file) {
-        perror("file not found");
+        perror("MAP NOT FOUND");
         exit(EXIT_FAILURE);
     }
 
@@ -33,7 +33,7 @@ void LoadMap(Server* server, const char* path)
     fclose(file);
     mapvxlLoadVXL(&server->map.map, buffer);
     free(buffer);
-    STATUS("compressing map data");
+    STATUS("Compressing map data");
 
     mapvxlWriteMap(&server->map.map, mapOut);
     
