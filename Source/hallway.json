@@ -1,7 +1,7 @@
 {
-	"team1_start": [ 64, 224, 62 ],
-	"team1_end": [ 128, 288, 62 ],
-	"team2_start": [ 382, 224, 62 ],
-	"team2_end": [ 448, 288, 62 ],
+	"team1_start": [ 64, 224 ],
+	"team1_end": [ 128, 288 ],
+	"team2_start": [ 382, 224 ],
+	"team2_end": [ 448, 288 ],
 	"author": ""
 }
