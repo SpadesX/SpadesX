@@ -849,7 +849,7 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         for (uint32 i = 0; i < strlen(server->player[playerID].name); ++i)
             lowerCaseName[i] = tolower(lowerCaseName[i]);
 
-        char* unwantedNames[] = {"igger", "1gger", NULL};
+        char* unwantedNames[] = {"igger", "1gger", "igg3r", "1gg3r", NULL};
 
         int index = 0;
 
