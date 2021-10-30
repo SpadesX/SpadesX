@@ -1,5 +1,5 @@
 ﻿---
-Language:        Cpp
+Language:        C
 AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
 AlignConsecutiveMacros: true
