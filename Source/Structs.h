@@ -134,6 +134,11 @@ typedef struct
     uint32    deaths;
     Color3i   color;
     char      name[17];
+    char      client;
+    int       version_minor;
+    int       version_major;
+    int       version_revision;
+    char      os_info[255];
     ENetPeer* peer;
     uint8     respawnTime;
     Color4i   toolColor;
