@@ -179,7 +179,13 @@ static void pbanCommand(Server* server, char command[30], char* message, uint8 p
                 sendServerNotice(server, player, "Player could not be banned. File failed to open");
                 return;
             }
-            fprintf(fp, "%hhu.%hhu.%hhu.%hhu %s\n", server->player[ID].ipUnion.ip[0], server->player[ID].ipUnion.ip[1], server->player[ID].ipUnion.ip[2], server->player[ID].ipUnion.ip[3], server->player[ID].name);
+            fprintf(fp,
+                    "%hhu.%hhu.%hhu.%hhu %s\n",
+                    server->player[ID].ipUnion.ip[0],
+                    server->player[ID].ipUnion.ip[1],
+                    server->player[ID].ipUnion.ip[2],
+                    server->player[ID].ipUnion.ip[3],
+                    server->player[ID].name);
             fclose(fp);
             enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
             broadcastServerNotice(server, sendingMessage);
@@ -339,7 +345,7 @@ static void sayCommand(Server* server, char command[30], char* message, uint8 pl
 static void banIPCommand(Server* server, char command[30], char* message, uint8 player)
 {
     char         ipString[16];
-    int          ip[4]; //Waste of memory. FIXME later
+    int          ip[4]; // Waste of memory. FIXME later
     unsigned int ip32;
     if (sscanf(message, "%s %s", command, ipString) == 2) {
         if (sscanf(ipString, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] <= 255) &&
@@ -415,21 +421,27 @@ static void serverCommand(Server* server, uint8 player)
 
 static void clinCommand(Server* server, char command[30], char* message, uint8 player)
 {
-    int  ID = 33;
+    int ID = 33;
     if (sscanf(message, "%s #%d", command, &ID) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             char message[330];
             char client[15];
             if (server->player[player].client == 'o') {
                 strcpy(client, "OpenSpades");
-            }
-            else if (server->player[player].client == 'b') {
+            } else if (server->player[player].client == 'b') {
                 strcpy(client, "BetterSpades");
-            }
-            else {
+            } else {
                 strcpy(client, "Voxlap");
             }
-            snprintf(message, 327, "Player %s is running %s version %d.%d.%d on %s", server->player[ID].name, client, server->player[ID].version_major, server->player[ID].version_minor, server->player[ID].version_revision, server->player[ID].os_info);
+            snprintf(message,
+                     327,
+                     "Player %s is running %s version %d.%d.%d on %s",
+                     server->player[ID].name,
+                     client,
+                     server->player[ID].version_major,
+                     server->player[ID].version_minor,
+                     server->player[ID].version_revision,
+                     server->player[ID].os_info);
             sendServerNotice(server, player, message);
         } else {
             sendServerNotice(server, player, "Invalid ID. Player doesnt exist");
@@ -506,8 +518,7 @@ void handleCommands(Server* server, uint8 player, char* message)
         logoutCommand(server, player);
     } else if (strcmp(command, "/server") == 0) {
         serverCommand(server, player);
-    }
-    else if (strcmp(command, "/clin") == 0 || strcmp(command, "/client") == 0) {
+    } else if (strcmp(command, "/clin") == 0 || strcmp(command, "/client") == 0) {
         clinCommand(server, command, message, player);
     }
 }
