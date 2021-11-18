@@ -507,7 +507,7 @@ void handleCommands(Server* server, uint8 player, char* message)
     } else if (strcmp(command, "/server") == 0) {
         serverCommand(server, player);
     }
-    else if (strcmp(command, "/clin") == 0) {
+    else if (strcmp(command, "/clin") == 0 || strcmp(command, "/client") == 0) {
         clinCommand(server, command, message, player);
     }
 }
