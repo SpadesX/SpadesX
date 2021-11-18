@@ -62,6 +62,8 @@ typedef enum {
     PACKET_TYPE_CHANGE_TEAM       = 29,
     PACKET_TYPE_CHANGE_WEAPON     = 30,
     PACKET_TYPE_MAP_CACHED        = 31,
+    PACKET_TYPE_VERSION_REQUEST   = 33,
+    PACKET_TYPE_VERSION_RESPONSE  = 34,
 } PacketID;
 
 typedef enum {

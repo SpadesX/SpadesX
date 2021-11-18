@@ -454,6 +454,13 @@ void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
     }
 }
 
+void SendVersionRequest(Server* server, uint8 playerID)
+{
+    ENetPacket* packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_VERSION_REQUEST);
+    enet_peer_send(server->player[playerID].peer, 0, packet);
+}
 void SendMapStart(Server* server, uint8 playerID)
 {
     STATUS("sending map info");
@@ -479,6 +486,7 @@ void SendMapChunks(Server* server, uint8 playerID)
         while (server->map.compressedMap) {
             server->map.compressedMap = Pop(server->map.compressedMap);
         }
+        SendVersionRequest(server, playerID);
         server->player[playerID].state = STATE_JOINING;
         STATUS("loading chunks done");
     } else {
@@ -1196,6 +1204,19 @@ static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
 
+static void receiveVersionResponse(Server* server, uint8 playerID, DataStream* data)
+{
+    server->player[playerID].client = ReadByte(data);
+    server->player[playerID].version_major               = ReadByte(data);
+    server->player[playerID].version_minor               = ReadByte(data);
+    server->player[playerID].version_revision            = ReadByte(data);
+    uint32 length = DataLeft(data);
+    if (length < 256) {
+        server->player[playerID].os_info[length] = '\0';
+        ReadArray(data, server->player[playerID].os_info, length);
+    } else { strcpy(server->player[playerID].os_info, "Unknown");
+    }
+}
 void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEvent event)
 {
     PacketID type = (PacketID) ReadByte(data);
@@ -1244,6 +1265,9 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             break;
         case PACKET_TYPE_GRENADE_PACKET:
             receiveGrenadePacket(server, playerID, data);
+            break;
+        case PACKET_TYPE_VERSION_RESPONSE:
+            receiveVersionResponse(server, playerID, data);
             break;
         default:
             printf("unhandled input, id %u, code %u\n", playerID, type);
