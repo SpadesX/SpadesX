@@ -413,6 +413,32 @@ static void serverCommand(Server* server, uint8 player)
     sendServerNotice(server, player, message);
 }
 
+static void clinCommand(Server* server, char command[30], char* message, uint8 player)
+{
+    int  ID = 33;
+    if (sscanf(message, "%s #%d", command, &ID) == 2) {
+        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+            char message[330];
+            char client[15];
+            if (server->player[player].client == 'o') {
+                strcpy(client, "OpenSpades");
+            }
+            else if (server->player[player].client == 'b') {
+                strcpy(client, "BetterSpades");
+            }
+            else {
+                strcpy(client, "Voxlap");
+            }
+            snprintf(message, 327, "Player %s is running %s version %d.%d.%d on %s", server->player[ID].name, client, server->player[ID].version_major, server->player[ID].version_minor, server->player[ID].version_revision, server->player[ID].os_info);
+            sendServerNotice(server, player, message);
+        } else {
+            sendServerNotice(server, player, "Invalid ID. Player doesnt exist");
+        }
+    } else {
+        sendServerNotice(server, player, "No ID given");
+    }
+}
+
 void handleCommands(Server* server, uint8 player, char* message)
 {
     Player srvPlayer = server->player[player];
@@ -480,5 +506,8 @@ void handleCommands(Server* server, uint8 player, char* message)
         logoutCommand(server, player);
     } else if (strcmp(command, "/server") == 0) {
         serverCommand(server, player);
+    }
+    else if (strcmp(command, "/clin") == 0) {
+        clinCommand(server, command, message, player);
     }
 }
