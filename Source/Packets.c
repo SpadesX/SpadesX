@@ -1206,15 +1206,16 @@ static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data
 
 static void receiveVersionResponse(Server* server, uint8 playerID, DataStream* data)
 {
-    server->player[playerID].client = ReadByte(data);
-    server->player[playerID].version_major               = ReadByte(data);
-    server->player[playerID].version_minor               = ReadByte(data);
-    server->player[playerID].version_revision            = ReadByte(data);
-    uint32 length = DataLeft(data);
+    server->player[playerID].client           = ReadByte(data);
+    server->player[playerID].version_major    = ReadByte(data);
+    server->player[playerID].version_minor    = ReadByte(data);
+    server->player[playerID].version_revision = ReadByte(data);
+    uint32 length                             = DataLeft(data);
     if (length < 256) {
         server->player[playerID].os_info[length] = '\0';
         ReadArray(data, server->player[playerID].os_info, length);
-    } else { strcpy(server->player[playerID].os_info, "Unknown");
+    } else {
+        snprintf(server->player[playerID].os_info, 8, "Unknown");
     }
 }
 void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEvent event)

@@ -427,11 +427,11 @@ static void clinCommand(Server* server, char command[30], char* message, uint8 p
             char message[330];
             char client[15];
             if (server->player[player].client == 'o') {
-                strcpy(client, "OpenSpades");
-            } else if (server->player[player].client == 'b') {
-                strcpy(client, "BetterSpades");
+                snprintf(client, 12, "OpenSpades");
+            } else if (server->player[player].client == 'B') {
+                snprintf(client, 13, "BetterSpades");
             } else {
-                strcpy(client, "Voxlap");
+                snprintf(client, 7, "Voxlap");
             }
             snprintf(message,
                      327,
