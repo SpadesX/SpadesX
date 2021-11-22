@@ -851,8 +851,8 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
             return;
         }
 
-        char* lowerCaseName = malloc(sizeof(strlen(server->player[playerID].name) + 1) / sizeof(char));
-        strcpy(lowerCaseName, server->player[playerID].name);
+        char* lowerCaseName = malloc((strlen(server->player[playerID].name) + 1) * sizeof(char));
+        snprintf(lowerCaseName, strlen(server->player[playerID].name), "%s", server->player[playerID].name);
 
         for (uint32 i = 0; i < strlen(server->player[playerID].name); ++i)
             lowerCaseName[i] = tolower(lowerCaseName[i]);
