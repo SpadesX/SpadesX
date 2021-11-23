@@ -180,7 +180,7 @@ static void pbanCommand(Server* server, char command[30], char* message, uint8 p
                 return;
             }
             fprintf(fp,
-                    "%hhu.%hhu.%hhu.%hhu %s\n",
+                    "%hhu.%hhu.%hhu.%hhu, %s,\n",
                     server->player[ID].ipUnion.ip[0],
                     server->player[ID].ipUnion.ip[1],
                     server->player[ID].ipUnion.ip[2],
@@ -365,7 +365,7 @@ static void banIPCommand(Server* server, char command[30], char* message, uint8 
             for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
                 if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipUnion.ip32 == ip32) {
                     if (banned == 0) {
-                        fprintf(fp, "%s %s\n", ipString, server->player[ID].name);
+                        fprintf(fp, "%s, %s,\n", ipString, server->player[ID].name);
                         fclose(fp);
                         banned = 1; // Do not add multiples of the same IP. Its pointless.
                     }
