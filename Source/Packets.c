@@ -383,7 +383,7 @@ void sendKillPacket(Server* server,
             server->player[killerID].kills++;
         }
         server->player[playerID].deaths++;
-        server->player[playerID].alive = 0;
+        server->player[playerID].alive                     = 0;
         server->player[playerID].respawnTime               = respawnTime;
         server->player[playerID].timers.startOfRespawnWait = time(NULL);
         server->player[playerID].state                     = STATE_WAITING_FOR_RESPAWN;
@@ -1101,7 +1101,8 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
                 (server->player[playerID].movement.previousOrientation.y ==
                  server->player[playerID].movement.forwardOrientation.y) &&
                 (server->player[playerID].movement.previousOrientation.z ==
-                 server->player[playerID].movement.forwardOrientation.z))
+                 server->player[playerID].movement.forwardOrientation.z) &&
+                server->player[playerID].item == TOOL_GUN)
             {
                 for (int i = 0; i < server->protocol.maxPlayers; ++i) {
                     if (isPastJoinScreen(server, i) && isStaff(server, i)) {
