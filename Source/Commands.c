@@ -273,7 +273,7 @@ static void pmCommand(Server* server, char command[30], char* message, uint8 pla
     char returnMessage[100];
     char PM[1024];
     int  ID = 33;
-    if (sscanf(message, "%s #%d %[^\n]", command, &ID, PM) == 2) {
+    if (sscanf(message, "%s #%d %[^\n]", command, &ID, PM) == 3) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             snprintf(sendingMessage,
                      strlen(server->player[player].name) + 1034,
@@ -296,7 +296,7 @@ static void adminCommand(Server* server, char command[30], char* message, uint8 
 {
     char sendingMessage[strlen(server->player[player].name) + 1037];
     char staffMessage[1024];
-    if (sscanf(message, "%s %[^\n]", command, staffMessage) == 1) {
+    if (sscanf(message, "%s %[^\n]", command, staffMessage) == 2) {
         snprintf(sendingMessage,
                  strlen(server->player[player].name) + 1037,
                  "Staff from %s: %s",
@@ -331,7 +331,7 @@ static void invCommand(Server* server, uint8 player)
 static void sayCommand(Server* server, char command[30], char* message, uint8 player)
 {
     char staffMessage[1024];
-    if (sscanf(message, "%s %[^\n]", command, staffMessage) == 1) {
+    if (sscanf(message, "%s %[^\n]", command, staffMessage) == 2) {
         for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
             if (isPastJoinScreen(server, ID)) {
                 sendServerNotice(server, ID, staffMessage);
