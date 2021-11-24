@@ -231,7 +231,7 @@ void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
     WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
     WriteByte(&stream, playerID);
     WriteByte(&stream, wInput);
-    if (SendPacketExceptSenderDistCheck(server, packet, playerID) == 0) {
+    if (SendPacketExceptSender(server, packet, playerID) == 0) {
         enet_packet_destroy(packet);
     }
 }
