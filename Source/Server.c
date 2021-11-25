@@ -635,6 +635,7 @@ static void ServerUpdate(Server* server, int timeout)
             case ENET_EVENT_TYPE_DISCONNECT:
                 playerID = (uint8) ((size_t) event.peer->data);
                 SendPlayerLeft(server, playerID);
+                SendIntelDrop(server, playerID);
                 Vector3f empty                                            = {0, 0, 0};
                 Vector3f forward                                          = {1, 0, 0};
                 Vector3f height                                           = {0, 0, 1};
@@ -691,7 +692,6 @@ static void ServerUpdate(Server* server, int timeout)
                 memset(server->player[playerID].name, 0, 17);
                 server->protocol.numPlayers--;
                 server->protocol.teamUserCount[server->player[playerID].team]--;
-                SendIntelDrop(server, playerID);
                 if (server->master.enableMasterConnection == 1) {
                     updateMaster(server);
                 }
