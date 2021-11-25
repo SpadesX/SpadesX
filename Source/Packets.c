@@ -113,11 +113,19 @@ void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
 
 void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
 {
+    uint8 team;
+    if (server->player[playerID].team == 0) {
+        team = 1;
+    } else {
+        team = 0;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INTEL_CAPTURE);
     WriteByte(&stream, playerID);
     WriteByte(&stream, winning);
+    server->player[playerID].hasIntel    = 0;
+    server->protocol.ctf.intelHeld[team] = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
             enet_peer_send(server->player[player].peer, 0, packet);
@@ -127,10 +135,18 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
 
 void SendIntelPickup(Server* server, uint8 playerID)
 {
+    uint8 team;
+    if (server->player[playerID].team == 0) {
+        team = 1;
+    } else {
+        team = 0;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INTEL_PICKUP);
     WriteByte(&stream, playerID);
+    server->player[playerID].hasIntel    = 1;
+    server->protocol.ctf.intelHeld[team] = 1;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
             enet_peer_send(server->player[player].peer, 0, packet);
@@ -367,12 +383,6 @@ void sendKillPacket(Server* server,
                     uint8   respawnTime,
                     uint8   makeInvisible)
 {
-    uint8 team;
-    if (server->player[playerID].team == 0) {
-        team = 1;
-    } else {
-        team = 0;
-    }
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
@@ -397,8 +407,6 @@ void sendKillPacket(Server* server,
         server->player[playerID].state                     = STATE_WAITING_FOR_RESPAWN;
     }
     if (server->player[playerID].hasIntel) {
-        server->player[playerID].hasIntel    = 0;
-        server->protocol.ctf.intelHeld[team] = 0;
         SendIntelDrop(server, playerID);
     }
 }

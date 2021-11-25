@@ -652,8 +652,6 @@ void handleIntel(Server* server, uint8 playerID)
 
             if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.ctf.intelHeld[team])) {
                 SendIntelPickup(server, playerID);
-                server->protocol.ctf.intelHeld[team] = 1;
-                server->player[playerID].hasIntel    = 1;
             } else if (checkPlayerInTent(server, playerID) &&
                        timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15)
             {
@@ -698,8 +696,6 @@ void handleIntel(Server* server, uint8 playerID)
                         break;
                 }
                 SendRestock(server, playerID);
-                server->player[playerID].hasIntel                  = 0;
-                server->protocol.ctf.intelHeld[team]               = 0;
                 server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
                 server->protocol.ctf.intel[team]                   = SetIntelTentSpawnPoint(server, team);
                 SendMoveObject(server, team, team, server->protocol.ctf.intel[team]);
