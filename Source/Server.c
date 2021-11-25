@@ -635,12 +635,6 @@ static void ServerUpdate(Server* server, int timeout)
             case ENET_EVENT_TYPE_DISCONNECT:
                 playerID = (uint8) ((size_t) event.peer->data);
                 SendPlayerLeft(server, playerID);
-                uint8 team;
-                if (server->player[playerID].team == 0) {
-                    team = 1;
-                } else {
-                    team = 0;
-                }
                 Vector3f empty                                            = {0, 0, 0};
                 Vector3f forward                                          = {1, 0, 0};
                 Vector3f height                                           = {0, 0, 1};
@@ -686,7 +680,6 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].HP                               = 100;
                 server->player[playerID].blocks                           = 50;
                 server->player[playerID].grenades                         = 3;
-                server->player[playerID].hasIntel                         = 0;
                 server->player[playerID].isManager                        = 0;
                 server->player[playerID].isAdmin                          = 0;
                 server->player[playerID].isMod                            = 0;
@@ -695,10 +688,10 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].isInvisible                      = 0;
                 server->player[playerID].kills                            = 0;
                 server->player[playerID].deaths                           = 0;
-                server->protocol.ctf.intelHeld[team]                      = 0;
                 memset(server->player[playerID].name, 0, 17);
                 server->protocol.numPlayers--;
                 server->protocol.teamUserCount[server->player[playerID].team]--;
+                SendIntelDrop(server, playerID);
                 if (server->master.enableMasterConnection == 1) {
                     updateMaster(server);
                 }

@@ -152,10 +152,18 @@ void SendIntelDrop(Server* server, uint8 playerID)
     WriteByte(&stream, playerID);
     WriteFloat(&stream, server->player[playerID].movement.position.x);
     WriteFloat(&stream, server->player[playerID].movement.position.y);
-    WriteFloat(&stream, floor(server->player[playerID].movement.position.z + 3));
+    WriteFloat(&stream,
+               (float) mapvxlFindTopBlock(&server->map.map,
+                                          server->player[playerID].movement.position.x,
+                                          server->player[playerID].movement.position.y));
+
     server->protocol.ctf.intel[team].x = (int) server->player[playerID].movement.position.x;
     server->protocol.ctf.intel[team].y = (int) server->player[playerID].movement.position.y;
-    server->protocol.ctf.intel[team].z = (int) server->player[playerID].movement.position.z + 3;
+    server->protocol.ctf.intel[team].z = mapvxlFindTopBlock(
+    &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y);
+    server->player[playerID].hasIntel    = 0;
+    server->protocol.ctf.intelHeld[team] = 0;
+
     printf("Dropping intel at X: %d, Y: %d, Z: %d\n",
            (int) server->protocol.ctf.intel[team].x,
            (int) server->protocol.ctf.intel[team].y,
