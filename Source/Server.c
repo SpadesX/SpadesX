@@ -46,27 +46,30 @@ static void forPlayers()
             if (server.player[playerID].primary_fire) {
                 if (server.player[playerID].weaponClip > 0) {
                     switch (server.player[playerID].weapon) {
-                    case WEAPON_RIFLE:
-                    {
-                        if (diffIsOlderThen(timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 500)) {
-                            server.player[playerID].weaponClip--;
+                        case WEAPON_RIFLE:
+                        {
+                            if (diffIsOlderThen(
+                                timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 500)) {
+                                server.player[playerID].weaponClip--;
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case WEAPON_SMG:
-                    {
-                        if (diffIsOlderThen(timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 110)) {
-                            server.player[playerID].weaponClip--;
+                        case WEAPON_SMG:
+                        {
+                            if (diffIsOlderThen(
+                                timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 110)) {
+                                server.player[playerID].weaponClip--;
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case WEAPON_SHOTGUN:
-                    {
-                        if (diffIsOlderThen(timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 1000)) {
-                            server.player[playerID].weaponClip--;
+                        case WEAPON_SHOTGUN:
+                        {
+                            if (diffIsOlderThen(
+                                timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 1000)) {
+                                server.player[playerID].weaponClip--;
+                            }
+                            break;
                         }
-                        break;
-                    }
                     }
                 }
             }
@@ -584,14 +587,20 @@ static void ServerUpdate(Server* server, int timeout)
                     server->running = 0;
                     return;
                 }
-                uint8 IP[4];
-                char         nameOfPlayer[20];
-                uint8 *hostIP;
+                uint8  IP[4];
+                char   nameOfPlayer[20];
+                uint8* hostIP;
                 hostIP = uint32ToUint8(event.peer->address.host);
-                while (fscanf(fp, "%hhu.%hhu.%hhu.%hhu, %17[^,],", &IP[0], &IP[1], &IP[2], &IP[3], nameOfPlayer) != EOF) {
+                while (fscanf(fp, "%hhu.%hhu.%hhu.%hhu, %17[^,],", &IP[0], &IP[1], &IP[2], &IP[3], nameOfPlayer) != EOF)
+                {
                     if (IP[0] == hostIP[0] && IP[1] == hostIP[1] && IP[2] == hostIP[2] && IP[3] == hostIP[3]) {
                         enet_peer_disconnect(event.peer, REASON_BANNED);
-                        printf("WARNING: Banned user %s tried to join. IP: %hhu.%hhu.%hhu.%hhu\n", nameOfPlayer, IP[0], IP[1], IP[2], IP[3]);
+                        printf("WARNING: Banned user %s tried to join. IP: %hhu.%hhu.%hhu.%hhu\n",
+                               nameOfPlayer,
+                               IP[0],
+                               IP[1],
+                               IP[2],
+                               IP[3]);
                         bannedUser = 1;
                         break;
                     }
@@ -610,9 +619,9 @@ static void ServerUpdate(Server* server, int timeout)
                     STATUS("Server full. Kicking player");
                     break;
                 }
-                server->player[playerID].peer = event.peer;
-                event.peer->data              = (void*) ((size_t) playerID);
-                server->player[playerID].HP   = 100;
+                server->player[playerID].peer         = event.peer;
+                event.peer->data                      = (void*) ((size_t) playerID);
+                server->player[playerID].HP           = 100;
                 server->player[playerID].ipUnion.ip32 = event.peer->address.host;
                 printf("INFO: connected %u (%d.%d.%d.%d):%u, id %u\n",
                        event.peer->address.host,
@@ -626,6 +635,12 @@ static void ServerUpdate(Server* server, int timeout)
             case ENET_EVENT_TYPE_DISCONNECT:
                 playerID = (uint8) ((size_t) event.peer->data);
                 SendPlayerLeft(server, playerID);
+                uint8 team;
+                if (server->player[playerID].team == 0) {
+                    team = 1;
+                } else {
+                    team = 0;
+                }
                 Vector3f empty                                            = {0, 0, 0};
                 Vector3f forward                                          = {1, 0, 0};
                 Vector3f height                                           = {0, 0, 1};
@@ -680,6 +695,7 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].isInvisible                      = 0;
                 server->player[playerID].kills                            = 0;
                 server->player[playerID].deaths                           = 0;
+                server->protocol.ctf.intelHeld[team]                      = 0;
                 memset(server->player[playerID].name, 0, 17);
                 server->protocol.numPlayers--;
                 server->protocol.teamUserCount[server->player[playerID].team]--;
