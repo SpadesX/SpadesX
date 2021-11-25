@@ -451,6 +451,30 @@ static void clinCommand(Server* server, char command[30], char* message, uint8 p
     }
 }
 
+static void intelCommand(Server* server, uint8 player)
+{
+    char  message[57];
+    uint8 sentAtLeastOnce = 0;
+    for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
+        if (server->player[playerID].state != STATE_DISCONNECTED && server->player[playerID].hasIntel) {
+            snprintf(message, 22, "Player #%d has intel", playerID);
+            sendServerNotice(server, player, message);
+            sentAtLeastOnce = 1;
+        }
+    }
+    if (sentAtLeastOnce == 0) {
+        if (server->protocol.ctf.intelHeld[0]) {
+            snprintf(message, 57, "Intel is not being held but intel of team 0 thinks it is");
+            sendServerNotice(server, player, message);
+        } else if (server->protocol.ctf.intelHeld[1]) {
+            snprintf(message, 57, "Intel is not being held but intel of team 1 thinks it is");
+            sendServerNotice(server, player, message);
+        }
+        snprintf(message, 24, "Intel is not being held");
+        sendServerNotice(server, player, message);
+    }
+}
+
 void handleCommands(Server* server, uint8 player, char* message)
 {
     Player srvPlayer = server->player[player];
@@ -520,5 +544,7 @@ void handleCommands(Server* server, uint8 player, char* message)
         serverCommand(server, player);
     } else if (strcmp(command, "/clin") == 0 || strcmp(command, "/client") == 0) {
         clinCommand(server, command, message, player);
+    } else if (strcmp(command, "/intel") == 0) {
+        intelCommand(server, player);
     }
 }
