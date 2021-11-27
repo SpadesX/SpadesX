@@ -119,6 +119,9 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
     } else {
         team = 0;
     }
+    if (server->player[playerID].hasIntel == 0 || server->protocol.ctf.intelHeld[team] == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INTEL_CAPTURE);
@@ -135,11 +138,15 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
 
 void SendIntelPickup(Server* server, uint8 playerID)
 {
+
     uint8 team;
     if (server->player[playerID].team == 0) {
         team = 1;
     } else {
         team = 0;
+    }
+    if (server->player[playerID].hasIntel == 1 || server->protocol.ctf.intelHeld[team] == 1) {
+        return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
@@ -161,6 +168,9 @@ void SendIntelDrop(Server* server, uint8 playerID)
         team = 1;
     } else {
         team = 0;
+    }
+    if (server->player[playerID].hasIntel == 0 || server->protocol.ctf.intelHeld[team] == 0) {
+        return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 14, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
