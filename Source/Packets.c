@@ -1245,6 +1245,19 @@ static void receiveVersionResponse(Server* server, uint8 playerID, DataStream* d
     } else {
         snprintf(server->player[playerID].os_info, 8, "Unknown");
     }
+    if (server->player[playerID].client == 'o') {
+        if (!(server->player[playerID].version_major == 0 && server->player[playerID].version_minor == 1 &&
+              (server->player[playerID].version_revision == 3 || server->player[playerID].version_revision == 5)))
+        {
+            enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
+        }
+    } else if (server->player[playerID].client == 'B') {
+        if (!(server->player[playerID].version_major == 0 && server->player[playerID].version_minor == 1 &&
+              server->player[playerID].version_revision == 5))
+        {
+            enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
+        }
+    }
 }
 void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEvent event)
 {
