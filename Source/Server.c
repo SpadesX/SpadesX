@@ -82,7 +82,7 @@ static void forPlayers()
 static void* calculatePhysics()
 {
     updateTime = get_nanos();
-    if (updateTime - lastUpdateTime >= (1000000000 / 120)) {
+    if (updateTime - lastUpdateTime >= (1000000000 / 60)) {
         updateMovementAndGrenades(&server, updateTime, lastUpdateTime, timeSinceStart);
         lastUpdateTime = get_nanos();
     }
