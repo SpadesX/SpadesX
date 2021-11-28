@@ -14,12 +14,13 @@
 #include <time.h>
 
 #define NANO_IN_SECOND 1000000000
-#define NANO_IN_MILLI 1000000
-#define VERSION "0.0.4"
-#define MAX_MAP_COUNT 64 //Change this if you have more then 64 maps. Tho ask yourself first WHY.
+#define NANO_IN_MILLI  1000000
+#define VERSION        "0.0.4"
+#define MAX_MAP_COUNT  64 // Change this if you have more then 64 maps. Tho ask yourself first WHY.
 
-typedef union {
-    uint8 ip[4];
+typedef union
+{
+    uint8  ip[4];
     uint32 ip32;
 } IPUnion;
 
@@ -121,50 +122,58 @@ typedef struct
 
 typedef struct
 {
-    Queue*    queues;
-    State     state;
-    Weapon    weapon;
-    Team      team;
-    Tool      item;
-    PermLevel roleList[5]; // Change me based on the number of access levels you require
-    Timers    timers;
-    WeaponDefaultClip defaultClip;
+    unsigned long long updateTime;
+    unsigned long long lastUpdateTime;
+    unsigned long long timeSinceStart;
+    float              timeSinceStartSimulated;
+} GlobalTimers;
+
+typedef struct
+{
+    Queue*               queues;
+    State                state;
+    Weapon               weapon;
+    Team                 team;
+    Tool                 item;
+    PermLevel            roleList[5]; // Change me based on the number of access levels you require
+    Timers               timers;
+    WeaponDefaultClip    defaultClip;
     WeaponDefaultReserve defaultReserve;
-    uint32    kills;
-    uint32    deaths;
-    Color3i   color;
-    char      name[17];
-    char      client;
-    int       version_minor;
-    int       version_major;
-    int       version_revision;
-    char      os_info[255];
-    ENetPeer* peer;
-    uint8     respawnTime;
-    Color4i   toolColor;
-    int       HP;
-    uint8     grenades;
-    uint8     blocks;
-    uint8     weaponReserve;
-    short     weaponClip;
-    vec3i     resultLine[50];
-    IPUnion   ipUnion;
-    uint8     alive;
-    uint8     input;
-    uint8     allowKilling;
-    uint8     allowTeamKilling;
-    uint16    ups;
-    uint8     muted;
-    uint8     canBuild;
-    Grenade   grenade[3];
-    uint8     toldToMaster;
-    uint8     hasIntel;
-    uint8     isManager;
-    uint8     isAdmin;
-    uint8     isMod;
-    uint8     isGuard;
-    uint8     isTrusted;
-    uint8     isInvisible;
+    uint32               kills;
+    uint32               deaths;
+    Color3i              color;
+    char                 name[17];
+    char                 client;
+    int                  version_minor;
+    int                  version_major;
+    int                  version_revision;
+    char                 os_info[255];
+    ENetPeer*            peer;
+    uint8                respawnTime;
+    Color4i              toolColor;
+    int                  HP;
+    uint8                grenades;
+    uint8                blocks;
+    uint8                weaponReserve;
+    short                weaponClip;
+    vec3i                resultLine[50];
+    IPUnion              ipUnion;
+    uint8                alive;
+    uint8                input;
+    uint8                allowKilling;
+    uint8                allowTeamKilling;
+    uint16               ups;
+    uint8                muted;
+    uint8                canBuild;
+    Grenade              grenade[3];
+    uint8                toldToMaster;
+    uint8                hasIntel;
+    uint8                isManager;
+    uint8                isAdmin;
+    uint8                isMod;
+    uint8                isGuard;
+    uint8                isTrusted;
+    uint8                isInvisible;
 
     uint8    movForward;
     uint8    movBackwards;
@@ -197,22 +206,23 @@ typedef struct
 
 typedef struct
 {
-    ENetHost*   host;
-    Player      player[32];
-    Protocol    protocol;
-    Master      master;
-    Map         map;
-    uint8       globalAK;
-    uint8       globalAB;
-    const char* managerPasswd;
-    const char* adminPasswd;
-    const char* modPasswd;
-    const char* guardPasswd;
-    const char* trustedPasswd;
-    char        serverName[31];
-    char        mapName[20];
-    char        gamemodeName[7];
-    uint8       running;
+    ENetHost*    host;
+    Player       player[32];
+    Protocol     protocol;
+    Master       master;
+    Map          map;
+    GlobalTimers globalTimers;
+    uint8        globalAK;
+    uint8        globalAB;
+    const char*  managerPasswd;
+    const char*  adminPasswd;
+    const char*  modPasswd;
+    const char*  guardPasswd;
+    const char*  trustedPasswd;
+    char         serverName[31];
+    char         mapName[20];
+    char         gamemodeName[7];
+    uint8        running;
 } Server;
 
 #endif

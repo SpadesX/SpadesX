@@ -28,7 +28,7 @@ uint8     checkItemInTent(Server* server, uint8 team, Vector3f itemPos);
 uint8     checkInTent(Server* server, uint8 team);
 uint8     checkInIntel(Server* server, uint8 team);
 void      handleGrenade(Server* server, uint8 playerID);
-void      updateMovementAndGrenades(Server* server, time_t timeNow, time_t timeSinceLastUpdate, time_t timeSinceStart);
+void      updateMovementAndGrenades(Server* server);
 void      SetPlayerRespawnPoint(Server* server, uint8 playerID);
 Vector3f  SetIntelTentSpawnPoint(Server* server, uint8 team);
 void      sendServerNotice(Server* server, uint8 playerID, char* message);

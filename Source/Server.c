@@ -25,9 +25,6 @@
 #include <time.h>
 #include <unistd.h>
 
-unsigned long long updateTime;
-unsigned long long lastUpdateTime;
-unsigned long long timeSinceStart;
 Server             server;
 pthread_t          thread[3];
 
@@ -81,10 +78,10 @@ static void forPlayers()
 
 static void* calculatePhysics()
 {
-    updateTime = get_nanos();
-    if (updateTime - lastUpdateTime >= (1000000000 / 60)) {
-        updateMovementAndGrenades(&server, updateTime, lastUpdateTime, timeSinceStart);
-        lastUpdateTime = get_nanos();
+    server.globalTimers.updateTime = get_nanos();
+    if (server.globalTimers.updateTime - server.globalTimers.lastUpdateTime >= (1000000000 / 60)) {
+        updateMovementAndGrenades(&server);
+        server.globalTimers.lastUpdateTime = get_nanos();
     }
     return 0;
 }
@@ -100,7 +97,7 @@ static void ServerInit(Server*     server,
                        uint8*      team2Color,
                        uint8       gamemode)
 {
-    updateTime = lastUpdateTime = get_nanos();
+    server->globalTimers.updateTime = server->globalTimers.lastUpdateTime = get_nanos();
     server->protocol.numPlayers = 0;
     server->protocol.maxPlayers = (connections <= 32) ? connections : 32;
 
@@ -315,7 +312,7 @@ static void ServerInit(Server*     server,
 
 void ServerReset(Server* server)
 {
-    updateTime = lastUpdateTime = get_nanos();
+    server->globalTimers.updateTime = server->globalTimers.lastUpdateTime = get_nanos();
 
     server->map.compressedMap   = NULL;
     server->map.compressedSize  = 0;
@@ -728,7 +725,7 @@ void StartServer(uint16      port,
                  uint8*      team2Color,
                  uint8       gamemode)
 {
-    timeSinceStart = get_nanos();
+    server.globalTimers.timeSinceStart = get_nanos();
     STATUS("Welcome to SpadesX server");
     STATUS("Initializing ENet");
 

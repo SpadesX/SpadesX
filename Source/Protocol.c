@@ -784,9 +784,11 @@ void handleGrenade(Server* server, uint8 playerID)
     }
 }
 
-void updateMovementAndGrenades(Server* server, time_t timeNow, time_t timeSinceLastUpdate, time_t timeSinceStart)
+void updateMovementAndGrenades(Server* server)
 {
-    set_globals((timeNow - timeSinceStart) / 1000000000.f, (timeNow - timeSinceLastUpdate) / 1000000000.f);
+    float dt = 1.0f / 60.0f;
+    server->globalTimers.timeSinceStartSimulated += dt;
+    set_globals(server->globalTimers.timeSinceStartSimulated, dt);
     for (int playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
         if (server->player[playerID].state == STATE_READY) {
             long falldamage = 0;

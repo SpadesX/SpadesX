@@ -18,6 +18,14 @@
 
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
 int  validate_hit(Vector3f shooter, Vector3f orientation, Vector3f otherPos, float tolerance);
+
+static unsigned long long get_nanos(void)
+{
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
+}
+
 long cast_ray(Server* server,
               float   x0,
               float   y0,
@@ -606,7 +614,11 @@ void SendWorldUpdate(Server* server, uint8 playerID)
 
     for (uint8 j = 0; j < server->protocol.maxPlayers; ++j) {
         if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0) {
-            WriteVector3f(&stream, server->player[j].movement.position);
+            float    dt       = (get_nanos() / 1000000000.f) - server->globalTimers.lastUpdateTime;
+            Vector3f position = {server->player[j].movement.position.x + (server->player[j].movement.velocity.x * dt),
+                                 server->player[j].movement.position.y + (server->player[j].movement.velocity.y * dt),
+                                 server->player[j].movement.position.z + (server->player[j].movement.velocity.z * dt)};
+            WriteVector3f(&stream, position);
             WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
         } else {
             Vector3f empty;
@@ -629,13 +641,6 @@ void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float 
     WriteFloat(&stream, y);
     WriteFloat(&stream, z);
     enet_peer_send(server->player[playerID].peer, 0, packet);
-}
-
-static unsigned long long get_nanos(void)
-{
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
 static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* data)
@@ -832,6 +837,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     x = ReadFloat(data);
     y = ReadFloat(data);
     z = ReadFloat(data);
+    //printf("Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f\n", server->player[playerID].movement.position.x, server->player[playerID].movement.position.y, server->player[playerID].movement.position.z, x, y, z);
     if (validPos(x, y, z)) {
         server->player[playerID].movement.position.x = x;
         server->player[playerID].movement.position.y = y;
