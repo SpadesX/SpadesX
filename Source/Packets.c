@@ -614,10 +614,10 @@ void SendWorldUpdate(Server* server, uint8 playerID)
 
     for (uint8 j = 0; j < server->protocol.maxPlayers; ++j) {
         if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0) {
-            float    dt       = (get_nanos() / 1000000000.f) - server->globalTimers.lastUpdateTime;
-            Vector3f position = {server->player[j].movement.position.x + (server->player[j].movement.velocity.x * dt),
-                                 server->player[j].movement.position.y + (server->player[j].movement.velocity.y * dt),
-                                 server->player[j].movement.position.z + (server->player[j].movement.velocity.z * dt)};
+            float    dt       = (get_nanos() - server->globalTimers.lastUpdateTime) / 1000000000.f;
+            Vector3f position = {server->player[j].movement.velocity.x * dt + server->player[j].movement.position.x,
+                                 server->player[j].movement.velocity.y * dt + server->player[j].movement.position.y,
+                                 server->player[j].movement.velocity.z * dt + server->player[j].movement.position.z};
             WriteVector3f(&stream, position);
             WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
         } else {
@@ -837,7 +837,8 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     x = ReadFloat(data);
     y = ReadFloat(data);
     z = ReadFloat(data);
-    //printf("Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f\n", server->player[playerID].movement.position.x, server->player[playerID].movement.position.y, server->player[playerID].movement.position.z, x, y, z);
+    // printf("Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f\n", server->player[playerID].movement.position.x,
+    // server->player[playerID].movement.position.y, server->player[playerID].movement.position.z, x, y, z);
     if (validPos(x, y, z)) {
         server->player[playerID].movement.position.x = x;
         server->player[playerID].movement.position.y = y;
