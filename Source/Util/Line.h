@@ -10,13 +10,8 @@
 #define UTIL_LINE_H
 
 #include <stdlib.h>
-
-typedef struct
-{
-    int x;
-    int y;
-    int z;
-} vec3i;
+#include "../Structs.h"
+#include "Types.h"
 
 #define TMAX_ALT_VALUE  (0x3FFFFFFF / 1024)
 #define MAX_LINE_LENGTH 50
@@ -29,16 +24,16 @@ typedef struct
  * @param result Array of blocks positions
  * @return Number of block positions
  */
-static inline int blockLine(const vec3i* v1, const vec3i* v2, vec3i* result)
+static inline int blockLine(const Vector3i* v1, const Vector3i* v2, Vector3i* result)
 {
     int count = 0;
 
-    vec3i pos  = *v1;
-    vec3i dist = {v2->x - v1->x, v2->y - v1->y, v2->z - v1->z};
-    vec3i step;
-    vec3i a;
-    vec3i tmax;
-    vec3i delta;
+    Vector3i pos  = *v1;
+    Vector3i dist = {v2->x - v1->x, v2->y - v1->y, v2->z - v1->z};
+    Vector3i step;
+    Vector3i a;
+    Vector3i tmax;
+    Vector3i delta;
 
     step.x = dist.x < 0 ? -1 : 1;
     step.y = dist.y < 0 ? -1 : 1;
@@ -75,19 +70,19 @@ static inline int blockLine(const vec3i* v1, const vec3i* v2, vec3i* result)
 
         if (tmax.z <= tmax.x && tmax.z <= tmax.y) {
             pos.z += step.z;
-            if (pos.z >= 64) {
+            if (pos.z >= MAP_MAX_Z) {
                 break;
             }
             tmax.z += delta.z;
         } else if (tmax.x < tmax.y) {
             pos.x += step.x;
-            if (pos.x >= 512) {
+            if (pos.x >= MAP_MAX_X) {
                 break;
             }
             tmax.x += delta.x;
         } else {
             pos.y += step.y;
-            if (pos.y >= 512) {
+            if (pos.y >= MAP_MAX_Y) {
                 break;
             }
             tmax.y += delta.y;

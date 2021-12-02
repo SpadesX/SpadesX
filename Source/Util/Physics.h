@@ -34,21 +34,21 @@
 #define SCPITCH              128
 #define SQRT                 0.70710678f
 #define MINERANGE            3
-#define MAXZDIM              64 // Maximum .VXL dimensions in z direction (height)
+#define MAXZDIM              MAP_MAX_Z // Maximum .VXL dimensions in z direction (height)
 #define MAXZDIMM             (MAXZDIM - 1)
 #define MAXZDIMMM            (MAXZDIM - 2)
 #define PORT                 32887
-#define GRID_SIZE            64
+#define GRID_SIZE            512
 #define FALL_SLOW_DOWN       0.24f
 #define FALL_DAMAGE_VELOCITY 0.58f
 #define FALL_DAMAGE_SCALAR   4096
 #define MINERANGE            3
 #define WEAPON_PRIMARY       1
 #define PI                   3.141592653589793f
-#define VSID                 512 // maximum .VXL dimensions in both x & y direction
+#define VSID                 MAP_MAX_X // maximum .VXL dimensions in both x & y direction
 #define VSIDM                (VSID - 1)
 #define VSIDSQ               (VSID * VSID)
-#define CUBE_ARRAY_LENGTH    64
+#define CUBE_ARRAY_LENGTH    512
 
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
@@ -126,14 +126,14 @@ static inline int clipbox(Server* server, float x, float y, float z)
 {
     int sz;
 
-    if (x < 0 || x >= 512 || y < 0 || y >= 512)
+    if (x < 0 || x >= MAP_MAX_X || y < 0 || y >= MAP_MAX_Y)
         return 1;
     else if (z < 0)
         return 0;
     sz = (int) z;
-    if (sz == 63)
-        sz = 62;
-    else if (sz >= 64)
+    if (sz == MAP_MAX_Z - 1)
+        sz = MAP_MAX_Z - 2;
+    else if (sz >= MAP_MAX_Z)
         return 1;
     return mapvxlIsSolid(&server->map.map, (int) x, (int) y, sz);
 }
@@ -143,7 +143,7 @@ static inline long isvoxelsolidwrap(Server* server, long x, long y, long z)
 {
     if (z < 0)
         return 0;
-    else if (z >= 64)
+    else if (z >= MAP_MAX_Z)
         return 1;
     return mapvxlIsSolid(&server->map.map, (int) x & VSIDM, (int) y & VSIDM, z);
 }
@@ -153,14 +153,14 @@ static inline long clipworld(Server* server, long x, long y, long z)
 {
     int sz;
 
-    if (x < 0 || x >= 512 || y < 0 || y >= 512)
+    if (x < 0 || x >= MAP_MAX_X || y < 0 || y >= MAP_MAX_Y)
         return 0;
     if (z < 0)
         return 0;
     sz = (int) z;
-    if (sz == 63)
-        sz = 62;
-    else if (sz >= 63)
+    if (sz == MAP_MAX_Z - 1)
+        sz = MAP_MAX_Z - 2;
+    else if (sz >= MAP_MAX_Z - 1)
         return 1;
     else if (sz < 0)
         return 0;

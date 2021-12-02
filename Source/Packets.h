@@ -20,7 +20,7 @@ void SendWeaponReload(Server* server, uint8 playerID);
 void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput);
 void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B);
 void SendSetTool(Server* server, uint8 playerID, uint8 tool);
-void SendBlockLine(Server* server, uint8 playerID, vec3i start, vec3i end);
+void SendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end);
 void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, int Y, int Z);
 void SendStateData(Server* server, uint8 playerID);
 void SendInputData(Server* server, uint8 playerID);

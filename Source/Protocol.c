@@ -78,7 +78,7 @@ uint8 isPastJoinScreen(Server* server, uint8 playerID)
 
 uint8 vecValidPos(Vector3i pos)
 {
-    if (pos.x < 512 && pos.x >= 0 && pos.y < 512 && pos.y >= 0 && pos.z < 64 && pos.z >= 0) {
+    if (pos.x < MAP_MAX_X && pos.x >= 0 && pos.y < MAP_MAX_Y && pos.y >= 0 && pos.z < MAP_MAX_Z && pos.z >= 0) {
         return 1;
     } else {
         return 0;
@@ -87,7 +87,7 @@ uint8 vecValidPos(Vector3i pos)
 
 uint8 vecfValidPos(Vector3f pos)
 {
-    if (pos.x < 512 && pos.x >= 0 && pos.y < 512 && pos.y >= 0 && pos.z < 64 && pos.z >= 0) {
+    if (pos.x < MAP_MAX_X && pos.x >= 0 && pos.y < MAP_MAX_Y && pos.y >= 0 && pos.z < MAP_MAX_Z && pos.z >= 0) {
         return 1;
     } else {
         return 0;
@@ -95,7 +95,7 @@ uint8 vecfValidPos(Vector3f pos)
 }
 uint8 validPos(int x, int y, int z)
 {
-    if (x < 512 && x >= 0 && y < 512 && y >= 0 && z < 64 && z >= 0) {
+    if (x < MAP_MAX_X && x >= 0 && y < MAP_MAX_Y && y >= 0 && z < MAP_MAX_Z && z >= 0) {
         return 1;
     } else {
         return 0;
@@ -386,7 +386,7 @@ static inline const Vector3i* returnCurrentNode()
 
 static inline void addNode(Server* server, int x, int y, int z)
 {
-    if ((x >= 0 && x < 512) && (y >= 0 && y < 512) && (z >= 0 && z < 64)) {
+    if ((x >= 0 && x < MAP_MAX_X) && (y >= 0 && y < MAP_MAX_Y) && (z >= 0 && z < MAP_MAX_Z)) {
         if (mapvxlIsSolid(&server->map.map, x, y, z)) {
             saveNode(x, y, z);
         }
@@ -752,8 +752,8 @@ void handleGrenade(Server* server, uint8 playerID)
                      z <= server->player[playerID].grenade[i].position.z + 1;
                      ++z)
                 {
-                    if (z < 62 && (x >= 0 && x <= 512 && x - 1 >= 0 && x - 1 <= 512 && x + 1 >= 0 && x + 1 <= 512) &&
-                        (y >= 0 && y <= 512 && y - 1 >= 0 && y - 1 <= 512 && y + 1 >= 0 && y + 1 <= 512))
+                    if (z < 62 && (x >= 0 && x <= MAP_MAX_X && x - 1 >= 0 && x - 1 <= MAP_MAX_X && x + 1 >= 0 && x + 1 <= MAP_MAX_X) &&
+                        (y >= 0 && y <= MAP_MAX_Y && y - 1 >= 0 && y - 1 <= MAP_MAX_Y && y + 1 >= 0 && y + 1 <= MAP_MAX_Y))
                     {
                         mapvxlSetAir(&server->map.map, x - 1, y - 1, z);
                         mapvxlSetAir(&server->map.map, x, y - 1, z);

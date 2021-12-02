@@ -8,6 +8,7 @@
 #include <DataStream.h>
 #include <Queue.h>
 #include <Types.h>
+#include <Line.h>
 #include <ctype.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
@@ -304,7 +305,7 @@ void SendSetTool(Server* server, uint8 playerID, uint8 tool)
     }
 }
 
-void SendBlockLine(Server* server, uint8 playerID, vec3i start, vec3i end)
+void SendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
 {
     ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
@@ -618,6 +619,7 @@ void SendWorldUpdate(Server* server, uint8 playerID)
             Vector3f position = {server->player[j].movement.velocity.x * dt + server->player[j].movement.position.x,
                                  server->player[j].movement.velocity.y * dt + server->player[j].movement.position.y,
                                  server->player[j].movement.velocity.z * dt + server->player[j].movement.position.z};
+            printf("%f, %f, %f\n", position.x, position.y, position.z);
             WriteVector3f(&stream, position);
             WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
         } else {
@@ -1046,8 +1048,8 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
         server->player[playerID].item == 1 &&
         diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
     {
-        vec3i start;
-        vec3i end;
+        Vector3i start;
+        Vector3i end;
         start.x         = ReadInt(data);
         start.y         = ReadInt(data);
         start.z         = ReadInt(data);

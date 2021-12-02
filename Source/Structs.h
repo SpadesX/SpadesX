@@ -5,7 +5,6 @@
 #include "Enums.h"
 #include "enet/protocol.h"
 
-#include <Line.h>
 #include <Queue.h>
 #include <Types.h>
 #include <bits/types/struct_timeval.h>
@@ -17,6 +16,10 @@
 #define NANO_IN_MILLI  1000000
 #define VERSION        "0.0.4"
 #define MAX_MAP_COUNT  64 // Change this if you have more then 64 maps. Tho ask yourself first WHY.
+
+#define MAP_MAX_X MAP_X_MAX
+#define MAP_MAX_Y MAP_Y_MAX
+#define MAP_MAX_Z MAP_Z_MAX
 
 typedef union
 {
@@ -67,7 +70,7 @@ typedef struct
     // compressed map
     Queue*            compressedMap;
     uint32            compressedSize;
-    vec3i             resultLine[50];
+    Vector3i             resultLine[50];
     long unsigned int mapSize;
     MapVxl            map;
     char              mapArray[MAX_MAP_COUNT][64];
@@ -156,7 +159,7 @@ typedef struct
     uint8                blocks;
     uint8                weaponReserve;
     short                weaponClip;
-    vec3i                resultLine[50];
+    Vector3i                resultLine[50];
     IPUnion              ipUnion;
     uint8                alive;
     uint8                input;
