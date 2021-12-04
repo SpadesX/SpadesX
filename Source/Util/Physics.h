@@ -48,7 +48,7 @@
 #define VSID                 MAP_MAX_X // maximum .VXL dimensions in both x & y direction
 #define VSIDM                (VSID - 1)
 #define VSIDSQ               (VSID * VSID)
-#define CUBE_ARRAY_LENGTH    512
+#define CUBE_ARRAY_LENGTH    64
 
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
