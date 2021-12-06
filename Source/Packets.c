@@ -619,7 +619,6 @@ void SendWorldUpdate(Server* server, uint8 playerID)
             Vector3f position = {server->player[j].movement.velocity.x * dt + server->player[j].movement.position.x,
                                  server->player[j].movement.velocity.y * dt + server->player[j].movement.position.y,
                                  server->player[j].movement.velocity.z * dt + server->player[j].movement.position.z};
-            printf("%f, %f, %f\n", position.x, position.y, position.z);
             WriteVector3f(&stream, position);
             WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
         } else {
