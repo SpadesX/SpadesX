@@ -14,7 +14,7 @@
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
 #include <stdio.h>
-#include <string.h>
+#include <bsd/string.h>
 #include <time.h>
 
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
@@ -919,8 +919,8 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         }
         if (count > 0) {
             char idChar[4];
-            sprintf(idChar, "%d", playerID);
-            strcat(server->player[playerID].name, idChar);
+            snprintf(idChar, 4, "%d", playerID);
+            strlcat(server->player[playerID].name, idChar, 17);
         }
     }
     switch (server->player[playerID].weapon) {

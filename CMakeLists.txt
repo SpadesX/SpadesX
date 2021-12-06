@@ -26,6 +26,7 @@ target_link_libraries(server
         m
         json-c
         pthread
+        bsd
 )
 
 add_subdirectory(Source)
