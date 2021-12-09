@@ -663,8 +663,8 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
                 server->player[playerID].grenade[i].position.z = ReadFloat(data);
                 float velX = ReadFloat(data), velY = ReadFloat(data), velZ = ReadFloat(data);
                 float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
-                float normLength = 1 / length;
                 if (length > 2) return;
+                float normLength = 1 / length;
                 server->player[playerID].grenade[i].velocity.x = velX * normLength;
                 server->player[playerID].grenade[i].velocity.y = velY * normLength;
                 server->player[playerID].grenade[i].velocity.z = velZ * normLength;
