@@ -843,8 +843,15 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     x = ReadFloat(data);
     y = ReadFloat(data);
     z = ReadFloat(data);
-    // printf("Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f\n", server->player[playerID].movement.position.x,
-    // server->player[playerID].movement.position.y, server->player[playerID].movement.position.z, x, y, z);
+#ifdef DEBUG
+    printf("Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f\n",
+           server->player[playerID].movement.position.x,
+           server->player[playerID].movement.position.y,
+           server->player[playerID].movement.position.z,
+           x,
+           y,
+           z);
+#endif
     if (validPos(x, y, z)) {
         server->player[playerID].movement.position.x = x;
         server->player[playerID].movement.position.y = y;

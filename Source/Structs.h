@@ -21,6 +21,8 @@
 #define MAP_MAX_Y MAP_Y_MAX
 #define MAP_MAX_Z MAP_Z_MAX
 
+//#define DEBUG
+
 typedef union
 {
     uint8  ip[4];
