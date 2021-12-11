@@ -6,15 +6,15 @@
 
 #include <Compress.h>
 #include <DataStream.h>
+#include <Line.h>
 #include <Queue.h>
 #include <Types.h>
-#include <Line.h>
+#include <bsd/string.h>
 #include <ctype.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
 #include <stdio.h>
-#include <bsd/string.h>
 #include <time.h>
 
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
@@ -663,8 +663,9 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
                 server->player[playerID].grenade[i].position.z = ReadFloat(data);
                 float velX = ReadFloat(data), velY = ReadFloat(data), velZ = ReadFloat(data);
                 float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
-                if (length > 2) return;
-                float normLength = 1 / length;
+                if (length > 2)
+                    return;
+                float normLength                               = 1 / length;
                 server->player[playerID].grenade[i].velocity.x = velX * normLength;
                 server->player[playerID].grenade[i].velocity.y = velY * normLength;
                 server->player[playerID].grenade[i].velocity.z = velZ * normLength;
@@ -985,23 +986,25 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
 
                     case 1:
                     {
-                        time_t timeNow = get_nanos();
-                        if (diffIsOlderThen(
-                            timeNow, &server->player[playerID].timers.sinceLastBlockDest, NANO_IN_MILLI * 100)) {
-                            Vector3i  position = {X, Y, Z};
-                            Vector3i* neigh    = getNeighbors(position);
-                            mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
-                            for (int i = 0; i < 6; ++i) {
-                                if (neigh[i].z < 62) {
-                                    checkNode(server, neigh[i]);
+                        if (Z < 62) {
+                            time_t timeNow = get_nanos();
+                            if (diffIsOlderThen(
+                                timeNow, &server->player[playerID].timers.sinceLastBlockDest, NANO_IN_MILLI * 100)) {
+                                Vector3i  position = {X, Y, Z};
+                                Vector3i* neigh    = getNeighbors(position);
+                                mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
+                                for (int i = 0; i < 6; ++i) {
+                                    if (neigh[i].z < 62) {
+                                        checkNode(server, neigh[i]);
+                                    }
                                 }
-                            }
-                            if (server->player[playerID].item != 2) {
-                                if (server->player[playerID].blocks < 50) {
-                                    server->player[playerID].blocks++;
+                                if (server->player[playerID].item != 2) {
+                                    if (server->player[playerID].blocks < 50) {
+                                        server->player[playerID].blocks++;
+                                    }
                                 }
+                                SendBlockAction(server, playerID, actionType, X, Y, Z);
                             }
-                            SendBlockAction(server, playerID, actionType, X, Y, Z);
                         }
                     } break;
 
