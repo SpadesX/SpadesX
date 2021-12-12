@@ -844,18 +844,36 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     y = ReadFloat(data);
     z = ReadFloat(data);
 #ifdef DEBUG
-    printf("Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f\n",
+    printf("Player: %d, Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f\n",
+           playerID,
            server->player[playerID].movement.position.x,
            server->player[playerID].movement.position.y,
            server->player[playerID].movement.position.z,
            x,
            y,
            z);
+    printf("Player: %d, Z solid: %d, Z+1 solid: %d, Z+2 solid: %d, Z: %d, Z+1: %d, Z+2: %d, Crouching: %d\n",
+           playerID,
+           mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z),
+           mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 1),
+           mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 2),
+           (int) z,
+           (int) z + 1,
+           (int) z + 2,
+           server->player[playerID].crouching);
 #endif
-    if (validPos(x, y, z)) {
-        server->player[playerID].movement.position.x = x;
-        server->player[playerID].movement.position.y = y;
-        server->player[playerID].movement.position.z = z;
+    if (validPlayerPos(server, playerID, x, y, z))
+    {
+        server->player[playerID].movement.position.x   = x;
+        server->player[playerID].movement.position.y   = y;
+        server->player[playerID].movement.position.z   = z;
+        server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
+    } else {
+        SendPositionPacket(server,
+                           playerID,
+                           server->player[playerID].movement.prevLegitPos.x,
+                           server->player[playerID].movement.prevLegitPos.y,
+                           server->player[playerID].movement.prevLegitPos.z);
     }
 }
 

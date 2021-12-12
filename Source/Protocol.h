@@ -15,6 +15,7 @@ uint8     isPastJoinScreen(Server* server, uint8 playerID);
 uint8     vecValidPos(Vector3i pos);
 uint8     vecfValidPos(Vector3f pos);
 uint8     validPos(int x, int y, int z);
+uint8     validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z);
 Vector3i* getNeighbors(Vector3i pos);
 uint8     checkNode(Server* server, Vector3i position);
 void      moveIntelAndTentDown(Server* server);
@@ -42,7 +43,7 @@ uint32    DistanceIn2D(Vector3f vector1, Vector3f vector2);
 uint8     Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance);
 uint8     diffIsOlderThen(time_t timeNow, time_t* timeBefore, time_t timeDiff);
 uint8     diffIsOlderThenDontUpdate(time_t timeNow, time_t timeBefore, time_t timeDiff);
-uint8 isStaff(Server* server, uint8 playerID);
-void sendMessageToStaff(Server* server, char* message);
+uint8     isStaff(Server* server, uint8 playerID);
+void      sendMessageToStaff(Server* server, char* message);
 
 #endif

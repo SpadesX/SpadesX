@@ -102,6 +102,42 @@ uint8 validPos(int x, int y, int z)
     }
 }
 
+uint8 validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z)
+{
+    int x = (int) X;
+    int y = (int) Y;
+    int z = 0;
+    if (Z < 0.f) {
+        z = (int) Z + 1;
+    } else {
+        z = (int) Z + 2;
+    }
+
+    printf("X: %d, Y: %d, Z: %d, Real Z: %f\n", x, y, z, Z);
+    if (x < MAP_MAX_X && x >= 0 && y < MAP_MAX_Y && y >= 0 &&
+        (z < MAP_MAX_Z || (z == 64 && server->player[playerID].crouching)) &&
+        (z >= 0 || ((z == -1) || (z == -2 && server->player[playerID].jumping))))
+    {
+        if ((!mapvxlIsSolid(&server->map.map, x, y, z) ||
+             (z == 63 || z == -1 || (z == -2 && server->player[playerID].jumping) ||
+              (z == 64 && server->player[playerID].crouching)) ||
+             (mapvxlIsSolid(&server->map.map, x, y, z) && server->player[playerID].crouching)) &&
+            (!mapvxlIsSolid(&server->map.map, x, y, z - 1) ||
+             ((z <= 1 && z > -2) || (z == -2 && server->player[playerID].jumping)) ||
+             (z - 1 == 63 && server->player[playerID].crouching)) &&
+            (!mapvxlIsSolid(&server->map.map, x, y, z - 2) ||
+             ((z <= 2 && z > -2) || (z == -2 && server->player[playerID].jumping))))
+        /* Dont even think about this
+        This is what happens when map doesnt account for full height of
+        freaking player and I have to check for out of bounds checks on map...
+        */
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 Vector3i* getNeighbors(Vector3i pos)
 {
     static Vector3i neighArray[6];
@@ -752,8 +788,11 @@ void handleGrenade(Server* server, uint8 playerID)
                      z <= server->player[playerID].grenade[i].position.z + 1;
                      ++z)
                 {
-                    if (z < 62 && (x >= 0 && x <= MAP_MAX_X && x - 1 >= 0 && x - 1 <= MAP_MAX_X && x + 1 >= 0 && x + 1 <= MAP_MAX_X) &&
-                        (y >= 0 && y <= MAP_MAX_Y && y - 1 >= 0 && y - 1 <= MAP_MAX_Y && y + 1 >= 0 && y + 1 <= MAP_MAX_Y))
+                    if (z < 62 &&
+                        (x >= 0 && x <= MAP_MAX_X && x - 1 >= 0 && x - 1 <= MAP_MAX_X && x + 1 >= 0 &&
+                         x + 1 <= MAP_MAX_X) &&
+                        (y >= 0 && y <= MAP_MAX_Y && y - 1 >= 0 && y - 1 <= MAP_MAX_Y && y + 1 >= 0 &&
+                         y + 1 <= MAP_MAX_Y))
                     {
                         mapvxlSetAir(&server->map.map, x - 1, y - 1, z);
                         mapvxlSetAir(&server->map.map, x, y - 1, z);
@@ -786,7 +825,8 @@ void handleGrenade(Server* server, uint8 playerID)
 
 void updateMovementAndGrenades(Server* server)
 {
-    set_globals((server->globalTimers.updateTime - server->globalTimers.timeSinceStart) / 1000000000.f, (server->globalTimers.updateTime - server->globalTimers.lastUpdateTime) / 1000000000.f);
+    set_globals((server->globalTimers.updateTime - server->globalTimers.timeSinceStart) / 1000000000.f,
+                (server->globalTimers.updateTime - server->globalTimers.lastUpdateTime) / 1000000000.f);
     for (int playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
         if (server->player[playerID].state == STATE_READY) {
             long falldamage = 0;
@@ -810,7 +850,10 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
 
         server->player[playerID].movement.position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
         server->player[playerID].movement.position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-        server->player[playerID].movement.position.z = mapvxlFindTopBlock(&server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y) - 2.36f;
+        server->player[playerID].movement.position.z =
+        mapvxlFindTopBlock(
+        &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y) -
+        2.36f;
 
         server->player[playerID].movement.forwardOrientation.x = 0.f;
         server->player[playerID].movement.forwardOrientation.y = 0.f;
