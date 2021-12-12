@@ -870,6 +870,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
         server->player[playerID].movement.position.z   = z;
         server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
     } else {
+        server->player[playerID].movement.position = server->player[playerID].movement.prevLegitPos;
         SendPositionPacket(server,
                            playerID,
                            server->player[playerID].movement.prevLegitPos.x,
