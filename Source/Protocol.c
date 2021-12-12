@@ -120,7 +120,7 @@ uint8 validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z)
     {
         if ((!mapvxlIsSolid(&server->map.map, x, y, z) ||
              (z == 63 || z == -1 || (z == -2 && server->player[playerID].jumping) ||
-              (z == 64 && server->player[playerID].crouching)) ||
+              (z == 64 && server->player[playerID].crouching) || server->player[playerID].jumping) ||
              (mapvxlIsSolid(&server->map.map, x, y, z) && server->player[playerID].crouching)) &&
             (!mapvxlIsSolid(&server->map.map, x, y, z - 1) ||
              ((z <= 1 && z > -2) || (z == -2 && server->player[playerID].jumping)) ||
