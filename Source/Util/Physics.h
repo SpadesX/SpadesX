@@ -38,7 +38,7 @@
 #define MAXZDIMM             (MAXZDIM - 1)
 #define MAXZDIMMM            (MAXZDIM - 2)
 #define PORT                 32887
-#define GRID_SIZE            512
+#define GRID_SIZE            64
 #define FALL_SLOW_DOWN       0.24f
 #define FALL_DAMAGE_VELOCITY 0.58f
 #define FALL_DAMAGE_SCALAR   4096
