@@ -615,11 +615,12 @@ void SendWorldUpdate(Server* server, uint8 playerID)
 
     for (uint8 j = 0; j < server->protocol.maxPlayers; ++j) {
         if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0) {
-            float    dt       = (get_nanos() - server->globalTimers.lastUpdateTime) / 1000000000.f;
+            /*float    dt       = (get_nanos() - server->globalTimers.lastUpdateTime) / 1000000000.f;
             Vector3f position = {server->player[j].movement.velocity.x * dt + server->player[j].movement.position.x,
                                  server->player[j].movement.velocity.y * dt + server->player[j].movement.position.y,
                                  server->player[j].movement.velocity.z * dt + server->player[j].movement.position.z};
-            WriteVector3f(&stream, position);
+            WriteVector3f(&stream, position);*/
+            WriteVector3f(&stream, server->player[j].movement.position);
             WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
         } else {
             Vector3f empty;

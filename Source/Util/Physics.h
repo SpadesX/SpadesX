@@ -412,7 +412,7 @@ void boxclipmove(Server* server, uint8 playerID)
     float offset, m, f, nx, ny, nz, z;
     long  climb = 0;
 
-    f  = fsynctics * 32.f;
+    f  = fsynctics * 64.f;
     nx = f * server->player[playerID].movement.velocity.x + server->player[playerID].movement.position.x;
     ny = f * server->player[playerID].movement.velocity.y + server->player[playerID].movement.position.y;
 
@@ -485,7 +485,7 @@ void boxclipmove(Server* server, uint8 playerID)
     } else {
         if (server->player[playerID].movement.velocity.z < 0)
             m = -m;
-        nz += server->player[playerID].movement.velocity.z * fsynctics * 32.f;
+        nz += server->player[playerID].movement.velocity.z * fsynctics * 64.f;
     }
 
     server->player[playerID].airborne = 1;
@@ -592,7 +592,7 @@ int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
 {
     Vector3f fpos = server->player[playerID].grenade[grenadeID].position; // old position
     // do velocity & gravity (friction is negligible)
-    float f = fsynctics * 32;
+    float f = fsynctics * 64.f;
     server->player[playerID].grenade[grenadeID].velocity.z += fsynctics;
     server->player[playerID].grenade[grenadeID].position.x +=
     server->player[playerID].grenade[grenadeID].velocity.x * f;

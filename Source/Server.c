@@ -79,7 +79,7 @@ static void forPlayers()
 static void* calculatePhysics()
 {
     server.globalTimers.updateTime = get_nanos();
-    if (server.globalTimers.updateTime - server.globalTimers.lastUpdateTime >= (1000000000 / 60)) {
+    if (server.globalTimers.updateTime - server.globalTimers.lastUpdateTime >= (1000000000 / 120)) {
         updateMovementAndGrenades(&server);
         server.globalTimers.lastUpdateTime = get_nanos();
     }

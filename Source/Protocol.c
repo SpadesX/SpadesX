@@ -113,7 +113,6 @@ uint8 validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z)
         z = (int) Z + 2;
     }
 
-    printf("X: %d, Y: %d, Z: %d, Real Z: %f\n", x, y, z, Z);
     if (x < MAP_MAX_X && x >= 0 && y < MAP_MAX_Y && y >= 0 &&
         (z < MAP_MAX_Z || (z == 64 && server->player[playerID].crouching)) &&
         (z >= 0 || ((z == -1) || (z == -2 && server->player[playerID].jumping))))
