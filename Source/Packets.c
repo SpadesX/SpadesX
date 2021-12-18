@@ -508,7 +508,7 @@ void SendMapStart(Server* server, uint8 playerID)
         server->player[playerID].state = STATE_LOADING_CHUNKS;
 
         // map
-        uint8* out = (uint8*) malloc(server->map.mapSize);
+        uint8* out = (uint8*) malloc(1024*1024*10);// TODO: Make me dynamic based on changes to map
         mapvxlWriteMap(&server->map.map, out);
         server->map.compressedMap       = CompressData(out, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
         server->player[playerID].queues = server->map.compressedMap;
