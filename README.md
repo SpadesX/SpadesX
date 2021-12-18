@@ -46,3 +46,11 @@ Beware tho that it may take days or even weeks before we fix the issue.
 While we would love to fix issues all day (OK maybe not that actually sounds horrible) we are people too with our lives too.
 Just like you we have jobs or other things we have to take care of. Please remember this before you start yelling at us why we cant fix your bug fast enough.
 THIS IS WHY.
+
+## Credits
+
+Big thanks goes to amisometimes for the SpadesX logo.
+
+Main Developer: Haxk20
+
+Contributors: Check CONTRIBUTORS.md
