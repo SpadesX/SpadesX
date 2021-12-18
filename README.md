@@ -48,9 +48,8 @@ Just like you we have jobs or other things we have to take care of. Please remem
 THIS IS WHY.
 
 ## Credits
-
-Big thanks goes to amisometimes for the SpadesX logo.
-
 Main Developer: Haxk20
 
 Contributors: Check CONTRIBUTORS.md
+
+Big thanks goes to amisometimes for the SpadesX logo.
