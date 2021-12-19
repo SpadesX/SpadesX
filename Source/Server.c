@@ -478,7 +478,7 @@ static void SendJoiningData(Server* server, uint8 playerID)
 {
     STATUS("sending state");
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (i != playerID && isPastJoinScreen(server, i)) {
+        if (i != playerID && isPastStateData(server, i)) {
             SendPlayerState(server, playerID, i);
         }
     }
