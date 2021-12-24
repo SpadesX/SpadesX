@@ -1,0 +1,20 @@
+{
+	"team1_start": [
+		64,
+		233
+	],
+	"team1_end": [
+		118,
+		287
+	],
+	"team2_start": [
+		393,
+		225
+	],
+	"team2_end": [
+		447,
+		278
+	],
+	"author": "F176",
+	"description": "A border control with it's sole purpose to allow access beetwen nations to distribuite resources and act as checkpoint, this version made of reinforced concrete and elastic joints capable to absorb vibrations, earthquakes to ensure safety in a terrain otherwise hostile. Part of SpadesX entry maps for hallway"
+}
