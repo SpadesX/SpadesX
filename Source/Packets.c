@@ -975,9 +975,9 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
             break;
     }
     server->player[playerID].state = STATE_SPAWNING;
-    sendServerNotice(server, playerID, "Welcome to SpadesX server.");
-    sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
     sendServerNotice(server, playerID, "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8");
+    sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
+    sendServerNotice(server, playerID, "Welcome to SpadesX server.");
 }
 
 static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
