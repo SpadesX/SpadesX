@@ -4,4 +4,4 @@ Haxk20
 Rakete
 CircumScriptor
 
-If you commited to SpadesX please also add yourself to this fine.
+If you commited to SpadesX please also add yourself to this file.
