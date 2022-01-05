@@ -751,6 +751,8 @@ void StartServer(uint16      port,
         WARNING("Compress with range coder failed");
     }
 
+    server.port = port;
+
     STATUS("Intializing server");
     server.running = 1;
     ServerInit(

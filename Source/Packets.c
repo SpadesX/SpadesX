@@ -975,9 +975,12 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
             break;
     }
     server->player[playerID].state = STATE_SPAWNING;
-    sendServerNotice(server, playerID, "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8");
-    sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
-    sendServerNotice(server, playerID, "Welcome to SpadesX server.");
+    if (server->player[playerID].welcomeSent == 0) {
+        sendServerNotice(server, playerID, "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8");
+        sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
+        sendServerNotice(server, playerID, "Welcome to SpadesX server.");
+        server->player[playerID].welcomeSent = 1; //So we dont send the message to the player on each time they spawn.
+    }
 }
 
 static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)

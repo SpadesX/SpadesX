@@ -180,6 +180,7 @@ typedef struct
     uint8                isGuard;
     uint8                isTrusted;
     uint8                isInvisible;
+    uint8                welcomeSent;
 
     uint8    movForward;
     uint8    movBackwards;
@@ -216,6 +217,7 @@ typedef struct
     Player       player[32];
     Protocol     protocol;
     Master       master;
+    uint16       port;
     Map          map;
     GlobalTimers globalTimers;
     uint8        globalAK;

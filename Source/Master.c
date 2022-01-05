@@ -48,7 +48,7 @@ int ConnectMaster(Server* server, uint16 port)
     ENetAddress address;
 
     enet_address_set_host(&address, "67.205.183.163");
-    address.port = 32886;
+    address.port = server->port - 1;
 
     STATUS("Connecting to master server");
 
