@@ -940,7 +940,9 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
             if (strstr(lowerCaseName, unwantedNames[index]) != NULL &&
                 strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
             {
-                enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
+                snprintf(server->player[playerID].name, strlen("Deuce") + 1, "Deuce");
+                length = 5;
+                invName = 1;
                 free(lowerCaseName);
                 return;
             }
@@ -988,8 +990,8 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
         sendServerNotice(server, playerID, "Welcome to SpadesX server.");
         if (invName) {
-            char message[95] = "Your name was either empty or had # in front of it. Your name has been set to ";
-            strlcat(message, server->player[playerID].name, 95);
+            char message[122] = "Your name was either empty, had # in front of it or contained something nasty. Your name has been set to ";
+            strlcat(message, server->player[playerID].name, 122);
             sendServerNotice(server, playerID, message);
         }
         server->player[playerID].welcomeSent = 1; //So we dont send the message to the player on each time they spawn.
