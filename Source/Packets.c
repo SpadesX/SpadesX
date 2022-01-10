@@ -989,7 +989,7 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         sendServerNotice(server, playerID, "Welcome to SpadesX server.");
         if (invName) {
             char message[95] = "Your name was either empty or had # in front of it. Your name has been set to ";
-            strcat(message, server->player[playerID].name);
+            strlcat(message, server->player[playerID].name, strlen(server->player[playerID].name));
             sendServerNotice(server, playerID, message);
         }
         server->player[playerID].welcomeSent = 1; //So we dont send the message to the player on each time they spawn.
