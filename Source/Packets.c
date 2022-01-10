@@ -15,6 +15,7 @@
 #include <libmapvxl/libmapvxl.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
@@ -906,6 +907,7 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     server->player[playerID].ups = 60;
 
     uint32 length = DataLeft(data);
+    uint8 invName = 0;
     if (length > 16) {
         WARNING("name too long");
         length = 16;
@@ -914,8 +916,14 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         ReadArray(data, server->player[playerID].name, length);
 
         if (strlen(server->player[playerID].name) == 0) {
-            enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
-            return;
+            snprintf(server->player[playerID].name, strlen("Deuce") + 1, "Deuce");
+            length = 5;
+            invName = 1;
+        }
+        else if (server->player[playerID].name[0] == '#') {
+            snprintf(server->player[playerID].name, strlen("Deuce") + 1, "Deuce");
+            length = 5;
+            invName = 1;
         }
 
         char* lowerCaseName = malloc((strlen(server->player[playerID].name) + 1) * sizeof(char));
@@ -979,6 +987,11 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         sendServerNotice(server, playerID, "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8");
         sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
         sendServerNotice(server, playerID, "Welcome to SpadesX server.");
+        if (invName) {
+            char message[95] = "Your name was either empty or had # in front of it. Your name has been set to ";
+            strcat(message, server->player[playerID].name);
+            sendServerNotice(server, playerID, message);
+        }
         server->player[playerID].welcomeSent = 1; //So we dont send the message to the player on each time they spawn.
     }
 }
