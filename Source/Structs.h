@@ -73,7 +73,7 @@ typedef struct
     // compressed map
     Queue*            compressedMap;
     uint32            compressedSize;
-    Vector3i             resultLine[50];
+    Vector3i          resultLine[50];
     long unsigned int mapSize;
     MapVxl            map;
     char              mapArray[MAX_MAP_COUNT][64];
@@ -93,20 +93,24 @@ typedef struct
 
 typedef struct
 {
+    ModeCTF CTF;
+} GameModes;
+
+typedef struct
+{
     uint8 countOfUsers;
     uint8 teamUserCount[2];
     //
     uint8 numPlayers;
     uint8 maxPlayers;
     //
-    Color3i  colorFog;
-    Color3i  colorTeamA;
-    Color3i  colorTeamB;
-    char     nameTeamA[11];
-    char     nameTeamB[11];
-    GameMode mode;
-    // mode
-    ModeCTF ctf;
+    Color3i   colorFog;
+    Color3i   colorTeamA;
+    Color3i   colorTeamB;
+    char      nameTeamA[11];
+    char      nameTeamB[11];
+    GameMode  currentGameMode;
+    GameModes gameModes;
     // respawn area
     Quad3D spawns[2];
     uint32 inputFlags;
@@ -162,7 +166,7 @@ typedef struct
     uint8                blocks;
     uint8                weaponReserve;
     short                weaponClip;
-    Vector3i                resultLine[50];
+    Vector3i             resultLine[50];
     IPUnion              ipUnion;
     uint8                alive;
     uint8                input;

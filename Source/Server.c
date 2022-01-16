@@ -308,7 +308,7 @@ void ServerReset(Server* server)
                server->protocol.nameTeamB,
                server->protocol.colorTeamA,
                server->protocol.colorTeamB,
-               server->protocol.mode,
+               server->protocol.currentGameMode,
                1);
 }
 
