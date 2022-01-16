@@ -69,6 +69,8 @@ typedef enum {
 typedef enum {
     GAME_MODE_CTF = 0,
     GAME_MODE_TC  = 1,
+    GAME_MODE_BABEL  = 2,
+    GAME_MODE_ARENA  = 3,
 } GameMode;
 
 typedef enum {
