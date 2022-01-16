@@ -34,6 +34,12 @@ void initGameMode(Server* server, uint8 gamemode)
         server->protocol.gameModes.CTF.base[1].y = floorf(server->protocol.gameModes.CTF.base[1].y);
     } else if (server->protocol.currentGameMode == GAME_MODE_TC) {
         memcpy(server->gamemodeName, "tc", strlen("tc") + 1);
+    }
+    else if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
+        memcpy(server->gamemodeName, "babel", strlen("babel") + 1);
+    }
+    else if (server->protocol.currentGameMode == GAME_MODE_ARENA) {
+        memcpy(server->gamemodeName, "arena", strlen("arena") + 1);
     } else {
         memcpy(server->gamemodeName, "IDK", strlen("IDK") + 1);
     }
