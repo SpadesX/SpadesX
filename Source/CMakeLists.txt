@@ -12,6 +12,7 @@ set(SERVER_HEADERS
     Packets.h
     Conversion.h
     Commands.h
+    Gamemodes.h
 )
 
 set(SERVER_SOURCES
@@ -22,20 +23,21 @@ set(SERVER_SOURCES
     Protocol.c
     Packets.c
     Commands.c
+    Gamemodes.c
 )
 
-target_sources(server
+target_sources(SpadesX
     PRIVATE
         ${SERVER_SOURCES}
         ${SERVER_HEADERS}
 )
 
-target_compile_features(server
+target_compile_features(SpadesX
     PRIVATE
         c_std_11
 )
 
-target_include_directories(server
+target_include_directories(SpadesX
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/Extern

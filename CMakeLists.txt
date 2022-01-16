@@ -16,9 +16,9 @@ add_subdirectory(Extern)
 # Add main target
 #
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -O2)
-add_executable(server "")
+add_executable(SpadesX "")
 
-target_link_libraries(server
+target_link_libraries(SpadesX
     PRIVATE
         enet
         util
