@@ -191,71 +191,7 @@ static void ServerInit(Server*     server,
     Vector3f height  = {0, 0, 1};
     Vector3f strafe  = {0, 1, 0};
     for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (reset == 0) {
-            server->player[i].state  = STATE_DISCONNECTED;
-            server->player[i].queues = NULL;
-        }
-        server->player[i].ups                         = 60;
-        server->player[i].timers.timeSinceLastWU      = get_nanos();
-        server->player[i].input                       = 0;
-        server->player[i].movement.eyePos             = empty;
-        server->player[i].movement.forwardOrientation = forward;
-        server->player[i].movement.strafeOrientation  = strafe;
-        server->player[i].movement.heightOrientation  = height;
-        server->player[i].movement.position           = empty;
-        server->player[i].movement.velocity           = empty;
-        if (reset == 0) {
-            PermLevel roleList[5] = {{"manager", &server->managerPasswd, &server->player[i].isManager},
-                                     {"admin", &server->adminPasswd, &server->player[i].isAdmin},
-                                     {"mod", &server->modPasswd, &server->player[i].isMod},
-                                     {"guard", &server->guardPasswd, &server->player[i].isGuard},
-                                     {"trusted", &server->trustedPasswd, &server->player[i].isTrusted}};
-            for (unsigned long x = 0; x < sizeof(roleList) / sizeof(PermLevel); ++x) {
-                server->player[i].roleList[x] = roleList[x];
-            }
-        }
-        server->player[i].airborne                         = 0;
-        server->player[i].wade                             = 0;
-        server->player[i].lastclimb                        = 0;
-        server->player[i].movBackwards                     = 0;
-        server->player[i].movForward                       = 0;
-        server->player[i].movLeft                          = 0;
-        server->player[i].movRight                         = 0;
-        server->player[i].jumping                          = 0;
-        server->player[i].crouching                        = 0;
-        server->player[i].sneaking                         = 0;
-        server->player[i].sprinting                        = 0;
-        server->player[i].primary_fire                     = 0;
-        server->player[i].secondary_fire                   = 0;
-        server->player[i].canBuild                         = 1;
-        server->player[i].allowKilling                     = 1;
-        server->player[i].allowTeamKilling                 = 0;
-        server->player[i].muted                            = 0;
-        server->player[i].toldToMaster                     = 0;
-        server->player[i].timers.sinceLastBaseEnter        = 0;
-        server->player[i].timers.sinceLastBaseEnterRestock = 0;
-        server->player[i].timers.sinceLast3BlockDest       = 0;
-        server->player[i].timers.sinceLastBlockDest        = 0;
-        server->player[i].timers.sinceLastBlockPlac        = 0;
-        server->player[i].timers.sinceLastGrenadeThrown    = 0;
-        server->player[i].timers.sinceLastShot             = 0;
-        server->player[i].timers.timeSinceLastWU           = 0;
-        server->player[i].timers.sinceLastWeaponInput      = 0;
-        server->player[i].HP                               = 100;
-        server->player[i].blocks                           = 50;
-        server->player[i].grenades                         = 3;
-        server->player[i].hasIntel                         = 0;
-        if (reset == 0) {
-            server->player[i].isManager = 0;
-            server->player[i].isAdmin   = 0;
-            server->player[i].isMod     = 0;
-            server->player[i].isGuard   = 0;
-            server->player[i].isTrusted = 0;
-        }
-        server->player[i].isInvisible = 0;
-        server->player[i].kills       = 0;
-        server->player[i].deaths      = 0;
-        memset(server->player[i].name, 0, 17);
+        initPlayer(server, i, reset, 0, empty, forward, strafe, height);
     }
 
     server->globalAB = 1;
@@ -475,56 +411,7 @@ static void ServerUpdate(Server* server, int timeout)
                 Vector3f forward                                          = {1, 0, 0};
                 Vector3f height                                           = {0, 0, 1};
                 Vector3f strafe                                           = {0, 1, 0};
-                server->player[playerID].state                            = STATE_DISCONNECTED;
-                server->player[playerID].queues                           = NULL;
-                server->player[playerID].ups                              = 60;
-                server->player[playerID].timers.timeSinceLastWU           = get_nanos();
-                server->player[playerID].input                            = 0;
-                server->player[playerID].movement.eyePos                  = empty;
-                server->player[playerID].movement.forwardOrientation      = forward;
-                server->player[playerID].movement.strafeOrientation       = strafe;
-                server->player[playerID].movement.heightOrientation       = height;
-                server->player[playerID].movement.position                = empty;
-                server->player[playerID].movement.velocity                = empty;
-                server->player[playerID].airborne                         = 0;
-                server->player[playerID].wade                             = 0;
-                server->player[playerID].lastclimb                        = 0;
-                server->player[playerID].movBackwards                     = 0;
-                server->player[playerID].movForward                       = 0;
-                server->player[playerID].movLeft                          = 0;
-                server->player[playerID].movRight                         = 0;
-                server->player[playerID].jumping                          = 0;
-                server->player[playerID].crouching                        = 0;
-                server->player[playerID].sneaking                         = 0;
-                server->player[playerID].sprinting                        = 0;
-                server->player[playerID].primary_fire                     = 0;
-                server->player[playerID].secondary_fire                   = 0;
-                server->player[playerID].canBuild                         = 1;
-                server->player[playerID].allowKilling                     = 1;
-                server->player[playerID].allowTeamKilling                 = 0;
-                server->player[playerID].muted                            = 0;
-                server->player[playerID].toldToMaster                     = 0;
-                server->player[playerID].timers.sinceLastBaseEnter        = 0;
-                server->player[playerID].timers.sinceLastBaseEnterRestock = 0;
-                server->player[playerID].timers.sinceLast3BlockDest       = 0;
-                server->player[playerID].timers.sinceLastBlockDest        = 0;
-                server->player[playerID].timers.sinceLastBlockPlac        = 0;
-                server->player[playerID].timers.sinceLastGrenadeThrown    = 0;
-                server->player[playerID].timers.sinceLastShot             = 0;
-                server->player[playerID].timers.timeSinceLastWU           = 0;
-                server->player[playerID].timers.sinceLastWeaponInput      = 0;
-                server->player[playerID].HP                               = 100;
-                server->player[playerID].blocks                           = 50;
-                server->player[playerID].grenades                         = 3;
-                server->player[playerID].isManager                        = 0;
-                server->player[playerID].isAdmin                          = 0;
-                server->player[playerID].isMod                            = 0;
-                server->player[playerID].isGuard                          = 0;
-                server->player[playerID].isTrusted                        = 0;
-                server->player[playerID].isInvisible                      = 0;
-                server->player[playerID].kills                            = 0;
-                server->player[playerID].deaths                           = 0;
-                memset(server->player[playerID].name, 0, 17);
+                initPlayer(server, playerID, 0, 1, empty, forward, strafe, height);
                 server->protocol.numPlayers--;
                 server->protocol.teamUserCount[server->player[playerID].team]--;
                 if (server->master.enableMasterConnection == 1) {

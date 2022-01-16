@@ -33,6 +33,82 @@ static unsigned long long get_nanos(void)
 
 }*/
 
+void initPlayer(Server*  server,
+                uint8    playerID,
+                uint8    reset,
+                uint8    disconnect,
+                Vector3f empty,
+                Vector3f forward,
+                Vector3f strafe,
+                Vector3f height)
+{
+    if (reset == 0) {
+        server->player[playerID].state  = STATE_DISCONNECTED;
+        server->player[playerID].queues = NULL;
+    }
+    server->player[playerID].ups                         = 60;
+    server->player[playerID].timers.timeSinceLastWU      = get_nanos();
+    server->player[playerID].input                       = 0;
+    server->player[playerID].movement.eyePos             = empty;
+    server->player[playerID].movement.forwardOrientation = forward;
+    server->player[playerID].movement.strafeOrientation  = strafe;
+    server->player[playerID].movement.heightOrientation  = height;
+    server->player[playerID].movement.position           = empty;
+    server->player[playerID].movement.velocity           = empty;
+    if (reset == 0 && disconnect == 0) {
+        PermLevel roleList[5] = {{"manager", &server->managerPasswd, &server->player[playerID].isManager},
+                                 {"admin", &server->adminPasswd, &server->player[playerID].isAdmin},
+                                 {"mod", &server->modPasswd, &server->player[playerID].isMod},
+                                 {"guard", &server->guardPasswd, &server->player[playerID].isGuard},
+                                 {"trusted", &server->trustedPasswd, &server->player[playerID].isTrusted}};
+        for (unsigned long x = 0; x < sizeof(roleList) / sizeof(PermLevel); ++x) {
+            server->player[playerID].roleList[x] = roleList[x];
+        }
+    }
+    server->player[playerID].airborne                         = 0;
+    server->player[playerID].wade                             = 0;
+    server->player[playerID].lastclimb                        = 0;
+    server->player[playerID].movBackwards                     = 0;
+    server->player[playerID].movForward                       = 0;
+    server->player[playerID].movLeft                          = 0;
+    server->player[playerID].movRight                         = 0;
+    server->player[playerID].jumping                          = 0;
+    server->player[playerID].crouching                        = 0;
+    server->player[playerID].sneaking                         = 0;
+    server->player[playerID].sprinting                        = 0;
+    server->player[playerID].primary_fire                     = 0;
+    server->player[playerID].secondary_fire                   = 0;
+    server->player[playerID].canBuild                         = 1;
+    server->player[playerID].allowKilling                     = 1;
+    server->player[playerID].allowTeamKilling                 = 0;
+    server->player[playerID].muted                            = 0;
+    server->player[playerID].toldToMaster                     = 0;
+    server->player[playerID].timers.sinceLastBaseEnter        = 0;
+    server->player[playerID].timers.sinceLastBaseEnterRestock = 0;
+    server->player[playerID].timers.sinceLast3BlockDest       = 0;
+    server->player[playerID].timers.sinceLastBlockDest        = 0;
+    server->player[playerID].timers.sinceLastBlockPlac        = 0;
+    server->player[playerID].timers.sinceLastGrenadeThrown    = 0;
+    server->player[playerID].timers.sinceLastShot             = 0;
+    server->player[playerID].timers.timeSinceLastWU           = 0;
+    server->player[playerID].timers.sinceLastWeaponInput      = 0;
+    server->player[playerID].HP                               = 100;
+    server->player[playerID].blocks                           = 50;
+    server->player[playerID].grenades                         = 3;
+    server->player[playerID].hasIntel                         = 0;
+    if (reset == 0) {
+        server->player[playerID].isManager = 0;
+        server->player[playerID].isAdmin   = 0;
+        server->player[playerID].isMod     = 0;
+        server->player[playerID].isGuard   = 0;
+        server->player[playerID].isTrusted = 0;
+    }
+    server->player[playerID].isInvisible = 0;
+    server->player[playerID].kills       = 0;
+    server->player[playerID].deaths      = 0;
+    memset(server->player[playerID].name, 0, 17);
+}
+
 uint8 isStaff(Server* server, uint8 playerID)
 {
     if (server->player[playerID].isManager || server->player[playerID].isAdmin || server->player[playerID].isMod ||

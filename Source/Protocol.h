@@ -10,6 +10,14 @@
 #include <Types.h>
 #include <enet/enet.h>
 
+void      initPlayer(Server*  server,
+                     uint8    playerID,
+                     uint8    reset,
+                     uint8    disconnect,
+                     Vector3f empty,
+                     Vector3f forward,
+                     Vector3f strafe,
+                     Vector3f height);
 uint8     isPastStateData(Server* server, uint8 playerID);
 uint8     isPastJoinScreen(Server* server, uint8 playerID);
 uint8     vecValidPos(Vector3i pos);
