@@ -279,18 +279,18 @@ static void ServerInit(Server*     server,
     server->protocol.colorFog[1] = 0xE8;
     server->protocol.colorFog[2] = 0xFF;
 
-    server->protocol.colorTeamA[0] = team1Color[0];
-    server->protocol.colorTeamA[1] = team1Color[1];
-    server->protocol.colorTeamA[2] = team1Color[2];
+    server->protocol.colorTeam[0][0] = team1Color[0];
+    server->protocol.colorTeam[0][1] = team1Color[1];
+    server->protocol.colorTeam[0][2] = team1Color[2];
 
-    server->protocol.colorTeamB[0] = team2Color[0];
-    server->protocol.colorTeamB[1] = team2Color[1];
-    server->protocol.colorTeamB[2] = team2Color[2];
+    server->protocol.colorTeam[1][0] = team2Color[0];
+    server->protocol.colorTeam[1][1] = team2Color[1];
+    server->protocol.colorTeam[1][2] = team2Color[2];
 
-    memcpy(server->protocol.nameTeamA, team1Name, strlen(team1Name));
-    memcpy(server->protocol.nameTeamB, team2Name, strlen(team2Name));
-    server->protocol.nameTeamA[strlen(team1Name)] = '\0';
-    server->protocol.nameTeamB[strlen(team2Name)] = '\0';
+    memcpy(server->protocol.nameTeam[0], team1Name, strlen(team1Name));
+    memcpy(server->protocol.nameTeam[1], team2Name, strlen(team2Name));
+    server->protocol.nameTeam[0][strlen(team1Name)] = '\0';
+    server->protocol.nameTeam[1][strlen(team2Name)] = '\0';
 
     memcpy(server->serverName, serverName, strlen(serverName));
     server->serverName[strlen(serverName)] = '\0';
@@ -304,10 +304,10 @@ void ServerReset(Server* server)
                server->map.mapArray,
                server->map.mapCount,
                server->serverName,
-               server->protocol.nameTeamA,
-               server->protocol.nameTeamB,
-               server->protocol.colorTeamA,
-               server->protocol.colorTeamB,
+               server->protocol.nameTeam[0],
+               server->protocol.nameTeam[1],
+               server->protocol.colorTeam[0],
+               server->protocol.colorTeam[1],
                server->protocol.currentGameMode,
                1);
 }

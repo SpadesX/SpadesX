@@ -86,15 +86,9 @@ typedef struct
     IntelFlag intelFlags;
     Vector3f  intel[2];
     Vector3f  base[2];
-    uint8     playerIntelTeamA; // player ID if intel flags & 1 != 0
-    uint8     playerIntelTeamB; // player ID if intel flags & 2 != 0
+    uint8     playerIntelTeam[2];
     uint8     intelHeld[2];
-} ModeCTF;
-
-typedef struct
-{
-    ModeCTF CTF;
-} GameModes;
+} GameModeVars;
 
 typedef struct
 {
@@ -105,12 +99,10 @@ typedef struct
     uint8 maxPlayers;
     //
     Color3i   colorFog;
-    Color3i   colorTeamA;
-    Color3i   colorTeamB;
-    char      nameTeamA[11];
-    char      nameTeamB[11];
+    Color3i   colorTeam[2];
+    char      nameTeam[2][11];
     GameMode  currentGameMode;
-    GameModes gameModes;
+    GameModeVars gameMode;
     // respawn area
     Quad3D spawns[2];
     uint32 inputFlags;

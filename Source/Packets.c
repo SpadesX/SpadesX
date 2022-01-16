@@ -129,7 +129,7 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
     } else {
         team = 0;
     }
-    if (server->player[playerID].hasIntel == 0 || server->protocol.gameModes.CTF.intelHeld[team] == 0) {
+    if (server->player[playerID].hasIntel == 0 || server->protocol.gameMode.intelHeld[team] == 0) {
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
@@ -138,7 +138,7 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
     WriteByte(&stream, playerID);
     WriteByte(&stream, winning);
     server->player[playerID].hasIntel    = 0;
-    server->protocol.gameModes.CTF.intelHeld[team] = 0;
+    server->protocol.gameMode.intelHeld[team] = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
             enet_peer_send(server->player[player].peer, 0, packet);
@@ -155,7 +155,7 @@ void SendIntelPickup(Server* server, uint8 playerID)
     } else {
         team = 0;
     }
-    if (server->player[playerID].hasIntel == 1 || server->protocol.gameModes.CTF.intelHeld[team] == 1) {
+    if (server->player[playerID].hasIntel == 1 || server->protocol.gameMode.intelHeld[team] == 1) {
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
@@ -163,7 +163,7 @@ void SendIntelPickup(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_INTEL_PICKUP);
     WriteByte(&stream, playerID);
     server->player[playerID].hasIntel    = 1;
-    server->protocol.gameModes.CTF.intelHeld[team] = 1;
+    server->protocol.gameMode.intelHeld[team] = 1;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
             enet_peer_send(server->player[player].peer, 0, packet);
@@ -179,7 +179,7 @@ void SendIntelDrop(Server* server, uint8 playerID)
     } else {
         team = 0;
     }
-    if (server->player[playerID].hasIntel == 0 || server->protocol.gameModes.CTF.intelHeld[team] == 0) {
+    if (server->player[playerID].hasIntel == 0 || server->protocol.gameMode.intelHeld[team] == 0) {
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 14, ENET_PACKET_FLAG_RELIABLE);
@@ -193,17 +193,17 @@ void SendIntelDrop(Server* server, uint8 playerID)
                                           server->player[playerID].movement.position.x,
                                           server->player[playerID].movement.position.y));
 
-    server->protocol.gameModes.CTF.intel[team].x = (int) server->player[playerID].movement.position.x;
-    server->protocol.gameModes.CTF.intel[team].y = (int) server->player[playerID].movement.position.y;
-    server->protocol.gameModes.CTF.intel[team].z = mapvxlFindTopBlock(
+    server->protocol.gameMode.intel[team].x = (int) server->player[playerID].movement.position.x;
+    server->protocol.gameMode.intel[team].y = (int) server->player[playerID].movement.position.y;
+    server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(
     &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y);
     server->player[playerID].hasIntel    = 0;
-    server->protocol.gameModes.CTF.intelHeld[team] = 0;
+    server->protocol.gameMode.intelHeld[team] = 0;
 
     printf("Dropping intel at X: %d, Y: %d, Z: %d\n",
-           (int) server->protocol.gameModes.CTF.intel[team].x,
-           (int) server->protocol.gameModes.CTF.intel[team].y,
-           (int) server->protocol.gameModes.CTF.intel[team].z);
+           (int) server->protocol.gameMode.intel[team].x,
+           (int) server->protocol.gameMode.intel[team].y,
+           (int) server->protocol.gameMode.intel[team].z);
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
             enet_peer_send(server->player[player].peer, 0, packet);
@@ -349,35 +349,35 @@ void SendStateData(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_STATE_DATA);
     WriteByte(&stream, playerID);
     WriteColor3i(&stream, server->protocol.colorFog);
-    WriteColor3i(&stream, server->protocol.colorTeamA);
-    WriteColor3i(&stream, server->protocol.colorTeamB);
-    WriteArray(&stream, server->protocol.nameTeamA, 10);
-    WriteArray(&stream, server->protocol.nameTeamB, 10);
+    WriteColor3i(&stream, server->protocol.colorTeam[0]);
+    WriteColor3i(&stream, server->protocol.colorTeam[1]);
+    WriteArray(&stream, server->protocol.nameTeam[0], 10);
+    WriteArray(&stream, server->protocol.nameTeam[1], 10);
     WriteByte(&stream, server->protocol.currentGameMode);
 
     // MODE CTF:
 
-    WriteByte(&stream, server->protocol.gameModes.CTF.score[0]);   // SCORE TEAM A
-    WriteByte(&stream, server->protocol.gameModes.CTF.score[1]);   // SCORE TEAM B
-    WriteByte(&stream, server->protocol.gameModes.CTF.scoreLimit); // SCORE LIMIT
-    WriteByte(&stream, server->protocol.gameModes.CTF.intelFlags); // INTEL FLAGS
+    WriteByte(&stream, server->protocol.gameMode.score[0]);   // SCORE TEAM A
+    WriteByte(&stream, server->protocol.gameMode.score[1]);   // SCORE TEAM B
+    WriteByte(&stream, server->protocol.gameMode.scoreLimit); // SCORE LIMIT
+    WriteByte(&stream, server->protocol.gameMode.intelFlags); // INTEL FLAGS
 
-    if ((server->protocol.gameModes.CTF.intelFlags & 1) == 0) {
-        WriteVector3f(&stream, server->protocol.gameModes.CTF.intel[0]);
+    if ((server->protocol.gameMode.intelFlags & 1) == 0) {
+        WriteVector3f(&stream, server->protocol.gameMode.intel[0]);
     } else {
-        WriteByte(&stream, server->protocol.gameModes.CTF.playerIntelTeamA);
+        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
         StreamSkip(&stream, 11);
     }
 
-    if ((server->protocol.gameModes.CTF.intelFlags & 2) == 0) {
-        WriteVector3f(&stream, server->protocol.gameModes.CTF.intel[1]);
+    if ((server->protocol.gameMode.intelFlags & 2) == 0) {
+        WriteVector3f(&stream, server->protocol.gameMode.intel[1]);
     } else {
-        WriteByte(&stream, server->protocol.gameModes.CTF.playerIntelTeamB);
+        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[1]);
         StreamSkip(&stream, 11);
     }
 
-    WriteVector3f(&stream, server->protocol.gameModes.CTF.base[0]);
-    WriteVector3f(&stream, server->protocol.gameModes.CTF.base[1]);
+    WriteVector3f(&stream, server->protocol.gameMode.base[0]);
+    WriteVector3f(&stream, server->protocol.gameMode.base[1]);
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
         server->player[playerID].state = STATE_PICK_SCREEN;

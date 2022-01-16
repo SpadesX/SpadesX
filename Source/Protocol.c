@@ -502,61 +502,61 @@ void moveIntelAndTentDown(Server* server)
 {
     while (checkUnderIntel(server, 0)) {
         Vector3f newPos = {
-        server->protocol.gameModes.CTF.intel[0].x, server->protocol.gameModes.CTF.intel[0].y, server->protocol.gameModes.CTF.intel[0].z + 1};
+        server->protocol.gameMode.intel[0].x, server->protocol.gameMode.intel[0].y, server->protocol.gameMode.intel[0].z + 1};
         SendMoveObject(server, 0, 0, newPos);
-        server->protocol.gameModes.CTF.intel[0] = newPos;
+        server->protocol.gameMode.intel[0] = newPos;
     }
     while (checkUnderIntel(server, 1)) {
         Vector3f newPos = {
-        server->protocol.gameModes.CTF.intel[1].x, server->protocol.gameModes.CTF.intel[1].y, server->protocol.gameModes.CTF.intel[1].z + 1};
+        server->protocol.gameMode.intel[1].x, server->protocol.gameMode.intel[1].y, server->protocol.gameMode.intel[1].z + 1};
         SendMoveObject(server, 1, 1, newPos);
-        server->protocol.gameModes.CTF.intel[1] = newPos;
+        server->protocol.gameMode.intel[1] = newPos;
     }
     while (checkUnderTent(server, 0) == 4) {
         Vector3f newPos = {
-        server->protocol.gameModes.CTF.base[0].x, server->protocol.gameModes.CTF.base[0].y, server->protocol.gameModes.CTF.base[0].z + 1};
+        server->protocol.gameMode.base[0].x, server->protocol.gameMode.base[0].y, server->protocol.gameMode.base[0].z + 1};
         SendMoveObject(server, 2, 0, newPos);
-        server->protocol.gameModes.CTF.base[0] = newPos;
+        server->protocol.gameMode.base[0] = newPos;
     }
     while (checkUnderTent(server, 1) == 4) {
         Vector3f newPos = {
-        server->protocol.gameModes.CTF.base[1].x, server->protocol.gameModes.CTF.base[1].y, server->protocol.gameModes.CTF.base[1].z + 1};
+        server->protocol.gameMode.base[1].x, server->protocol.gameMode.base[1].y, server->protocol.gameMode.base[1].z + 1};
         SendMoveObject(server, 3, 1, newPos);
-        server->protocol.gameModes.CTF.base[1] = newPos;
+        server->protocol.gameMode.base[1] = newPos;
     }
 }
 
 void moveIntelAndTentUp(Server* server)
 {
     if (checkInTent(server, 0)) {
-        Vector3f newTentPos = server->protocol.gameModes.CTF.base[0];
+        Vector3f newTentPos = server->protocol.gameMode.base[0];
         newTentPos.z -= 1;
         SendMoveObject(server, 0 + 2, 0, newTentPos);
-        server->protocol.gameModes.CTF.base[0] = newTentPos;
+        server->protocol.gameMode.base[0] = newTentPos;
     } else if (checkInTent(server, 1)) {
-        Vector3f newTentPos = server->protocol.gameModes.CTF.base[1];
+        Vector3f newTentPos = server->protocol.gameMode.base[1];
         newTentPos.z -= 1;
         SendMoveObject(server, 1 + 2, 1, newTentPos);
-        server->protocol.gameModes.CTF.base[1] = newTentPos;
+        server->protocol.gameMode.base[1] = newTentPos;
     } else if (checkInIntel(server, 1)) {
-        Vector3f newIntelPos = server->protocol.gameModes.CTF.intel[1];
+        Vector3f newIntelPos = server->protocol.gameMode.intel[1];
         newIntelPos.z -= 1;
         SendMoveObject(server, 1, 1, newIntelPos);
-        server->protocol.gameModes.CTF.intel[1] = newIntelPos;
+        server->protocol.gameMode.intel[1] = newIntelPos;
     } else if (checkInIntel(server, 0)) {
-        Vector3f newIntelPos = server->protocol.gameModes.CTF.intel[0];
+        Vector3f newIntelPos = server->protocol.gameMode.intel[0];
         newIntelPos.z -= 1;
         SendMoveObject(server, 0, 0, newIntelPos);
-        server->protocol.gameModes.CTF.intel[0] = newIntelPos;
+        server->protocol.gameMode.intel[0] = newIntelPos;
     }
 }
 
 uint8 checkUnderTent(Server* server, uint8 team)
 {
     uint8 count = 0;
-    for (int x = server->protocol.gameModes.CTF.base[team].x - 1; x <= server->protocol.gameModes.CTF.base[team].x; x++) {
-        for (int y = server->protocol.gameModes.CTF.base[team].y - 1; y <= server->protocol.gameModes.CTF.base[team].y; y++) {
-            if (mapvxlIsSolid(&server->map.map, x, y, server->protocol.gameModes.CTF.base[team].z) == 0) {
+    for (int x = server->protocol.gameMode.base[team].x - 1; x <= server->protocol.gameMode.base[team].x; x++) {
+        for (int y = server->protocol.gameMode.base[team].y - 1; y <= server->protocol.gameMode.base[team].y; y++) {
+            if (mapvxlIsSolid(&server->map.map, x, y, server->protocol.gameMode.base[team].z) == 0) {
                 count++;
             }
         }
@@ -568,9 +568,9 @@ uint8 checkUnderIntel(Server* server, uint8 team)
 {
     uint8 ret = 0;
     if (mapvxlIsSolid(&server->map.map,
-                      server->protocol.gameModes.CTF.intel[team].x,
-                      server->protocol.gameModes.CTF.intel[team].y,
-                      server->protocol.gameModes.CTF.intel[team].z) == 0)
+                      server->protocol.gameMode.intel[team].x,
+                      server->protocol.gameMode.intel[team].y,
+                      server->protocol.gameMode.intel[team].z) == 0)
     {
         ret = 1;
     }
@@ -581,7 +581,7 @@ uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team)
 {
     uint8    ret       = 0;
     Vector3f playerPos = server->player[playerID].movement.position;
-    Vector3f intelPos  = server->protocol.gameModes.CTF.intel[team];
+    Vector3f intelPos  = server->protocol.gameMode.intel[team];
     if ((int) playerPos.y == (int) intelPos.y &&
         ((int) playerPos.z + 3 == (int) intelPos.z ||
          (server->player[playerID].crouching && (int) playerPos.z + 2 == (int) intelPos.z)) &&
@@ -596,7 +596,7 @@ uint8 checkPlayerInTent(Server* server, uint8 playerID)
 {
     uint8    ret       = 0;
     Vector3f playerPos = server->player[playerID].movement.position;
-    Vector3f tentPos   = server->protocol.gameModes.CTF.base[server->player[playerID].team];
+    Vector3f tentPos   = server->protocol.gameMode.base[server->player[playerID].team];
     if (((int) playerPos.z + 3 == (int) tentPos.z ||
          (server->player[playerID].crouching && (int) playerPos.z + 2 == (int) tentPos.z)) &&
         ((int) playerPos.x >= (int) tentPos.x - 1 && (int) playerPos.x <= (int) tentPos.x) &&
@@ -610,7 +610,7 @@ uint8 checkPlayerInTent(Server* server, uint8 playerID)
 uint8 checkItemOnIntel(Server* server, uint8 team, Vector3f itemPos)
 {
     uint8    ret      = 0;
-    Vector3f intelPos = server->protocol.gameModes.CTF.intel[team];
+    Vector3f intelPos = server->protocol.gameMode.intel[team];
     if ((int) itemPos.y == (int) intelPos.y && ((int) itemPos.z == (int) intelPos.z) &&
         (int) itemPos.x == (int) intelPos.x) {
         ret = 1;
@@ -621,7 +621,7 @@ uint8 checkItemOnIntel(Server* server, uint8 team, Vector3f itemPos)
 uint8 checkItemInTent(Server* server, uint8 team, Vector3f itemPos)
 {
     uint8    ret     = 0;
-    Vector3f tentPos = server->protocol.gameModes.CTF.base[team];
+    Vector3f tentPos = server->protocol.gameMode.base[team];
     if (((int) itemPos.z == (int) tentPos.z) &&
         ((int) itemPos.x >= (int) tentPos.x - 1 && (int) itemPos.x <= (int) tentPos.x) &&
         ((int) itemPos.y >= (int) tentPos.y - 1 && (int) itemPos.y <= (int) tentPos.y))
@@ -634,7 +634,7 @@ uint8 checkItemInTent(Server* server, uint8 team, Vector3f itemPos)
 uint8 checkInTent(Server* server, uint8 team)
 {
     uint8    ret      = 0;
-    Vector3f checkPos = server->protocol.gameModes.CTF.base[team];
+    Vector3f checkPos = server->protocol.gameMode.base[team];
     checkPos.z--;
     if (mapvxlIsSolid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z)) {
         ret = 1;
@@ -652,7 +652,7 @@ uint8 checkInTent(Server* server, uint8 team)
 uint8 checkInIntel(Server* server, uint8 team)
 {
     uint8    ret      = 0;
-    Vector3f checkPos = server->protocol.gameModes.CTF.intel[team];
+    Vector3f checkPos = server->protocol.gameMode.intel[team];
     checkPos.z--;
     if (mapvxlIsSolid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z)) {
         ret = 1;
@@ -685,7 +685,7 @@ void handleIntel(Server* server, uint8 playerID)
         time_t timeNow = time(NULL);
         if (server->player[playerID].hasIntel == 0) {
 
-            if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.gameModes.CTF.intelHeld[team])) {
+            if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.gameMode.intelHeld[team])) {
                 SendIntelPickup(server, playerID);
             } else if (checkPlayerInTent(server, playerID) &&
                        timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15)
@@ -710,9 +710,9 @@ void handleIntel(Server* server, uint8 playerID)
         } else if (server->player[playerID].hasIntel) {
             if (checkPlayerInTent(server, playerID) &&
                 timeNow - server->player[playerID].timers.sinceLastBaseEnter >= 5) {
-                server->protocol.gameModes.CTF.score[server->player[playerID].team]++;
+                server->protocol.gameMode.score[server->player[playerID].team]++;
                 uint8 winning = 0;
-                if (server->protocol.gameModes.CTF.score[server->player[playerID].team] >= server->protocol.gameModes.CTF.scoreLimit) {
+                if (server->protocol.gameMode.score[server->player[playerID].team] >= server->protocol.gameMode.scoreLimit) {
                     winning = 1;
                 }
                 SendIntelCapture(server, playerID, winning);
@@ -732,8 +732,8 @@ void handleIntel(Server* server, uint8 playerID)
                 }
                 SendRestock(server, playerID);
                 server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
-                server->protocol.gameModes.CTF.intel[team]                   = SetIntelTentSpawnPoint(server, team);
-                SendMoveObject(server, team, team, server->protocol.gameModes.CTF.intel[team]);
+                server->protocol.gameMode.intel[team]                   = SetIntelTentSpawnPoint(server, team);
+                SendMoveObject(server, team, team, server->protocol.gameMode.intel[team]);
                 if (winning) {
                     for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
                         if (server->player[i].state != STATE_DISCONNECTED) {

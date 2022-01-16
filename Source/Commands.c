@@ -465,10 +465,10 @@ static void intelCommand(Server* server, uint8 player)
         }
     }
     if (sentAtLeastOnce == 0) {
-        if (server->protocol.gameModes.CTF.intelHeld[0]) {
+        if (server->protocol.gameMode.intelHeld[0]) {
             snprintf(message, 57, "Intel is not being held but intel of team 0 thinks it is");
             sendServerNotice(server, player, message);
-        } else if (server->protocol.gameModes.CTF.intelHeld[1]) {
+        } else if (server->protocol.gameMode.intelHeld[1]) {
             snprintf(message, 57, "Intel is not being held but intel of team 1 thinks it is");
             sendServerNotice(server, player, message);
         }
