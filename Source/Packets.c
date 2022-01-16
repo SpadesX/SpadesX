@@ -1178,7 +1178,7 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
         server->player[playerID].locAtClick = server->player[playerID].movement.position;
     }
 
-    else if (server->player[playerID].weaponClip >= 0)
+    else if (server->player[playerID].weaponClip > 0)
     {
         SendWeaponInput(server, playerID, wInput);
 
