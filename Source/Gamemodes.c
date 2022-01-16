@@ -1,2 +1,1 @@
-int i = 0;
-// YAY gamemodes.
+typedef int make_iso_compilers_happy; //For now to make compiler happy :)
