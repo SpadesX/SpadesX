@@ -716,7 +716,8 @@ uint8 checkInTent(Server* server, uint8 team)
     uint8    ret      = 0;
     Vector3f checkPos = server->protocol.gameMode.base[team];
     checkPos.z--;
-    if (mapvxlIsSolid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z)) { // Implement check for solid blocks in XYZ range in libmapvxl
+    if (mapvxlIsSolid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z))
+    { // Implement check for solid blocks in XYZ range in libmapvxl
         ret = 1;
     } else if (mapvxlIsSolid(&server->map.map, (int) checkPos.x - 1, (int) checkPos.y, (int) checkPos.z)) {
         ret = 1;
@@ -914,7 +915,9 @@ void updateMovementAndGrenades(Server* server)
             if (falldamage > 0) {
                 sendHP(server, playerID, playerID, falldamage, 0, 4, 5);
             }
-            handleTentAndIntel(server, playerID);
+            if (server->protocol.currentGameMode != GAME_MODE_ARENA) {
+                handleTentAndIntel(server, playerID);
+            }
         }
         handleGrenade(server, playerID);
     }
