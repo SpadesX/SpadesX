@@ -501,26 +501,30 @@ uint8 checkNode(Server* server, Vector3i position)
 void moveIntelAndTentDown(Server* server)
 {
     while (checkUnderIntel(server, 0)) {
-        Vector3f newPos = {
-        server->protocol.gameMode.intel[0].x, server->protocol.gameMode.intel[0].y, server->protocol.gameMode.intel[0].z + 1};
+        Vector3f newPos = {server->protocol.gameMode.intel[0].x,
+                           server->protocol.gameMode.intel[0].y,
+                           server->protocol.gameMode.intel[0].z + 1};
         SendMoveObject(server, 0, 0, newPos);
         server->protocol.gameMode.intel[0] = newPos;
     }
     while (checkUnderIntel(server, 1)) {
-        Vector3f newPos = {
-        server->protocol.gameMode.intel[1].x, server->protocol.gameMode.intel[1].y, server->protocol.gameMode.intel[1].z + 1};
+        Vector3f newPos = {server->protocol.gameMode.intel[1].x,
+                           server->protocol.gameMode.intel[1].y,
+                           server->protocol.gameMode.intel[1].z + 1};
         SendMoveObject(server, 1, 1, newPos);
         server->protocol.gameMode.intel[1] = newPos;
     }
     while (checkUnderTent(server, 0) == 4) {
-        Vector3f newPos = {
-        server->protocol.gameMode.base[0].x, server->protocol.gameMode.base[0].y, server->protocol.gameMode.base[0].z + 1};
+        Vector3f newPos = {server->protocol.gameMode.base[0].x,
+                           server->protocol.gameMode.base[0].y,
+                           server->protocol.gameMode.base[0].z + 1};
         SendMoveObject(server, 2, 0, newPos);
         server->protocol.gameMode.base[0] = newPos;
     }
     while (checkUnderTent(server, 1) == 4) {
-        Vector3f newPos = {
-        server->protocol.gameMode.base[1].x, server->protocol.gameMode.base[1].y, server->protocol.gameMode.base[1].z + 1};
+        Vector3f newPos = {server->protocol.gameMode.base[1].x,
+                           server->protocol.gameMode.base[1].y,
+                           server->protocol.gameMode.base[1].z + 1};
         SendMoveObject(server, 3, 1, newPos);
         server->protocol.gameMode.base[1] = newPos;
     }
@@ -712,7 +716,8 @@ void handleIntel(Server* server, uint8 playerID)
                 timeNow - server->player[playerID].timers.sinceLastBaseEnter >= 5) {
                 server->protocol.gameMode.score[server->player[playerID].team]++;
                 uint8 winning = 0;
-                if (server->protocol.gameMode.score[server->player[playerID].team] >= server->protocol.gameMode.scoreLimit) {
+                if (server->protocol.gameMode.score[server->player[playerID].team] >=
+                    server->protocol.gameMode.scoreLimit) {
                     winning = 1;
                 }
                 SendIntelCapture(server, playerID, winning);
@@ -732,7 +737,7 @@ void handleIntel(Server* server, uint8 playerID)
                 }
                 SendRestock(server, playerID);
                 server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
-                server->protocol.gameMode.intel[team]                   = SetIntelTentSpawnPoint(server, team);
+                server->protocol.gameMode.intel[team]              = SetIntelTentSpawnPoint(server, team);
                 SendMoveObject(server, team, team, server->protocol.gameMode.intel[team]);
                 if (winning) {
                     for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
@@ -858,7 +863,8 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
         server->player[playerID].movement.forwardOrientation.y = 0.f;
         server->player[playerID].movement.forwardOrientation.z = 0.f;
 
-        printf("respawn: %f %f %f\n",
+        printf("Player %d spawning at: %f %f %f\n",
+               playerID,
                server->player[playerID].movement.position.x,
                server->player[playerID].movement.position.y,
                server->player[playerID].movement.position.z);
