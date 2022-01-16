@@ -25,8 +25,8 @@
 #include <time.h>
 #include <unistd.h>
 
-Server             server;
-pthread_t          thread[3];
+Server    server;
+pthread_t thread[3];
 
 static unsigned long long get_nanos(void)
 {
@@ -95,26 +95,39 @@ static void ServerInit(Server*     server,
                        const char* team2Name,
                        uint8*      team1Color,
                        uint8*      team2Color,
-                       uint8       gamemode)
+                       uint8       gamemode,
+                       uint8       reset)
 {
     server->globalTimers.updateTime = server->globalTimers.lastUpdateTime = get_nanos();
-    server->protocol.numPlayers = 0;
-    server->protocol.maxPlayers = (connections <= 32) ? connections : 32;
+    if (reset == 0) {
+        server->protocol.numPlayers = 0;
+        server->protocol.maxPlayers = (connections <= 32) ? connections : 32;
+    }
 
     server->map.compressedMap   = NULL;
     server->map.compressedSize  = 0;
     server->protocol.inputFlags = 0;
-
-    for (int i = 0; i < mapCount; ++i) {
-        memcpy(server->map.mapArray, mapArray[i], strlen(mapArray[i]));
+    if (reset == 0) {
+        for (int i = 0; i < mapCount; ++i) {
+            memcpy(server->map.mapArray, mapArray[i], strlen(mapArray[i]));
+        }
+        server->map.mapCount = mapCount;
     }
-    server->map.mapCount = mapCount;
 
-    char vxlMap[64];
-    srand(time(0));
-    uint8 index          = rand() % mapCount;
+    char  vxlMap[64];
+    uint8 index;
+    if (reset == 0) {
+        srand(time(0));
+        index = rand() % mapCount;
+    } else {
+        index = rand() % server->map.mapCount;
+    }
     server->map.mapIndex = index;
-    memcpy(server->mapName, mapArray[index], strlen(mapArray[index]) + 1);
+    if (reset == 0) {
+        memcpy(server->mapName, mapArray[index], strlen(mapArray[index]) + 1);
+    } else {
+        memcpy(server->mapName, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
+    }
     printf("STATUS: Selecting %s as map\n", server->mapName);
 
     snprintf(vxlMap, 64, "%s.vxl", server->mapName);
@@ -177,8 +190,10 @@ static void ServerInit(Server*     server,
     Vector3f height  = {0, 0, 1};
     Vector3f strafe  = {0, 1, 0};
     for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
-        server->player[i].state                       = STATE_DISCONNECTED;
-        server->player[i].queues                      = NULL;
+        if (reset == 0) {
+            server->player[i].state  = STATE_DISCONNECTED;
+            server->player[i].queues = NULL;
+        }
         server->player[i].ups                         = 60;
         server->player[i].timers.timeSinceLastWU      = get_nanos();
         server->player[i].input                       = 0;
@@ -188,13 +203,15 @@ static void ServerInit(Server*     server,
         server->player[i].movement.heightOrientation  = height;
         server->player[i].movement.position           = empty;
         server->player[i].movement.velocity           = empty;
-        PermLevel roleList[5] = {{"manager", &server->managerPasswd, &server->player[i].isManager},
-                                 {"admin", &server->adminPasswd, &server->player[i].isAdmin},
-                                 {"mod", &server->modPasswd, &server->player[i].isMod},
-                                 {"guard", &server->guardPasswd, &server->player[i].isGuard},
-                                 {"trusted", &server->trustedPasswd, &server->player[i].isTrusted}};
-        for (unsigned long x = 0; x < sizeof(roleList) / sizeof(PermLevel); ++x) {
-            server->player[i].roleList[x] = roleList[x];
+        if (reset == 0) {
+            PermLevel roleList[5] = {{"manager", &server->managerPasswd, &server->player[i].isManager},
+                                     {"admin", &server->adminPasswd, &server->player[i].isAdmin},
+                                     {"mod", &server->modPasswd, &server->player[i].isMod},
+                                     {"guard", &server->guardPasswd, &server->player[i].isGuard},
+                                     {"trusted", &server->trustedPasswd, &server->player[i].isTrusted}};
+            for (unsigned long x = 0; x < sizeof(roleList) / sizeof(PermLevel); ++x) {
+                server->player[i].roleList[x] = roleList[x];
+            }
         }
         server->player[i].airborne                         = 0;
         server->player[i].wade                             = 0;
@@ -227,14 +244,16 @@ static void ServerInit(Server*     server,
         server->player[i].blocks                           = 50;
         server->player[i].grenades                         = 3;
         server->player[i].hasIntel                         = 0;
-        server->player[i].isManager                        = 0;
-        server->player[i].isAdmin                          = 0;
-        server->player[i].isMod                            = 0;
-        server->player[i].isGuard                          = 0;
-        server->player[i].isTrusted                        = 0;
-        server->player[i].isInvisible                      = 0;
-        server->player[i].kills                            = 0;
-        server->player[i].deaths                           = 0;
+        if (reset == 0) {
+            server->player[i].isManager = 0;
+            server->player[i].isAdmin   = 0;
+            server->player[i].isMod     = 0;
+            server->player[i].isGuard   = 0;
+            server->player[i].isTrusted = 0;
+        }
+        server->player[i].isInvisible = 0;
+        server->player[i].kills       = 0;
+        server->player[i].deaths      = 0;
         memset(server->player[i].name, 0, 17);
     }
 
@@ -312,166 +331,17 @@ static void ServerInit(Server*     server,
 
 void ServerReset(Server* server)
 {
-    server->globalTimers.updateTime = server->globalTimers.lastUpdateTime = get_nanos();
-
-    server->map.compressedMap   = NULL;
-    server->map.compressedSize  = 0;
-    server->protocol.inputFlags = 0;
-
-    char  vxlMap[64];
-    uint8 index          = rand() % server->map.mapCount;
-    server->map.mapIndex = index;
-    memcpy(server->mapName, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
-    printf("STATUS: Selecting %s as map\n", server->mapName);
-
-    snprintf(vxlMap, 64, "%s.vxl", server->mapName);
-    LoadMap(server, vxlMap);
-
-    STATUS("Loading spawn ranges from map file");
-    char mapConfig[64];
-    snprintf(mapConfig, 64, "%s.json", server->mapName);
-
-    struct json_object* parsed_map_json;
-    parsed_map_json = json_object_from_file(mapConfig);
-
-    struct json_object* team1StartInConfig;
-    struct json_object* team1EndInConfig;
-    struct json_object* team2StartInConfig;
-    struct json_object* team2EndInConfig;
-    struct json_object* authorInConfig;
-    int                 team1Start[3];
-    int                 team2Start[3];
-    int                 team1End[3];
-    int                 team2End[3];
-
-    if (json_object_object_get_ex(parsed_map_json, "team1_start", &team1StartInConfig) == 0) {
-        ERROR("Failed to find team1 start in map config");
-        server->running = 0;
-        return;
-    }
-    if (json_object_object_get_ex(parsed_map_json, "team1_end", &team1EndInConfig) == 0) {
-        ERROR("Failed to find team1 end in map config");
-        server->running = 0;
-        return;
-    }
-    if (json_object_object_get_ex(parsed_map_json, "team2_start", &team2StartInConfig) == 0) {
-        ERROR("Failed to find team2 start in map config");
-        server->running = 0;
-        return;
-    }
-    if (json_object_object_get_ex(parsed_map_json, "team2_end", &team2EndInConfig) == 0) {
-        ERROR("Failed to find team2 start in map config");
-        server->running = 0;
-        return;
-    }
-    if (json_object_object_get_ex(parsed_map_json, "author", &authorInConfig) == 0) {
-        ERROR("Failed to find author in map config");
-        server->running = 0;
-        return;
-    }
-
-    for (uint8 i = 0; i < 2; ++i) {
-        team1Start[i] = json_object_get_int(json_object_array_get_idx(team1StartInConfig, i));
-        team2Start[i] = json_object_get_int(json_object_array_get_idx(team2StartInConfig, i));
-        team1End[i]   = json_object_get_int(json_object_array_get_idx(team1EndInConfig, i));
-        team2End[i]   = json_object_get_int(json_object_array_get_idx(team2EndInConfig, i));
-    }
-
-    json_object_put(parsed_map_json);
-
-    Vector3f empty   = {0, 0, 0};
-    Vector3f forward = {1, 0, 0};
-    Vector3f height  = {0, 0, 1};
-    Vector3f strafe  = {0, 1, 0};
-    for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
-        server->player[i].ups                              = 60;
-        server->player[i].timers.timeSinceLastWU           = get_nanos();
-        server->player[i].input                            = 0;
-        server->player[i].movement.eyePos                  = empty;
-        server->player[i].movement.forwardOrientation      = forward;
-        server->player[i].movement.strafeOrientation       = strafe;
-        server->player[i].movement.heightOrientation       = height;
-        server->player[i].movement.position                = empty;
-        server->player[i].movement.velocity                = empty;
-        server->player[i].airborne                         = 0;
-        server->player[i].wade                             = 0;
-        server->player[i].lastclimb                        = 0;
-        server->player[i].movBackwards                     = 0;
-        server->player[i].movForward                       = 0;
-        server->player[i].movLeft                          = 0;
-        server->player[i].movRight                         = 0;
-        server->player[i].jumping                          = 0;
-        server->player[i].crouching                        = 0;
-        server->player[i].sneaking                         = 0;
-        server->player[i].sprinting                        = 0;
-        server->player[i].primary_fire                     = 0;
-        server->player[i].secondary_fire                   = 0;
-        server->player[i].canBuild                         = 1;
-        server->player[i].allowKilling                     = 1;
-        server->player[i].allowTeamKilling                 = 0;
-        server->player[i].muted                            = 0;
-        server->player[i].toldToMaster                     = 0;
-        server->player[i].timers.sinceLastBaseEnter        = 0;
-        server->player[i].timers.sinceLastBaseEnterRestock = 0;
-        server->player[i].timers.sinceLast3BlockDest       = 0;
-        server->player[i].timers.sinceLastBlockDest        = 0;
-        server->player[i].timers.sinceLastBlockPlac        = 0;
-        server->player[i].timers.sinceLastGrenadeThrown    = 0;
-        server->player[i].timers.sinceLastShot             = 0;
-        server->player[i].timers.timeSinceLastWU           = 0;
-        server->player[i].timers.sinceLastWeaponInput      = 0;
-        server->player[i].HP                               = 100;
-        server->player[i].blocks                           = 50;
-        server->player[i].grenades                         = 3;
-        server->player[i].hasIntel                         = 0;
-        server->player[i].isInvisible                      = 0;
-        server->player[i].kills                            = 0;
-        server->player[i].deaths                           = 0;
-        memset(server->player[i].name, 0, 17);
-    }
-
-    server->globalAB = 1;
-    server->globalAK = 1;
-
-    server->protocol.spawns[0].from.x = team1Start[0];
-    server->protocol.spawns[0].from.y = team1Start[1];
-    server->protocol.spawns[0].from.z = team1Start[2];
-    server->protocol.spawns[0].to.x   = team1End[0];
-    server->protocol.spawns[0].to.y   = team1End[1];
-    server->protocol.spawns[0].to.z   = team1End[2];
-
-    server->protocol.spawns[1].from.x = team2Start[0];
-    server->protocol.spawns[1].from.y = team2Start[1];
-    server->protocol.spawns[1].from.z = team2Start[2];
-    server->protocol.spawns[1].to.x   = team2End[0];
-    server->protocol.spawns[1].to.y   = team2End[1];
-    server->protocol.spawns[1].to.z   = team2End[2];
-
-    server->protocol.colorFog[0] = 0x80;
-    server->protocol.colorFog[1] = 0xE8;
-    server->protocol.colorFog[2] = 0xFF;
-
-    server->protocol.mode = GAME_MODE_CTF;
-
-    // Init CTF
-
-    server->protocol.ctf.score[0]   = 0;
-    server->protocol.ctf.score[1]   = 0;
-    server->protocol.ctf.scoreLimit = 10;
-    server->protocol.ctf.intelFlags = 0;
-    // intel
-    server->protocol.ctf.intel[0]     = SetIntelTentSpawnPoint(server, 0);
-    server->protocol.ctf.intel[1]     = SetIntelTentSpawnPoint(server, 1);
-    server->protocol.ctf.intelHeld[0] = 0;
-    server->protocol.ctf.intelHeld[1] = 0;
-    // bases
-    server->protocol.ctf.base[0] = SetIntelTentSpawnPoint(server, 0);
-    server->protocol.ctf.base[1] = SetIntelTentSpawnPoint(server, 1);
-
-    server->protocol.ctf.base[0].x = floorf(server->protocol.ctf.base[0].x);
-    server->protocol.ctf.base[0].y = floorf(server->protocol.ctf.base[0].y);
-    server->protocol.ctf.base[1].x = floorf(server->protocol.ctf.base[1].x);
-    server->protocol.ctf.base[1].y = floorf(server->protocol.ctf.base[1].y);
+    ServerInit(server,
+               server->protocol.maxPlayers,
+               server->map.mapArray,
+               server->map.mapCount,
+               server->serverName,
+               server->protocol.nameTeamA,
+               server->protocol.nameTeamB,
+               server->protocol.colorTeamA,
+               server->protocol.colorTeamB,
+               server->protocol.mode,
+               1);
 }
 
 static void SendJoiningData(Server* server, uint8 playerID)
@@ -756,7 +626,7 @@ void StartServer(uint16      port,
     STATUS("Intializing server");
     server.running = 1;
     ServerInit(
-    &server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode);
+    &server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
     server.master.enableMasterConnection = master;
     server.managerPasswd                 = managerPasswd;
     server.adminPasswd                   = adminPasswd;
