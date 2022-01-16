@@ -1,6 +1,7 @@
 #include "Protocol.h"
 #include "Structs.h"
 
+#include <stdio.h>
 #include <math.h>
 #include <string.h>
 
@@ -34,13 +35,21 @@ void initGameMode(Server* server, uint8 gamemode)
         server->protocol.gameMode.base[1].y = floorf(server->protocol.gameMode.base[1].y);
     } else if (server->protocol.currentGameMode == GAME_MODE_TC) {
         memcpy(server->gamemodeName, "tc", strlen("tc") + 1);
+        printf("GameMode not supported properly yet\n");
+        server->running = 0;
     }
     else if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
         memcpy(server->gamemodeName, "babel", strlen("babel") + 1);
+        printf("GameMode not supported properly yet\n");
+        server->running = 0;
     }
     else if (server->protocol.currentGameMode == GAME_MODE_ARENA) {
         memcpy(server->gamemodeName, "arena", strlen("arena") + 1);
+        printf("GameMode not supported properly yet\n");
+        server->running = 0;
     } else {
         memcpy(server->gamemodeName, "IDK", strlen("IDK") + 1);
+        printf("Unknown GameMode\n");
+        server->running = 0;
     }
 }
