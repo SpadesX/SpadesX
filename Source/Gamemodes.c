@@ -37,8 +37,26 @@ static void initTC(Server* server)
 static void initBabel(Server* server)
 {
     memcpy(server->gamemodeName, "babel", strlen("babel") + 1);
-    printf("GameMode not supported properly yet\n");
-    server->running = 0;
+    // Init CTF
+    server->protocol.gameMode.score[0]   = 0;
+    server->protocol.gameMode.score[1]   = 0;
+    server->protocol.gameMode.scoreLimit = 10;
+    server->protocol.gameMode.intelFlags = 1;
+    // intel
+    server->protocol.gameMode.intel[0] =
+    SetIntelTentSpawnPoint(server, 0); // We still need highest point of map. While this is 0 for normal map. The
+                                       // platform may not be there in all sizes
+    server->protocol.gameMode.intel[0].x   = MAP_MAX_X / 2;
+    server->protocol.gameMode.intel[0].y   = MAP_MAX_Y / 2;
+    server->protocol.gameMode.intelHeld[0] = 0;
+    // bases
+    server->protocol.gameMode.base[0] = SetIntelTentSpawnPoint(server, 0);
+    server->protocol.gameMode.base[1] = SetIntelTentSpawnPoint(server, 1);
+
+    server->protocol.gameMode.base[0].x = floorf(server->protocol.gameMode.base[0].x);
+    server->protocol.gameMode.base[0].y = floorf(server->protocol.gameMode.base[0].y);
+    server->protocol.gameMode.base[1].x = floorf(server->protocol.gameMode.base[1].x);
+    server->protocol.gameMode.base[1].y = floorf(server->protocol.gameMode.base[1].y);
 }
 
 static void initArena(Server* server)
