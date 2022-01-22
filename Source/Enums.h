@@ -88,6 +88,7 @@ typedef enum {
 typedef enum {
     INTEL_TEAM_A = 1,
     INTEL_TEAM_B = 2,
+    INTEL_TEAM_BOTH = 3,
 } IntelFlag;
 
 typedef enum {

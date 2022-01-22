@@ -163,7 +163,9 @@ void SendIntelPickup(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_INTEL_PICKUP);
     WriteByte(&stream, playerID);
     server->player[playerID].hasIntel    = 1;
+    server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = playerID;
     server->protocol.gameMode.intelHeld[team] = 1;
+
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
             enet_peer_send(server->player[player].peer, 0, packet);
@@ -198,6 +200,7 @@ void SendIntelDrop(Server* server, uint8 playerID)
     server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(
     &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y);
     server->player[playerID].hasIntel    = 0;
+    server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = playerID;
     server->protocol.gameMode.intelHeld[team] = 0;
 
     printf("Dropping intel at X: %d, Y: %d, Z: %d\n",
@@ -360,20 +363,40 @@ void SendStateData(Server* server, uint8 playerID)
     WriteByte(&stream, server->protocol.gameMode.score[0]);   // SCORE TEAM A
     WriteByte(&stream, server->protocol.gameMode.score[1]);   // SCORE TEAM B
     WriteByte(&stream, server->protocol.gameMode.scoreLimit); // SCORE LIMIT
-    WriteByte(&stream, server->protocol.gameMode.intelFlags); // INTEL FLAGS
 
-    if ((server->protocol.gameMode.intelFlags & 1) == 0) {
-        WriteVector3f(&stream, server->protocol.gameMode.intel[0]);
-    } else {
-        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
-        StreamSkip(&stream, 11);
+    if (server->protocol.gameMode.intelHeld[0]) {
+        server->protocol.gameMode.intelFlags = INTEL_TEAM_B;
+    }
+    else if (server->protocol.gameMode.intelHeld[1]) {
+        server->protocol.gameMode.intelFlags = INTEL_TEAM_A;
+    }
+    else if (server->protocol.gameMode.intelHeld[0] && server->protocol.gameMode.intelHeld[1]) {
+        server->protocol.gameMode.intelFlags = INTEL_TEAM_BOTH;
     }
 
-    if ((server->protocol.gameMode.intelFlags & 2) == 0) {
-        WriteVector3f(&stream, server->protocol.gameMode.intel[1]);
+    WriteByte(&stream, server->protocol.gameMode.intelFlags); // INTEL FLAGS
+    printf("%d\n", server->protocol.gameMode.intelFlags);
+
+    if ((server->protocol.gameMode.intelFlags & 1) != 0) {
+        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
+        Vector3f intelLoc = {0, 0 ,0};
+        WriteVector3f(&stream, intelLoc);
+        printf("Team A is holding\n");
+        
     } else {
+        WriteVector3f(&stream, server->protocol.gameMode.intel[0]);
+        printf("Sending team A position\n");
+    }
+
+    if ((server->protocol.gameMode.intelFlags & 2) != 0) {
         WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[1]);
-        StreamSkip(&stream, 11);
+        Vector3f intelLoc = {0, 0 ,0};
+        WriteVector3f(&stream, intelLoc);
+        printf("Team B is holding\n");
+        
+    } else {
+        WriteVector3f(&stream, server->protocol.gameMode.intel[1]);
+        printf("Sending team B position\n");
     }
 
     WriteVector3f(&stream, server->protocol.gameMode.base[0]);
