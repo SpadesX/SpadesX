@@ -664,7 +664,7 @@ uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team)
     Vector3f intelPos  = server->protocol.gameMode.intel[team];
     if ((int) playerPos.y == (int) intelPos.y &&
         ((int) playerPos.z + 3 == (int) intelPos.z ||
-         (server->player[playerID].crouching && (int) playerPos.z + 2 == (int) intelPos.z)) &&
+         ((server->player[playerID].crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) intelPos.z)) &&
         (int) playerPos.x == (int) intelPos.x)
     {
         ret = 1;
@@ -678,7 +678,7 @@ uint8 checkPlayerInTent(Server* server, uint8 playerID)
     Vector3f playerPos = server->player[playerID].movement.position;
     Vector3f tentPos   = server->protocol.gameMode.base[server->player[playerID].team];
     if (((int) playerPos.z + 3 == (int) tentPos.z ||
-         (server->player[playerID].crouching && (int) playerPos.z + 2 == (int) tentPos.z)) &&
+         ((server->player[playerID].crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) tentPos.z)) &&
         ((int) playerPos.x >= (int) tentPos.x - 1 && (int) playerPos.x <= (int) tentPos.x) &&
         ((int) playerPos.y >= (int) tentPos.y - 1 && (int) playerPos.y <= (int) tentPos.y))
     {
@@ -768,6 +768,11 @@ void handleTentAndIntel(Server* server, uint8 playerID)
 
             if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.gameMode.intelHeld[team])) {
                 SendIntelPickup(server, playerID);
+                if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
+                    Vector3f pos = {0, 0, 64};
+                    SendMoveObject(server, server->player[playerID].team, server->player[playerID].team, pos);
+                    server->protocol.gameMode.intel[server->player[playerID].team] = pos;
+                }
             } else if (checkPlayerInTent(server, playerID) &&
                        timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15)
             {
@@ -814,8 +819,16 @@ void handleTentAndIntel(Server* server, uint8 playerID)
                 }
                 SendRestock(server, playerID);
                 server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
-                server->protocol.gameMode.intel[team]              = SetIntelTentSpawnPoint(server, team);
-                SendMoveObject(server, team, team, server->protocol.gameMode.intel[team]);
+                if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
+                    Vector3f babelIntelPos = {255, 255, mapvxlFindTopBlock(&server->map.map, 255, 255)};
+                    server->protocol.gameMode.intel[0] = babelIntelPos;
+                    server->protocol.gameMode.intel[1] = babelIntelPos;
+                    SendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
+                    SendMoveObject(server, 1, 1, server->protocol.gameMode.intel[1]);
+                } else {
+                    server->protocol.gameMode.intel[team] = SetIntelTentSpawnPoint(server, team);
+                    SendMoveObject(server, team, team, server->protocol.gameMode.intel[team]);
+                }
                 if (winning) {
                     for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
                         if (server->player[i].state != STATE_DISCONNECTED) {

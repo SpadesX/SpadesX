@@ -26,6 +26,8 @@ void LoadMap(Server* server, const char* path)
     server->map.mapSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
+    server->map.mapSize = 1024*1024*10; //Absolute hack to get some maps to even load.
+
     uint8* buffer = (uint8*) malloc(server->map.mapSize);
     uint8* mapOut = (uint8*) malloc(server->map.mapSize);
     if (fread(buffer, server->map.mapSize, 1, file) < server->map.mapSize) {

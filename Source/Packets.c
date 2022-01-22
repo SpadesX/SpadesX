@@ -137,7 +137,7 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
     WriteByte(&stream, PACKET_TYPE_INTEL_CAPTURE);
     WriteByte(&stream, playerID);
     WriteByte(&stream, winning);
-    server->player[playerID].hasIntel    = 0;
+    server->player[playerID].hasIntel         = 0;
     server->protocol.gameMode.intelHeld[team] = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
@@ -162,9 +162,9 @@ void SendIntelPickup(Server* server, uint8 playerID)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INTEL_PICKUP);
     WriteByte(&stream, playerID);
-    server->player[playerID].hasIntel    = 1;
+    server->player[playerID].hasIntel                                        = 1;
     server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = playerID;
-    server->protocol.gameMode.intelHeld[team] = 1;
+    server->protocol.gameMode.intelHeld[team]                                = 1;
 
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
@@ -188,20 +188,33 @@ void SendIntelDrop(Server* server, uint8 playerID)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INTEL_DROP);
     WriteByte(&stream, playerID);
-    WriteFloat(&stream, server->player[playerID].movement.position.x);
-    WriteFloat(&stream, server->player[playerID].movement.position.y);
-    WriteFloat(&stream,
-               (float) mapvxlFindTopBlock(&server->map.map,
-                                          server->player[playerID].movement.position.x,
-                                          server->player[playerID].movement.position.y));
+    if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
+        WriteFloat(&stream, MAP_MAX_X / 2);
+        WriteFloat(&stream, MAP_MAX_Y / 2);
+        WriteFloat(&stream, (float) mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2));
 
-    server->protocol.gameMode.intel[team].x = (int) server->player[playerID].movement.position.x;
-    server->protocol.gameMode.intel[team].y = (int) server->player[playerID].movement.position.y;
-    server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(
-    &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y);
-    server->player[playerID].hasIntel    = 0;
-    server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = playerID;
-    server->protocol.gameMode.intelHeld[team] = 0;
+        server->protocol.gameMode.intel[team].x = MAP_MAX_X / 2;
+        server->protocol.gameMode.intel[team].y = MAP_MAX_Y / 2;
+        server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2);
+        server->protocol.gameMode.intel[server->player[playerID].team] = server->protocol.gameMode.intel[team];
+        SendMoveObject(
+        server, server->player[playerID].team, server->player[playerID].team, server->protocol.gameMode.intel[team]);
+    } else {
+        WriteFloat(&stream, server->player[playerID].movement.position.x);
+        WriteFloat(&stream, server->player[playerID].movement.position.y);
+        WriteFloat(&stream,
+                   (float) mapvxlFindTopBlock(&server->map.map,
+                                              server->player[playerID].movement.position.x,
+                                              server->player[playerID].movement.position.y));
+
+        server->protocol.gameMode.intel[team].x = (int) server->player[playerID].movement.position.x;
+        server->protocol.gameMode.intel[team].y = (int) server->player[playerID].movement.position.y;
+        server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(
+        &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y);
+    }
+    server->player[playerID].hasIntel                                        = 0;
+    server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = 32;
+    server->protocol.gameMode.intelHeld[team]                                = 0;
 
     printf("Dropping intel at X: %d, Y: %d, Z: %d\n",
            (int) server->protocol.gameMode.intel[team].x,
@@ -356,7 +369,11 @@ void SendStateData(Server* server, uint8 playerID)
     WriteColor3i(&stream, server->protocol.colorTeam[1]);
     WriteArray(&stream, server->protocol.nameTeam[0], 10);
     WriteArray(&stream, server->protocol.nameTeam[1], 10);
-    WriteByte(&stream, server->protocol.currentGameMode);
+    if (server->protocol.currentGameMode == 0 || server->protocol.currentGameMode == 1) {
+        WriteByte(&stream, server->protocol.currentGameMode);
+    } else {
+        WriteByte(&stream, 0);
+    }
 
     // MODE CTF:
 
@@ -366,11 +383,9 @@ void SendStateData(Server* server, uint8 playerID)
 
     if (server->protocol.gameMode.intelHeld[0]) {
         server->protocol.gameMode.intelFlags = INTEL_TEAM_B;
-    }
-    else if (server->protocol.gameMode.intelHeld[1]) {
+    } else if (server->protocol.gameMode.intelHeld[1]) {
         server->protocol.gameMode.intelFlags = INTEL_TEAM_A;
-    }
-    else if (server->protocol.gameMode.intelHeld[0] && server->protocol.gameMode.intelHeld[1]) {
+    } else if (server->protocol.gameMode.intelHeld[0] && server->protocol.gameMode.intelHeld[1]) {
         server->protocol.gameMode.intelFlags = INTEL_TEAM_BOTH;
     }
 
@@ -379,10 +394,10 @@ void SendStateData(Server* server, uint8 playerID)
 
     if ((server->protocol.gameMode.intelFlags & 1) != 0) {
         WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
-        Vector3f intelLoc = {0, 0 ,0};
+        Vector3f intelLoc = {0, 0, 0};
         WriteVector3f(&stream, intelLoc);
         printf("Team A is holding\n");
-        
+
     } else {
         WriteVector3f(&stream, server->protocol.gameMode.intel[0]);
         printf("Sending team A position\n");
@@ -390,10 +405,10 @@ void SendStateData(Server* server, uint8 playerID)
 
     if ((server->protocol.gameMode.intelFlags & 2) != 0) {
         WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[1]);
-        Vector3f intelLoc = {0, 0 ,0};
+        Vector3f intelLoc = {0, 0, 0};
         WriteVector3f(&stream, intelLoc);
         printf("Team B is holding\n");
-        
+
     } else {
         WriteVector3f(&stream, server->protocol.gameMode.intel[1]);
         printf("Sending team B position\n");
@@ -532,7 +547,7 @@ void SendMapStart(Server* server, uint8 playerID)
         server->player[playerID].state = STATE_LOADING_CHUNKS;
 
         // map
-        uint8* out = (uint8*) malloc(1024*1024*10);// TODO: Make me dynamic based on changes to map
+        uint8* out = (uint8*) malloc(1024 * 1024 * 10); // TODO: Make me dynamic based on changes to map
         mapvxlWriteMap(&server->map.map, out);
         server->map.compressedMap       = CompressData(out, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
         server->player[playerID].queues = server->map.compressedMap;
@@ -887,8 +902,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
            (int) z + 2,
            server->player[playerID].crouching);
 #endif
-    if (validPlayerPos(server, playerID, x, y, z))
-    {
+    if (validPlayerPos(server, playerID, x, y, z)) {
         server->player[playerID].movement.position.x   = x;
         server->player[playerID].movement.position.y   = y;
         server->player[playerID].movement.position.z   = z;
@@ -929,8 +943,8 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     ReadColor3i(data, server->player[playerID].color);
     server->player[playerID].ups = 60;
 
-    uint32 length = DataLeft(data);
-    uint8 invName = 0;
+    uint32 length  = DataLeft(data);
+    uint8  invName = 0;
     if (length > 16) {
         WARNING("name too long");
         length = 16;
@@ -940,12 +954,11 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
 
         if (strlen(server->player[playerID].name) == 0) {
             snprintf(server->player[playerID].name, strlen("Deuce") + 1, "Deuce");
-            length = 5;
+            length  = 5;
             invName = 1;
-        }
-        else if (server->player[playerID].name[0] == '#') {
+        } else if (server->player[playerID].name[0] == '#') {
             snprintf(server->player[playerID].name, strlen("Deuce") + 1, "Deuce");
-            length = 5;
+            length  = 5;
             invName = 1;
         }
 
@@ -964,7 +977,7 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
                 strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
             {
                 snprintf(server->player[playerID].name, strlen("Deuce") + 1, "Deuce");
-                length = 5;
+                length  = 5;
                 invName = 1;
                 free(lowerCaseName);
                 return;
@@ -1009,15 +1022,24 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     }
     server->player[playerID].state = STATE_SPAWNING;
     if (server->player[playerID].welcomeSent == 0) {
-        sendServerNotice(server, playerID, "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8");
+        sendServerNotice(
+        server, playerID, "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8");
         sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
         sendServerNotice(server, playerID, "Welcome to SpadesX server.");
         if (invName) {
-            char message[122] = "Your name was either empty, had # in front of it or contained something nasty. Your name has been set to ";
+            char message[122] =
+            "Your name was either empty, had # in front of it or contained something nasty. Your name has been set to ";
             strlcat(message, server->player[playerID].name, 122);
             sendServerNotice(server, playerID, message);
         }
-        server->player[playerID].welcomeSent = 1; //So we dont send the message to the player on each time they spawn.
+        server->player[playerID].welcomeSent = 1; // So we dont send the message to the player on each time they spawn.
+    }
+
+    if (server->protocol.gameMode.intelHeld[0] == 0) {
+        SendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
+    }
+    if (server->protocol.gameMode.intelHeld[1] == 0) {
+        SendMoveObject(server, 1, 1, server->protocol.gameMode.intel[1]);
     }
 }
 
@@ -1061,6 +1083,10 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                             time_t timeNow = get_nanos();
                             if (diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLastBlockDest, NANO_IN_MILLI * 100)) {
+                                if (server->protocol.currentGameMode == GAME_MODE_BABEL && Z == 1) //Make this check for gamemodes and not babel only.
+                                {
+                                    return;
+                                }
                                 Vector3i  position = {X, Y, Z};
                                 Vector3i* neigh    = getNeighbors(position);
                                 mapvxlSetAir(&server->map.map, position.x, position.y, position.z);

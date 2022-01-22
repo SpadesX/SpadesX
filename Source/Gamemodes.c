@@ -1,9 +1,19 @@
 #include "Protocol.h"
 #include "Structs.h"
+#include "libmapvxl.h"
 
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+
+/*static int color4iToInt(Color4i color)
+{
+    int intColor = 0;
+    intColor     = ((uint64) (((uint8) color[0]) << 24) | (uint64) (((uint8) color[1]) << 16) |
+                (uint64) (((uint8) color[2]) << 8) | (uint64) ((uint8) color[3]));
+    return intColor;
+}*/
+
 static void initCTF(Server* server)
 {
     memcpy(server->gamemodeName, "ctf", strlen("ctf") + 1);
@@ -41,14 +51,27 @@ static void initBabel(Server* server)
     server->protocol.gameMode.score[0]   = 0;
     server->protocol.gameMode.score[1]   = 0;
     server->protocol.gameMode.scoreLimit = 10;
-    server->protocol.gameMode.intelFlags = 1;
+    server->protocol.gameMode.intelFlags = 0;
+
+    for (int x = 206; x <= 306; ++x) {
+        for (int y = 240; y <= 272; ++y) {
+            mapvxlSetColor(&server->map.map, x, y, 1, 4228250625);
+        }
+    }
     // intel
-    server->protocol.gameMode.intel[0] =
-    SetIntelTentSpawnPoint(server, 0); // We still need highest point of map. While this is 0 for normal map. The
-                                       // platform may not be there in all sizes
+    server->protocol.gameMode.intel[0].z =
+    mapvxlFindTopBlock(&server->map.map, 255, 255); // We still need highest point of map. While this is 0 for normal
+                                                    // map. The platform may not be there in all sizes
     server->protocol.gameMode.intel[0].x   = MAP_MAX_X / 2;
     server->protocol.gameMode.intel[0].y   = MAP_MAX_Y / 2;
     server->protocol.gameMode.intelHeld[0] = 0;
+
+    server->protocol.gameMode.intel[1].z =
+    mapvxlFindTopBlock(&server->map.map, 255, 255); // We still need highest point of map. While this is 0 for normal
+                                                    // map. The platform may not be there in all sizes
+    server->protocol.gameMode.intel[1].x   = MAP_MAX_X / 2;
+    server->protocol.gameMode.intel[1].y   = MAP_MAX_Y / 2;
+    server->protocol.gameMode.intelHeld[1] = 0;
     // bases
     server->protocol.gameMode.base[0] = SetIntelTentSpawnPoint(server, 0);
     server->protocol.gameMode.base[1] = SetIntelTentSpawnPoint(server, 1);
