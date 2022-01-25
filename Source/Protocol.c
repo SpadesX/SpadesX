@@ -875,6 +875,10 @@ void handleGrenade(Server* server, uint8 playerID)
                                         server->player[playerID].grenade[i].position.z - 1) &&
                     gamemodeBlockChecks(server,
                                         server->player[playerID].grenade[i].position.x + 1,
+                                        server->player[playerID].grenade[i].position.y + 1,
+                                        server->player[playerID].grenade[i].position.z) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x + 1,
                                         server->player[playerID].grenade[i].position.y - 1,
                                         server->player[playerID].grenade[i].position.z + 1) &&
                     gamemodeBlockChecks(server,
@@ -882,6 +886,10 @@ void handleGrenade(Server* server, uint8 playerID)
                                         server->player[playerID].grenade[i].position.y - 1,
                                         server->player[playerID].grenade[i].position.z - 1) &&
                     gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x + 1,
+                                        server->player[playerID].grenade[i].position.y - 1,
+                                        server->player[playerID].grenade[i].position.z) &&
+                    gamemodeBlockChecks(server,
                                         server->player[playerID].grenade[i].position.x - 1,
                                         server->player[playerID].grenade[i].position.y + 1,
                                         server->player[playerID].grenade[i].position.z + 1) &&
@@ -891,12 +899,20 @@ void handleGrenade(Server* server, uint8 playerID)
                                         server->player[playerID].grenade[i].position.z - 1) &&
                     gamemodeBlockChecks(server,
                                         server->player[playerID].grenade[i].position.x - 1,
+                                        server->player[playerID].grenade[i].position.y + 1,
+                                        server->player[playerID].grenade[i].position.z) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x - 1,
                                         server->player[playerID].grenade[i].position.y - 1,
                                         server->player[playerID].grenade[i].position.z + 1) &&
                     gamemodeBlockChecks(server,
                                         server->player[playerID].grenade[i].position.x - 1,
                                         server->player[playerID].grenade[i].position.y - 1,
-                                        server->player[playerID].grenade[i].position.z - 1))
+                                        server->player[playerID].grenade[i].position.z - 1) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x - 1,
+                                        server->player[playerID].grenade[i].position.y - 1,
+                                        server->player[playerID].grenade[i].position.z))
                 {
                     SendBlockAction(server,
                                     playerID,
