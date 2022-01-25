@@ -706,7 +706,13 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
                 server->player[playerID].grenade[i].velocity.x = velX * normLength;
                 server->player[playerID].grenade[i].velocity.y = velY * normLength;
                 server->player[playerID].grenade[i].velocity.z = velZ * normLength;
-                if (vecfValidPos(server->player[playerID].grenade[i].position)) {
+                Vector3f posZ1 = server->player[playerID].grenade[i].position;
+                posZ1.z += 1;
+                Vector3f posZ2 = server->player[playerID].grenade[i].position;
+                posZ2.z += 2;
+                if (vecfValidPos(server->player[playerID].grenade[i].position) ||
+                    (vecfValidPos(posZ1) && server->player[playerID].movement.position.z < 0) ||
+                    (vecfValidPos(posZ2) && server->player[playerID].movement.position.z < 0)) {
                     SendGrenade(server,
                                 playerID,
                                 server->player[playerID].grenade[i].fuse,
