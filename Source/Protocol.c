@@ -33,6 +33,18 @@ static unsigned long long get_nanos(void)
 
 }*/
 
+uint8 gamemodeBlockChecks(Server* server, int x, int y, int z)
+{
+    printf("X: %d, Y: %d, Z: %d\n", x, y, z);
+    if (((((x >= 206 && x <= 306) && (y >= 240 && y <= 272) && (z == 2 || z == 0)) ||
+          ((x >= 205 && x <= 307) && (y >= 239 && y <= 273) && (z == 1))) &&
+         server->protocol.currentGameMode == GAME_MODE_BABEL))
+    {
+        return 0;
+    }
+    return 1;
+}
+
 void initPlayer(Server*  server,
                 uint8    playerID,
                 uint8    reset,
@@ -820,7 +832,7 @@ void handleTentAndIntel(Server* server, uint8 playerID)
                 SendRestock(server, playerID);
                 server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
                 if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-                    Vector3f babelIntelPos = {255, 255, mapvxlFindTopBlock(&server->map.map, 255, 255)};
+                    Vector3f babelIntelPos             = {255, 255, mapvxlFindTopBlock(&server->map.map, 255, 255)};
                     server->protocol.gameMode.intel[0] = babelIntelPos;
                     server->protocol.gameMode.intel[1] = babelIntelPos;
                     SendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
@@ -846,16 +858,54 @@ void handleGrenade(Server* server, uint8 playerID)
 {
     for (int i = 0; i < 3; ++i) {
         if (server->player[playerID].grenade[i].sent) {
+            printf("The grenade was sent\n");
             move_grenade(server, playerID, i);
             if ((get_nanos() - server->player[playerID].grenade[i].timeSinceSent) / 1000000000.f >=
                 server->player[playerID].grenade[i].fuse)
             {
-                SendBlockAction(server,
-                                playerID,
-                                3,
-                                server->player[playerID].grenade[i].position.x,
-                                server->player[playerID].grenade[i].position.y,
-                                server->player[playerID].grenade[i].position.z);
+                printf("Grenade went boom boom\n");
+                uint8 allowToDestroy = 0;
+                if (gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x + 1,
+                                        server->player[playerID].grenade[i].position.y + 1,
+                                        server->player[playerID].grenade[i].position.z + 1) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x + 1,
+                                        server->player[playerID].grenade[i].position.y + 1,
+                                        server->player[playerID].grenade[i].position.z - 1) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x + 1,
+                                        server->player[playerID].grenade[i].position.y - 1,
+                                        server->player[playerID].grenade[i].position.z + 1) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x + 1,
+                                        server->player[playerID].grenade[i].position.y - 1,
+                                        server->player[playerID].grenade[i].position.z - 1) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x - 1,
+                                        server->player[playerID].grenade[i].position.y + 1,
+                                        server->player[playerID].grenade[i].position.z + 1) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x - 1,
+                                        server->player[playerID].grenade[i].position.y + 1,
+                                        server->player[playerID].grenade[i].position.z - 1) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x - 1,
+                                        server->player[playerID].grenade[i].position.y - 1,
+                                        server->player[playerID].grenade[i].position.z + 1) &&
+                    gamemodeBlockChecks(server,
+                                        server->player[playerID].grenade[i].position.x - 1,
+                                        server->player[playerID].grenade[i].position.y - 1,
+                                        server->player[playerID].grenade[i].position.z - 1))
+                {
+                    SendBlockAction(server,
+                                    playerID,
+                                    3,
+                                    server->player[playerID].grenade[i].position.x,
+                                    server->player[playerID].grenade[i].position.y,
+                                    server->player[playerID].grenade[i].position.z);
+                    allowToDestroy = 1;
+                }
                 for (int y = 0; y < server->protocol.maxPlayers; ++y) {
                     if (server->player[y].state == STATE_READY) {
                         int diffX =
@@ -888,15 +938,17 @@ void handleGrenade(Server* server, uint8 playerID)
                         (y >= 0 && y <= MAP_MAX_Y && y - 1 >= 0 && y - 1 <= MAP_MAX_Y && y + 1 >= 0 &&
                          y + 1 <= MAP_MAX_Y))
                     {
-                        mapvxlSetAir(&server->map.map, x - 1, y - 1, z);
-                        mapvxlSetAir(&server->map.map, x, y - 1, z);
-                        mapvxlSetAir(&server->map.map, x + 1, y - 1, z);
-                        mapvxlSetAir(&server->map.map, x - 1, y, z);
-                        mapvxlSetAir(&server->map.map, x, y, z);
-                        mapvxlSetAir(&server->map.map, x + 1, y, z);
-                        mapvxlSetAir(&server->map.map, x - 1, y + 1, z);
-                        mapvxlSetAir(&server->map.map, x, y + 1, z);
-                        mapvxlSetAir(&server->map.map, x + 1, y + 1, z);
+                        if (allowToDestroy) {
+                            mapvxlSetAir(&server->map.map, x - 1, y - 1, z);
+                            mapvxlSetAir(&server->map.map, x, y - 1, z);
+                            mapvxlSetAir(&server->map.map, x + 1, y - 1, z);
+                            mapvxlSetAir(&server->map.map, x - 1, y, z);
+                            mapvxlSetAir(&server->map.map, x, y, z);
+                            mapvxlSetAir(&server->map.map, x + 1, y, z);
+                            mapvxlSetAir(&server->map.map, x - 1, y + 1, z);
+                            mapvxlSetAir(&server->map.map, x, y + 1, z);
+                            mapvxlSetAir(&server->map.map, x + 1, y + 1, z);
+                        }
                         Vector3i pos;
                         pos.x = server->player[playerID].grenade[i].position.x;
                         pos.y = server->player[playerID].grenade[i].position.y;

@@ -396,22 +396,18 @@ void SendStateData(Server* server, uint8 playerID)
         WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
         Vector3f intelLoc = {0, 0, 0};
         WriteVector3f(&stream, intelLoc);
-        printf("Team A is holding\n");
 
     } else {
         WriteVector3f(&stream, server->protocol.gameMode.intel[0]);
-        printf("Sending team A position\n");
     }
 
     if ((server->protocol.gameMode.intelFlags & 2) != 0) {
         WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[1]);
         Vector3f intelLoc = {0, 0, 0};
         WriteVector3f(&stream, intelLoc);
-        printf("Team B is holding\n");
 
     } else {
         WriteVector3f(&stream, server->protocol.gameMode.intel[1]);
-        printf("Sending team B position\n");
     }
 
     WriteVector3f(&stream, server->protocol.gameMode.base[0]);
@@ -705,6 +701,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
                 float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
                 if (length > 2)
                     return;
+
                 float normLength                               = 1 / length;
                 server->player[playerID].grenade[i].velocity.x = velX * normLength;
                 server->player[playerID].grenade[i].velocity.y = velY * normLength;
@@ -1065,28 +1062,27 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                 switch (actionType) {
                     case 0:
                     {
-                        time_t timeNow = get_nanos();
-                        if (server->player[playerID].blocks > 0 &&
-                            diffIsOlderThen(
-                            timeNow, &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
-                        {
-                            mapvxlSetColor(&server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
-                            server->player[playerID].blocks--;
-                            moveIntelAndTentUp(server);
-                            SendBlockAction(server, playerID, actionType, X, Y, Z);
+                        if (gamemodeBlockChecks(server, X, Y, Z)) {
+                            time_t timeNow = get_nanos();
+                            if (server->player[playerID].blocks > 0 &&
+                                diffIsOlderThen(
+                                timeNow, &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
+                            {
+                                mapvxlSetColor(
+                                &server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
+                                server->player[playerID].blocks--;
+                                moveIntelAndTentUp(server);
+                                SendBlockAction(server, playerID, actionType, X, Y, Z);
+                            }
                         }
                     } break;
 
                     case 1:
                     {
-                        if (Z < 62) {
+                        if (Z < 62 && gamemodeBlockChecks(server, X, Y, Z)) {
                             time_t timeNow = get_nanos();
                             if (diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLastBlockDest, NANO_IN_MILLI * 100)) {
-                                if (server->protocol.currentGameMode == GAME_MODE_BABEL && Z == 1) //Make this check for gamemodes and not babel only.
-                                {
-                                    return;
-                                }
                                 Vector3i  position = {X, Y, Z};
                                 Vector3i* neigh    = getNeighbors(position);
                                 mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
@@ -1107,26 +1103,30 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
 
                     case 2:
                     {
-                        time_t timeNow = get_nanos();
-                        if (diffIsOlderThen(
-                            timeNow, &server->player[playerID].timers.sinceLast3BlockDest, NANO_IN_MILLI * 300)) {
-                            for (int z = Z - 1; z <= Z + 1; z++) {
-                                if (z < 62) {
-                                    mapvxlSetAir(&server->map.map, X, Y, z);
-                                    if (server->player[playerID].blocks < 50) {
-                                        server->player[playerID].blocks++;
-                                    }
-                                    Vector3i  position = {X, Y, z};
-                                    Vector3i* neigh    = getNeighbors(position);
-                                    mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
-                                    for (int i = 0; i < 6; ++i) {
-                                        if (neigh[i].z < 62) {
-                                            checkNode(server, neigh[i]);
+                        if (gamemodeBlockChecks(server, X, Y, Z) && gamemodeBlockChecks(server, X, Y, Z + 1) &&
+                            gamemodeBlockChecks(server, X, Y, Z - 1))
+                        {
+                            time_t timeNow = get_nanos();
+                            if (diffIsOlderThen(
+                                timeNow, &server->player[playerID].timers.sinceLast3BlockDest, NANO_IN_MILLI * 300)) {
+                                for (int z = Z - 1; z <= Z + 1; z++) {
+                                    if (z < 62) {
+                                        mapvxlSetAir(&server->map.map, X, Y, z);
+                                        if (server->player[playerID].blocks < 50) {
+                                            server->player[playerID].blocks++;
+                                        }
+                                        Vector3i  position = {X, Y, z};
+                                        Vector3i* neigh    = getNeighbors(position);
+                                        mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
+                                        for (int i = 0; i < 6; ++i) {
+                                            if (neigh[i].z < 62) {
+                                                checkNode(server, neigh[i]);
+                                            }
                                         }
                                     }
                                 }
+                                SendBlockAction(server, playerID, actionType, X, Y, Z);
                             }
-                            SendBlockAction(server, playerID, actionType, X, Y, Z);
                         }
                     } break;
                 }
