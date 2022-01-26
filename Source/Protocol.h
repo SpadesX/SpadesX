@@ -2,10 +2,10 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
-#include "Enums.h"
 #include "Map.h"
 
 #include <DataStream.h>
+#include <Enums.h>
 #include <Queue.h>
 #include <Types.h>
 #include <enet/enet.h>

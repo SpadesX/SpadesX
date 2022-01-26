@@ -2,7 +2,6 @@
 #include "Server.h"
 
 #include "Conversion.h"
-#include "Enums.h"
 #include "Map.h"
 #include "Master.h"
 #include "Packets.h"
@@ -11,6 +10,7 @@
 
 #include <Compress.h>
 #include <DataStream.h>
+#include <Enums.h>
 #include <Gamemodes.h>
 #include <Line.h>
 #include <Queue.h>
@@ -407,10 +407,10 @@ static void ServerUpdate(Server* server, int timeout)
                 playerID = (uint8) ((size_t) event.peer->data);
                 SendPlayerLeft(server, playerID);
                 SendIntelDrop(server, playerID);
-                Vector3f empty                                            = {0, 0, 0};
-                Vector3f forward                                          = {1, 0, 0};
-                Vector3f height                                           = {0, 0, 1};
-                Vector3f strafe                                           = {0, 1, 0};
+                Vector3f empty   = {0, 0, 0};
+                Vector3f forward = {1, 0, 0};
+                Vector3f height  = {0, 0, 1};
+                Vector3f strafe  = {0, 1, 0};
                 initPlayer(server, playerID, 0, 1, empty, forward, strafe, height);
                 server->protocol.numPlayers--;
                 server->protocol.teamUserCount[server->player[playerID].team]--;

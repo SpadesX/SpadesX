@@ -1,17 +1,17 @@
 #include "Commands.h"
 
-#include "Enums.h"
+#include "Master.h"
 #include "Packets.h"
 #include "Protocol.h"
 #include "Structs.h"
 #include "Types.h"
-#include "Master.h"
 
+#include <Enums.h>
 #include <ctype.h>
+#include <enet/enet.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
-#include <enet/enet.h>
 
 float max(float num1, float num2)
 {
@@ -477,7 +477,8 @@ static void intelCommand(Server* server, uint8 player)
     }
 }
 
-static void masterCommand(Server* server, uint8 player) {
+static void masterCommand(Server* server, uint8 player)
+{
     if (server->master.enableMasterConnection == 1) {
         server->master.enableMasterConnection = 0;
         enet_host_destroy(server->master.client);
@@ -560,8 +561,7 @@ void handleCommands(Server* server, uint8 player, char* message)
         clinCommand(server, command, message, player);
     } else if (strcmp(command, "/intel") == 0) {
         intelCommand(server, player);
-    } else if (strcmp(command, "/master") == 0 &&
-               (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod)) {
+    } else if (strcmp(command, "/master") == 0 && (srvPlayer.isManager || srvPlayer.isAdmin || srvPlayer.isMod)) {
         masterCommand(server, player);
     }
 }

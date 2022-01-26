@@ -79,8 +79,8 @@ inline void ReadColor3i(DataStream* stream, Color3i color)
     color.colorArray[R_CHANNEL] = stream->data[stream->pos++];
     color.colorArray[G_CHANNEL] = stream->data[stream->pos++];
     color.colorArray[B_CHANNEL] = stream->data[stream->pos++];
-    Color3i temp = color;
-    color = temp; //Lets not error out over not using the damn variable but only setting it.
+    Color3i temp                = color;
+    color                       = temp; // Lets not error out over not using the damn variable but only setting it.
 }
 
 inline void ReadColor4i(DataStream* stream, Color4i color)
@@ -90,8 +90,8 @@ inline void ReadColor4i(DataStream* stream, Color4i color)
     color.colorArray[R_CHANNEL] = stream->data[stream->pos++];
     color.colorArray[G_CHANNEL] = stream->data[stream->pos++];
     color.colorArray[B_CHANNEL] = stream->data[stream->pos++];
-    Color4i temp = color;
-    color = temp;
+    Color4i temp                = color;
+    color                       = temp;
 }
 
 void ReadArray(DataStream* stream, void* output, uint32 length);

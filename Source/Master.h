@@ -2,8 +2,9 @@
 #ifndef MASTER_H
 #define MASTER_H
 
-#include "Enums.h"
 #include "Structs.h"
+
+#include <Enums.h>
 #include <Types.h>
 
 void* keepMasterAlive(void* server);

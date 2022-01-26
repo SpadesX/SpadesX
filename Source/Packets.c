@@ -1,11 +1,11 @@
 // Copyright DarkNeutrino 2021
 #include "Commands.h"
-#include "Enums.h"
 #include "Protocol.h"
 #include "Structs.h"
 
 #include <Compress.h>
 #include <DataStream.h>
+#include <Enums.h>
 #include <Line.h>
 #include <Queue.h>
 #include <Types.h>
@@ -697,13 +697,14 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
                 server->player[playerID].grenade[i].velocity.x = velX * normLength;
                 server->player[playerID].grenade[i].velocity.y = velY * normLength;
                 server->player[playerID].grenade[i].velocity.z = velZ * normLength;
-                Vector3f posZ1 = server->player[playerID].grenade[i].position;
+                Vector3f posZ1                                 = server->player[playerID].grenade[i].position;
                 posZ1.z += 1;
                 Vector3f posZ2 = server->player[playerID].grenade[i].position;
                 posZ2.z += 2;
                 if (vecfValidPos(server->player[playerID].grenade[i].position) ||
                     (vecfValidPos(posZ1) && server->player[playerID].movement.position.z < 0) ||
-                    (vecfValidPos(posZ2) && server->player[playerID].movement.position.z < 0)) {
+                    (vecfValidPos(posZ2) && server->player[playerID].movement.position.z < 0))
+                {
                     SendGrenade(server,
                                 playerID,
                                 server->player[playerID].grenade[i].fuse,
@@ -1065,8 +1066,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                 diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
                             {
-                                mapvxlSetColor(
-                                &server->map.map, X, Y, Z, server->player[playerID].toolColor.color);
+                                mapvxlSetColor(&server->map.map, X, Y, Z, server->player[playerID].toolColor.color);
                                 server->player[playerID].blocks--;
                                 moveIntelAndTentUp(server);
                                 SendBlockAction(server, playerID, actionType, X, Y, Z);

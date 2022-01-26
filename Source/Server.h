@@ -2,10 +2,10 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include "Enums.h"
 #include "Protocol.h"
 #include "Util/Line.h"
 
+#include <Enums.h>
 #include <Queue.h>
 #include <Types.h>
 #include <enet/enet.h>
@@ -28,9 +28,9 @@ void StartServer(uint16      port,
                  const char* modPasswd,
                  const char* guardPasswd,
                  const char* trustedPasswd,
-                 const char*       serverName,
-                 const char*       team1Name,
-                 const char*       team2Name,
+                 const char* serverName,
+                 const char* team1Name,
+                 const char* team2Name,
                  uint8*      team1Color,
                  uint8*      team2Color,
                  uint8       gamemode);

@@ -98,10 +98,10 @@ typedef struct
     uint8 numPlayers;
     uint8 maxPlayers;
     //
-    Color3i   colorFog;
-    Color3i   colorTeam[2];
-    char      nameTeam[2][11];
-    GameMode  currentGameMode;
+    Color3i      colorFog;
+    Color3i      colorTeam[2];
+    char         nameTeam[2][11];
+    GameMode     currentGameMode;
     GameModeVars gameMode;
     // respawn area
     Quad3D spawns[2];
