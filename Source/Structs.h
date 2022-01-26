@@ -2,9 +2,9 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#include "Enums.h"
 #include "enet/protocol.h"
 
+#include <Enums.h>
 #include <Queue.h>
 #include <Types.h>
 #include <bits/types/struct_timeval.h>

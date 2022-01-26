@@ -21,6 +21,7 @@
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
 int  validate_hit(Vector3f shooter, Vector3f orientation, Vector3f otherPos, float tolerance);
 
+
 static unsigned long long get_nanos(void)
 {
     struct timespec ts;

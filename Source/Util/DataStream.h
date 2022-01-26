@@ -51,7 +51,7 @@ inline uint16 ReadShort(DataStream* stream)
     return value;
 }
 
-inline uint32 ReadInt(DataStream* stream)
+static inline uint32 ReadInt(DataStream* stream)
 {
     ACCESS_CHECK(stream, 4);
     uint32 value = 0;
@@ -62,7 +62,7 @@ inline uint32 ReadInt(DataStream* stream)
     return value;
 }
 
-inline float ReadFloat(DataStream* stream)
+static inline float ReadFloat(DataStream* stream)
 {
     union
     {
