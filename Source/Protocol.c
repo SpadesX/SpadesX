@@ -1,10 +1,10 @@
 // Copyright DarkNeutrino 2021
-#include "Enums.h"
 #include "Packets.h"
 #include "Physics.h"
 #include "Server.h"
 #include "Structs.h"
 
+#include <Enums.h>
 #include <DataStream.h>
 #include <Types.h>
 #include <ctype.h>
