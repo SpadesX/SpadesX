@@ -48,9 +48,9 @@ static void initBabel(Server* server)
     server->protocol.gameMode.intelFlags = 0;
 
     Color4i platformColor;
-    platformColor.colorArray[B_CHANNEL] = 111;
-    platformColor.colorArray[G_CHANNEL] = 111;
-    platformColor.colorArray[R_CHANNEL] = 111;
+    platformColor.colorArray[B_CHANNEL] = 255;
+    platformColor.colorArray[G_CHANNEL] = 255;
+    platformColor.colorArray[R_CHANNEL] = 0;
 
     for (int x = 206; x <= 306; ++x) {
         for (int y = 240; y <= 272; ++y) {
