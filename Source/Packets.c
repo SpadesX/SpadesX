@@ -40,14 +40,6 @@ long cast_ray(Server* server,
               long*   y,
               long*   z);
 
-int color4iToInt(Color4i color)
-{
-    int intColor = 0;
-    intColor     = ((uint64) (((uint8) color[0]) << 24) | (uint64) (((uint8) color[1]) << 16) |
-                (uint64) (((uint8) color[2]) << 8) | (uint64) ((uint8) color[3]));
-    return intColor;
-}
-
 inline static uint8 allowShot(Server*  server,
                               uint8    playerID,
                               uint8    hitPlayerID,
@@ -1075,7 +1067,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                 timeNow, &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
                             {
                                 mapvxlSetColor(
-                                &server->map.map, X, Y, Z, color4iToInt(server->player[playerID].toolColor));
+                                &server->map.map, X, Y, Z, server->player[playerID].toolColor.color);
                                 server->player[playerID].blocks--;
                                 moveIntelAndTentUp(server);
                                 SendBlockAction(server, playerID, actionType, X, Y, Z);
@@ -1178,7 +1170,7 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
                                server->map.resultLine[i].x,
                                server->map.resultLine[i].y,
                                server->map.resultLine[i].z,
-                               color4iToInt(server->player[playerID].toolColor));
+                               server->player[playerID].toolColor.color);
             }
             moveIntelAndTentUp(server);
             SendBlockLine(server, playerID, start, end);
@@ -1209,10 +1201,10 @@ static void receiveSetColor(Server* server, uint8 playerID, DataStream* data)
         printf("Assigned ID: %d doesnt match sent ID: %d in set color packet\n", playerID, ID);
     }
 
-    server->player[playerID].toolColor[0] = A;
-    server->player[playerID].toolColor[1] = R;
-    server->player[playerID].toolColor[2] = G;
-    server->player[playerID].toolColor[3] = B;
+    server->player[playerID].toolColor.colorArray[A_CHANNEL] = A;
+    server->player[playerID].toolColor.colorArray[R_CHANNEL] = R;
+    server->player[playerID].toolColor.colorArray[G_CHANNEL] = G;
+    server->player[playerID].toolColor.colorArray[B_CHANNEL] = B;
     SendSetColor(server, playerID, R, G, B);
 }
 

@@ -211,17 +211,17 @@ static void ServerInit(Server*     server,
     server->protocol.spawns[1].to.y   = team2End[1];
     server->protocol.spawns[1].to.z   = team2End[2];
 
-    server->protocol.colorFog[0] = 0x80;
-    server->protocol.colorFog[1] = 0xE8;
-    server->protocol.colorFog[2] = 0xFF;
+    server->protocol.colorFog.colorArray[0] = 0x80;
+    server->protocol.colorFog.colorArray[1] = 0xE8;
+    server->protocol.colorFog.colorArray[2] = 0xFF;
 
-    server->protocol.colorTeam[0][0] = team1Color[0];
-    server->protocol.colorTeam[0][1] = team1Color[1];
-    server->protocol.colorTeam[0][2] = team1Color[2];
+    server->protocol.colorTeam[0].colorArray[B_CHANNEL] = team1Color[B_CHANNEL];
+    server->protocol.colorTeam[0].colorArray[G_CHANNEL] = team1Color[G_CHANNEL];
+    server->protocol.colorTeam[0].colorArray[R_CHANNEL] = team1Color[R_CHANNEL];
 
-    server->protocol.colorTeam[1][0] = team2Color[0];
-    server->protocol.colorTeam[1][1] = team2Color[1];
-    server->protocol.colorTeam[1][2] = team2Color[2];
+    server->protocol.colorTeam[1].colorArray[B_CHANNEL] = team2Color[B_CHANNEL];
+    server->protocol.colorTeam[1].colorArray[G_CHANNEL] = team2Color[G_CHANNEL];
+    server->protocol.colorTeam[1].colorArray[R_CHANNEL] = team2Color[R_CHANNEL];
 
     memcpy(server->protocol.nameTeam[0], team1Name, strlen(team1Name));
     memcpy(server->protocol.nameTeam[1], team2Name, strlen(team2Name));
@@ -242,8 +242,8 @@ void ServerReset(Server* server)
                server->serverName,
                server->protocol.nameTeam[0],
                server->protocol.nameTeam[1],
-               server->protocol.colorTeam[0],
-               server->protocol.colorTeam[1],
+               &server->protocol.colorTeam->colorArray[0],
+               &server->protocol.colorTeam->colorArray[1],
                server->protocol.currentGameMode,
                1);
 }

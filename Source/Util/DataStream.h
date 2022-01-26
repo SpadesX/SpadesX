@@ -2,7 +2,8 @@
 #ifndef DATASTREAM_H
 #define DATASTREAM_H
 
-#include <Types.h>
+#include "Enums.h"
+#include "Types.h"
 
 #define ACCESS_CHECK(stream, size)             \
     if (stream->pos + size > stream->length) { \
@@ -25,23 +26,23 @@ void CreateDataStream(DataStream* stream, uint32 length);
 
 void DestroyDataStream(DataStream* stream);
 
-static inline uint32 DataLeft(DataStream* stream)
+inline uint32 DataLeft(DataStream* stream)
 {
     return (stream->pos < stream->length) ? stream->length - stream->pos : 0;
 }
 
-static inline void StreamSkip(DataStream* stream, uint32 skip)
+inline void StreamSkip(DataStream* stream, uint32 skip)
 {
     stream->pos = (stream->pos + skip < stream->length) ? stream->pos + skip : stream->length;
 }
 
-static inline uint8 ReadByte(DataStream* stream)
+inline uint8 ReadByte(DataStream* stream)
 {
     ACCESS_CHECK(stream, 1);
     return stream->data[stream->pos++];
 }
 
-static inline uint16 ReadShort(DataStream* stream)
+inline uint16 ReadShort(DataStream* stream)
 {
     ACCESS_CHECK(stream, 2);
     uint16 value = 0;
@@ -50,7 +51,7 @@ static inline uint16 ReadShort(DataStream* stream)
     return value;
 }
 
-static inline uint32 ReadInt(DataStream* stream)
+inline uint32 ReadInt(DataStream* stream)
 {
     ACCESS_CHECK(stream, 4);
     uint32 value = 0;
@@ -61,7 +62,7 @@ static inline uint32 ReadInt(DataStream* stream)
     return value;
 }
 
-static inline float ReadFloat(DataStream* stream)
+inline float ReadFloat(DataStream* stream)
 {
     union
     {
@@ -72,39 +73,39 @@ static inline float ReadFloat(DataStream* stream)
     return u.f;
 }
 
-static inline void ReadColor3i(DataStream* stream, Color3i color)
+inline void ReadColor3i(DataStream* stream, Color3i color)
 {
     ACCESS_CHECK_N(stream, 3);
-    color[2] = stream->data[stream->pos++];
-    color[1] = stream->data[stream->pos++];
-    color[0] = stream->data[stream->pos++];
+    color.colorArray[R_CHANNEL] = stream->data[stream->pos++];
+    color.colorArray[G_CHANNEL] = stream->data[stream->pos++];
+    color.colorArray[B_CHANNEL] = stream->data[stream->pos++];
 }
 
-static inline void ReadColor4i(DataStream* stream, Color4i color)
+inline void ReadColor4i(DataStream* stream, Color4i color)
 {
     ACCESS_CHECK_N(stream, 4);
-    color[3] = stream->data[stream->pos++];
-    color[2] = stream->data[stream->pos++];
-    color[1] = stream->data[stream->pos++];
-    color[0] = stream->data[stream->pos++];
+    color.colorArray[A_CHANNEL] = stream->data[stream->pos++];
+    color.colorArray[R_CHANNEL] = stream->data[stream->pos++];
+    color.colorArray[G_CHANNEL] = stream->data[stream->pos++];
+    color.colorArray[B_CHANNEL] = stream->data[stream->pos++];
 }
 
 void ReadArray(DataStream* stream, void* output, uint32 length);
 
-static inline void WriteByte(DataStream* stream, uint8 value)
+inline void WriteByte(DataStream* stream, uint8 value)
 {
     ACCESS_CHECK_N(stream, 1);
     stream->data[stream->pos++] = value;
 }
 
-static inline void WriteShort(DataStream* stream, uint16 value)
+inline void WriteShort(DataStream* stream, uint16 value)
 {
     ACCESS_CHECK_N(stream, 2);
     stream->data[stream->pos++] = (uint8) value;
     stream->data[stream->pos++] = (uint8) (value >> 8);
 }
 
-static inline void WriteInt(DataStream* stream, uint32 value)
+inline void WriteInt(DataStream* stream, uint32 value)
 {
     ACCESS_CHECK_N(stream, 4);
     stream->data[stream->pos++] = (uint8) value;
@@ -113,7 +114,7 @@ static inline void WriteInt(DataStream* stream, uint32 value)
     stream->data[stream->pos++] = (uint8) (value >> 24);
 }
 
-static inline void WriteFloat(DataStream* stream, float value)
+inline void WriteFloat(DataStream* stream, float value)
 {
     union
     {
@@ -124,31 +125,31 @@ static inline void WriteFloat(DataStream* stream, float value)
     WriteInt(stream, u.v);
 }
 
-static inline void WriteVector3f(DataStream* stream, Vector3f vector)
+inline void WriteVector3f(DataStream* stream, Vector3f vector)
 {
     WriteFloat(stream, vector.x);
     WriteFloat(stream, vector.y);
     WriteFloat(stream, vector.z);
 }
 
-static inline void WriteColor3i(DataStream* stream, Color3i color)
+inline void WriteColor3i(DataStream* stream, Color3i color)
 {
     ACCESS_CHECK_N(stream, 3);
-    stream->data[stream->pos++] = color[2];
-    stream->data[stream->pos++] = color[1];
-    stream->data[stream->pos++] = color[0];
+    stream->data[stream->pos++] = color.colorArray[R_CHANNEL];
+    stream->data[stream->pos++] = color.colorArray[G_CHANNEL];
+    stream->data[stream->pos++] = color.colorArray[B_CHANNEL];
 }
 
-static inline void WriteColor4i(DataStream* stream, Color4i color)
+inline void WriteColor4i(DataStream* stream, Color4i color)
 {
     ACCESS_CHECK_N(stream, 4);
-    stream->data[stream->pos++] = color[3];
-    stream->data[stream->pos++] = color[2];
-    stream->data[stream->pos++] = color[1];
-    stream->data[stream->pos++] = color[0];
+    stream->data[stream->pos++] = color.colorArray[A_CHANNEL];
+    stream->data[stream->pos++] = color.colorArray[R_CHANNEL];
+    stream->data[stream->pos++] = color.colorArray[G_CHANNEL];
+    stream->data[stream->pos++] = color.colorArray[B_CHANNEL];
 }
 
-static inline void WriteColor3iv(DataStream* stream, uint8 r, uint8 g, uint8 b)
+inline void WriteColor3iv(DataStream* stream, uint8 r, uint8 g, uint8 b)
 {
     ACCESS_CHECK_N(stream, 3);
     stream->data[stream->pos++] = b;
@@ -156,7 +157,7 @@ static inline void WriteColor3iv(DataStream* stream, uint8 r, uint8 g, uint8 b)
     stream->data[stream->pos++] = r;
 }
 
-static inline void WriteColor4iv(DataStream* stream, uint8 a, uint8 r, uint8 g, uint8 b)
+inline void WriteColor4iv(DataStream* stream, uint8 a, uint8 r, uint8 g, uint8 b)
 {
     ACCESS_CHECK_N(stream, 4);
     stream->data[stream->pos++] = b;

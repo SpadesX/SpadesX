@@ -11,14 +11,17 @@ typedef unsigned short         uint16;
 typedef unsigned int           uint32;
 typedef unsigned long long int uint64;
 
-/**
- * @brief 3-byte color
- * @details [0] = A, [1] = R, [2] = G [3] = B
- *
- */
-typedef uint8 Color3i[3];
+typedef union
+{
+    uint8 colorArray[4];
+    uint32 color;
+} Color4i;
 
-typedef uint8 Color4i[4];
+typedef union
+{
+    uint8 colorArray[3];
+    uint32 color; //Bitshift required before usage
+} Color3i;
 
 typedef struct
 {

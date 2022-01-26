@@ -1,18 +1,12 @@
+#include "Enums.h"
 #include "Protocol.h"
 #include "Structs.h"
+#include "Types.h"
 #include "libmapvxl.h"
 
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-
-/*static int color4iToInt(Color4i color)
-{
-    int intColor = 0;
-    intColor     = ((uint64) (((uint8) color[0]) << 24) | (uint64) (((uint8) color[1]) << 16) |
-                (uint64) (((uint8) color[2]) << 8) | (uint64) ((uint8) color[3]));
-    return intColor;
-}*/
 
 static void initCTF(Server* server)
 {
@@ -53,9 +47,14 @@ static void initBabel(Server* server)
     server->protocol.gameMode.scoreLimit = 10;
     server->protocol.gameMode.intelFlags = 0;
 
+    Color4i platformColor;
+    platformColor.colorArray[B_CHANNEL] = 111;
+    platformColor.colorArray[G_CHANNEL] = 111;
+    platformColor.colorArray[R_CHANNEL] = 111;
+
     for (int x = 206; x <= 306; ++x) {
         for (int y = 240; y <= 272; ++y) {
-            mapvxlSetColor(&server->map.map, x, y, 1, 4228250625);
+            mapvxlSetColor(&server->map.map, x, y, 1, platformColor.color);
         }
     }
     // intel
