@@ -55,7 +55,6 @@ static uint8 grenadeGamemodeCheck(Server* server, Vector3f pos)
 
 uint8 gamemodeBlockChecks(Server* server, int x, int y, int z)
 {
-    printf("X: %d, Y: %d, Z: %d\n", x, y, z);
     if (((((x >= 206 && x <= 306) && (y >= 240 && y <= 272) && (z == 2 || z == 0)) ||
           ((x >= 205 && x <= 307) && (y >= 239 && y <= 273) && (z == 1))) &&
          server->protocol.currentGameMode == GAME_MODE_BABEL))

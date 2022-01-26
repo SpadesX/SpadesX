@@ -382,7 +382,6 @@ void SendStateData(Server* server, uint8 playerID)
     }
 
     WriteByte(&stream, server->protocol.gameMode.intelFlags); // INTEL FLAGS
-    printf("%d\n", server->protocol.gameMode.intelFlags);
 
     if ((server->protocol.gameMode.intelFlags & 1) != 0) {
         WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
