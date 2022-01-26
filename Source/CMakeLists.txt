@@ -5,7 +5,6 @@
 set(SERVER_HEADERS
     Protocol.h
     Master.h
-    Enums.h
     Server.h
     Structs.h
     Map.h
