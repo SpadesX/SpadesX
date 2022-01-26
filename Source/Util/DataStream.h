@@ -62,14 +62,18 @@ static inline uint32 ReadInt(DataStream* stream)
     return value;
 }
 
-static inline float ReadFloat(DataStream* stream)
+inline float ReadFloat(DataStream* stream)
 {
     union
     {
         float  f;
         uint32 v;
     } u;
-    u.v = ReadInt(stream);
+    u.v = 0;
+    u.v |= ((uint32) stream->data[stream->pos++]);
+    u.v |= ((uint32) stream->data[stream->pos++]) << 8;
+    u.v |= ((uint32) stream->data[stream->pos++]) << 16;
+    u.v |= ((uint32) stream->data[stream->pos++]) << 24;
     return u.f;
 }
 
