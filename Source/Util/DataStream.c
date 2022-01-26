@@ -31,3 +31,14 @@ void WriteArray(DataStream* stream, const void* array, uint32 length)
     memcpy(stream->data + stream->pos, array, length); //Replace me
     stream->pos += length;
 }
+
+uint32 ReadInt(DataStream* stream)
+{
+    ACCESS_CHECK(stream, 4);
+    uint32 value = 0;
+    value |= ((uint32) stream->data[stream->pos++]);
+    value |= ((uint32) stream->data[stream->pos++]) << 8;
+    value |= ((uint32) stream->data[stream->pos++]) << 16;
+    value |= ((uint32) stream->data[stream->pos++]) << 24;
+    return value;
+}

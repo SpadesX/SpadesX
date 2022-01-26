@@ -51,16 +51,7 @@ inline uint16 ReadShort(DataStream* stream)
     return value;
 }
 
-static inline uint32 ReadInt(DataStream* stream)
-{
-    ACCESS_CHECK(stream, 4);
-    uint32 value = 0;
-    value |= ((uint32) stream->data[stream->pos++]);
-    value |= ((uint32) stream->data[stream->pos++]) << 8;
-    value |= ((uint32) stream->data[stream->pos++]) << 16;
-    value |= ((uint32) stream->data[stream->pos++]) << 24;
-    return value;
-}
+uint32 ReadInt(DataStream* stream);
 
 inline float ReadFloat(DataStream* stream)
 {
