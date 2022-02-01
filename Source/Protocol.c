@@ -877,12 +877,10 @@ void handleGrenade(Server* server, uint8 playerID)
 {
     for (int i = 0; i < 3; ++i) {
         if (server->player[playerID].grenade[i].sent) {
-            printf("The grenade was sent\n");
             move_grenade(server, playerID, i);
             if ((get_nanos() - server->player[playerID].grenade[i].timeSinceSent) / 1000000000.f >=
                 server->player[playerID].grenade[i].fuse)
             {
-                printf("Grenade went boom boom\n");
                 uint8 allowToDestroy = 0;
                 if (grenadeGamemodeCheck(server, server->player[playerID].grenade[i].position)) {
                     SendBlockAction(server,
