@@ -505,7 +505,7 @@ Vector3i* getGrenadeNeighbors(Vector3i pos)
     return neighArray;
 }
 
-#define NODE_RESERVE_SIZE 2500000
+#define NODE_RESERVE_SIZE 250000
 Vector3i* nodes = NULL;
 int       nodePos;
 int       nodesSize;
