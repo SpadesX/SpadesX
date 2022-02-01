@@ -505,7 +505,7 @@ Vector3i* getGrenadeNeighbors(Vector3i pos)
     return neighArray;
 }
 
-#define NODE_RESERVE_SIZE 250000
+#define NODE_RESERVE_SIZE 2500000
 Vector3i* nodes = NULL;
 int       nodePos;
 int       nodesSize;
@@ -580,6 +580,7 @@ uint8 checkNode(Server* server, Vector3i position)
         for (int i = 0; i < visitedPos; ++i) {
             if (visitedNodes[i].x == position.x && visitedNodes[i].y == position.y && visitedNodes[i].z == position.z) {
                 nodeVisited = 1;
+                break;
             }
         }
         if (nodeVisited == 0) {
