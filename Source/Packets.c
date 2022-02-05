@@ -21,7 +21,6 @@
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
 int  validate_hit(Vector3f shooter, Vector3f orientation, Vector3f otherPos, float tolerance);
 
-
 static unsigned long long get_nanos(void)
 {
     struct timespec ts;
@@ -925,11 +924,12 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     server->player[playerID].item   = ReadByte(data);
     server->player[playerID].kills  = ReadInt(data);
 
-    if (server->player[playerID].team == 0 && server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1] > 2)
+    if (server->player[playerID].team == 0 &&
+        abs(server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1]) > 2)
     {
         server->player[playerID].team = 1;
     } else if (server->player[playerID].team == 1 &&
-               server->protocol.teamUserCount[1] - server->protocol.teamUserCount[0] > 2)
+               abs(server->protocol.teamUserCount[1] - server->protocol.teamUserCount[0]) > 2)
     {
         server->player[playerID].team = 0;
     }
@@ -1182,6 +1182,9 @@ static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID   = ReadByte(data);
     uint8 tool = ReadByte(data);
+    if (server->player[playerID].item == tool) {
+        return;
+    }
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in set tool packet\n", playerID, ID);
     }
@@ -1313,8 +1316,12 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
 
 static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data)
 {
-    uint8 ID                        = ReadByte(data);
-    server->player[playerID].weapon = ReadByte(data);
+    uint8 ID     = ReadByte(data);
+    uint8 weapon = ReadByte(data);
+    if (server->player[playerID].weapon == weapon) {
+        return;
+    }
+    server->player[playerID].weapon = weapon;
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in change weapon packet\n", playerID, ID);
     }
