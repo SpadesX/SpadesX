@@ -373,6 +373,8 @@ void SendStateData(Server* server, uint8 playerID)
     WriteByte(&stream, server->protocol.gameMode.score[1]);   // SCORE TEAM B
     WriteByte(&stream, server->protocol.gameMode.scoreLimit); // SCORE LIMIT
 
+    server->protocol.gameMode.intelFlags = 0;
+
     if (server->protocol.gameMode.intelHeld[0]) {
         server->protocol.gameMode.intelFlags = INTEL_TEAM_B;
     } else if (server->protocol.gameMode.intelHeld[1]) {
@@ -385,17 +387,18 @@ void SendStateData(Server* server, uint8 playerID)
 
     if ((server->protocol.gameMode.intelFlags & 1) != 0) {
         WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
-        Vector3f intelLoc = {0, 0, 0};
-        WriteVector3f(&stream, intelLoc);
-
+        for (int i = 0; i < 11; ++i) {
+            WriteByte(&stream, 0);
+        }
     } else {
         WriteVector3f(&stream, server->protocol.gameMode.intel[0]);
     }
 
     if ((server->protocol.gameMode.intelFlags & 2) != 0) {
         WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[1]);
-        Vector3f intelLoc = {0, 0, 0};
-        WriteVector3f(&stream, intelLoc);
+        for (int i = 0; i < 11; ++i) {
+            WriteByte(&stream, 0);
+        }
 
     } else {
         WriteVector3f(&stream, server->protocol.gameMode.intel[1]);
