@@ -1293,14 +1293,16 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID = ReadByte(data);
     server->protocol.teamUserCount[server->player[playerID].team]--;
-    server->player[playerID].team = ReadByte(data);
+    uint8 team = ReadByte(data);
+    if (server->player[playerID].team == team) {
+        return;
+    }
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
     }
     if (server->player[playerID].team == 0 &&
         abs(server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1]) > 2)
     {
-
         server->player[playerID].team = 1;
         sendServerNotice(server, playerID, "Team is full. Switching to other team");
     } else if (server->player[playerID].team == 1 &&
