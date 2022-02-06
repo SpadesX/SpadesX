@@ -385,21 +385,20 @@ void SendStateData(Server* server, uint8 playerID)
 
     WriteByte(&stream, server->protocol.gameMode.intelFlags); // INTEL FLAGS
 
-    if ((server->protocol.gameMode.intelFlags & 1) != 0) {
-        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
+    if ((server->protocol.gameMode.intelFlags & 1) == 0) {
+        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[1]);
         for (int i = 0; i < 11; ++i) {
-            WriteByte(&stream, 0);
+            WriteByte(&stream, 255);
         }
     } else {
         WriteVector3f(&stream, server->protocol.gameMode.intel[0]);
     }
 
-    if ((server->protocol.gameMode.intelFlags & 2) != 0) {
-        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[1]);
+    if ((server->protocol.gameMode.intelFlags & 2) == 0) {
+        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
         for (int i = 0; i < 11; ++i) {
-            WriteByte(&stream, 0);
+            WriteByte(&stream, 255);
         }
-
     } else {
         WriteVector3f(&stream, server->protocol.gameMode.intel[1]);
     }
