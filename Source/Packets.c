@@ -452,6 +452,26 @@ void sendKillPacket(Server* server,
         server->player[playerID].respawnTime               = respawnTime;
         server->player[playerID].timers.startOfRespawnWait = time(NULL);
         server->player[playerID].state                     = STATE_WAITING_FOR_RESPAWN;
+        switch (server->player[playerID].weapon) {
+            case 0:
+                server->player[playerID].weaponReserve  = 50;
+                server->player[playerID].weaponClip     = 10;
+                server->player[playerID].defaultClip    = RIFLE_DEFAULT_CLIP;
+                server->player[playerID].defaultReserve = RIFLE_DEFAULT_RESERVE;
+                break;
+            case 1:
+                server->player[playerID].weaponReserve  = 120;
+                server->player[playerID].weaponClip     = 30;
+                server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
+                server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
+                break;
+            case 2:
+                server->player[playerID].weaponReserve  = 48;
+                server->player[playerID].weaponClip     = 6;
+                server->player[playerID].defaultClip    = SHOTGUN_DEFAULT_CLIP;
+                server->player[playerID].defaultReserve = SHOTGUN_DEFAULT_RESERVE;
+                break;
+        }
     }
     if (server->player[playerID].hasIntel) {
         SendIntelDrop(server, playerID);
@@ -1328,26 +1348,6 @@ static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data
     server->player[playerID].weapon = weapon;
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in change weapon packet\n", playerID, ID);
-    }
-    switch (server->player[playerID].weapon) {
-        case 0:
-            server->player[playerID].weaponReserve  = 50;
-            server->player[playerID].weaponClip     = 10;
-            server->player[playerID].defaultClip    = RIFLE_DEFAULT_CLIP;
-            server->player[playerID].defaultReserve = RIFLE_DEFAULT_RESERVE;
-            break;
-        case 1:
-            server->player[playerID].weaponReserve  = 120;
-            server->player[playerID].weaponClip     = 30;
-            server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
-            server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
-            break;
-        case 2:
-            server->player[playerID].weaponReserve  = 48;
-            server->player[playerID].weaponClip     = 6;
-            server->player[playerID].defaultClip    = SHOTGUN_DEFAULT_CLIP;
-            server->player[playerID].defaultReserve = SHOTGUN_DEFAULT_RESERVE;
-            break;
     }
     sendKillPacket(server, playerID, playerID, 6, 5, 0);
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
