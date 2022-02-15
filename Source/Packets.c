@@ -1306,9 +1306,7 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
     uint8 ID = ReadByte(data);
     server->protocol.teamUserCount[server->player[playerID].team]--;
     uint8 team = ReadByte(data);
-    if (server->player[playerID].team == team) {
-        return;
-    }
+    server->player[playerID].team = team;
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
     }
