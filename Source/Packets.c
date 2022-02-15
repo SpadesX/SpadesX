@@ -946,16 +946,6 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     server->player[playerID].item   = ReadByte(data);
     server->player[playerID].kills  = ReadInt(data);
 
-    if (server->player[playerID].team == 0 &&
-        abs(server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1]) > 2)
-    {
-        server->player[playerID].team = 1;
-    } else if (server->player[playerID].team == 1 &&
-               abs(server->protocol.teamUserCount[1] - server->protocol.teamUserCount[0]) > 2)
-    {
-        server->player[playerID].team = 0;
-    }
-
     server->protocol.teamUserCount[server->player[playerID].team]++;
 
     ReadColor3i(data, server->player[playerID].color);
@@ -1321,17 +1311,6 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
     }
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
-    }
-    if (server->player[playerID].team == 0 &&
-        abs(server->protocol.teamUserCount[0] - server->protocol.teamUserCount[1]) > 2)
-    {
-        server->player[playerID].team = 1;
-        sendServerNotice(server, playerID, "Team is full. Switching to other team");
-    } else if (server->player[playerID].team == 1 &&
-               abs(server->protocol.teamUserCount[1] - server->protocol.teamUserCount[0]) > 2)
-    {
-        server->player[playerID].team = 0;
-        sendServerNotice(server, playerID, "Team is full. Switching to other team");
     }
     server->protocol.teamUserCount[server->player[playerID].team]++;
     sendKillPacket(server, playerID, playerID, 5, 5, 0);
