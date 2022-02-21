@@ -49,9 +49,9 @@ static uint8 grenadeGamemodeCheck(Server* server, Vector3f pos)
         gamemodeBlockChecks(server, pos.x - 1, pos.y - 1, pos.z - 1) &&
         gamemodeBlockChecks(server, pos.x - 1, pos.y - 1, pos.z))
     {
-        return 0;
+        return 1;
     }
-    return 1;
+    return 0;
 }
 
 uint8 gamemodeBlockChecks(Server* server, int x, int y, int z)
