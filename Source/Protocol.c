@@ -1,6 +1,7 @@
 // Copyright DarkNeutrino 2021
 #include "Packets.h"
 #include "Physics.h"
+#include "Protocol.h"
 #include "Server.h"
 #include "Structs.h"
 
@@ -907,7 +908,12 @@ void handleGrenade(Server* server, uint8 playerID)
                             server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
                             server->player[playerID].grenade[i].position.z < 62)
                         {
-                            int value = 4096 / ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
+                            int diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
+                            if (diff <= 0) {
+                                printf("Player %d sent a grenade that had a diff of 0\n", playerID);
+                                diff = 4096;
+                            }
+                            int value = 4096 / diff;
                             sendHP(server, playerID, y, value, 1, 3, 5);
                         }
                     }
