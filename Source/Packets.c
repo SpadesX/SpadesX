@@ -936,10 +936,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
 
 static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
 {
-    uint8 ID = ReadByte(data);
-    if (playerID != ID) {
-        printf("Assigned ID: %d doesnt match sent ID: %d in existing player packet\n", playerID, ID);
-    }
+    StreamSkip(data, 1); // Clients always send a "dumb" ID here since server has not sent them their ID yet
 
     server->player[playerID].team   = ReadByte(data);
     server->player[playerID].weapon = ReadByte(data);
