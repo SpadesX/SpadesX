@@ -895,12 +895,12 @@ void handleGrenade(Server* server, uint8 playerID)
                 }
                 for (int y = 0; y < server->protocol.maxPlayers; ++y) {
                     if (server->player[y].state == STATE_READY) {
-                        int diffX =
-                        fabsf(server->player[y].movement.position.x - server->player[playerID].grenade[i].position.x);
-                        int diffY =
-                        fabsf(server->player[y].movement.position.y - server->player[playerID].grenade[i].position.y);
-                        int diffZ =
-                        fabsf(server->player[y].movement.position.z - server->player[playerID].grenade[i].position.z);
+                        float diffX =
+                        fabs(server->player[y].movement.position.x - server->player[playerID].grenade[i].position.x);
+                        float diffY =
+                        fabs(server->player[y].movement.position.y - server->player[playerID].grenade[i].position.y);
+                        float diffZ =
+                        fabs(server->player[y].movement.position.z - server->player[playerID].grenade[i].position.z);
                         Vector3f playerPos  = server->player[y].movement.position;
                         Vector3f grenadePos = server->player[y].grenade[i].position;
                         if (diffX < 16 && diffY < 16 && diffZ < 16 &&
@@ -908,12 +908,12 @@ void handleGrenade(Server* server, uint8 playerID)
                             server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
                             server->player[playerID].grenade[i].position.z < 62)
                         {
-                            int diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
+                            float diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
                             if (diff <= 0) {
                                 printf("Player %d sent a grenade that had a diff of 0\n", playerID);
-                                diff = 4096;
+                                diff = 41.f;
                             }
-                            int value = 4096 / diff;
+                            int value = (int)(4096.f / diff);
                             sendHP(server, playerID, y, value, 1, 3, 5);
                         }
                     }
