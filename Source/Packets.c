@@ -512,9 +512,15 @@ void sendHP(Server* server,
             WriteByte(&stream, PACKET_TYPE_SET_HP);
             WriteByte(&stream, server->player[hitPlayerID].HP);
             WriteByte(&stream, typeOfDamage);
-            WriteFloat(&stream, server->player[playerID].movement.position.x);
-            WriteFloat(&stream, server->player[playerID].movement.position.y);
-            WriteFloat(&stream, server->player[playerID].movement.position.z);
+            if (typeOfDamage != 0) {
+                WriteFloat(&stream, server->player[playerID].movement.position.x);
+                WriteFloat(&stream, server->player[playerID].movement.position.y);
+                WriteFloat(&stream, server->player[playerID].movement.position.z);
+            } else {
+                WriteFloat(&stream, 0);
+                WriteFloat(&stream, 0);
+                WriteFloat(&stream, 0);
+            }
             enet_peer_send(server->player[hitPlayerID].peer, 0, packet);
         }
     }
