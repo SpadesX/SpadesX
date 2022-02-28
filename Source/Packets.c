@@ -1071,10 +1071,10 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
         printf("Assigned ID: %d doesnt match sent ID: %d in block action packet\n", playerID, ID);
     }
     if (server->player[playerID].canBuild && server->globalAB) {
-        uint8    actionType   = ReadByte(data);
-        int      X            = ReadInt(data);
-        int      Y            = ReadInt(data);
-        int      Z            = ReadInt(data);
+        uint8 actionType = ReadByte(data);
+        int   X          = ReadInt(data);
+        int   Y          = ReadInt(data);
+        int   Z          = ReadInt(data);
         if (server->player[playerID].sprinting) {
             return;
         }
@@ -1179,12 +1179,12 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
     {
         Vector3i start;
         Vector3i end;
-        start.x         = ReadInt(data);
-        start.y         = ReadInt(data);
-        start.z         = ReadInt(data);
-        end.x           = ReadInt(data);
-        end.y           = ReadInt(data);
-        end.z           = ReadInt(data);
+        start.x = ReadInt(data);
+        start.y = ReadInt(data);
+        start.z = ReadInt(data);
+        end.x   = ReadInt(data);
+        end.y   = ReadInt(data);
+        end.z   = ReadInt(data);
         if (server->player[playerID].sprinting) {
             return;
         }
@@ -1249,8 +1249,11 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     uint8 wInput = ReadByte(data);
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in weapon input packet\n", playerID, ID);
-    } else if (server->player[playerID].state != STATE_READY || server->player[playerID].sprinting) {
+    } else if (server->player[playerID].state != STATE_READY) {
         return;
+    } else if (server->player[playerID].sprinting) {
+        wInput = 0; /* Do not return just set it to 0 as we want to send to players that the player is no longer
+                    shooting when they start sprinting */
     }
     server->player[playerID].primary_fire   = wInput & mask;
     server->player[playerID].secondary_fire = (wInput >> 1) & mask;
