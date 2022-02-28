@@ -282,6 +282,9 @@ void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
     WriteByte(&stream, playerID);
+    if (server->player[playerID].sprinting) {
+        wInput = 0;
+    }
     WriteByte(&stream, wInput);
     if (SendPacketExceptSender(server, packet, playerID) == 0) {
         enet_packet_destroy(packet);
@@ -717,6 +720,9 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
                 server->player[playerID].grenade[i].position.y = ReadFloat(data);
                 server->player[playerID].grenade[i].position.z = ReadFloat(data);
                 float velX = ReadFloat(data), velY = ReadFloat(data), velZ = ReadFloat(data);
+                if (server->player[playerID].sprinting) {
+                    return;
+                }
                 float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
                 if (length > 2)
                     return;
@@ -760,6 +766,10 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
     Vector3f shotOrien   = server->player[playerID].movement.forwardOrientation;
     float    distance    = DistanceIn2D(shotPos, hitPos);
     long     x = 0, y = 0, z = 0;
+
+    if (server->player[playerID].sprinting) {
+        return; // Sprinting and hitting somebody is impossible
+    }
 
     time_t timeNow = get_nanos();
 
@@ -1065,6 +1075,9 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
         int      X            = ReadInt(data);
         int      Y            = ReadInt(data);
         int      Z            = ReadInt(data);
+        if (server->player[playerID].sprinting) {
+            return;
+        }
         Vector3f vectorBlock  = {X, Y, Z};
         Vector3f playerVector = server->player[playerID].movement.position;
         if (((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) ||
@@ -1172,6 +1185,9 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
         end.x           = ReadInt(data);
         end.y           = ReadInt(data);
         end.z           = ReadInt(data);
+        if (server->player[playerID].sprinting) {
+            return;
+        }
         Vector3f startF = {start.x, start.y, start.z};
         Vector3f endF   = {end.x, end.y, end.z};
         if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
@@ -1233,7 +1249,7 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     uint8 wInput = ReadByte(data);
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in weapon input packet\n", playerID, ID);
-    } else if (server->player[playerID].state != STATE_READY) {
+    } else if (server->player[playerID].state != STATE_READY || server->player[playerID].sprinting) {
         return;
     }
     server->player[playerID].primary_fire   = wInput & mask;
