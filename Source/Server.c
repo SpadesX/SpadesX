@@ -32,7 +32,7 @@ pthread_t thread[3];
 static unsigned long long get_nanos(void)
 {
     struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
+    clock_gettime(CLOCK_REALTIME, &ts);
     return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
@@ -134,7 +134,7 @@ static void ServerInit(Server*     server,
     snprintf(vxlMap, 64, "%s.vxl", server->mapName);
     LoadMap(server, vxlMap);
 
-    STATUS("Loading spawn ranges from map file");
+    LOG_STATUS("Loading spawn ranges from map file");
     char mapConfig[64];
     snprintf(mapConfig, 64, "%s.json", server->mapName);
 
@@ -152,27 +152,27 @@ static void ServerInit(Server*     server,
     int                 team2End[3];
 
     if (json_object_object_get_ex(parsed_map_json, "team1_start", &team1StartInConfig) == 0) {
-        ERROR("Failed to find team1 start in map config");
+        LOG_ERROR("Failed to find team1 start in map config");
         server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team1_end", &team1EndInConfig) == 0) {
-        ERROR("Failed to find team1 end in map config");
+        LOG_ERROR("Failed to find team1 end in map config");
         server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team2_start", &team2StartInConfig) == 0) {
-        ERROR("Failed to find team2 start in map config");
+        LOG_ERROR("Failed to find team2 start in map config");
         server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "team2_end", &team2EndInConfig) == 0) {
-        ERROR("Failed to find team2 start in map config");
+        LOG_ERROR("Failed to find team2 start in map config");
         server->running = 0;
         return;
     }
     if (json_object_object_get_ex(parsed_map_json, "author", &authorInConfig) == 0) {
-        ERROR("Failed to find author in map config");
+        LOG_ERROR("Failed to find author in map config");
         server->running = 0;
         return;
     }
@@ -250,7 +250,7 @@ void ServerReset(Server* server)
 
 static void SendJoiningData(Server* server, uint8 playerID)
 {
-    STATUS("sending state");
+    LOG_STATUS("sending state");
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && isPastStateData(server, i)) {
             SendPlayerState(server, playerID, i);
@@ -342,7 +342,7 @@ static void ServerUpdate(Server* server, int timeout)
         uint8 playerID;
         switch (event.type) {
             case ENET_EVENT_TYPE_NONE:
-                STATUS("Event of type none received. Ignoring");
+                LOG_STATUS("Event of type none received. Ignoring");
                 break;
             case ENET_EVENT_TYPE_CONNECT:
                 if (event.data != VERSION_0_75) {
@@ -353,7 +353,7 @@ static void ServerUpdate(Server* server, int timeout)
                 FILE* fp;
                 fp = fopen("BanList.txt", "r");
                 if (fp == NULL) {
-                    ERROR(
+                    LOG_ERROR(
                     "BanList.txt could not be opened for checking ban. PLEASE FIX THIS NOW BY CREATING THIS FILE!!!!");
                     server->running = 0;
                     return;
@@ -387,7 +387,7 @@ static void ServerUpdate(Server* server, int timeout)
                 playerID = OnConnect(server);
                 if (playerID == 0xFF) {
                     enet_peer_disconnect_now(event.peer, REASON_SERVER_FULL);
-                    STATUS("Server full. Kicking player");
+                    LOG_STATUS("Server full. Kicking player");
                     break;
                 }
                 server->player[playerID].peer         = event.peer;
@@ -451,11 +451,11 @@ void StartServer(uint16      port,
                  uint8       gamemode)
 {
     server.globalTimers.timeSinceStart = get_nanos();
-    STATUS("Welcome to SpadesX server");
-    STATUS("Initializing ENet");
+    LOG_STATUS("Welcome to SpadesX server");
+    LOG_STATUS("Initializing ENet");
 
     if (enet_initialize() != 0) {
-        ERROR("Failed to initalize ENet");
+        LOG_ERROR("Failed to initalize ENet");
         exit(EXIT_FAILURE);
     }
     atexit(enet_deinitialize);
@@ -468,17 +468,17 @@ void StartServer(uint16      port,
 
     server.host = enet_host_create(&address, connections, channels, inBandwidth, outBandwidth);
     if (server.host == NULL) {
-        ERROR("Failed to create server");
+        LOG_ERROR("Failed to create server");
         exit(EXIT_FAILURE);
     }
 
     if (enet_host_compress_with_range_coder(server.host) != 0) {
-        WARNING("Compress with range coder failed");
+        LOG_WARNING("Compress with range coder failed");
     }
 
     server.port = port;
 
-    STATUS("Intializing server");
+    LOG_STATUS("Intializing server");
     server.running = 1;
     ServerInit(
     &server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
@@ -490,7 +490,7 @@ void StartServer(uint16      port,
     server.trustedPasswd                 = trustedPasswd;
 
     if (server.running) {
-        STATUS("Server started");
+        LOG_STATUS("Server started");
     }
     if (server.master.enableMasterConnection == 1) {
         ConnectMaster(&server, port);
@@ -509,6 +509,6 @@ void StartServer(uint16      port,
     }
     free(server.map.compressedMap);
 
-    STATUS("Exiting");
+    LOG_STATUS("Exiting");
     enet_host_destroy(server.host);
 }

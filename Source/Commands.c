@@ -10,13 +10,9 @@
 #include <ctype.h>
 #include <enet/enet.h>
 #include <inttypes.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-
-float max(float num1, float num2)
-{
-    return (num1 > num2) ? num1 : num2;
-}
 
 static void killCommand(Server* server, char command[30], char* message, uint8 player, Player srvPlayer)
 {
@@ -211,7 +207,7 @@ static void loginCommand(Server* server, char command[30], char* message, uint8 
             for (uint8 j = 0; j < levelLen; ++j) {
                 level[j] = tolower(level[j]);
             }
-            uint failed = 0;
+            unsigned int failed = 0;
             for (unsigned long i = 0; i < sizeof(server->player[player].roleList) / sizeof(PermLevel); ++i) {
                 if (strcmp(level, server->player[player].roleList[i].accessLevel) == 0) {
                     if (strcmp(password, *server->player[player].roleList[i].accessPassword) == 0) {
@@ -249,7 +245,7 @@ static void ratioCommand(Server* server, char command[30], char* message, uint8 
                      100,
                      "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
                      server->player[ID].name,
-                     ((float) server->player[ID].kills / max(1, (float) server->player[ID].deaths)),
+                     ((float) server->player[ID].kills / fmaxf(1, (float) server->player[ID].deaths)),
                      server->player[ID].kills,
                      server->player[ID].deaths);
             sendServerNotice(server, player, sendingMessage);
@@ -262,7 +258,7 @@ static void ratioCommand(Server* server, char command[30], char* message, uint8 
                  100,
                  "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
                  server->player[player].name,
-                 ((float) server->player[player].kills / max(1, (float) server->player[player].deaths)),
+                 ((float) server->player[player].kills / fmaxf(1, (float) server->player[player].deaths)),
                  server->player[player].kills,
                  server->player[player].deaths);
         sendServerNotice(server, player, sendingMessage);

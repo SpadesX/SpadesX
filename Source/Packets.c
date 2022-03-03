@@ -9,7 +9,6 @@
 #include <Line.h>
 #include <Queue.h>
 #include <Types.h>
-#include <bsd/string.h>
 #include <ctype.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
@@ -18,13 +17,19 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef _WIN32
+    #define strlcat(dst, src, siz) strcat_s(dst, siz, src)
+#else
+    #include <bsd/string.h>
+#endif
+
 void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
 int  validate_hit(Vector3f shooter, Vector3f orientation, Vector3f otherPos, float tolerance);
 
 static unsigned long long get_nanos(void)
 {
     struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
+    clock_gettime(CLOCK_REALTIME, &ts);
     return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
@@ -248,7 +253,7 @@ void SendPlayerLeft(Server* server, uint8 playerID)
             WriteByte(&stream, playerID);
 
             if (enet_peer_send(server->player[i].peer, 0, packet) != 0) {
-                WARNING("failed to send player left event\n");
+                LOG_WARNING("failed to send player left event\n");
             }
         }
     }
@@ -543,7 +548,7 @@ void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
     WriteArray(&stream, server->player[otherID].name, 16); // NAME
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
-        WARNING("failed to send player state\n");
+        LOG_WARNING("failed to send player state\n");
     }
 }
 
@@ -556,7 +561,7 @@ void SendVersionRequest(Server* server, uint8 playerID)
 }
 void SendMapStart(Server* server, uint8 playerID)
 {
-    STATUS("sending map info");
+    LOG_STATUS("sending map info");
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_MAP_START);
@@ -581,7 +586,7 @@ void SendMapChunks(Server* server, uint8 playerID)
         }
         SendVersionRequest(server, playerID);
         server->player[playerID].state = STATE_JOINING;
-        STATUS("loading chunks done");
+        LOG_STATUS("loading chunks done");
     } else {
         ENetPacket* packet =
         enet_packet_create(NULL, server->player[playerID].queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
@@ -607,7 +612,7 @@ void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
     WriteArray(&stream, server->player[otherID].name, 16);             // NAME
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
-        WARNING("failed to send player state\n");
+        LOG_WARNING("failed to send player state\n");
     }
 }
 
@@ -967,7 +972,7 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     uint32 length  = DataLeft(data);
     uint8  invName = 0;
     if (length > 16) {
-        WARNING("name too long");
+        LOG_WARNING("name too long");
         length = 16;
     } else {
         server->player[playerID].name[length] = '\0';

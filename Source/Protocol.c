@@ -20,7 +20,7 @@
 static unsigned long long get_nanos(void)
 {
     struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
+    clock_gettime(CLOCK_REALTIME, &ts);
     return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
@@ -913,7 +913,7 @@ void handleGrenade(Server* server, uint8 playerID)
                                 printf("Player %d sent a grenade that had a diff of 0\n", playerID);
                                 diff = 41.f;
                             }
-                            int value = (int)(4096.f / diff);
+                            int value = (int) (4096.f / diff);
                             sendHP(server, playerID, y, value, 1, 3, 5);
                         }
                     }

@@ -10,7 +10,7 @@
 
 void LoadMap(Server* server, const char* path)
 {
-    STATUS("Loading map");
+    LOG_STATUS("Loading map");
 
     while (server->map.compressedMap) {
         server->map.compressedMap = Pop(server->map.compressedMap);
@@ -31,12 +31,12 @@ void LoadMap(Server* server, const char* path)
     uint8* buffer = (uint8*) malloc(server->map.mapSize);
     uint8* mapOut = (uint8*) malloc(server->map.mapSize);
     if (fread(buffer, server->map.mapSize, 1, file) < server->map.mapSize) {
-        STATUS("Finished loading map");
+        LOG_STATUS("Finished loading map");
     }
     fclose(file);
     mapvxlLoadVXL(&server->map.map, buffer);
     free(buffer);
-    STATUS("Compressing map data");
+    LOG_STATUS("Compressing map data");
 
     mapvxlWriteMap(&server->map.map, mapOut);
     

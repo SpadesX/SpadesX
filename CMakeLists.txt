@@ -7,6 +7,11 @@ cmake_minimum_required(VERSION 3.16)
 project(SpadesX)
 
 #
+# Find pthread
+#
+find_package(Threads REQUIRED)
+
+#
 # Add third party libraries
 #
 
@@ -25,8 +30,11 @@ target_link_libraries(SpadesX
         mapvxl
         m
         json-c
-        pthread
-        bsd
+        Threads::Threads
 )
+
+if (UNIX)
+    target_link_libraries(SpadesX PRIVATE bsd)
+endif()
 
 add_subdirectory(Source)

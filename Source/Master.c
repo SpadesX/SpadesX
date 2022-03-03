@@ -50,7 +50,7 @@ int ConnectMaster(Server* server, uint16 port)
     enet_address_set_host(&address, "67.205.183.163");
     address.port = server->port - 1;
 
-    STATUS("Connecting to master server");
+    LOG_STATUS("Connecting to master server");
 
     server->master.peer = enet_host_connect(server->master.client, &address, 2, 31);
     if (server->master.peer == NULL) {
@@ -60,7 +60,7 @@ int ConnectMaster(Server* server, uint16 port)
 
     ENetEvent event;
     while (enet_host_service(server->master.client, &event, 2000) > 0) {
-        STATUS("Connection success");
+        LOG_STATUS("Connection success");
         ENetPacket* packet =
         enet_packet_create(NULL,
                            9 + strlen(server->serverName) + strlen(server->gamemodeName) + strlen(server->mapName) + 3,
