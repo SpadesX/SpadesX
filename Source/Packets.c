@@ -1043,9 +1043,9 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     }
     server->player[playerID].state = STATE_SPAWNING;
     if (server->player[playerID].welcomeSent == 0) {
+        sendServerNotice(server, playerID, "Please take a minute and go check out https://helpukrainewin.org");
         sendServerNotice(
-        server, playerID, "Please take a minute and go check out https://helpukrainewin.org");
-        sendServerNotice(server, playerID, "We fully support Ukraine, And since the current situation at Ukraine is at best BAD!");
+        server, playerID, "We fully support Ukraine, And since the current situation at Ukraine is at best BAD!");
         sendServerNotice(
         server, playerID, "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8");
         sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
@@ -1096,7 +1096,11 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                             time_t timeNow = get_nanos();
                             if (server->player[playerID].blocks > 0 &&
                                 diffIsOlderThen(
-                                timeNow, &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
+                                timeNow, &server->player[playerID].timers.sinceLastBlockPlac, BLOCK_DELAY) &&
+                                diffIsOlderThenDontUpdate(
+                                timeNow, server->player[playerID].timers.sinceLastBlockDest, BLOCK_DELAY) &&
+                                diffIsOlderThenDontUpdate(
+                                timeNow, server->player[playerID].timers.sinceLast3BlockDest, BLOCK_DELAY))
                             {
                                 mapvxlSetColor(&server->map.map, X, Y, Z, server->player[playerID].toolColor.color);
                                 server->player[playerID].blocks--;
@@ -1111,7 +1115,12 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                         if (Z < 62 && gamemodeBlockChecks(server, X, Y, Z)) {
                             time_t timeNow = get_nanos();
                             if (diffIsOlderThen(
-                                timeNow, &server->player[playerID].timers.sinceLastBlockDest, NANO_IN_MILLI * 100)) {
+                                timeNow, &server->player[playerID].timers.sinceLastBlockDest, SPADE_DELAY) &&
+                                diffIsOlderThenDontUpdate(
+                                timeNow, server->player[playerID].timers.sinceLast3BlockDest, SPADE_DELAY) &&
+                                diffIsOlderThenDontUpdate(
+                                timeNow, server->player[playerID].timers.sinceLastBlockPlac, SPADE_DELAY))
+                            {
                                 Vector3i  position = {X, Y, Z};
                                 Vector3i* neigh    = getNeighbors(position);
                                 mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
@@ -1137,7 +1146,12 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                         {
                             time_t timeNow = get_nanos();
                             if (diffIsOlderThen(
-                                timeNow, &server->player[playerID].timers.sinceLast3BlockDest, NANO_IN_MILLI * 300)) {
+                                timeNow, &server->player[playerID].timers.sinceLast3BlockDest, THREEBLOCK_DELAY) &&
+                                diffIsOlderThenDontUpdate(
+                                timeNow, server->player[playerID].timers.sinceLastBlockDest, THREEBLOCK_DELAY) &&
+                                diffIsOlderThenDontUpdate(
+                                timeNow, server->player[playerID].timers.sinceLastBlockPlac, THREEBLOCK_DELAY))
+                            {
                                 for (int z = Z - 1; z <= Z + 1; z++) {
                                     if (z < 62) {
                                         mapvxlSetAir(&server->map.map, X, Y, z);
@@ -1176,9 +1190,12 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
     }
+    time_t timeNow = get_nanos();
     if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
         server->player[playerID].item == 1 &&
-        diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastBlockPlac, NANO_IN_MILLI * 100))
+        diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastBlockPlac, BLOCK_DELAY) &&
+        diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastBlockDest, BLOCK_DELAY) &&
+        diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLast3BlockDest, BLOCK_DELAY))
     {
         Vector3i start;
         Vector3i end;

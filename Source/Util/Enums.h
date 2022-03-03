@@ -4,6 +4,9 @@
 
 #include "Types.h"
 
+#define NANO_IN_SECOND 1000000000
+#define NANO_IN_MILLI  1000000
+
 typedef enum {
     STATE_DISCONNECTED,
     STATE_STARTING_MAP,
@@ -124,5 +127,12 @@ typedef enum {
     R_CHANNEL = 2,
     A_CHANNEL = 3,
 } ColorChannels;
+
+typedef enum {
+    BLOCK_DELAY = NANO_IN_MILLI * 500,
+    SPADE_DELAY = NANO_IN_MILLI * 200,
+    GRENADE_DELAY = NANO_IN_MILLI * 500,
+    THREEBLOCK_DELAY = NANO_IN_MILLI * 1000,
+} ToolDelays;
 
 #endif /* ENUMS_H */
