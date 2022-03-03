@@ -130,7 +130,7 @@ typedef enum {
 
 typedef enum {
     BLOCK_DELAY = NANO_IN_MILLI * 500,
-    SPADE_DELAY = NANO_IN_MILLI * 200,
+    SPADE_DELAY = NANO_IN_MILLI * 400,
     GRENADE_DELAY = NANO_IN_MILLI * 500,
     THREEBLOCK_DELAY = NANO_IN_MILLI * 1000,
 } ToolDelays;
