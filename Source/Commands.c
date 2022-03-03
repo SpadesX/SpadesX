@@ -207,7 +207,7 @@ static void loginCommand(Server* server, char command[30], char* message, uint8 
             for (uint8 j = 0; j < levelLen; ++j) {
                 level[j] = tolower(level[j]);
             }
-            unsigned int failed = 0;
+            uint8 failed = 0;
             for (unsigned long i = 0; i < sizeof(server->player[player].roleList) / sizeof(PermLevel); ++i) {
                 if (strcmp(level, server->player[player].roleList[i].accessLevel) == 0) {
                     if (strcmp(password, *server->player[player].roleList[i].accessPassword) == 0) {
