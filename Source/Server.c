@@ -353,11 +353,11 @@ static void ServerUpdate(Server* server, int timeout)
                 FILE* fp;
                 fp = fopen("BanList.txt", "r");
                 if (fp == NULL) {
-                    LOG_ERROR(
+                    LOG_WARNING(
                     "BanList.txt could not be opened. Creating clean BanList.txt");
                     fp = fopen("BanList.txt", "w+");
                     fclose(fp);
-                    return;
+                    fp = fopen("BanList.txt", "r");
                 }
                 uint8  IP[4];
                 char   nameOfPlayer[20];
