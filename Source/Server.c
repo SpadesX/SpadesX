@@ -354,8 +354,8 @@ static void ServerUpdate(Server* server, int timeout)
                 fp = fopen("BanList.txt", "r");
                 if (fp == NULL) {
                     LOG_ERROR(
-                    "BanList.txt could not be opened for checking ban. PLEASE FIX THIS NOW BY CREATING THIS FILE!!!!");
-                    server->running = 0;
+                    "BanList.txt could not be opened. Creating clean BanList.txt");
+                    fp = fopen("BanList.txt", "w+");
                     return;
                 }
                 uint8  IP[4];
