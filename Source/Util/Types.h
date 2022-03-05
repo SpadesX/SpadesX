@@ -2,9 +2,9 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define LOG_STATUS(msg)  printf("STATUS: " msg "\n")
-#define LOG_WARNING(msg) printf("WARNING: " msg "\n")
-#define LOG_ERROR(msg)   fprintf(stderr, "ERROR: " msg "\n")
+#define LOG_STATUS(msg, ...)  printf("STATUS: " msg "\n", ##__VA_ARGS__)
+#define LOG_WARNING(msg, ...) printf("WARNING: " msg "\n", ##__VA_ARGS__)
+#define LOG_ERROR(msg, ...)   fprintf(stderr, "ERROR: " msg "\n", ##__VA_ARGS__)
 
 typedef unsigned char          uint8;
 typedef unsigned short         uint16;
