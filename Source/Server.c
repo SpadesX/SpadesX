@@ -142,16 +142,16 @@ static void ServerInit(Server*     server,
     struct json_object* parsed_map_json;
     parsed_map_json = json_object_from_file(mapConfig);
 
-    int          team1Start[3];
-    int          team2Start[3];
-    int          team1End[3];
-    int          team2End[3];
+    int          team1Start[2];
+    int          team2Start[2];
+    int          team1End[2];
+    int          team2End[2];
     const char * author;
 
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0, 0}), 3)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10, 10}), 3)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]){20, 20, 0}), 3)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]){20, 20, 10}), 3)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0}), 2)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10}), 2)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]){20, 20}), 2)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]){30, 30}), 2)
     READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown")
     (void) author;
 
@@ -170,17 +170,13 @@ static void ServerInit(Server*     server,
 
     server->protocol.spawns[0].from.x = team1Start[0];
     server->protocol.spawns[0].from.y = team1Start[1];
-    server->protocol.spawns[0].from.z = team1Start[2];
     server->protocol.spawns[0].to.x   = team1End[0];
     server->protocol.spawns[0].to.y   = team1End[1];
-    server->protocol.spawns[0].to.z   = team1End[2];
 
     server->protocol.spawns[1].from.x = team2Start[0];
     server->protocol.spawns[1].from.y = team2Start[1];
-    server->protocol.spawns[1].from.z = team2Start[2];
     server->protocol.spawns[1].to.x   = team2End[0];
     server->protocol.spawns[1].to.y   = team2End[1];
-    server->protocol.spawns[1].to.z   = team2End[2];
 
     server->protocol.colorFog.colorArray[0] = 0x80;
     server->protocol.colorFog.colorArray[1] = 0xE8;
