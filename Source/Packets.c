@@ -540,8 +540,7 @@ void sendHP(Server*  server,
                 WriteFloat(&stream, position.x);
                 WriteFloat(&stream, position.y);
                 WriteFloat(&stream, position.z);
-            }
-             else {
+            } else {
                 WriteFloat(&stream, 0);
                 WriteFloat(&stream, 0);
                 WriteFloat(&stream, 0);
@@ -963,7 +962,16 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
         server->player[playerID].movement.position.z   = z;
         server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
     } else {
-        server->player[playerID].movement.position = server->player[playerID].movement.prevLegitPos;
+        if (validPlayerPos(server,
+                           playerID,
+                           server->player[playerID].movement.prevLegitPos.x,
+                           server->player[playerID].movement.prevLegitPos.y,
+                           server->player[playerID].movement.prevLegitPos.z) == 0)
+        {
+            server->player[playerID].movement.prevLegitPos.z--; // TODO: Checks for blocks around. If none are legit
+                                                                // send to random spawn location
+            server->player[playerID].movement.position = server->player[playerID].movement.prevLegitPos;
+        }
         SendPositionPacket(server,
                            playerID,
                            server->player[playerID].movement.prevLegitPos.x,
