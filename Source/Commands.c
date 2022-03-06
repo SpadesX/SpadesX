@@ -343,15 +343,11 @@ static void sayCommand(Server* server, char command[30], char* message, uint8 pl
 
 static void banIPCommand(Server* server, char command[30], char* message, uint8 player)
 {
-    char         ipString[16];
-    int          ip[4]; // Waste of memory. FIXME later
-    unsigned int ip32;
+    char    ipString[16];
+    IPUnion ip;
     if (sscanf(message, "%s %s", command, ipString) == 2) {
-        if (sscanf(ipString, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) == 4 && (ip[0] >= 0 && ip[0] <= 255) &&
-            (ip[1] >= 0 && ip[1] <= 255) && (ip[2] >= 0 && ip[2] <= 255) && (ip[3] >= 0 && ip[3] <= 255))
+        if (sscanf(ipString, "%hhu.%hhu.%hhu.%hhu", &ip.ip[0], &ip.ip[1], &ip.ip[2], &ip.ip[3]) == 4)
         {
-            ip32 = ((uint64) (((uint8) ip[0])) | (uint64) (((uint8) ip[1]) << 8) | (uint64) (((uint8) ip[2]) << 16) |
-                    (uint64) ((uint8) ip[3]) << 24);
             char sendingMessage[100];
             snprintf(sendingMessage, 100, "IP %s has been permanently banned", ipString);
             FILE* fp;
@@ -362,7 +358,7 @@ static void banIPCommand(Server* server, char command[30], char* message, uint8 
             }
             uint8 banned = 0;
             for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
-                if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipUnion.ip32 == ip32) {
+                if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipUnion.ip32 == ip.ip32) {
                     if (banned == 0) {
                         fprintf(fp, "%s, %s,\n", ipString, server->player[ID].name);
                         fclose(fp);
