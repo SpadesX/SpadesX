@@ -15,6 +15,7 @@
 #include <Line.h>
 #include <Queue.h>
 #include <Types.h>
+#include <JSONHelpers.h>
 #include <enet/enet.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
@@ -141,48 +142,18 @@ static void ServerInit(Server*     server,
     struct json_object* parsed_map_json;
     parsed_map_json = json_object_from_file(mapConfig);
 
-    struct json_object* team1StartInConfig;
-    struct json_object* team1EndInConfig;
-    struct json_object* team2StartInConfig;
-    struct json_object* team2EndInConfig;
-    struct json_object* authorInConfig;
-    int                 team1Start[3];
-    int                 team2Start[3];
-    int                 team1End[3];
-    int                 team2End[3];
+    int          team1Start[2];
+    int          team2Start[2];
+    int          team1End[2];
+    int          team2End[2];
+    const char * author;
 
-    if (json_object_object_get_ex(parsed_map_json, "team1_start", &team1StartInConfig) == 0) {
-        LOG_ERROR("Failed to find team1 start in map config");
-        server->running = 0;
-        return;
-    }
-    if (json_object_object_get_ex(parsed_map_json, "team1_end", &team1EndInConfig) == 0) {
-        LOG_ERROR("Failed to find team1 end in map config");
-        server->running = 0;
-        return;
-    }
-    if (json_object_object_get_ex(parsed_map_json, "team2_start", &team2StartInConfig) == 0) {
-        LOG_ERROR("Failed to find team2 start in map config");
-        server->running = 0;
-        return;
-    }
-    if (json_object_object_get_ex(parsed_map_json, "team2_end", &team2EndInConfig) == 0) {
-        LOG_ERROR("Failed to find team2 start in map config");
-        server->running = 0;
-        return;
-    }
-    if (json_object_object_get_ex(parsed_map_json, "author", &authorInConfig) == 0) {
-        LOG_ERROR("Failed to find author in map config");
-        server->running = 0;
-        return;
-    }
-
-    for (uint8 i = 0; i < 2; ++i) {
-        team1Start[i] = json_object_get_int(json_object_array_get_idx(team1StartInConfig, i));
-        team2Start[i] = json_object_get_int(json_object_array_get_idx(team2StartInConfig, i));
-        team1End[i]   = json_object_get_int(json_object_array_get_idx(team1EndInConfig, i));
-        team2End[i]   = json_object_get_int(json_object_array_get_idx(team2EndInConfig, i));
-    }
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0}), 2)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10}), 2)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]){20, 20}), 2)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]){30, 30}), 2)
+    READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown")
+    (void) author;
 
     json_object_put(parsed_map_json);
 
@@ -199,17 +170,13 @@ static void ServerInit(Server*     server,
 
     server->protocol.spawns[0].from.x = team1Start[0];
     server->protocol.spawns[0].from.y = team1Start[1];
-    server->protocol.spawns[0].from.z = team1Start[2];
     server->protocol.spawns[0].to.x   = team1End[0];
     server->protocol.spawns[0].to.y   = team1End[1];
-    server->protocol.spawns[0].to.z   = team1End[2];
 
     server->protocol.spawns[1].from.x = team2Start[0];
     server->protocol.spawns[1].from.y = team2Start[1];
-    server->protocol.spawns[1].from.z = team2Start[2];
     server->protocol.spawns[1].to.x   = team2End[0];
     server->protocol.spawns[1].to.y   = team2End[1];
-    server->protocol.spawns[1].to.z   = team2End[2];
 
     server->protocol.colorFog.colorArray[0] = 0x80;
     server->protocol.colorFog.colorArray[1] = 0xE8;
