@@ -214,9 +214,9 @@ void SendIntelDrop(Server* server, uint8 playerID)
     server->protocol.gameMode.intelHeld[team]                                = 0;
 
     LOG_INFO("Dropping intel at X: %d, Y: %d, Z: %d",
-           (int) server->protocol.gameMode.intel[team].x,
-           (int) server->protocol.gameMode.intel[team].y,
-           (int) server->protocol.gameMode.intel[team].z);
+             (int) server->protocol.gameMode.intel[team].x,
+             (int) server->protocol.gameMode.intel[team].y,
+             (int) server->protocol.gameMode.intel[team].z);
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
             enet_peer_send(server->player[player].peer, 0, packet);
@@ -268,12 +268,12 @@ void SendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint
     uint8 tempClip;
     uint8 tempReserve;
     if (startAnimation) {
-        tempClip = clip;
+        tempClip    = clip;
         tempReserve = reserve;
         WriteByte(&stream, tempClip);
         WriteByte(&stream, tempReserve);
     } else {
-        tempClip = server->player[playerID].weaponClip;
+        tempClip    = server->player[playerID].weaponClip;
         tempReserve = server->player[playerID].weaponReserve;
         WriteByte(&stream, server->player[playerID].weaponClip);
         WriteByte(&stream, server->player[playerID].weaponReserve);
@@ -496,13 +496,15 @@ void sendKillPacket(Server* server,
     }
 }
 
-void sendHP(Server* server,
-            uint8   playerID,
-            uint8   hitPlayerID,
-            long    HPChange,
-            uint8   typeOfDamage,
-            uint8   killReason,
-            uint8   respawnTime)
+void sendHP(Server*  server,
+            uint8    playerID,
+            uint8    hitPlayerID,
+            long     HPChange,
+            uint8    typeOfDamage,
+            uint8    killReason,
+            uint8    respawnTime,
+            uint8    isGrenade,
+            Vector3f position)
 {
     if ((server->player[playerID].allowKilling && server->globalAK && server->player[playerID].allowKilling &&
          server->player[playerID].alive) ||
@@ -530,11 +532,16 @@ void sendHP(Server* server,
             WriteByte(&stream, PACKET_TYPE_SET_HP);
             WriteByte(&stream, server->player[hitPlayerID].HP);
             WriteByte(&stream, typeOfDamage);
-            if (typeOfDamage != 0) {
+            if (typeOfDamage != 0 && isGrenade == 0) {
                 WriteFloat(&stream, server->player[playerID].movement.position.x);
                 WriteFloat(&stream, server->player[playerID].movement.position.y);
                 WriteFloat(&stream, server->player[playerID].movement.position.z);
-            } else {
+            } else if (typeOfDamage != 0 && isGrenade == 1) {
+                WriteFloat(&stream, position.x);
+                WriteFloat(&stream, position.y);
+                WriteFloat(&stream, position.z);
+            }
+             else {
                 WriteFloat(&stream, 0);
                 WriteFloat(&stream, 0);
                 WriteFloat(&stream, 0);
@@ -648,10 +655,10 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player, ID);
     }
     LOG_INFO("Player %s (%ld) to %d said: %s",
-           server->player[player].name,
-           (long) server->player[player].peer->data,
-           meantfor,
-           message);
+             server->player[player].name,
+             (long) server->player[player].peer->data,
+             meantfor,
+             message);
     message[length]    = '\0';
     ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
@@ -801,17 +808,17 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
                     }
                     case HIT_TYPE_TORSO:
                     {
-                        sendHP(server, playerID, hitPlayerID, 49, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 49, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_ARMS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_LEGS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_MELEE:
@@ -825,22 +832,22 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
                 switch (hitType) {
                     case HIT_TYPE_HEAD:
                     {
-                        sendHP(server, playerID, hitPlayerID, 75, 1, 1, 5);
+                        sendHP(server, playerID, hitPlayerID, 75, 1, 1, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_TORSO:
                     {
-                        sendHP(server, playerID, hitPlayerID, 29, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 29, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_ARMS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_LEGS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_MELEE:
@@ -854,22 +861,22 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
                 switch (hitType) {
                     case HIT_TYPE_HEAD:
                     {
-                        sendHP(server, playerID, hitPlayerID, 37, 1, 1, 5);
+                        sendHP(server, playerID, hitPlayerID, 37, 1, 1, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_TORSO:
                     {
-                        sendHP(server, playerID, hitPlayerID, 27, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 27, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_ARMS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_LEGS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5);
+                        sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_MELEE:
@@ -880,7 +887,7 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
             }
         }
         if (hitType == HIT_TYPE_MELEE) {
-            sendHP(server, playerID, hitPlayerID, 80, 1, 2, 5);
+            sendHP(server, playerID, hitPlayerID, 80, 1, 2, 5, 0, shotPos);
         }
     }
 }
@@ -933,22 +940,22 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     z = ReadFloat(data);
 #ifdef DEBUG
     LOG_DEBUG("Player: %d, Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f",
-           playerID,
-           server->player[playerID].movement.position.x,
-           server->player[playerID].movement.position.y,
-           server->player[playerID].movement.position.z,
-           x,
-           y,
-           z);
+              playerID,
+              server->player[playerID].movement.position.x,
+              server->player[playerID].movement.position.y,
+              server->player[playerID].movement.position.z,
+              x,
+              y,
+              z);
     LOG_DEBUG("Player: %d, Z solid: %d, Z+1 solid: %d, Z+2 solid: %d, Z: %d, Z+1: %d, Z+2: %d, Crouching: %d",
-           playerID,
-           mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z),
-           mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 1),
-           mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 2),
-           (int) z,
-           (int) z + 1,
-           (int) z + 2,
-           server->player[playerID].crouching);
+              playerID,
+              mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z),
+              mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 1),
+              mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 2),
+              (int) z,
+              (int) z + 1,
+              (int) z + 2,
+              server->player[playerID].crouching);
 #endif
     if (validPlayerPos(server, playerID, x, y, z)) {
         server->player[playerID].movement.position.x   = x;
@@ -1192,9 +1199,9 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
             }
         } else {
             LOG_WARNING("Player: #%d may be using BlockExploit with Item: %d and Action: %d",
-                   playerID,
-                   server->player[playerID].item,
-                   actionType);
+                        playerID,
+                        server->player[playerID].item,
+                        actionType);
         }
     }
 }
@@ -1302,24 +1309,26 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
         SendWeaponInput(server, playerID, wInput);
         uint64 timeDiff = 0;
         switch (server->player[playerID].weapon) {
-                        case WEAPON_RIFLE:
-                        {
-                            timeDiff = NANO_IN_MILLI * 500;
-                            break;
-                        }
-                        case WEAPON_SMG:
-                        {
-                            timeDiff = NANO_IN_MILLI * 110;
-                            break;
-                        }
-                        case WEAPON_SHOTGUN:
-                        {
-                            timeDiff = NANO_IN_MILLI * 1000;
-                            break;
-                        }
-                    }
+            case WEAPON_RIFLE:
+            {
+                timeDiff = NANO_IN_MILLI * 500;
+                break;
+            }
+            case WEAPON_SMG:
+            {
+                timeDiff = NANO_IN_MILLI * 110;
+                break;
+            }
+            case WEAPON_SHOTGUN:
+            {
+                timeDiff = NANO_IN_MILLI * 1000;
+                break;
+            }
+        }
 
-        if (server->player[playerID].primary_fire && diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastWeaponInput, timeDiff)) {
+        if (server->player[playerID].primary_fire &&
+            diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastWeaponInput, timeDiff))
+        {
             server->player[playerID].timers.sinceLastWeaponInput = get_nanos();
             server->player[playerID].toRefill++;
             server->player[playerID].weaponClip--;
@@ -1346,7 +1355,6 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     } else {
         // sendKillPacket(server, playerID, playerID, 0, 30, 0);
     }
-    
 }
 
 static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data)

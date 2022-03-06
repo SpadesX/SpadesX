@@ -914,7 +914,7 @@ void handleGrenade(Server* server, uint8 playerID)
                                 diff = 41.f;
                             }
                             int value = (int) (4096.f / diff);
-                            sendHP(server, playerID, y, value, 1, 3, 5);
+                            sendHP(server, playerID, y, value, 1, 3, 5, 1, server->player[playerID].grenade[i].position);
                         }
                     }
                 }
@@ -970,7 +970,8 @@ void updateMovementAndGrenades(Server* server)
             long falldamage = 0;
             falldamage      = move_player(server, playerID);
             if (falldamage > 0) {
-                sendHP(server, playerID, playerID, falldamage, 0, 4, 5);
+                Vector3f zero = {0, 0, 0};
+                sendHP(server, playerID, playerID, falldamage, 0, 4, 5, 0, zero);
             }
             if (server->protocol.currentGameMode != GAME_MODE_ARENA) {
                 handleTentAndIntel(server, playerID);

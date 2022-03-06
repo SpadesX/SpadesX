@@ -25,13 +25,15 @@ void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, in
 void SendStateData(Server* server, uint8 playerID);
 void SendInputData(Server* server, uint8 playerID);
 void sendKillPacket(Server* server, uint8 killerID, uint8 playerID, uint8 killReason, uint8 respawnTime, uint8 makeInvisible);
-void sendHP(Server* server,
-            uint8   hitPlayerID,
-            uint8   playerID,
-            long    HPChange,
-            uint8   type,
-            uint8   killReason,
-            uint8   respawnTime);
+void sendHP(Server*  server,
+            uint8    playerID,
+            uint8    hitPlayerID,
+            long     HPChange,
+            uint8    typeOfDamage,
+            uint8    killReason,
+            uint8    respawnTime,
+            uint8    isGrenade,
+            Vector3f position);
 void SendPlayerState(Server* server, uint8 playerID, uint8 otherID);
 void SendMapStart(Server* server, uint8 playerID);
 void SendMapChunks(Server* server, uint8 playerID);
