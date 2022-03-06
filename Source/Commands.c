@@ -210,7 +210,8 @@ static void loginCommand(Server* server, char command[30], char* message, uint8 
             uint8 failed = 0;
             for (unsigned long i = 0; i < sizeof(server->player[player].roleList) / sizeof(PermLevel); ++i) {
                 if (strcmp(level, server->player[player].roleList[i].accessLevel) == 0) {
-                    if (strcmp(password, *server->player[player].roleList[i].accessPassword) == 0) {
+                    if (*server->player[player].roleList[i].accessPassword[0] != '\0' // disable the role if no password is set
+                        && strcmp(password, *server->player[player].roleList[i].accessPassword) == 0) {
                         *server->player[player].roleList[i].access = 1;
                         char success[128];
                         snprintf(success, 128, "You logged in %s", server->player[player].roleList[i].accessLevel);
