@@ -1,12 +1,13 @@
 // Copyright DarkNeutrino 2021
+#include "Protocol.h"
+
 #include "Packets.h"
 #include "Physics.h"
-#include "Protocol.h"
 #include "Server.h"
 #include "Structs.h"
 
-#include <Enums.h>
 #include <DataStream.h>
+#include <Enums.h>
 #include <Types.h>
 #include <ctype.h>
 #include <enet/enet.h>
@@ -50,6 +51,29 @@ static uint8 grenadeGamemodeCheck(Server* server, Vector3f pos)
         gamemodeBlockChecks(server, pos.x - 1, pos.y - 1, pos.z))
     {
         return 1;
+    }
+    return 0;
+}
+
+uint8 getGrenadeDamage(Server* server, uint8 damageID, uint8 throwerID, uint8 grenadeID)
+{
+    double diffX =
+    fabs(server->player[damageID].movement.position.x - server->player[throwerID].grenade[grenadeID].position.x);
+    double diffY =
+    fabs(server->player[damageID].movement.position.y - server->player[throwerID].grenade[grenadeID].position.y);
+    double diffZ =
+    fabs(server->player[damageID].movement.position.z - server->player[throwerID].grenade[grenadeID].position.z);
+    Vector3f playerPos  = server->player[damageID].movement.position;
+    Vector3f grenadePos = server->player[damageID].grenade[grenadeID].position;
+    if (diffX < 16 && diffY < 16 && diffZ < 16 &&
+        can_see(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
+        server->player[throwerID].grenade[grenadeID].position.z < 62)
+    {
+        double diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
+        if (diff == 0) {
+            return 100;
+        }
+        return (int) fmin((4096.f / diff), 100);
     }
     return 0;
 }
@@ -888,33 +912,17 @@ void handleGrenade(Server* server, uint8 playerID)
                     SendBlockAction(server,
                                     playerID,
                                     3,
-                                    server->player[playerID].grenade[i].position.x,
-                                    server->player[playerID].grenade[i].position.y,
-                                    server->player[playerID].grenade[i].position.z);
+                                    floor(server->player[playerID].grenade[i].position.x),
+                                    floor(server->player[playerID].grenade[i].position.y),
+                                    floor(server->player[playerID].grenade[i].position.z));
                     allowToDestroy = 1;
                 }
                 for (int y = 0; y < server->protocol.maxPlayers; ++y) {
                     if (server->player[y].state == STATE_READY) {
-                        float diffX =
-                        fabs(server->player[y].movement.position.x - server->player[playerID].grenade[i].position.x);
-                        float diffY =
-                        fabs(server->player[y].movement.position.y - server->player[playerID].grenade[i].position.y);
-                        float diffZ =
-                        fabs(server->player[y].movement.position.z - server->player[playerID].grenade[i].position.z);
-                        Vector3f playerPos  = server->player[y].movement.position;
-                        Vector3f grenadePos = server->player[y].grenade[i].position;
-                        if (diffX < 16 && diffY < 16 && diffZ < 16 &&
-                            can_see(
-                            server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
-                            server->player[playerID].grenade[i].position.z < 62)
-                        {
-                            float diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
-                            if (diff <= 0) {
-                                LOG_WARNING("Player %d sent a grenade that had a diff of 0", playerID);
-                                diff = 41.f;
-                            }
-                            int value = (int) (4096.f / diff);
-                            sendHP(server, playerID, y, value, 1, 3, 5, 1, server->player[playerID].grenade[i].position);
+                        uint8 value = getGrenadeDamage(server, y, playerID, i);
+                        if (value > 0) {
+                            sendHP(
+                            server, playerID, y, value, 1, 3, 5, 1, server->player[playerID].grenade[i].position);
                         }
                     }
                 }
@@ -1001,10 +1009,10 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
         server->player[playerID].movement.forwardOrientation.z = 0.f;
 
         LOG_INFO("Player %d spawning at: %f %f %f",
-               playerID,
-               server->player[playerID].movement.position.x,
-               server->player[playerID].movement.position.y,
-               server->player[playerID].movement.position.z);
+                 playerID,
+                 server->player[playerID].movement.position.x,
+                 server->player[playerID].movement.position.y,
+                 server->player[playerID].movement.position.z);
     }
 }
 
