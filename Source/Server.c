@@ -441,7 +441,6 @@ void StopServer(int signal)
 {
     (void) signal; // To prevent a warning about unused variable
     server.running = 0;
-    LOG_STATUS("Exiting...");
 }
 
 void StartServer(uint16      port,
