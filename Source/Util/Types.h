@@ -3,13 +3,13 @@
 #define TYPES_H
 
 #define LOG__INT(msg, ...) printf(msg "%s", __VA_ARGS__);
-#define LOGF__INT(msg, ...) fprintf(stderr, msg "%s", __VA_ARGS__);
+#define LOGF__INT(file ,msg, ...) fprintf(file, msg "%s", __VA_ARGS__);
 
 #define LOG_DEBUG(...)  LOG__INT("DEBUG: " __VA_ARGS__, "\n")
 #define LOG_INFO(...)  LOG__INT("INFO: " __VA_ARGS__, "\n")
 #define LOG_STATUS(...)  LOG__INT("STATUS: " __VA_ARGS__, "\n")
 #define LOG_WARNING(...) LOG__INT("WARNING: " __VA_ARGS__, "\n")
-#define LOG_ERROR(...)   LOGF__INT("ERROR: " __VA_ARGS__, "\n")
+#define LOG_ERROR(...)   LOGF__INT(stderr ,"ERROR: " __VA_ARGS__, "\n")
 
 
 typedef unsigned char          uint8;
