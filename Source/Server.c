@@ -41,39 +41,78 @@ static void forPlayers()
 {
     for (int playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         if (isPastJoinScreen(&server, playerID)) {
-            time_t timeNow = get_nanos();
-            if (server.player[playerID].primary_fire) {
+            uint64 timeNow = get_nanos();
+            if (server.player[playerID].primary_fire == 1 && server.player[playerID].reloading == 0) {
                 if (server.player[playerID].weaponClip > 0) {
+                    uint64 milliseconds = 0;
                     switch (server.player[playerID].weapon) {
                         case WEAPON_RIFLE:
                         {
-                            if (diffIsOlderThen(
-                                timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 500)) {
-                                server.player[playerID].weaponClip--;
-                            }
+                            milliseconds = 500;
                             break;
                         }
                         case WEAPON_SMG:
                         {
-                            if (diffIsOlderThen(
-                                timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 110)) {
-                                server.player[playerID].weaponClip--;
-                            }
+                            milliseconds = 110;
                             break;
                         }
                         case WEAPON_SHOTGUN:
                         {
-                            if (diffIsOlderThen(
-                                timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * 1000)) {
-                                server.player[playerID].weaponClip--;
-                            }
+                            milliseconds = 1000;
                             break;
                         }
                     }
+                    if (diffIsOlderThen(
+                        timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * milliseconds)) {
+                        server.player[playerID].toRefill++;
+                        server.player[playerID].weaponClip--;
+                    }
+                }
+            } else if (server.player[playerID].primary_fire == 0 && server.player[playerID].reloading == 1) {
+                switch (server.player[playerID].weapon) {
+                    case WEAPON_RIFLE:
+                    case WEAPON_SMG:
+                    {
+                        if (diffIsOlderThen(
+                            timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 2500)) {
+                            if (server.player[playerID].weaponReserve < server.player[playerID].toRefill) {
+                                server.player[playerID].weaponClip += server.player[playerID].weaponReserve;
+                                server.player[playerID].toRefill -= server.player[playerID].weaponReserve;
+                                server.player[playerID].weaponReserve = 0;
+                                server.player[playerID].reloading     = 0;
+                                server.player[playerID].toRefill      = 0;
+                                SendWeaponReload(&server, playerID, 0, 0, 0);
+                                break;
+                            }
+                            server.player[playerID].weaponClip += server.player[playerID].toRefill;
+                            server.player[playerID].weaponReserve -= server.player[playerID].toRefill;
+                            server.player[playerID].reloading = 0;
+                            server.player[playerID].toRefill  = 0;
+                            SendWeaponReload(&server, playerID, 0, 0, 0);
+                        }
+                        break;
+                    }
+                    case WEAPON_SHOTGUN:
+                    {
+                        if (diffIsOlderThen(
+                            timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 500)) {
+                            if (server.player[playerID].weaponReserve == 0 || server.player[playerID].toRefill == 0) {
+                                server.player[playerID].reloading = 0;
+                                break;
+                            }
+                            server.player[playerID].weaponClip++;
+                            server.player[playerID].weaponReserve--;
+                            server.player[playerID].toRefill--;
+                            if (server.player[playerID].toRefill == 0) {
+                                server.player[playerID].reloading = 0;
+                            }
+                            SendWeaponReload(&server, playerID, 0, 0, 0);
+                        }
+                        break;
+                    }
                 }
             }
-        }
-        if (isPastStateData(&server, playerID)) {
+        } else if (isPastStateData(&server, playerID)) {
         }
     }
 }
@@ -290,7 +329,7 @@ static void* WorldUpdate()
     for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         OnPlayerUpdate(&server, playerID);
         if (isPastJoinScreen(&server, playerID)) {
-            time_t time = get_nanos();
+            uint64 time = get_nanos();
             if (time - server.player[playerID].timers.timeSinceLastWU >= (NANO_IN_SECOND / server.player[playerID].ups))
             {
                 SendWorldUpdate(&server, playerID);
@@ -320,8 +359,7 @@ static void ServerUpdate(Server* server, int timeout)
                 FILE* fp;
                 fp = fopen("BanList.txt", "r");
                 if (fp == NULL) {
-                    LOG_WARNING(
-                    "BanList.txt could not be opened. Creating clean BanList.txt");
+                    LOG_WARNING("BanList.txt could not be opened. Creating clean BanList.txt");
                     fp = fopen("BanList.txt", "w+");
                     fclose(fp);
                     fp = fopen("BanList.txt", "r");

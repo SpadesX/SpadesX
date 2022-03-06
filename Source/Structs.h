@@ -40,8 +40,8 @@ typedef struct
     uint8    exploded;
     Vector3f position;
     Vector3f velocity;
-    time_t   timeSinceSent;
-    time_t   timeNow;
+    uint64   timeSinceSent;
+    uint64   timeNow;
 } Grenade;
 
 typedef struct
@@ -107,16 +107,18 @@ typedef struct
 
 typedef struct
 {
-    time_t timeSinceLastWU;
-    time_t sinceLastBaseEnter;
-    time_t sinceLastBaseEnterRestock;
-    time_t startOfRespawnWait;
-    time_t sinceLastShot;
-    time_t sinceLastBlockDest;
-    time_t sinceLastBlockPlac;
-    time_t sinceLast3BlockDest;
-    time_t sinceLastGrenadeThrown;
-    time_t sinceLastWeaponInput;
+    uint64 timeSinceLastWU;
+    uint64 sinceLastBaseEnter;
+    uint64 sinceLastBaseEnterRestock;
+    uint64 startOfRespawnWait;
+    uint64 sinceLastShot;
+    uint64 sinceLastBlockDest;
+    uint64 sinceLastBlockPlac;
+    uint64 sinceLast3BlockDest;
+    uint64 sinceLastGrenadeThrown;
+    uint64 sinceLastWeaponInput;
+    uint64 sinceReloadStart;
+    uint64 sinceLastPrimaryWeaponInput;
 } Timers;
 
 typedef struct
@@ -174,6 +176,9 @@ typedef struct
     uint8                isTrusted;
     uint8                isInvisible;
     uint8                welcomeSent;
+    uint8                toRefill;
+    uint8                reloading;
+    uint8                firstBullet;
 
     uint8    movForward;
     uint8    movBackwards;
@@ -201,7 +206,7 @@ typedef struct
     ENetPeer* peer;
     ENetEvent event;
     uint8     enableMasterConnection;
-    time_t    timeSinceLastSend;
+    uint64    timeSinceLastSend;
 } Master;
 
 typedef struct

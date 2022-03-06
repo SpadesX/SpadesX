@@ -16,7 +16,7 @@ void SendIntelPickup(Server* server, uint8 playerID);
 void SendIntelDrop(Server* server, uint8 playerID);
 void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity);
 void SendPlayerLeft(Server* server, uint8 playerID);
-void SendWeaponReload(Server* server, uint8 playerID);
+void SendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint8 clip, uint8 reserve);
 void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput);
 void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B);
 void SendSetTool(Server* server, uint8 playerID, uint8 tool);

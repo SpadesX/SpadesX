@@ -48,7 +48,7 @@ long cast_ray(Server* server,
 inline static uint8 allowShot(Server*  server,
                               uint8    playerID,
                               uint8    hitPlayerID,
-                              time_t   timeNow,
+                              uint64   timeNow,
                               float    distance,
                               long*    x,
                               long*    y,
@@ -259,24 +259,34 @@ void SendPlayerLeft(Server* server, uint8 playerID)
     }
 }
 
-void SendWeaponReload(Server* server, uint8 playerID)
+void SendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint8 clip, uint8 reserve)
 {
     ENetPacket* packet = enet_packet_create(NULL, 4, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WEAPON_RELOAD);
     WriteByte(&stream, playerID);
-    WriteByte(&stream, server->player[playerID].weaponClip);
-    WriteByte(&stream, server->player[playerID].weaponReserve);
+    uint8 tempClip;
+    uint8 tempReserve;
+    if (startAnimation) {
+        tempClip = clip;
+        tempReserve = reserve;
+        WriteByte(&stream, tempClip);
+        WriteByte(&stream, tempReserve);
+    } else {
+        tempClip = server->player[playerID].weaponClip;
+        tempReserve = server->player[playerID].weaponReserve;
+        WriteByte(&stream, server->player[playerID].weaponClip);
+        WriteByte(&stream, server->player[playerID].weaponReserve);
+    }
     uint8 sendSucc = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player)) {
+        if (isPastStateData(server, player) && (startAnimation == 0 && playerID != player)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sendSucc = 1;
             }
         }
     }
     if (sendSucc == 0) {
-        printf("destroying packet\n");
         enet_packet_destroy(packet);
     }
 }
@@ -713,7 +723,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in grenade packet\n", playerID, ID);
     }
-    time_t timeNow = get_nanos();
+    uint64 timeNow = get_nanos();
     if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 1000)) {
         return;
     }
@@ -776,7 +786,7 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
         return; // Sprinting and hitting somebody is impossible
     }
 
-    time_t timeNow = get_nanos();
+    uint64 timeNow = get_nanos();
 
     if (allowShot(server, playerID, hitPlayerID, timeNow, distance, &x, &y, &z, shotPos, shotOrien, hitPos, shotEyePos))
     {
@@ -1098,7 +1108,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                     case 0:
                     {
                         if (gamemodeBlockChecks(server, X, Y, Z)) {
-                            time_t timeNow = get_nanos();
+                            uint64 timeNow = get_nanos();
                             if (server->player[playerID].blocks > 0 &&
                                 diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLastBlockPlac, BLOCK_DELAY) &&
@@ -1118,7 +1128,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                     case 1:
                     {
                         if (Z < 62 && gamemodeBlockChecks(server, X, Y, Z)) {
-                            time_t timeNow = get_nanos();
+                            uint64 timeNow = get_nanos();
                             if (diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLastBlockDest, SPADE_DELAY) &&
                                 diffIsOlderThenDontUpdate(
@@ -1149,7 +1159,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                         if (gamemodeBlockChecks(server, X, Y, Z) && gamemodeBlockChecks(server, X, Y, Z + 1) &&
                             gamemodeBlockChecks(server, X, Y, Z - 1))
                         {
-                            time_t timeNow = get_nanos();
+                            uint64 timeNow = get_nanos();
                             if (diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLast3BlockDest, THREEBLOCK_DELAY) &&
                                 diffIsOlderThenDontUpdate(
@@ -1195,7 +1205,7 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
     if (playerID != ID) {
         printf("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
     }
-    time_t timeNow = get_nanos();
+    uint64 timeNow = get_nanos();
     if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
         server->player[playerID].item == 1 &&
         diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastBlockPlac, BLOCK_DELAY) &&
@@ -1290,10 +1300,30 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     else if (server->player[playerID].weaponClip > 0)
     {
         SendWeaponInput(server, playerID, wInput);
+        uint64 timeDiff = 0;
+        switch (server->player[playerID].weapon) {
+                        case WEAPON_RIFLE:
+                        {
+                            timeDiff = NANO_IN_MILLI * 500;
+                            break;
+                        }
+                        case WEAPON_SMG:
+                        {
+                            timeDiff = NANO_IN_MILLI * 110;
+                            break;
+                        }
+                        case WEAPON_SHOTGUN:
+                        {
+                            timeDiff = NANO_IN_MILLI * 1000;
+                            break;
+                        }
+                    }
 
-        if (server->player[playerID].primary_fire) {
+        if (server->player[playerID].primary_fire && diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastWeaponInput, timeDiff)) {
             server->player[playerID].timers.sinceLastWeaponInput = get_nanos();
+            server->player[playerID].toRefill++;
             server->player[playerID].weaponClip--;
+            server->player[playerID].reloading = 0;
             if ((server->player[playerID].movement.previousOrientation.x ==
                  server->player[playerID].movement.forwardOrientation.x) &&
                 (server->player[playerID].movement.previousOrientation.y ==
@@ -1316,6 +1346,7 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     } else {
         // sendKillPacket(server, playerID, playerID, 0, 30, 0);
     }
+    
 }
 
 static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data)
@@ -1329,23 +1360,12 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
     server->player[playerID].primary_fire   = 0;
     server->player[playerID].secondary_fire = 0;
 
-    uint8 toRefill = server->player[playerID].defaultClip - server->player[playerID].weaponClip;
-    if (server->player[playerID].weaponReserve < toRefill) {
-        if (server->player[playerID].weaponReserve == 0) {
-            return;
-        }
-        server->player[playerID].weaponClip += server->player[playerID].weaponReserve;
-        server->player[playerID].weaponReserve = 0;
-        SendWeaponReload(server, playerID);
+    if (server->player[playerID].weaponReserve == 0) {
         return;
     }
-    server->player[playerID].weaponClip += toRefill;
-    server->player[playerID].weaponReserve -= toRefill;
-    if (server->player[playerID].weaponClip != clip || server->player[playerID].weaponReserve != reserve) {
-        // Do nothing for now. Voxlap is DUMB AF and sends only 0 0 and OpenSpades is sorta dumb as well and sends 255
-        // 255. How am i supposed to check for hacks dammit with this kind of info dammit ?
-    }
-    SendWeaponReload(server, playerID);
+    server->player[playerID].reloading               = 1;
+    server->player[playerID].timers.sinceReloadStart = get_nanos();
+    SendWeaponReload(server, playerID, 1, clip, reserve);
 }
 
 static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)

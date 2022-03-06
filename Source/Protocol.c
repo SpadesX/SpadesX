@@ -796,7 +796,7 @@ void handleTentAndIntel(Server* server, uint8 playerID)
         team = 0;
     }
     if (server->player[playerID].team != TEAM_SPECTATOR) {
-        time_t timeNow = time(NULL);
+        uint64 timeNow = time(NULL);
         if (server->player[playerID].hasIntel == 0) {
 
             if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.gameMode.intelHeld[team])) {
@@ -1119,7 +1119,7 @@ uint8 SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID)
     return sent;
 }
 
-uint8 diffIsOlderThen(time_t timeNow, time_t* timeBefore, time_t timeDiff)
+uint8 diffIsOlderThen(uint64 timeNow, uint64* timeBefore, uint64 timeDiff)
 {
     if (timeNow - *timeBefore >= timeDiff) {
         *timeBefore = timeNow;
@@ -1129,7 +1129,7 @@ uint8 diffIsOlderThen(time_t timeNow, time_t* timeBefore, time_t timeDiff)
     }
 }
 
-uint8 diffIsOlderThenDontUpdate(time_t timeNow, time_t timeBefore, time_t timeDiff)
+uint8 diffIsOlderThenDontUpdate(uint64 timeNow, uint64 timeBefore, uint64 timeDiff)
 {
     if (timeNow - timeBefore >= timeDiff) {
         return 1;

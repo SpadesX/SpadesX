@@ -50,8 +50,8 @@ uint8     playerToPlayerVisible(Server* server, uint8 playerID, uint8 playerID2)
 uint32    DistanceIn3D(Vector3f vector1, Vector3f vector2);
 uint32    DistanceIn2D(Vector3f vector1, Vector3f vector2);
 uint8     Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance);
-uint8     diffIsOlderThen(time_t timeNow, time_t* timeBefore, time_t timeDiff);
-uint8     diffIsOlderThenDontUpdate(time_t timeNow, time_t timeBefore, time_t timeDiff);
+uint8     diffIsOlderThen(uint64 timeNow, uint64* timeBefore, uint64 timeDiff);
+uint8     diffIsOlderThenDontUpdate(uint64 timeNow, uint64 timeBefore, uint64 timeDiff);
 uint8     isStaff(Server* server, uint8 playerID);
 void      sendMessageToStaff(Server* server, char* message);
 
