@@ -2,6 +2,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define LOG_DEBUG(msg, ...)  printf("DEBUG: " msg "\n", ##__VA_ARGS__)
+#define LOG_INFO(msg, ...)  printf("INFO: " msg "\n", ##__VA_ARGS__)
 #define LOG_STATUS(msg, ...)  printf("STATUS: " msg "\n", ##__VA_ARGS__)
 #define LOG_WARNING(msg, ...) printf("WARNING: " msg "\n", ##__VA_ARGS__)
 #define LOG_ERROR(msg, ...)   fprintf(stderr, "ERROR: " msg "\n", ##__VA_ARGS__)

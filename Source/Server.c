@@ -12,10 +12,10 @@
 #include <DataStream.h>
 #include <Enums.h>
 #include <Gamemodes.h>
+#include <JSONHelpers.h>
 #include <Line.h>
 #include <Queue.h>
 #include <Types.h>
-#include <JSONHelpers.h>
 #include <enet/enet.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
@@ -169,7 +169,7 @@ static void ServerInit(Server*     server,
     } else {
         memcpy(server->mapName, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
     }
-    printf("STATUS: Selecting %s as map\n", server->mapName);
+    LOG_STATUS("Selecting %s as map", server->mapName);
 
     snprintf(vxlMap, 64, "%s.vxl", server->mapName);
     LoadMap(server, vxlMap);
@@ -181,11 +181,11 @@ static void ServerInit(Server*     server,
     struct json_object* parsed_map_json;
     parsed_map_json = json_object_from_file(mapConfig);
 
-    int          team1Start[2];
-    int          team2Start[2];
-    int          team1End[2];
-    int          team2End[2];
-    const char * author;
+    int         team1Start[2];
+    int         team2Start[2];
+    int         team1End[2];
+    int         team2End[2];
+    const char* author;
 
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0}), 2)
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10}), 2)
@@ -372,7 +372,7 @@ static void ServerUpdate(Server* server, int timeout)
                 {
                     if (IP[0] == hostIP[0] && IP[1] == hostIP[1] && IP[2] == hostIP[2] && IP[3] == hostIP[3]) {
                         enet_peer_disconnect(event.peer, REASON_BANNED);
-                        printf("WARNING: Banned user %s tried to join. IP: %hhu.%hhu.%hhu.%hhu\n",
+                        LOG_WARNING("Banned user %s tried to join. IP: %hhu.%hhu.%hhu.%hhu\n",
                                nameOfPlayer,
                                IP[0],
                                IP[1],
@@ -400,14 +400,14 @@ static void ServerUpdate(Server* server, int timeout)
                 event.peer->data                      = (void*) ((size_t) playerID);
                 server->player[playerID].HP           = 100;
                 server->player[playerID].ipUnion.ip32 = event.peer->address.host;
-                printf("INFO: connected %u (%d.%d.%d.%d):%u, id %u\n",
-                       event.peer->address.host,
-                       server->player[playerID].ipUnion.ip[0],
-                       server->player[playerID].ipUnion.ip[1],
-                       server->player[playerID].ipUnion.ip[2],
-                       server->player[playerID].ipUnion.ip[3],
-                       event.peer->address.port,
-                       playerID);
+                LOG_STATUS("Connected %u (%d.%d.%d.%d):%u, id %u",
+                           event.peer->address.host,
+                           server->player[playerID].ipUnion.ip[0],
+                           server->player[playerID].ipUnion.ip[1],
+                           server->player[playerID].ipUnion.ip[2],
+                           server->player[playerID].ipUnion.ip[3],
+                           event.peer->address.port,
+                           playerID);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 playerID = (uint8) ((size_t) event.peer->data);
@@ -470,7 +470,7 @@ void StartServer(uint16      port,
     address.host = ENET_HOST_ANY;
     address.port = port;
 
-    printf("Creating server at port %d\n", port);
+    LOG_STATUS("Creating server at port %d", port);
 
     server.host = enet_host_create(&address, connections, channels, inBandwidth, outBandwidth);
     if (server.host == NULL) {

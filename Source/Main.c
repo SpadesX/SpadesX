@@ -33,7 +33,7 @@ int main(void)
     READ_INT_FROM_JSON(parsed_json, master, master, "master variable", 1)
     READ_INT_FROM_JSON(parsed_json, gamemode, gamemode, "gamemode", 0)
     if (json_object_object_get_ex(parsed_json, "map", &mapInConfig) == 0) {
-        printf("Failed to find map name in config\n");
+        LOG_ERROR("Failed to find map name in config");
         return -1;
     }
     READ_STR_FROM_JSON(parsed_json, managerPasswd, manager_password, "manager password", "")

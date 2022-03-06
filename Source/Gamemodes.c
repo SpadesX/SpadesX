@@ -34,7 +34,7 @@ static void initCTF(Server* server)
 static void initTC(Server* server)
 {
     memcpy(server->gamemodeName, "tc", strlen("tc") + 1);
-    printf("GameMode not supported properly yet\n");
+    LOG_WARNING("GameMode not supported properly yet");
     server->running = 0;
 }
 
@@ -84,7 +84,7 @@ static void initBabel(Server* server)
 static void initArena(Server* server)
 {
     memcpy(server->gamemodeName, "arena", strlen("arena") + 1);
-    printf("GameMode not supported properly yet\n");
+    LOG_WARNING("GameMode not supported properly yet");
     server->running = 0;
 }
 
@@ -101,7 +101,7 @@ void initGameMode(Server* server, uint8 gamemode)
     } else if (server->protocol.currentGameMode == GAME_MODE_ARENA) {
         initArena(server);
     } else {
-        printf("Unknown GameMode\n");
+        LOG_ERROR("Unknown GameMode");
         server->running = 0;
     }
 }

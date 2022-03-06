@@ -11,7 +11,7 @@ static z_stream* GlobalCompressor = NULL;
 int InitCompressor(int level)
 {
     if (GlobalCompressor != NULL) {
-        fprintf(stderr, "WARNING: compressor is already initialized\n");
+        LOG_ERROR("Compressor is already initialized");
         return 1;
     } else {
         GlobalCompressor = (z_stream*) malloc(sizeof(z_stream));
@@ -22,7 +22,7 @@ int InitCompressor(int level)
     GlobalCompressor->opaque = Z_NULL;
 
     if (deflateInit(GlobalCompressor, level) < 0) {
-        fprintf(stderr, "ERROR: failed to initialize compressor\n");
+        LOG_ERROR("Failed to initialize compressor");
         return 1;
     }
     return 0;
@@ -31,12 +31,12 @@ int InitCompressor(int level)
 int CloseCompressor()
 {
     if (GlobalCompressor == NULL) {
-        fprintf(stderr, "WARNING: compressor is not initialized\n");
+        LOG_ERROR("Compressor is not initialized");
         return 1;
     }
 
     if (deflateEnd(GlobalCompressor) != 0) {
-        fprintf(stderr, "ERROR: failed to close compressor\n");
+        LOG_ERROR("Failed to close compressor");
         return 1;
     }
 
@@ -49,7 +49,7 @@ Queue* CompressData(uint8* data, uint32 length, uint32 chunkSize)
 {
     InitCompressor(5);
     if (GlobalCompressor == NULL) {
-        fprintf(stderr, "WARNING: compressor is not initialized\n");
+        LOG_ERROR("Compressor is not initialized");
         return NULL;
     }
 
@@ -70,7 +70,7 @@ Queue* CompressData(uint8* data, uint32 length, uint32 chunkSize)
         GlobalCompressor->avail_out = chunkSize;
         GlobalCompressor->next_out  = node->block;
         if (deflate(GlobalCompressor, Z_FINISH) < 0) {
-            printf("ERROR: failed to compress data\n");
+            LOG_ERROR("Failed to compress data");
             return NULL;
         }
         node->length = chunkSize - GlobalCompressor->avail_out;
