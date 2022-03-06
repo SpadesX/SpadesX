@@ -71,11 +71,6 @@ typedef struct
     float z;
 } Vector;
 
-/*struct GrenadeType
-{
-    Vector p, v;
-};*/
-
 static inline void get_orientation(Orientation* o, float orientation_x, float orientation_y, float orientation_z)
 {
     float f;
