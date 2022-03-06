@@ -2,11 +2,15 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define LOG_DEBUG(msg, ...)  printf("DEBUG: " msg "\n", ##__VA_ARGS__)
-#define LOG_INFO(msg, ...)  printf("INFO: " msg "\n", ##__VA_ARGS__)
-#define LOG_STATUS(msg, ...)  printf("STATUS: " msg "\n", ##__VA_ARGS__)
-#define LOG_WARNING(msg, ...) printf("WARNING: " msg "\n", ##__VA_ARGS__)
-#define LOG_ERROR(msg, ...)   fprintf(stderr, "ERROR: " msg "\n", ##__VA_ARGS__)
+#define LOG__INT(msg, ...) printf(msg "%s", __VA_ARGS__);
+#define LOGF__INT(msg, ...) fprintf(stderr, msg "%s", __VA_ARGS__);
+
+#define LOG_DEBUG(...)  LOG__INT("DEBUG: " __VA_ARGS__, "\n")
+#define LOG_INFO(...)  LOG__INT("INFO: " __VA_ARGS__, "\n")
+#define LOG_STATUS(...)  LOG__INT("STATUS: " __VA_ARGS__, "\n")
+#define LOG_WARNING(...) LOG__INT("WARNING: " __VA_ARGS__, "\n")
+#define LOG_ERROR(...)   LOGF__INT("ERROR: " __VA_ARGS__, "\n")
+
 
 typedef unsigned char          uint8;
 typedef unsigned short         uint16;
