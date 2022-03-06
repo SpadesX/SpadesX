@@ -9,10 +9,11 @@
 #include <Types.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
+#include <signal.h>
 #include <time.h>
 
-#define VERSION        "0.0.50"
-#define MAX_MAP_COUNT  64 // Change this if you have more then 64 maps. Tho ask yourself first WHY.
+#define VERSION       "0.0.50"
+#define MAX_MAP_COUNT 64 // Change this if you have more then 64 maps. Tho ask yourself first WHY.
 
 #define MAP_MAX_X MAP_X_MAX
 #define MAP_MAX_Y MAP_Y_MAX
@@ -211,24 +212,24 @@ typedef struct
 
 typedef struct
 {
-    ENetHost*      host;
-    Player         player[32];
-    Protocol       protocol;
-    Master         master;
-    uint16         port;
-    Map            map;
-    GlobalTimers   globalTimers;
-    uint8          globalAK;
-    uint8          globalAB;
-    const char*    managerPasswd;
-    const char*    adminPasswd;
-    const char*    modPasswd;
-    const char*    guardPasswd;
-    const char*    trustedPasswd;
-    char           serverName[31];
-    char           mapName[20];
-    char           gamemodeName[7];
-    volatile uint8 running; // volatile keyword is required to have an access to this variable in any thread
+    ENetHost*             host;
+    Player                player[32];
+    Protocol              protocol;
+    Master                master;
+    uint16                port;
+    Map                   map;
+    GlobalTimers          globalTimers;
+    uint8                 globalAK;
+    uint8                 globalAB;
+    const char*           managerPasswd;
+    const char*           adminPasswd;
+    const char*           modPasswd;
+    const char*           guardPasswd;
+    const char*           trustedPasswd;
+    char                  serverName[31];
+    char                  mapName[20];
+    char                  gamemodeName[7];
+    volatile sig_atomic_t running; // volatile keyword is required to have an access to this variable in any thread
 } Server;
 
 #endif
