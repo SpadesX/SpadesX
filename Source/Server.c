@@ -439,8 +439,9 @@ static void ServerUpdate(Server* server, int timeout)
 
 void StopServer(int signal)
 {
-    (void) signal;
+    (void) signal; // To prevent a warning about unused variable
     server.running = 0;
+    LOG_STATUS("Exiting...");
 }
 
 void StartServer(uint16      port,
@@ -463,7 +464,7 @@ void StartServer(uint16      port,
                  uint8*      team2Color,
                  uint8       gamemode)
 {
-    signal(SIGINT, StopServer); // TODO: is this code cross-platform?
+    signal(SIGINT, StopServer);
 
     server.globalTimers.timeSinceStart = get_nanos();
     LOG_STATUS("Welcome to SpadesX server");

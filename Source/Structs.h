@@ -229,7 +229,6 @@ typedef struct
     char           mapName[20];
     char           gamemodeName[7];
     volatile uint8 running; // volatile keyword is required to have an access to this variable in any thread
-                            // TODO: should the whole Server struct be volatile rather than this variable?
 } Server;
 
 #endif
