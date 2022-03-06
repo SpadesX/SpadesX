@@ -211,24 +211,25 @@ typedef struct
 
 typedef struct
 {
-    ENetHost*    host;
-    Player       player[32];
-    Protocol     protocol;
-    Master       master;
-    uint16       port;
-    Map          map;
-    GlobalTimers globalTimers;
-    uint8        globalAK;
-    uint8        globalAB;
-    const char*  managerPasswd;
-    const char*  adminPasswd;
-    const char*  modPasswd;
-    const char*  guardPasswd;
-    const char*  trustedPasswd;
-    char         serverName[31];
-    char         mapName[20];
-    char         gamemodeName[7];
-    uint8        running;
+    ENetHost*      host;
+    Player         player[32];
+    Protocol       protocol;
+    Master         master;
+    uint16         port;
+    Map            map;
+    GlobalTimers   globalTimers;
+    uint8          globalAK;
+    uint8          globalAB;
+    const char*    managerPasswd;
+    const char*    adminPasswd;
+    const char*    modPasswd;
+    const char*    guardPasswd;
+    const char*    trustedPasswd;
+    char           serverName[31];
+    char           mapName[20];
+    char           gamemodeName[7];
+    volatile uint8 running; // volatile keyword is required to have an access to this variable in any thread
+                            // TODO: should the whole Server struct be volatile rather than this variable?
 } Server;
 
 #endif
