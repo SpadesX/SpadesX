@@ -910,7 +910,7 @@ void handleGrenade(Server* server, uint8 playerID)
                         {
                             float diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
                             if (diff <= 0) {
-                                LOG_WARNING("Player %d sent a grenade that had a diff of 0\n", playerID);
+                                LOG_WARNING("Player %d sent a grenade that had a diff of 0", playerID);
                                 diff = 41.f;
                             }
                             int value = (int) (4096.f / diff);
@@ -999,7 +999,7 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
         server->player[playerID].movement.forwardOrientation.y = 0.f;
         server->player[playerID].movement.forwardOrientation.z = 0.f;
 
-        LOG_INFO("Player %d spawning at: %f %f %f\n",
+        LOG_INFO("Player %d spawning at: %f %f %f",
                playerID,
                server->player[playerID].movement.position.x,
                server->player[playerID].movement.position.y,

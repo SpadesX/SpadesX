@@ -256,7 +256,7 @@ void ServerReset(Server* server)
 
 static void SendJoiningData(Server* server, uint8 playerID)
 {
-    LOG_STATUS("sending state");
+    LOG_STATUS("Sending state");
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && isPastStateData(server, i)) {
             SendPlayerState(server, playerID, i);
@@ -372,7 +372,7 @@ static void ServerUpdate(Server* server, int timeout)
                 {
                     if (IP[0] == hostIP[0] && IP[1] == hostIP[1] && IP[2] == hostIP[2] && IP[3] == hostIP[3]) {
                         enet_peer_disconnect(event.peer, REASON_BANNED);
-                        LOG_WARNING("Banned user %s tried to join. IP: %hhu.%hhu.%hhu.%hhu\n",
+                        LOG_WARNING("Banned user %s tried to join. IP: %hhu.%hhu.%hhu.%hhu",
                                nameOfPlayer,
                                IP[0],
                                IP[1],
@@ -393,7 +393,7 @@ static void ServerUpdate(Server* server, int timeout)
                 playerID = OnConnect(server);
                 if (playerID == 0xFF) {
                     enet_peer_disconnect_now(event.peer, REASON_SERVER_FULL);
-                    LOG_STATUS("Server full. Kicking player");
+                    LOG_WARNING("Server full. Kicking player");
                     break;
                 }
                 server->player[playerID].peer         = event.peer;

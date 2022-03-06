@@ -213,7 +213,7 @@ void SendIntelDrop(Server* server, uint8 playerID)
     server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = 32;
     server->protocol.gameMode.intelHeld[team]                                = 0;
 
-    LOG_INFO("Dropping intel at X: %d, Y: %d, Z: %d\n",
+    LOG_INFO("Dropping intel at X: %d, Y: %d, Z: %d",
            (int) server->protocol.gameMode.intel[team].x,
            (int) server->protocol.gameMode.intel[team].y,
            (int) server->protocol.gameMode.intel[team].z);
@@ -244,7 +244,7 @@ void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, 
 
 void SendPlayerLeft(Server* server, uint8 playerID)
 {
-    LOG_INFO("Player %s disconnected\n", server->player[playerID].name);
+    LOG_INFO("Player %s disconnected", server->player[playerID].name);
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && isPastStateData(server, i)) {
             ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
@@ -253,7 +253,7 @@ void SendPlayerLeft(Server* server, uint8 playerID)
             WriteByte(&stream, playerID);
 
             if (enet_peer_send(server->player[i].peer, 0, packet) != 0) {
-                LOG_WARNING("failed to send player left event\n");
+                LOG_WARNING("Failed to send player left event");
             }
         }
     }
@@ -558,7 +558,7 @@ void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
     WriteArray(&stream, server->player[otherID].name, 16); // NAME
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
-        LOG_WARNING("failed to send player state\n");
+        LOG_WARNING("Failed to send player state");
     }
 }
 
@@ -571,7 +571,7 @@ void SendVersionRequest(Server* server, uint8 playerID)
 }
 void SendMapStart(Server* server, uint8 playerID)
 {
-    LOG_STATUS("sending map info");
+    LOG_STATUS("Sending map info");
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_MAP_START);
@@ -596,7 +596,7 @@ void SendMapChunks(Server* server, uint8 playerID)
         }
         SendVersionRequest(server, playerID);
         server->player[playerID].state = STATE_JOINING;
-        LOG_STATUS("loading chunks done");
+        LOG_STATUS("Loading chunks done");
     } else {
         ENetPacket* packet =
         enet_packet_create(NULL, server->player[playerID].queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
@@ -622,7 +622,7 @@ void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
     WriteArray(&stream, server->player[otherID].name, 16);             // NAME
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
-        LOG_WARNING("failed to send player state\n");
+        LOG_WARNING("Failed to send player state");
     }
 }
 
@@ -645,9 +645,9 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     char*  message    = calloc(length + 1, sizeof(char));
     ReadArray(data, message, length);
     if (player != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet\n", player, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player, ID);
     }
-    LOG_INFO("Player %s (%ld) to %d said: %s\n",
+    LOG_INFO("Player %s (%ld) to %d said: %s",
            server->player[player].name,
            (long) server->player[player].peer->data,
            meantfor,
@@ -721,7 +721,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
 {
     uint8 ID = ReadByte(data);
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet", playerID, ID);
     }
     uint64 timeNow = get_nanos();
     if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 1000)) {
@@ -907,7 +907,7 @@ static void receiveInputData(Server* server, uint8 playerID, DataStream* data)
     uint8 ID;
     ID = ReadByte(data);
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in Input packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in Input packet", playerID, ID);
     } else if (server->player[playerID].state == STATE_READY) {
         server->player[playerID].input = ReadByte(data);
         for (int i = 0; i < 8; i++) {
@@ -932,7 +932,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     y = ReadFloat(data);
     z = ReadFloat(data);
 #ifdef DEBUG
-    LOG_DEBUG("Player: %d, Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f\n",
+    LOG_DEBUG("Player: %d, Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f",
            playerID,
            server->player[playerID].movement.position.x,
            server->player[playerID].movement.position.y,
@@ -940,7 +940,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
            x,
            y,
            z);
-    LOG_DEBUG("Player: %d, Z solid: %d, Z+1 solid: %d, Z+2 solid: %d, Z: %d, Z+1: %d, Z+2: %d, Crouching: %d\n",
+    LOG_DEBUG("Player: %d, Z solid: %d, Z+1 solid: %d, Z+2 solid: %d, Z: %d, Z+1: %d, Z+2: %d, Crouching: %d",
            playerID,
            mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z),
            mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 1),
@@ -982,7 +982,7 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     uint32 length  = DataLeft(data);
     uint8  invName = 0;
     if (length > 16) {
-        LOG_WARNING("name too long");
+        LOG_WARNING("Name of player %d is too long. Cutting", playerID);
         length = 16;
     } else {
         server->player[playerID].name[length] = '\0';
@@ -1086,7 +1086,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID = ReadByte(data);
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet", playerID, ID);
     }
     if (server->player[playerID].canBuild && server->globalAB) {
         uint8 actionType = ReadByte(data);
@@ -1191,7 +1191,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                 moveIntelAndTentDown(server);
             }
         } else {
-            LOG_WARNING("Player: #%d may be using BlockExploit with Item: %d and Action: %d\n",
+            LOG_WARNING("Player: #%d may be using BlockExploit with Item: %d and Action: %d",
                    playerID,
                    server->player[playerID].item,
                    actionType);
@@ -1203,7 +1203,7 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID = ReadByte(data);
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", playerID, ID);
     }
     uint64 timeNow = get_nanos();
     if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
@@ -1252,7 +1252,7 @@ static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
         return;
     }
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set tool packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set tool packet", playerID, ID);
     }
     server->player[playerID].item = tool;
     SendSetTool(server, playerID, tool);
@@ -1267,7 +1267,7 @@ static void receiveSetColor(Server* server, uint8 playerID, DataStream* data)
     uint8 A  = 0;
 
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set color packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set color packet", playerID, ID);
     }
 
     server->player[playerID].toolColor.colorArray[A_CHANNEL] = A;
@@ -1283,7 +1283,7 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     uint8 ID     = ReadByte(data);
     uint8 wInput = ReadByte(data);
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in weapon input packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in weapon input packet", playerID, ID);
     } else if (server->player[playerID].state != STATE_READY) {
         return;
     } else if (server->player[playerID].sprinting) {
@@ -1355,7 +1355,7 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
     uint8 clip    = ReadByte(data);
     uint8 reserve = ReadByte(data);
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet", playerID, ID);
     }
     server->player[playerID].primary_fire   = 0;
     server->player[playerID].secondary_fire = 0;
@@ -1375,7 +1375,7 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
     uint8 team                    = ReadByte(data);
     server->player[playerID].team = team;
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change team packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change team packet", playerID, ID);
     }
     server->protocol.teamUserCount[server->player[playerID].team]++;
     sendKillPacket(server, playerID, playerID, 5, 5, 0);
@@ -1391,7 +1391,7 @@ static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data
     }
     server->player[playerID].weapon = weapon;
     if (playerID != ID) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change weapon packet\n", playerID, ID);
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change weapon packet", playerID, ID);
     }
     sendKillPacket(server, playerID, playerID, 6, 5, 0);
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
@@ -1478,7 +1478,7 @@ void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEven
             receiveVersionResponse(server, playerID, data);
             break;
         default:
-            LOG_WARNING("Unhandled input, id %u, code %u\n", playerID, type);
+            LOG_WARNING("Unhandled input, id %u, code %u", playerID, type);
             break;
     }
 }
