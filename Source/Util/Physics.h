@@ -587,12 +587,11 @@ long move_player(Server* server, uint8 playerID)
     return (0); // no fall damage
 }
 
-// returns 1 if there was a collision, 2 if sound should be played
 int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
 {
     Vector3f fpos = server->player[playerID].grenade[grenadeID].position; // old position
     // do velocity & gravity (friction is negligible)
-    float f = fsynctics * 32.f;
+    float f = fsynctics * 32;
     server->player[playerID].grenade[grenadeID].velocity.z += fsynctics;
     server->player[playerID].grenade[grenadeID].position.x +=
     server->player[playerID].grenade[grenadeID].velocity.x * f;
@@ -605,20 +604,19 @@ int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
     //  if(g->v.x > 0.1f || g->v.x < -0.1f || g->v.y > 0.1f || g->v.y < -0.1f)
     //  {
     //  f *= -0.5;
-    // }
+    //  }
     // make it bounce (accurate)
     Vector3l lp;
     lp.x = (long) floor(server->player[playerID].grenade[grenadeID].position.x);
     lp.y = (long) floor(server->player[playerID].grenade[grenadeID].position.y);
     lp.z = (long) floor(server->player[playerID].grenade[grenadeID].position.z);
 
-    int ret = 0;
+    if (!clipworld(server, lp.x, lp.y, lp.z)) {
+        return 0; // we didn't hit anything, no collision
+    } else {      // hit a wall
+        static const float BOUNCE_SOUND_THRESHOLD = 1.1f;
 
-    if (clipworld(server, lp.x, lp.y, lp.z)) // hit a wall
-    {
-#define BOUNCE_SOUND_THRESHOLD 0.1f
-
-        ret = 1;
+        int ret = 1;
         if (fabs(server->player[playerID].grenade[grenadeID].velocity.x) > BOUNCE_SOUND_THRESHOLD ||
             fabs(server->player[playerID].grenade[grenadeID].velocity.y) > BOUNCE_SOUND_THRESHOLD ||
             fabs(server->player[playerID].grenade[grenadeID].velocity.z) > BOUNCE_SOUND_THRESHOLD)
@@ -641,8 +639,8 @@ int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
         server->player[playerID].grenade[grenadeID].velocity.x *= 0.36f;
         server->player[playerID].grenade[grenadeID].velocity.y *= 0.36f;
         server->player[playerID].grenade[grenadeID].velocity.z *= 0.36f;
+        return ret;
     }
-    return ret;
 }
 // C interface
 
