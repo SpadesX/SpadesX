@@ -21,6 +21,7 @@
 #include <json-c/json_object.h>
 #include <math.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -436,6 +437,12 @@ static void ServerUpdate(Server* server, int timeout)
     }
 }
 
+void StopServer(int signal)
+{
+    (void) signal;
+    server.running = 0;
+}
+
 void StartServer(uint16      port,
                  uint32      connections,
                  uint32      channels,
@@ -456,6 +463,8 @@ void StartServer(uint16      port,
                  uint8*      team2Color,
                  uint8       gamemode)
 {
+    signal(SIGINT, StopServer); // TODO: is this code cross-platform?
+
     server.globalTimers.timeSinceStart = get_nanos();
     LOG_STATUS("Welcome to SpadesX server");
     LOG_STATUS("Initializing ENet");
