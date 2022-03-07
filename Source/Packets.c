@@ -265,29 +265,31 @@ void SendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WEAPON_RELOAD);
     WriteByte(&stream, playerID);
-    uint8 tempClip;
-    uint8 tempReserve;
     if (startAnimation) {
-        tempClip    = clip;
-        tempReserve = reserve;
-        WriteByte(&stream, tempClip);
-        WriteByte(&stream, tempReserve);
+        WriteByte(&stream, clip);
+        WriteByte(&stream, reserve);
     } else {
-        tempClip    = server->player[playerID].weaponClip;
-        tempReserve = server->player[playerID].weaponReserve;
         WriteByte(&stream, server->player[playerID].weaponClip);
         WriteByte(&stream, server->player[playerID].weaponReserve);
     }
-    uint8 sendSucc = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player) && (startAnimation == 0 && playerID != player)) {
-            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
-                sendSucc = 1;
+    if (startAnimation) {
+        uint8 sendSucc = 0;
+        for (int player = 0; player < server->protocol.maxPlayers; ++player) {
+            if (isPastStateData(server, player) && player != playerID) {
+                if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                    sendSucc = 1;
+                }
             }
         }
-    }
-    if (sendSucc == 0) {
-        enet_packet_destroy(packet);
+        if (sendSucc == 0) {
+            enet_packet_destroy(packet);
+        }
+    } else {
+        if (isPastJoinScreen(server, playerID)) {
+            if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
+                enet_packet_destroy(packet);
+            }
+        }
     }
 }
 
@@ -977,8 +979,14 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
                 sendServerNotice(
                 server, playerID, "Server could not find a free position to get you unstuck. Reseting to spawn");
                 char message[102];
-                snprintf(message, 102, "Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!", playerID);
-                LOG_WARNING("Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!", playerID);
+                snprintf(
+                message,
+                102,
+                "Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!",
+                playerID);
+                LOG_WARNING(
+                "Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!",
+                playerID);
                 sendMessageToStaff(server, message);
                 server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
             }
