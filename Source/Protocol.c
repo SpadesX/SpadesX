@@ -1134,7 +1134,7 @@ uint8 SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 
     uint8 sent = 0;
     for (uint8 i = 0; i < 32; ++i) {
         if (playerID != i && isPastStateData(server, i)) {
-            if (playerToPlayerVisible(server, playerID, i)) {
+            if (playerToPlayerVisible(server, playerID, i) || server->player[i].team == TEAM_SPECTATOR) {
                 if (enet_peer_send(server->player[i].peer, 0, packet) == 0) {
                     sent = 1;
                 }
@@ -1149,7 +1149,7 @@ uint8 SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID)
     uint8 sent = 0;
     for (uint8 i = 0; i < 32; ++i) {
         if (isPastStateData(server, i)) {
-            if (playerToPlayerVisible(server, playerID, i)) {
+            if (playerToPlayerVisible(server, playerID, i) || server->player[i].team == TEAM_SPECTATOR) {
                 if (enet_peer_send(server->player[i].peer, 0, packet) == 0) {
                     sent = 1;
                 }
