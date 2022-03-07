@@ -962,8 +962,8 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
         server->player[playerID].movement.position.z   = z;
         server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
     } else {
-        char message[29];
-        snprintf(message, 29, "Player #%d may be noclipping!", playerID);
+        char message[31];
+        snprintf(message, 31, "Player #%d may be noclipping!", playerID);
         LOG_WARNING("Player #%d may be noclipping!", playerID);
         sendMessageToStaff(server, message);
         if (validPlayerPos(server,
@@ -976,8 +976,8 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
                 SetPlayerRespawnPoint(server, playerID);
                 sendServerNotice(
                 server, playerID, "Server could not find a free position to get you unstuck. Reseting to spawn");
-                char message[99];
-                snprintf(message, 99, "Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!", playerID);
+                char message[102];
+                snprintf(message, 102, "Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!", playerID);
                 LOG_WARNING("Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!", playerID);
                 sendMessageToStaff(server, message);
                 server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
