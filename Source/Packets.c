@@ -968,9 +968,15 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
                            server->player[playerID].movement.prevLegitPos.y,
                            server->player[playerID].movement.prevLegitPos.z) == 0)
         {
-            server->player[playerID].movement.prevLegitPos.z--; // TODO: Checks for blocks around. If none are legit
-                                                                // send to random spawn location
-            server->player[playerID].movement.position = server->player[playerID].movement.prevLegitPos;
+            if (getPlayerUnstuck(server, playerID) == 0) {
+                SetPlayerRespawnPoint(server, playerID);
+                sendServerNotice(server, playerID, "Server could not find a free position to get you unstuck. Reseting to spawn");
+                char message[29];
+                snprintf(message, 29, "Player #%d may be noclipping!", playerID);
+                LOG_WARNING("Player #%d may be noclipping!", playerID);
+                sendMessageToStaff(server, message);
+                server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
+            }
         }
         SendPositionPacket(server,
                            playerID,

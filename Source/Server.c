@@ -301,6 +301,11 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
             server->player[playerID].alive    = 1;
             SetPlayerRespawnPoint(server, playerID);
             SendRespawn(server, playerID);
+            LOG_INFO("Player %d spawning at: %f %f %f",
+                 playerID,
+                 server->player[playerID].movement.position.x,
+                 server->player[playerID].movement.position.y,
+                 server->player[playerID].movement.position.z);
             break;
         case STATE_WAITING_FOR_RESPAWN:
         {

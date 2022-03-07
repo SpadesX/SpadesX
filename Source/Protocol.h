@@ -55,5 +55,6 @@ uint8     diffIsOlderThenDontUpdate(uint64 timeNow, uint64 timeBefore, uint64 ti
 uint8     isStaff(Server* server, uint8 playerID);
 void      sendMessageToStaff(Server* server, char* message);
 uint8     getGrenadeDamage(Server* server, uint8 damageID, uint8 throwerID, uint8 grenadeID);
+uint8     getPlayerUnstuck(Server* server, uint8 playerID);
 
 #endif

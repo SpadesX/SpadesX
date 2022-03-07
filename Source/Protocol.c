@@ -55,6 +55,43 @@ static uint8 grenadeGamemodeCheck(Server* server, Vector3f pos)
     return 0;
 }
 
+uint8 getPlayerUnstuck(Server* server, uint8 playerID)
+{
+    for (float z = server->player[playerID].movement.prevLegitPos.z - 1;
+         z <= server->player[playerID].movement.prevLegitPos.z + 1;
+         z++)
+    {
+        if (validPlayerPos(server,
+                           playerID,
+                           server->player[playerID].movement.prevLegitPos.x,
+                           server->player[playerID].movement.prevLegitPos.y,
+                           z))
+        {
+            server->player[playerID].movement.prevLegitPos.z = z;
+            server->player[playerID].movement.position       = server->player[playerID].movement.prevLegitPos;
+            return 1;
+        }
+        for (float x = server->player[playerID].movement.prevLegitPos.x - 1;
+             x <= server->player[playerID].movement.prevLegitPos.x + 1;
+             x++)
+        {
+            for (float y = server->player[playerID].movement.prevLegitPos.y - 1;
+                 y <= server->player[playerID].movement.prevLegitPos.y + 1;
+                 y++)
+            {
+                if (validPlayerPos(server, playerID, x, y, z)) {
+                    server->player[playerID].movement.prevLegitPos.x = x;
+                    server->player[playerID].movement.prevLegitPos.y = y;
+                    server->player[playerID].movement.prevLegitPos.z = z;
+                    server->player[playerID].movement.position       = server->player[playerID].movement.prevLegitPos;
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 uint8 getGrenadeDamage(Server* server, uint8 damageID, uint8 throwerID, uint8 grenadeID)
 {
     double diffX =
@@ -1007,12 +1044,6 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
         server->player[playerID].movement.forwardOrientation.x = 0.f;
         server->player[playerID].movement.forwardOrientation.y = 0.f;
         server->player[playerID].movement.forwardOrientation.z = 0.f;
-
-        LOG_INFO("Player %d spawning at: %f %f %f",
-                 playerID,
-                 server->player[playerID].movement.position.x,
-                 server->player[playerID].movement.position.y,
-                 server->player[playerID].movement.position.z);
     }
 }
 
