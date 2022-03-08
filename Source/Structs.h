@@ -179,7 +179,6 @@ typedef struct
     uint8                welcomeSent;
     uint8                toRefill;
     uint8                reloading;
-    uint8                firstBullet;
 
     uint8    movForward;
     uint8    movBackwards;

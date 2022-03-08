@@ -189,6 +189,8 @@ void initPlayer(Server*  server,
     server->player[playerID].blocks                           = 50;
     server->player[playerID].grenades                         = 3;
     server->player[playerID].hasIntel                         = 0;
+    server->player[playerID].reloading                        = 0;
+    server->player[playerID].toRefill                         = 0;
     if (reset == 0) {
         server->player[playerID].isManager = 0;
         server->player[playerID].isAdmin   = 0;

@@ -1395,7 +1395,7 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
     server->player[playerID].primary_fire   = 0;
     server->player[playerID].secondary_fire = 0;
 
-    if (server->player[playerID].weaponReserve == 0) {
+    if (server->player[playerID].weaponReserve == 0 || server->player[playerID].reloading) {
         return;
     }
     server->player[playerID].reloading               = 1;

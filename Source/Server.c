@@ -295,17 +295,19 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
             SendJoiningData(server, playerID);
             break;
         case STATE_SPAWNING:
-            server->player[playerID].HP       = 100;
-            server->player[playerID].grenades = 3;
-            server->player[playerID].blocks   = 50;
-            server->player[playerID].alive    = 1;
+            server->player[playerID].HP        = 100;
+            server->player[playerID].grenades  = 3;
+            server->player[playerID].blocks    = 50;
+            server->player[playerID].alive     = 1;
+            server->player[playerID].reloading = 0;
+            server->player[playerID].toRefill  = 0;
             SetPlayerRespawnPoint(server, playerID);
             SendRespawn(server, playerID);
             LOG_INFO("Player %d spawning at: %f %f %f",
-                 playerID,
-                 server->player[playerID].movement.position.x,
-                 server->player[playerID].movement.position.y,
-                 server->player[playerID].movement.position.z);
+                     playerID,
+                     server->player[playerID].movement.position.x,
+                     server->player[playerID].movement.position.y,
+                     server->player[playerID].movement.position.z);
             break;
         case STATE_WAITING_FOR_RESPAWN:
         {
@@ -379,11 +381,11 @@ static void ServerUpdate(Server* server, int timeout)
                     if (IP[0] == hostIP[0] && IP[1] == hostIP[1] && IP[2] == hostIP[2] && IP[3] == hostIP[3]) {
                         enet_peer_disconnect(event.peer, REASON_BANNED);
                         LOG_WARNING("Banned user %s tried to join. IP: %hhu.%hhu.%hhu.%hhu",
-                               nameOfPlayer,
-                               IP[0],
-                               IP[1],
-                               IP[2],
-                               IP[3]);
+                                    nameOfPlayer,
+                                    IP[0],
+                                    IP[1],
+                                    IP[2],
+                                    IP[3]);
                         bannedUser = 1;
                         break;
                     }

@@ -28,8 +28,8 @@ void LoadMap(Server* server, const char* path)
 
     server->map.mapSize = 1024*1024*10; //Absolute hack to get some maps to even load.
 
-    uint8* buffer = (uint8*) malloc(server->map.mapSize);
-    uint8* mapOut = (uint8*) malloc(server->map.mapSize);
+    uint8* buffer = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
+    uint8* mapOut = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
     if (fread(buffer, server->map.mapSize, 1, file) < server->map.mapSize) {
         LOG_STATUS("Finished loading map");
     }
