@@ -13,7 +13,7 @@
 #include <signal.h>
 #include <time.h>
 
-#define VERSION       "0.0.50"
+#define VERSION       "0.0.60"
 #define MAX_MAP_COUNT 64 // Change this if you have more then 64 maps. Tho ask yourself first WHY.
 
 #define MAP_MAX_X MAP_X_MAX
