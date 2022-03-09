@@ -171,11 +171,6 @@ typedef struct
     Grenade              grenade[3];
     uint8                toldToMaster;
     uint8                hasIntel;
-    uint8                isManager;
-    uint8                isAdmin;
-    uint8                isMod;
-    uint8                isGuard;
-    uint8                isTrusted;
     uint8                isInvisible;
     uint8                welcomeSent;
     uint8                toRefill;

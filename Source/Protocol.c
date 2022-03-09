@@ -196,24 +196,23 @@ void initPlayer(Server*  server,
     server->player[playerID].hasIntel                         = 0;
     server->player[playerID].reloading                        = 0;
     server->player[playerID].toRefill                         = 0;
+    server->player[playerID].client                           = ' ';
+    server->player[playerID].version_minor                    = 0;
+    server->player[playerID].version_major                    = 0;
+    server->player[playerID].version_revision                 = 0;
     if (reset == 0) {
-        server->player[playerID].isManager = 0;
-        server->player[playerID].isAdmin   = 0;
-        server->player[playerID].isMod     = 0;
-        server->player[playerID].isGuard   = 0;
-        server->player[playerID].isTrusted = 0;
+        server->player[playerID].permLevel = 0;
     }
     server->player[playerID].isInvisible = 0;
     server->player[playerID].kills       = 0;
     server->player[playerID].deaths      = 0;
     memset(server->player[playerID].name, 0, 17);
+    memset(server->player[playerID].os_info, 0, 255);
 }
 
 uint8 isStaff(Server* server, uint8 playerID)
 {
-    if (server->player[playerID].isManager || server->player[playerID].isAdmin || server->player[playerID].isMod ||
-        server->player[playerID].isGuard)
-    {
+    if (playerHasPermission(server, playerID, 4294967294)) {
         return 1;
     }
     return 0;
@@ -222,9 +221,7 @@ uint8 isStaff(Server* server, uint8 playerID)
 void sendMessageToStaff(Server* server, char* message)
 {
     for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
-        if (isPastJoinScreen(server, ID) && (server->player[ID].isManager || server->player[ID].isAdmin ||
-                                             server->player[ID].isMod || server->player[ID].isGuard))
-        {
+        if (isPastJoinScreen(server, ID) && isStaff(server, ID)) {
             sendServerNotice(server, ID, message);
         }
     }
