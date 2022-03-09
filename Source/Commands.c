@@ -527,7 +527,6 @@ void addCommands(Server* server)
         Command* command = createCommand(CommandArray[i].command, CommandArray[i].id, CommandArray[i].commandDesc, CommandArray[i].PermLevel);
         HASH_ADD_STR(server->commandsMap, id, command);
         LL_APPEND(server->commandsList, command);
-        LOG_DEBUG("%s", command->commandDesc);
     }
 }
 
