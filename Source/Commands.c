@@ -15,6 +15,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 static void killCommand(void* serverP, CommandArguments arguments)
 {
@@ -471,50 +472,63 @@ static void masterCommand(void* serverP, CommandArguments arguments)
     sendServerNotice(server, arguments.player, "Enabling master connection");
 }
 
-Command* createCommand(void (*command)(void* serverP, CommandArguments arguments), char id[30], uint32 permLevel)
+static void helpCommand(void* serverP, CommandArguments arguments)
+{
+    Server* server = (Server*) serverP;
+    Command* command;
+    LL_FOREACH(server->commandsList, command) {
+        if (playerHasPermission(server, arguments.player, command->PermLevel) || command->PermLevel == 0) {
+            sendServerNotice(server, arguments.player, "[Command: %s, Description: %s]", command->id, command->commandDesc);
+        }
+    }
+    sendServerNotice(server, arguments.player, "Commands available to you:");
+}
+
+Command* createCommand(void (*command)(void* serverP, CommandArguments arguments), char id[30], char commandDesc[1024], uint32 permLevel)
 {
     Command* structCommand   = malloc(sizeof(Command));
     structCommand->command   = command;
     structCommand->PermLevel = permLevel;
+    strcpy(structCommand->commandDesc, commandDesc);
     strcpy(structCommand->id, id);
     return structCommand;
 }
 
 void addCommands(Server* server)
 {
-    // server->commandsList->next = NULL; // UTlist requires root to be initialized to NULL
+    server->commandsList = NULL; // UTlist requires root to be initialized to NULL
     //  Add custom commands into this array definition
     CommandManager CommandArray[] = {
-    {"/kill", &killCommand, 0},
-    {"/ups", &upsCommand, 0},
-    {"/login", &loginCommand, 0},
-    {"/ratio", &ratioCommand, 0},
-    {"/pm", &pmCommand, 0},
-    {"/admin", &adminCommand, 0},
-    {"/server", &serverCommand, 0},
-    {"/clin", &clinCommand, 0},
+    {"/kill", &killCommand, 0, "Kills player who sent it or player specified in argument"},
+    {"/ups", &upsCommand, 0, "Sets UPS of player to requested ammount. Range: 1-300"},
+    {"/login", &loginCommand, 0, "Login command. First argument is a role. Second password"},
+    {"/ratio", &ratioCommand, 0, "Shows yours or requested player ratio"},
+    {"/pm", &pmCommand, 0, "Private message to specified player"},
+    {"/admin", &adminCommand, 0, "Sends a message to all online admins."},
+    {"/server", &serverCommand, 0, "Shows info about the server"},
+    {"/clin", &clinCommand, 0, "Shows players client info"},
     // We can have 2+ commands for same function even with different permissions and name
-    {"/client", &clinCommand, 0},
-    {"/intel", &intelCommand, 0},
-    {"/logout", &logoutCommand, 31},
-    {"/tk", &toggleKillCommand, 30},
-    {"/ttk", &toggleTeamKillCommand, 30},
-    {"/tb", &toggleBuildCommand, 30},
-    {"/kick", &kickCommand, 30},
-    {"/mute", &muteCommand, 30},
-    {"/pban", &pbanCommand, 30},
-    {"/inv", &invCommand, 30},
-    {"/say", &sayCommand, 30},
-    {"/banip", &banIPCommand, 30},
-    {"/master", &masterCommand, 28},
-    {"/tpc", &tpcCommand, 24}};
+    {"/client", &clinCommand, 0, "Shows players client info"},
+    {"/intel", &intelCommand, 0, "Shows info about intel"},
+    {"/help", &helpCommand, 0, "Shows commands and their description"},
+    {"/logout", &logoutCommand, 31, "Logs out logged in player"},
+    {"/tk", &toggleKillCommand, 30, "Toggles ability to kill for everyone or specified player"},
+    {"/ttk", &toggleTeamKillCommand, 30, "Toggles ability to team kill for everyone or specified player"},
+    {"/tb", &toggleBuildCommand, 30, "Toggles ability to build for everyone or specified player"},
+    {"/kick", &kickCommand, 30, "Kicks specified player from the server"},
+    {"/mute", &muteCommand, 30, "Mutes or unmutes specified player"},
+    {"/pban", &pbanCommand, 30, "Permanently bans a specified player"},
+    {"/inv", &invCommand, 30, "Makes you go invisible"},
+    {"/say", &sayCommand, 30, "Send message to everyone as the server"},
+    {"/banip", &banIPCommand, 30, "Puts specified IP into ban list"},
+    {"/master", &masterCommand, 28, "Toggles master connection"},
+    {"/tpc", &tpcCommand, 24, "Teleports to specified cordinates"}};
     for (unsigned long i = 0; i < sizeof(CommandArray) / sizeof(CommandManager); i++) {
-        Command* command = createCommand(CommandArray[i].command, CommandArray[i].id, CommandArray[i].PermLevel);
+        Command* command = createCommand(CommandArray[i].command, CommandArray[i].id, CommandArray[i].commandDesc, CommandArray[i].PermLevel);
         HASH_ADD_STR(server->commandsMap, id, command);
-        // LL_APPEND(server->commandsList->next, command);
+        LL_APPEND(server->commandsList, command);
+        LOG_DEBUG("%s", command->commandDesc);
     }
-    Command* command = createCommand(&killCommand, "/kill", 0);
-    HASH_ADD_STR(server->commandsMap, id, command);
 }
 
 void deleteCommands(Server* server)
@@ -525,6 +539,7 @@ void deleteCommands(Server* server)
     HASH_ITER(hh, server->commandsMap, current_command, tmp)
     {
         HASH_DEL(server->commandsMap, current_command); /* delete it (users advances to next) */
+        LL_DELETE(server->commandsList, current_command); /* delete the command from linked list as well */
         free(current_command);                          /* free it */
     }
 }

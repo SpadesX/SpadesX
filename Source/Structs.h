@@ -215,13 +215,14 @@ typedef struct
     char*  message;
 } CommandArguments;
 
-typedef struct
+typedef struct Command
 {
     char id[30];
     void (*command)(void* serverP, CommandArguments arguments);
     uint32          PermLevel; // 32 roles should be more then enough for anyone
+    char commandDesc[1024];
     UT_hash_handle  hh;
-    struct Command* next;
+    struct Command *next;
 } Command;
 
 // Command but with removed hash map and linked list stuff for easy managment
@@ -230,6 +231,7 @@ typedef struct
     char id[30];
     void (*command)(void* serverP, CommandArguments arguments);
     uint32 PermLevel; // 32 roles should be more then enough for anyone
+    char commandDesc[1024];
 } CommandManager;
 
 typedef struct
