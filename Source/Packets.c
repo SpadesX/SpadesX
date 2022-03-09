@@ -1407,7 +1407,7 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID = ReadByte(data);
     server->protocol.teamUserCount[server->player[playerID].team]--;
-    uint8 team                    = ReadByte(data);
+    uint8 team = ReadByte(data);
     server->player[playerID].team = team;
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change team packet", playerID, ID);
@@ -1447,8 +1447,7 @@ static void receiveVersionResponse(Server* server, uint8 playerID, DataStream* d
     }
     if (server->player[playerID].client == 'o') {
         if (!(server->player[playerID].version_major == 0 && server->player[playerID].version_minor == 1 &&
-              (server->player[playerID].version_revision == 3 || server->player[playerID].version_revision == 5)) &&
-            strstr(server->player[playerID].os_info, "ZeroSpades") == NULL)
+              (server->player[playerID].version_revision == 3 || server->player[playerID].version_revision == 5)))
         {
             enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
         }
