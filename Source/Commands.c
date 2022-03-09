@@ -13,9 +13,9 @@
 #include <enet/enet.h>
 #include <inttypes.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
 static void killCommand(void* serverP, CommandArguments arguments)
 {
@@ -222,7 +222,10 @@ static void loginCommand(void* serverP, CommandArguments arguments)
                     {
                         server->player[arguments.player].permLevel |=
                         1 << server->player[arguments.player].roleList[i].permLevelOffset;
-                        sendServerNotice(server, arguments.player, "You logged in as %s", server->player[arguments.player].roleList[i].accessLevel);
+                        sendServerNotice(server,
+                                         arguments.player,
+                                         "You logged in as %s",
+                                         server->player[arguments.player].roleList[i].accessLevel);
                         return;
                     } else {
                         sendServerNotice(server, arguments.player, "Wrong password");
@@ -260,13 +263,14 @@ static void ratioCommand(void* serverP, CommandArguments arguments)
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
         }
     } else {
-        sendServerNotice(server,
-                         arguments.player,
-                         "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
-                         server->player[arguments.player].name,
-                         ((float) server->player[arguments.player].kills / fmaxf(1, (float) server->player[arguments.player].deaths)),
-                         server->player[arguments.player].kills,
-                         server->player[arguments.player].deaths);
+        sendServerNotice(
+        server,
+        arguments.player,
+        "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
+        server->player[arguments.player].name,
+        ((float) server->player[arguments.player].kills / fmaxf(1, (float) server->player[arguments.player].deaths)),
+        server->player[arguments.player].kills,
+        server->player[arguments.player].deaths);
     }
 }
 
@@ -292,10 +296,7 @@ static void adminCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     char    staffMessage[1024];
     if (sscanf(arguments.message, "%s %[^\n]", arguments.command, staffMessage) == 2) {
-        sendMessageToStaff(server,
-                          "Staff from %s: %s",
-                          server->player[arguments.player].name,
-                          staffMessage);
+        sendMessageToStaff(server, "Staff from %s: %s", server->player[arguments.player].name, staffMessage);
         sendServerNotice(server, arguments.player, "Message sent to all staff members online");
     } else {
         sendServerNotice(server, arguments.player, "Invalid message");
@@ -440,7 +441,7 @@ static void clinCommand(void* serverP, CommandArguments arguments)
 
 static void intelCommand(void* serverP, CommandArguments arguments)
 {
-    Server* server = (Server*) serverP;
+    Server* server          = (Server*) serverP;
     uint8   sentAtLeastOnce = 0;
     for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
         if (server->player[playerID].state != STATE_DISCONNECTED && server->player[playerID].hasIntel) {
@@ -474,27 +475,34 @@ static void masterCommand(void* serverP, CommandArguments arguments)
 
 static void helpCommand(void* serverP, CommandArguments arguments)
 {
-    Server* server = (Server*) serverP;
+    Server*  server = (Server*) serverP;
     Command* command;
-    LL_FOREACH(server->commandsList, command) {
+    LL_FOREACH(server->commandsList, command)
+    {
         if (playerHasPermission(server, arguments.player, command->PermLevel) || command->PermLevel == 0) {
-            sendServerNotice(server, arguments.player, "[Command: %s, Description: %s]", command->id, command->commandDesc);
+            sendServerNotice(
+            server, arguments.player, "[Command: %s, Description: %s]", command->id, command->commandDesc);
         }
     }
     sendServerNotice(server, arguments.player, "Commands available to you:");
 }
 
-Command* createCommand(void (*command)(void* serverP, CommandArguments arguments), char id[30], char commandDesc[1024], uint32 permLevel)
+void createCommand(Server* server,
+                   void (*command)(void* serverP, CommandArguments arguments),
+                   char   id[30],
+                   char   commandDesc[1024],
+                   uint32 permLevel)
 {
     Command* structCommand   = malloc(sizeof(Command));
     structCommand->command   = command;
     structCommand->PermLevel = permLevel;
     strcpy(structCommand->commandDesc, commandDesc);
     strcpy(structCommand->id, id);
-    return structCommand;
+    HASH_ADD_STR(server->commandsMap, id, structCommand);
+    LL_APPEND(server->commandsList, structCommand);
 }
 
-void addCommands(Server* server)
+void populateCommands(Server* server)
 {
     server->commandsList = NULL; // UTlist requires root to be initialized to NULL
     //  Add custom commands into this array definition
@@ -524,23 +532,27 @@ void addCommands(Server* server)
     {"/master", &masterCommand, 28, "Toggles master connection"},
     {"/tpc", &tpcCommand, 24, "Teleports to specified cordinates"}};
     for (unsigned long i = 0; i < sizeof(CommandArray) / sizeof(CommandManager); i++) {
-        Command* command = createCommand(CommandArray[i].command, CommandArray[i].id, CommandArray[i].commandDesc, CommandArray[i].PermLevel);
-        HASH_ADD_STR(server->commandsMap, id, command);
-        LL_APPEND(server->commandsList, command);
+        createCommand(
+        server, CommandArray[i].command, CommandArray[i].id, CommandArray[i].commandDesc, CommandArray[i].PermLevel);
     }
 }
 
-void deleteCommands(Server* server)
+void freeCommands(Server* server)
 {
-    Command* current_command;
+    Command* currentCommand;
     Command* tmp;
 
-    HASH_ITER(hh, server->commandsMap, current_command, tmp)
+    HASH_ITER(hh, server->commandsMap, currentCommand, tmp)
     {
-        HASH_DEL(server->commandsMap, current_command); /* delete it (users advances to next) */
-        LL_DELETE(server->commandsList, current_command); /* delete the command from linked list as well */
-        free(current_command);                          /* free it */
+        deleteCommand(server, currentCommand);
     }
+}
+
+void deleteCommand(Server* server, Command* command)
+{
+    HASH_DEL(server->commandsMap, command);
+    LL_DELETE(server->commandsList, command);
+    free(command);
 }
 
 void handleCommands(Server* server, uint8 player, char* message)

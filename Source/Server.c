@@ -506,7 +506,7 @@ void StartServer(uint16      port,
     ServerInit(
     &server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
 
-    addCommands(&server);
+    populateCommands(&server);
 
     server.master.enableMasterConnection = master;
     server.managerPasswd                 = managerPasswd;
@@ -535,7 +535,7 @@ void StartServer(uint16      port,
     }
     free(server.map.compressedMap);
 
-    deleteCommands(&server);
+    freeCommands(&server);
 
     LOG_STATUS("Exiting");
     enet_host_destroy(server.host);
