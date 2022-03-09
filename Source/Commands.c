@@ -163,9 +163,7 @@ static void upsCommand(void* serverP, CommandArguments arguments)
     sscanf(arguments.message, "%s %f", arguments.command, &ups);
     if (ups >= 1 && ups <= 300) {
         server->player[arguments.player].ups = ups;
-        char fullString[64];
-        snprintf(fullString, 64, "UPS changed to %.2f successfully", ups);
-        sendServerNotice(server, arguments.player, fullString);
+        sendServerNotice(server, arguments.player, "UPS changed to %.2f successfully", ups);
     } else {
         sendServerNotice(server, arguments.player, "Changing UPS failed. Please select value between 1 and 300");
     }
@@ -223,10 +221,7 @@ static void loginCommand(void* serverP, CommandArguments arguments)
                     {
                         server->player[arguments.player].permLevel |=
                         1 << server->player[arguments.player].roleList[i].permLevelOffset;
-                        char success[128];
-                        snprintf(
-                        success, 128, "You logged in as %s", server->player[arguments.player].roleList[i].accessLevel);
-                        sendServerNotice(server, arguments.player, success);
+                        sendServerNotice(server, arguments.player, "You logged in as %s", server->player[arguments.player].roleList[i].accessLevel);
                         return;
                     } else {
                         sendServerNotice(server, arguments.player, "Wrong password");
@@ -253,50 +248,36 @@ static void ratioCommand(void* serverP, CommandArguments arguments)
     int     ID     = 33;
     if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            char sendingMessage[100];
-            snprintf(sendingMessage,
-                     100,
-                     "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
-                     server->player[ID].name,
-                     ((float) server->player[ID].kills / fmaxf(1, (float) server->player[ID].deaths)),
-                     server->player[ID].kills,
-                     server->player[ID].deaths);
-            sendServerNotice(server, arguments.player, sendingMessage);
+            sendServerNotice(server,
+                             arguments.player,
+                             "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
+                             server->player[ID].name,
+                             ((float) server->player[ID].kills / fmaxf(1, (float) server->player[ID].deaths)),
+                             server->player[ID].kills,
+                             server->player[ID].deaths);
         } else {
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
         }
     } else {
-        char sendingMessage[100];
-        snprintf(
-        sendingMessage,
-        100,
-        "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
-        server->player[arguments.player].name,
-        ((float) server->player[arguments.player].kills / fmaxf(1, (float) server->player[arguments.player].deaths)),
-        server->player[arguments.player].kills,
-        server->player[arguments.player].deaths);
-        sendServerNotice(server, arguments.player, sendingMessage);
+        sendServerNotice(server,
+                         arguments.player,
+                         "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
+                         server->player[arguments.player].name,
+                         ((float) server->player[arguments.player].kills / fmaxf(1, (float) server->player[arguments.player].deaths)),
+                         server->player[arguments.player].kills,
+                         server->player[arguments.player].deaths);
     }
 }
 
 static void pmCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    char    sendingMessage[strlen(server->player[arguments.player].name) + 1034];
-    char    returnMessage[100];
     char    PM[1024];
     int     ID = 33;
     if (sscanf(arguments.message, "%s #%d %[^\n]", arguments.command, &ID, PM) == 3) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            snprintf(sendingMessage,
-                     strlen(server->player[arguments.player].name) + 1034,
-                     "PM from %s: %s",
-                     server->player[arguments.player].name,
-                     PM);
-            snprintf(returnMessage, 100, "PM sent to %s", server->player[ID].name);
-
-            sendServerNotice(server, ID, sendingMessage);
-            sendServerNotice(server, arguments.player, returnMessage);
+            sendServerNotice(server, ID, "PM from %s: %s", server->player[arguments.player].name, PM);
+            sendServerNotice(server, arguments.player, "PM sent to %s", server->player[ID].name);
         } else {
             sendServerNotice(server, arguments.player, "Invalid ID. Player doesnt exist");
         }
@@ -308,15 +289,12 @@ static void pmCommand(void* serverP, CommandArguments arguments)
 static void adminCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    char    sendingMessage[strlen(server->player[arguments.player].name) + 1037];
     char    staffMessage[1024];
     if (sscanf(arguments.message, "%s %[^\n]", arguments.command, staffMessage) == 2) {
-        snprintf(sendingMessage,
-                 strlen(server->player[arguments.player].name) + 1037,
-                 "Staff from %s: %s",
-                 server->player[arguments.player].name,
-                 staffMessage);
-        sendMessageToStaff(server, sendingMessage);
+        sendMessageToStaff(server,
+                          "Staff from %s: %s",
+                          server->player[arguments.player].name,
+                          staffMessage);
         sendServerNotice(server, arguments.player, "Message sent to all staff members online");
     } else {
         sendServerNotice(server, arguments.player, "Invalid message");
@@ -425,9 +403,7 @@ static void logoutCommand(void* serverP, CommandArguments arguments)
 static void serverCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    char    message[53];
-    snprintf(message, 53, "You are playing on SpadesX server. Version %s", VERSION);
-    sendServerNotice(server, arguments.player, message);
+    sendServerNotice(server, arguments.player, "You are playing on SpadesX server. Version %s", VERSION);
 }
 
 static void clinCommand(void* serverP, CommandArguments arguments)
@@ -436,7 +412,6 @@ static void clinCommand(void* serverP, CommandArguments arguments)
     int     ID     = 33;
     if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            char message[330];
             char client[15];
             if (server->player[arguments.player].client == 'o') {
                 snprintf(client, 12, "OpenSpades");
@@ -445,16 +420,15 @@ static void clinCommand(void* serverP, CommandArguments arguments)
             } else {
                 snprintf(client, 7, "Voxlap");
             }
-            snprintf(message,
-                     327,
-                     "Player %s is running %s version %d.%d.%d on %s",
-                     server->player[ID].name,
-                     client,
-                     server->player[ID].version_major,
-                     server->player[ID].version_minor,
-                     server->player[ID].version_revision,
-                     server->player[ID].os_info);
-            sendServerNotice(server, arguments.player, message);
+            sendServerNotice(server,
+                             arguments.player,
+                             "Player %s is running %s version %d.%d.%d on %s",
+                             server->player[ID].name,
+                             client,
+                             server->player[ID].version_major,
+                             server->player[ID].version_minor,
+                             server->player[ID].version_revision,
+                             server->player[ID].os_info);
         } else {
             sendServerNotice(server, arguments.player, "Invalid ID. Player doesnt exist");
         }
@@ -466,25 +440,20 @@ static void clinCommand(void* serverP, CommandArguments arguments)
 static void intelCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    char    message[57];
     uint8   sentAtLeastOnce = 0;
     for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
         if (server->player[playerID].state != STATE_DISCONNECTED && server->player[playerID].hasIntel) {
-            snprintf(message, 22, "Player #%d has intel", playerID);
-            sendServerNotice(server, arguments.player, message);
+            sendServerNotice(server, arguments.player, "Player #%d has intel", playerID);
             sentAtLeastOnce = 1;
         }
     }
     if (sentAtLeastOnce == 0) {
         if (server->protocol.gameMode.intelHeld[0]) {
-            snprintf(message, 57, "Intel is not being held but intel of team 0 thinks it is");
-            sendServerNotice(server, arguments.player, message);
+            sendServerNotice(server, arguments.player, "Intel is not being held but intel of team 0 thinks it is");
         } else if (server->protocol.gameMode.intelHeld[1]) {
-            snprintf(message, 57, "Intel is not being held but intel of team 1 thinks it is");
-            sendServerNotice(server, arguments.player, message);
+            sendServerNotice(server, arguments.player, "Intel is not being held but intel of team 1 thinks it is");
         }
-        snprintf(message, 24, "Intel is not being held");
-        sendServerNotice(server, arguments.player, message);
+        sendServerNotice(server, arguments.player, "Intel is not being held");
     }
 }
 

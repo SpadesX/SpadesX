@@ -9,6 +9,7 @@
 #include <Queue.h>
 #include <Types.h>
 #include <enet/enet.h>
+#include <stdarg.h>
 
 void      initPlayer(Server*  server,
                      uint8    playerID,
@@ -42,7 +43,7 @@ void      handleGrenade(Server* server, uint8 playerID);
 void      updateMovementAndGrenades(Server* server);
 void      SetPlayerRespawnPoint(Server* server, uint8 playerID);
 Vector3f  SetIntelTentSpawnPoint(Server* server, uint8 team);
-void      sendServerNotice(Server* server, uint8 playerID, char* message);
+void      sendServerNotice(Server* server, uint8 playerID, const char* message, ...);
 void      broadcastServerNotice(Server* server, char* message);
 uint8     SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
 uint8     SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
@@ -54,7 +55,7 @@ uint8     Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance);
 uint8     diffIsOlderThen(uint64 timeNow, uint64* timeBefore, uint64 timeDiff);
 uint8     diffIsOlderThenDontUpdate(uint64 timeNow, uint64 timeBefore, uint64 timeDiff);
 uint8     isStaff(Server* server, uint8 playerID);
-void      sendMessageToStaff(Server* server, char* message);
+void      sendMessageToStaff(Server* server, const char* format, ...);
 uint8     getGrenadeDamage(Server* server, uint8 damageID, uint8 throwerID, uint8 grenadeID);
 uint8     getPlayerUnstuck(Server* server, uint8 playerID);
 

@@ -218,13 +218,16 @@ uint8 isStaff(Server* server, uint8 playerID)
     return 0;
 }
 
-void sendMessageToStaff(Server* server, char* message)
+void sendMessageToStaff(Server* server, const char* format, ...)
 {
+    va_list args;
+    va_start(args, format);
     for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
         if (isPastJoinScreen(server, ID) && isStaff(server, ID)) {
-            sendServerNotice(server, ID, message);
+            sendServerNotice(server, ID, format, args);
         }
     }
+    va_end(args);
 }
 
 uint8 isPastStateData(Server* server, uint8 playerID)
@@ -1051,15 +1054,22 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
     }
 }
 
-void sendServerNotice(Server* server, uint8 playerID, char* message)
+void sendServerNotice(Server* server, uint8 playerID, const char* message, ...)
 {
-    uint32      packetSize = 3 + strlen(message);
-    ENetPacket* packet     = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream     = {packet->data, packet->dataLength, 0};
+    va_list args;
+    va_start(args, message);
+    char fMessage[256];
+    vsnprintf(fMessage, 255, message, args);
+    va_end(args);
+
+    uint32      fMessageSize = strlen(fMessage);
+    uint32      packetSize   = 3 + fMessageSize;
+    ENetPacket* packet       = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream       = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
     WriteByte(&stream, 33);
     WriteByte(&stream, 0);
-    WriteArray(&stream, message, strlen(message));
+    WriteArray(&stream, fMessage, fMessageSize);
     enet_peer_send(server->player[playerID].peer, 0, packet);
 }
 
