@@ -2,6 +2,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include "Uthash.h"
 #include "enet/protocol.h"
 
 #include <Enums.h>
@@ -31,7 +32,7 @@ typedef struct
 {
     char         accessLevel[32];
     const char** accessPassword;
-    uint8*       access;
+    uint8        permLevelOffset;
 } PermLevel;
 
 typedef struct
@@ -179,6 +180,7 @@ typedef struct
     uint8                welcomeSent;
     uint8                toRefill;
     uint8                reloading;
+    uint8                permLevel;
 
     uint8    movForward;
     uint8    movBackwards;
@@ -211,6 +213,32 @@ typedef struct
 
 typedef struct
 {
+    Player srvPlayer;
+    uint8  player;
+    uint32 commandPermissions;
+    char*  command;
+    char*  message;
+} CommandArguments;
+
+typedef struct
+{
+    char id[30];
+    void (*command)(void* serverP, CommandArguments arguments);
+    uint32          PermLevel; // 32 roles should be more then enough for anyone
+    UT_hash_handle  hh;
+    struct Command* next;
+} Command;
+
+// Command but with removed hash map and linked list stuff for easy managment
+typedef struct
+{
+    char id[30];
+    void (*command)(void* serverP, CommandArguments arguments);
+    uint32 PermLevel; // 32 roles should be more then enough for anyone
+} CommandManager;
+
+typedef struct
+{
     ENetHost*             host;
     Player                player[32];
     Protocol              protocol;
@@ -218,6 +246,8 @@ typedef struct
     uint16                port;
     Map                   map;
     GlobalTimers          globalTimers;
+    Command*              commandsMap;
+    Command*              commandsList;
     uint8                 globalAK;
     uint8                 globalAB;
     const char*           managerPasswd;

@@ -8,6 +8,7 @@
 #include "Protocol.h"
 #include "Structs.h"
 
+#include <Commands.h>
 #include <Compress.h>
 #include <DataStream.h>
 #include <Enums.h>
@@ -504,6 +505,9 @@ void StartServer(uint16      port,
     server.running = 1;
     ServerInit(
     &server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
+
+    addCommands(&server);
+
     server.master.enableMasterConnection = master;
     server.managerPasswd                 = managerPasswd;
     server.adminPasswd                   = adminPasswd;
@@ -530,6 +534,8 @@ void StartServer(uint16      port,
         server.map.compressedMap = Pop(server.map.compressedMap);
     }
     free(server.map.compressedMap);
+
+    deleteCommands(&server);
 
     LOG_STATUS("Exiting");
     enet_host_destroy(server.host);

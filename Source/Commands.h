@@ -5,4 +5,6 @@
 #include "Structs.h"
 
 void handleCommands(Server* server, uint8 player, char* message);
+void addCommands(Server* server);
+void deleteCommands(Server* server);
 #endif

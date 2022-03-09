@@ -18,6 +18,7 @@ void      initPlayer(Server*  server,
                      Vector3f forward,
                      Vector3f strafe,
                      Vector3f height);
+uint8     playerHasPermission(Server* server, uint8 playerID, uint32 permission);
 uint8     gamemodeBlockChecks(Server* server, int x, int y, int z);
 uint8     isPastStateData(Server* server, uint8 playerID);
 uint8     isPastJoinScreen(Server* server, uint8 playerID);

@@ -55,6 +55,11 @@ static uint8 grenadeGamemodeCheck(Server* server, Vector3f pos)
     return 0;
 }
 
+uint8 playerHasPermission(Server* server, uint8 playerID, uint32 permission)
+{
+    return (permission & server->player[playerID].permLevel);
+}
+
 uint8 getPlayerUnstuck(Server* server, uint8 playerID)
 {
     for (float z = server->player[playerID].movement.prevLegitPos.z - 1;
@@ -149,11 +154,11 @@ void initPlayer(Server*  server,
     server->player[playerID].movement.position           = empty;
     server->player[playerID].movement.velocity           = empty;
     if (reset == 0 && disconnect == 0) {
-        PermLevel roleList[5] = {{"manager", &server->managerPasswd, &server->player[playerID].isManager},
-                                 {"admin", &server->adminPasswd, &server->player[playerID].isAdmin},
-                                 {"mod", &server->modPasswd, &server->player[playerID].isMod},
-                                 {"guard", &server->guardPasswd, &server->player[playerID].isGuard},
-                                 {"trusted", &server->trustedPasswd, &server->player[playerID].isTrusted}};
+        PermLevel roleList[5] = {{"manager", &server->managerPasswd, 4},
+                                 {"admin", &server->adminPasswd, 3},
+                                 {"mod", &server->modPasswd, 2},
+                                 {"guard", &server->guardPasswd, 1},
+                                 {"trusted", &server->trustedPasswd, 0}};
         for (unsigned long x = 0; x < sizeof(roleList) / sizeof(PermLevel); ++x) {
             server->player[playerID].roleList[x] = roleList[x];
         }
