@@ -655,36 +655,63 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     if (player != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player, ID);
     }
-    LOG_INFO("Player %s (%ld) to %d said: %s",
+    uint8 resetTime = 1;
+    if (!diffIsOlderThenDontUpdate(
+        get_nanos(), server->player[player].timers.sinceLastMessage, (uint64) NANO_IN_MILLI * 2000) &&
+        !server->player[player].muted)
+    {
+        server->player[player].spamCounter++;
+        LOG_DEBUG("Spam counter: %d", server->player[player].spamCounter);
+        if (server->player[player].spamCounter >= 5) {
+            sendMessageToStaff(
+            server, "WARNING: Player %s (#%d) is trying to spam. Muting.", server->player[player].name, player);
+            sendServerNotice(server,
+                             player,
+                             "SERVER: You have been muted for excessive spam. If you feel like this is a mistake "
+                             "contact staff via /admin command");
+            server->player[player].muted = 1;
+            server->player[player].spamCounter = 0;
+        }
+        resetTime = 0;
+    }
+    if (resetTime) {
+        server->player[player].timers.sinceLastMessage = get_nanos();
+        server->player[player].spamCounter = 0;
+    }
+
+    message[length] = '\0';
+    LOG_INFO("Player %s (#%ld) to team %d said: %s",
              server->player[player].name,
              (long) server->player[player].peer->data,
              meantfor,
              message);
-    message[length]    = '\0';
-    ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
-    WriteByte(&stream, player);
-    WriteByte(&stream, meantfor);
-    WriteArray(&stream, message, length);
+
     uint8 sent = 0;
     if (message[0] == '/') {
         handleCommands(server, player, message);
     } else {
-        for (int playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
-            if (isPastJoinScreen(server, playerID) && !server->player[player].muted &&
-                ((server->player[playerID].team == server->player[player].team && meantfor == 1) || meantfor == 0))
-            {
-                if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
-                    sent = 1;
+        if (!server->player[player].muted) {
+            ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
+            DataStream  stream = {packet->data, packet->dataLength, 0};
+            WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
+            WriteByte(&stream, player);
+            WriteByte(&stream, meantfor);
+            WriteArray(&stream, message, length);
+            for (int playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
+                if (isPastJoinScreen(server, playerID) && !server->player[player].muted &&
+                    ((server->player[playerID].team == server->player[player].team && meantfor == 1) || meantfor == 0))
+                {
+                    if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
+                        sent = 1;
+                    }
                 }
+            }
+            if (sent == 0) {
+                enet_packet_destroy(packet);
             }
         }
     }
     free(message);
-    if (sent == 0) {
-        enet_packet_destroy(packet);
-    }
 }
 
 void SendWorldUpdate(Server* server, uint8 playerID)
@@ -1407,7 +1434,7 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID = ReadByte(data);
     server->protocol.teamUserCount[server->player[playerID].team]--;
-    uint8 team = ReadByte(data);
+    uint8 team                    = ReadByte(data);
     server->player[playerID].team = team;
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change team packet", playerID, ID);
