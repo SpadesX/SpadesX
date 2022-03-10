@@ -17,7 +17,8 @@
 #include <stdio.h>
 #include <string.h>
 
-static uint32 commandCompare(Command* first, Command* second) {
+static uint32 commandCompare(Command* first, Command* second)
+{
     return strcmp(first->id, second->id);
 }
 
@@ -396,24 +397,24 @@ static void toggleBuildCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     int     ID;
     if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 1) {
+        if (server->globalAB == 1) {
+            server->globalAB = 0;
+            broadcastServerNotice(server, "Building has been disabled");
+        } else if (server->globalAB == 0) {
+            server->globalAB = 1;
+            broadcastServerNotice(server, "Building has been enabled");
+        }
+    } else {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            if (server->globalAB == 1) {
-                server->globalAB = 0;
-                broadcastServerNotice(server, "Building has been disabled");
-            } else if (server->globalAB == 0) {
-                server->globalAB = 1;
-                broadcastServerNotice(server, "Building has been enabled");
+            if (server->player[ID].canBuild == 1) {
+                server->player[ID].canBuild = 0;
+                broadcastServerNotice(server, "Building has been disabled for %s", server->player[ID].name);
+            } else if (server->player[ID].canBuild == 0) {
+                server->player[ID].canBuild = 1;
+                broadcastServerNotice(server, "Building has been enabled for %s", server->player[ID].name);
             }
         } else {
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
-        }
-    } else {
-        if (server->player[ID].canBuild == 1) {
-            server->player[ID].canBuild = 0;
-            broadcastServerNotice(server, "Building has been disabled for %s", server->player[ID].name);
-        } else if (server->player[ID].canBuild == 0) {
-            server->player[ID].canBuild = 1;
-            broadcastServerNotice(server, "Building has been enabled for %s", server->player[ID].name);
         }
     }
 }
@@ -423,24 +424,24 @@ static void toggleKillCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     int     ID;
     if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 1) {
+        if (server->globalAK == 1) {
+            server->globalAK = 0;
+            broadcastServerNotice(server, "Killing has been disabled");
+        } else if (server->globalAK == 0) {
+            server->globalAK = 1;
+            broadcastServerNotice(server, "Killing has been enabled");
+        }
+    } else {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            if (server->globalAK == 1) {
-                server->globalAK = 0;
-                broadcastServerNotice(server, "Killing has been disabled");
-            } else if (server->globalAK == 0) {
-                server->globalAK = 1;
-                broadcastServerNotice(server, "Killing has been enabled");
+            if (server->player[ID].allowKilling == 1) {
+                server->player[ID].allowKilling = 0;
+                broadcastServerNotice(server, "Killing has been disabled for %s", server->player[ID].name);
+            } else if (server->player[ID].allowKilling == 0) {
+                server->player[ID].allowKilling = 1;
+                broadcastServerNotice(server, "Killing has been enabled for %s", server->player[ID].name);
             }
         } else {
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
-        }
-    } else {
-        if (server->player[ID].allowKilling == 1) {
-            server->player[ID].allowKilling = 0;
-            broadcastServerNotice(server, "Killing has been disabled for %s", server->player[ID].name);
-        } else if (server->player[ID].allowKilling == 0) {
-            server->player[ID].allowKilling = 1;
-            broadcastServerNotice(server, "Killing has been enabled for %s", server->player[ID].name);
         }
     }
 }
