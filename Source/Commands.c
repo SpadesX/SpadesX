@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+static uint32 commandCompare(Command* first, Command* second) {
+    return strcmp(first->id, second->id);
+}
+
 static void adminCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
@@ -546,6 +550,7 @@ void populateCommands(Server* server)
         createCommand(
         server, CommandArray[i].command, CommandArray[i].id, CommandArray[i].commandDesc, CommandArray[i].PermLevel);
     }
+    LL_SORT(server->commandsList, commandCompare);
 }
 
 void freeCommands(Server* server)
