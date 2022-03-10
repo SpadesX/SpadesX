@@ -49,15 +49,12 @@ static void toggleKillCommand(void* serverP, CommandArguments arguments)
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
         }
     } else {
-        char broadcast[100];
         if (server->player[ID].allowKilling == 1) {
             server->player[ID].allowKilling = 0;
-            snprintf(broadcast, 100, "Killing has been disabled for %s", server->player[ID].name);
-            broadcastServerNotice(server, broadcast);
+            broadcastServerNotice(server, "Killing has been disabled for %s", server->player[ID].name);
         } else if (server->player[ID].allowKilling == 0) {
             server->player[ID].allowKilling = 1;
-            snprintf(broadcast, 100, "Killing has been enabled for %s", server->player[ID].name);
-            broadcastServerNotice(server, broadcast);
+            broadcastServerNotice(server, "Killing has been enabled for %s", server->player[ID].name);
         }
     }
 }
@@ -68,15 +65,12 @@ static void toggleTeamKillCommand(void* serverP, CommandArguments arguments)
     int     ID     = 33;
     if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            char broadcast[100];
             if (server->player[ID].allowTeamKilling) {
                 server->player[ID].allowTeamKilling = 0;
-                snprintf(broadcast, 100, "Team killing has been disabled for %s", server->player[ID].name);
-                broadcastServerNotice(server, broadcast);
+                broadcastServerNotice(server, "Team killing has been disabled for %s", server->player[ID].name);
             } else {
                 server->player[ID].allowTeamKilling = 1;
-                snprintf(broadcast, 100, "Team killing has been enabled for %s", server->player[ID].name);
-                broadcastServerNotice(server, broadcast);
+                broadcastServerNotice(server, "Team killing has been enabled for %s", server->player[ID].name);
             }
         } else {
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
@@ -103,15 +97,12 @@ static void toggleBuildCommand(void* serverP, CommandArguments arguments)
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
         }
     } else {
-        char broadcast[100];
         if (server->player[ID].canBuild == 1) {
             server->player[ID].canBuild = 0;
-            snprintf(broadcast, 100, "Building has been disabled for %s", server->player[ID].name);
-            broadcastServerNotice(server, broadcast);
+            broadcastServerNotice(server, "Building has been disabled for %s", server->player[ID].name);
         } else if (server->player[ID].canBuild == 0) {
             server->player[ID].canBuild = 1;
-            snprintf(broadcast, 100, "Building has been enabled for %s", server->player[ID].name);
-            broadcastServerNotice(server, broadcast);
+            broadcastServerNotice(server, "Building has been enabled for %s", server->player[ID].name);
         }
     }
 }
@@ -122,10 +113,8 @@ static void kickCommand(void* serverP, CommandArguments arguments)
     int     ID     = 33;
     if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            char sendingMessage[100];
-            snprintf(sendingMessage, 100, "Player %s has been kicked", server->player[ID].name);
             enet_peer_disconnect(server->player[ID].peer, REASON_KICKED);
-            broadcastServerNotice(server, sendingMessage);
+            broadcastServerNotice(server, "Player %s has been kicked", server->player[ID].name);
         } else {
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
         }
@@ -140,15 +129,13 @@ static void muteCommand(void* serverP, CommandArguments arguments)
     int     ID     = 33;
     if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            char sendingMessage[100];
             if (server->player[ID].muted) {
                 server->player[ID].muted = 0;
-                snprintf(sendingMessage, 100, "%s has been unmuted", server->player[ID].name);
+                broadcastServerNotice(server, "%s has been unmuted", server->player[ID].name);
             } else {
                 server->player[ID].muted = 1;
-                snprintf(sendingMessage, 100, "%s has been muted", server->player[ID].name);
+                broadcastServerNotice(server, "%s has been muted", server->player[ID].name);
             }
-            broadcastServerNotice(server, sendingMessage);
         } else {
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
         }
@@ -176,8 +163,6 @@ static void pbanCommand(void* serverP, CommandArguments arguments)
     int     ID     = 33;
     if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 2) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
-            char sendingMessage[100];
-            snprintf(sendingMessage, 100, "%s has been permanently banned", server->player[ID].name);
             FILE* fp;
             fp = fopen("BanList.txt", "a");
             if (fp == NULL) {
@@ -193,7 +178,7 @@ static void pbanCommand(void* serverP, CommandArguments arguments)
                     server->player[ID].name);
             fclose(fp);
             enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
-            broadcastServerNotice(server, sendingMessage);
+            broadcastServerNotice(server, "%s has been permanently banned", server->player[ID].name);
         } else {
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
         }
