@@ -177,7 +177,7 @@ typedef struct
     uint8                welcomeSent;
     uint8                toRefill;
     uint8                reloading;
-    uint8                permLevel;
+    uint64               permLevel;
     uint8                spamCounter;
 
     uint8    movForward;
