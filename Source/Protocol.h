@@ -44,7 +44,7 @@ void      updateMovementAndGrenades(Server* server);
 void      SetPlayerRespawnPoint(Server* server, uint8 playerID);
 Vector3f  SetIntelTentSpawnPoint(Server* server, uint8 team);
 void      sendServerNotice(Server* server, uint8 playerID, const char* message, ...);
-void      broadcastServerNotice(Server* server, char* message);
+void broadcastServerNotice(Server* server, const char* message, ...);
 uint8     SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
 uint8     SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
 uint8     SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
