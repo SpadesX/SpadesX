@@ -144,6 +144,27 @@ static void muteCommand(void* serverP, CommandArguments arguments)
     }
 }
 
+static void adminMuteCommand(void* serverP, CommandArguments arguments)
+{
+    Server* server = (Server*) serverP;
+    int     ID     = 33;
+    if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 2) {
+        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+            if (server->player[ID].adminMuted) {
+                server->player[ID].adminMuted = 0;
+                sendServerNotice(server, arguments.player, "%s has been admin unmuted", server->player[ID].name);
+            } else {
+                server->player[ID].adminMuted = 1;
+                sendServerNotice(server, arguments.player, "%s has been admin muted", server->player[ID].name);
+            }
+        } else {
+            sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
+        }
+    } else {
+        sendServerNotice(server, arguments.player, "You did not enter ID or entered incorrect argument");
+    }
+}
+
 static void upsCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
@@ -281,6 +302,10 @@ static void adminCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     char    staffMessage[1024];
     if (sscanf(arguments.message, "%s %[^\n]", arguments.command, staffMessage) == 2) {
+        if (server->player[arguments.player].adminMuted == 1) {
+            sendServerNotice(server, arguments.player, "You are not allowed to use this command (Admin muted)");
+            return;
+        }
         sendMessageToStaff(server, "Staff from %s: %s", server->player[arguments.player].name, staffMessage);
         sendServerNotice(server, arguments.player, "Message sent to all staff members online");
     } else {
@@ -510,6 +535,7 @@ void populateCommands(Server* server)
     {"/tb", &toggleBuildCommand, 30, "Toggles ability to build for everyone or specified player"},
     {"/kick", &kickCommand, 30, "Kicks specified player from the server"},
     {"/mute", &muteCommand, 30, "Mutes or unmutes specified player"},
+    {"/adminmute", &adminMuteCommand, 30, "Mutes or unmutes player from /admin usage"},
     {"/pban", &pbanCommand, 30, "Permanently bans a specified player"},
     {"/inv", &invCommand, 30, "Makes you go invisible"},
     {"/say", &sayCommand, 30, "Send message to everyone as the server"},

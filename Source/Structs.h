@@ -169,6 +169,7 @@ typedef struct
     uint8                allowTeamKilling;
     uint16               ups;
     uint8                muted;
+    uint8                adminMuted;
     uint8                canBuild;
     Grenade              grenade[3];
     uint8                toldToMaster;
