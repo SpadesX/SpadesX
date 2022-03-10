@@ -121,6 +121,7 @@ typedef struct
     uint64 sinceLastWeaponInput;
     uint64 sinceReloadStart;
     uint64 sinceLastPrimaryWeaponInput;
+    uint64 sinceLastMessageForSpam;
     uint64 sinceLastMessage;
 } Timers;
 

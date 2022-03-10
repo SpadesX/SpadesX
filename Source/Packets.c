@@ -656,9 +656,9 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player, ID);
     }
     uint8 resetTime = 1;
-    if (!diffIsOlderThenDontUpdate(
-        get_nanos(), server->player[player].timers.sinceLastMessage, (uint64) NANO_IN_MILLI * 2000) &&
-        !server->player[player].muted)
+    if ((!diffIsOlderThenDontUpdate(
+        get_nanos(), server->player[player].timers.sinceLastMessageForSpam, (uint64) NANO_IN_MILLI * 2000) &&
+        !server->player[player].muted) || server->player[player].permLevel > 1)
     {
         server->player[player].spamCounter++;
         if (server->player[player].spamCounter >= 5) {
@@ -674,8 +674,13 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         resetTime = 0;
     }
     if (resetTime) {
-        server->player[player].timers.sinceLastMessage = get_nanos();
+        server->player[player].timers.sinceLastMessageForSpam = get_nanos();
         server->player[player].spamCounter = 0;
+    }
+
+    if (!diffIsOlderThen(get_nanos(), &server->player[player].timers.sinceLastMessage, (uint64)NANO_IN_MILLI * 500) && server->player[player].permLevel <= 1) {
+        sendServerNotice(server, player, "WARNING: You sent last message too fast and thus was not sent out to players");
+        return;
     }
 
     message[length] = '\0';
