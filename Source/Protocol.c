@@ -222,12 +222,15 @@ void sendMessageToStaff(Server* server, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
+    char fMessage[1024];
+    vsnprintf(fMessage, 1023, format, args);
+    va_end(args);
+
     for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
         if (isPastJoinScreen(server, ID) && isStaff(server, ID)) {
-            sendServerNotice(server, ID, format, args);
+            sendServerNotice(server, ID, fMessage);
         }
     }
-    va_end(args);
 }
 
 uint8 isPastStateData(Server* server, uint8 playerID)
@@ -1058,8 +1061,8 @@ void sendServerNotice(Server* server, uint8 playerID, const char* message, ...)
 {
     va_list args;
     va_start(args, message);
-    char fMessage[256];
-    vsnprintf(fMessage, 255, message, args);
+    char fMessage[1024];
+    vsnprintf(fMessage, 1023, message, args);
     va_end(args);
 
     uint32      fMessageSize = strlen(fMessage);

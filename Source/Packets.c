@@ -661,7 +661,6 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         !server->player[player].muted)
     {
         server->player[player].spamCounter++;
-        LOG_DEBUG("Spam counter: %d", server->player[player].spamCounter);
         if (server->player[player].spamCounter >= 5) {
             sendMessageToStaff(
             server, "WARNING: Player %s (#%d) is trying to spam. Muting.", server->player[player].name, player);
