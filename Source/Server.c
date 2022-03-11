@@ -7,6 +7,7 @@
 #include "Packets.h"
 #include "Protocol.h"
 #include "Structs.h"
+#include "Ping.h"
 
 #include <Commands.h>
 #include <Compress.h>
@@ -351,6 +352,7 @@ static void* WorldUpdate()
 
 static void ServerUpdate(Server* server, int timeout)
 {
+
     ENetEvent event;
     while (enet_host_service(server->host, &event, timeout) > 0) {
         uint8 bannedUser = 0;
@@ -500,6 +502,8 @@ void StartServer(uint16      port,
     }
 
     server.port = port;
+
+    server.host->intercept = &rawUdpInterceptCallback;
 
     LOG_STATUS("Intializing server");
     server.running = 1;
