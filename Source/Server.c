@@ -33,6 +33,10 @@
 Server    server;
 pthread_t thread[3];
 
+Server* getServer() {
+    return &server; // Needed when we cant pass Server as argument into function
+}
+
 static unsigned long long get_nanos(void)
 {
     struct timespec ts;

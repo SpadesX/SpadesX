@@ -15,6 +15,8 @@
     #define DEFAULT_SERVER_PORT 32887
 #endif
 
+Server* getServer();
+
 void StartServer(uint16      port,
                  uint32      connections,
                  uint32      channels,
