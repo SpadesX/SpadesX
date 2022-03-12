@@ -35,7 +35,7 @@ int rawUdpInterceptCallback(ENetHost* host, ENetEvent* event)
         const char *json = json_object_to_json_string(jobj);
 
         enet_socket_send(
-        host->socket, &host->receivedAddress, &(ENetBuffer){.data = (char*)json, .dataLength = strlen(json) - 1}, 1);
+        host->socket, &host->receivedAddress, &(ENetBuffer){.data = (char*)json, .dataLength = strlen(json)}, 1);
 
         while (json_object_put(jobj) != 1) {
             // Free the memory from the JSON object
