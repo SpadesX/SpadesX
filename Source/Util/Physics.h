@@ -582,18 +582,18 @@ long move_player(Server* server, uint8 playerID)
     return (0); // no fall damage
 }
 
-int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
+int move_grenade(Server* server,Grenade* grenade)
 {
-    Vector3f fpos = server->player[playerID].grenade[grenadeID].position; // old position
+    Vector3f fpos = grenade->position; // old position
     // do velocity & gravity (friction is negligible)
     float f = fsynctics * 32;
-    server->player[playerID].grenade[grenadeID].velocity.z += fsynctics;
-    server->player[playerID].grenade[grenadeID].position.x +=
-    server->player[playerID].grenade[grenadeID].velocity.x * f;
-    server->player[playerID].grenade[grenadeID].position.y +=
-    server->player[playerID].grenade[grenadeID].velocity.y * f;
-    server->player[playerID].grenade[grenadeID].position.z +=
-    server->player[playerID].grenade[grenadeID].velocity.z * f;
+    grenade->velocity.z += fsynctics;
+    grenade->position.x +=
+    grenade->velocity.x * f;
+    grenade->position.y +=
+    grenade->velocity.y * f;
+    grenade->position.z +=
+    grenade->velocity.z * f;
     // do rotation
     // FIX ME: Loses orientation after 45 degree bounce off wall
     //  if(g->v.x > 0.1f || g->v.x < -0.1f || g->v.y > 0.1f || g->v.y < -0.1f)
@@ -602,9 +602,9 @@ int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
     //  }
     // make it bounce (accurate)
     Vector3l lp;
-    lp.x = (long) floor(server->player[playerID].grenade[grenadeID].position.x);
-    lp.y = (long) floor(server->player[playerID].grenade[grenadeID].position.y);
-    lp.z = (long) floor(server->player[playerID].grenade[grenadeID].position.z);
+    lp.x = (long) floor(grenade->position.x);
+    lp.y = (long) floor(grenade->position.y);
+    lp.z = (long) floor(grenade->position.z);
 
     if (!clipworld(server, lp.x, lp.y, lp.z)) {
         return 0; // we didn't hit anything, no collision
@@ -612,9 +612,9 @@ int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
         static const float BOUNCE_SOUND_THRESHOLD = 1.1f;
 
         int ret = 1;
-        if (fabs(server->player[playerID].grenade[grenadeID].velocity.x) > BOUNCE_SOUND_THRESHOLD ||
-            fabs(server->player[playerID].grenade[grenadeID].velocity.y) > BOUNCE_SOUND_THRESHOLD ||
-            fabs(server->player[playerID].grenade[grenadeID].velocity.z) > BOUNCE_SOUND_THRESHOLD)
+        if (fabs(grenade->velocity.x) > BOUNCE_SOUND_THRESHOLD ||
+            fabs(grenade->velocity.y) > BOUNCE_SOUND_THRESHOLD ||
+            fabs(grenade->velocity.z) > BOUNCE_SOUND_THRESHOLD)
             ret = 2; // play sound
 
         Vector3l lp2;
@@ -622,18 +622,18 @@ int move_grenade(Server* server, uint8 playerID, uint8 grenadeID)
         lp2.y = (long) floor(fpos.y);
         lp2.z = (long) floor(fpos.z);
         if (lp.z != lp2.z && ((lp.x == lp2.x && lp.y == lp2.y) || !clipworld(server, lp.x, lp.y, lp2.z)))
-            server->player[playerID].grenade[grenadeID].velocity.z =
-            -server->player[playerID].grenade[grenadeID].velocity.z;
+            grenade->velocity.z =
+            -grenade->velocity.z;
         else if (lp.x != lp2.x && ((lp.y == lp2.y && lp.z == lp2.z) || !clipworld(server, lp2.x, lp.y, lp.z)))
-            server->player[playerID].grenade[grenadeID].velocity.x =
-            -server->player[playerID].grenade[grenadeID].velocity.x;
+            grenade->velocity.x =
+            -grenade->velocity.x;
         else if (lp.y != lp2.y && ((lp.x == lp2.x && lp.z == lp2.z) || !clipworld(server, lp.x, lp2.y, lp.z)))
-            server->player[playerID].grenade[grenadeID].velocity.y =
-            -server->player[playerID].grenade[grenadeID].velocity.y;
-        server->player[playerID].grenade[grenadeID].position = fpos; // set back to old position
-        server->player[playerID].grenade[grenadeID].velocity.x *= 0.36f;
-        server->player[playerID].grenade[grenadeID].velocity.y *= 0.36f;
-        server->player[playerID].grenade[grenadeID].velocity.z *= 0.36f;
+            grenade->velocity.y =
+            -grenade->velocity.y;
+        grenade->position = fpos; // set back to old position
+        grenade->velocity.x *= 0.36f;
+        grenade->velocity.y *= 0.36f;
+        grenade->velocity.z *= 0.36f;
         return ret;
     }
 }

@@ -2,6 +2,7 @@
 #include "Commands.h"
 #include "Protocol.h"
 #include "Structs.h"
+#include "Utlist.h"
 
 #include <Compress.h>
 #include <DataStream.h>
@@ -94,6 +95,9 @@ inline static uint8 allowShot(Server*  server,
 
 void SendRestock(Server* server, uint8 playerID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_RESTOCK);
@@ -103,6 +107,9 @@ void SendRestock(Server* server, uint8 playerID)
 
 void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_MOVE_OBJECT);
@@ -120,6 +127,9 @@ void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
 
 void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     uint8 team;
     if (server->player[playerID].team == 0) {
         team = 1;
@@ -145,7 +155,9 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
 
 void SendIntelPickup(Server* server, uint8 playerID)
 {
-
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     uint8 team;
     if (server->player[playerID].team == 0) {
         team = 1;
@@ -172,6 +184,9 @@ void SendIntelPickup(Server* server, uint8 playerID)
 
 void SendIntelDrop(Server* server, uint8 playerID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     uint8 team;
     if (server->player[playerID].team == 0) {
         team = 1;
@@ -186,12 +201,12 @@ void SendIntelDrop(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_INTEL_DROP);
     WriteByte(&stream, playerID);
     if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-        WriteFloat(&stream, (float)MAP_MAX_X / 2);
-        WriteFloat(&stream, (float)MAP_MAX_Y / 2);
+        WriteFloat(&stream, (float) MAP_MAX_X / 2);
+        WriteFloat(&stream, (float) MAP_MAX_Y / 2);
         WriteFloat(&stream, (float) mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2));
 
-        server->protocol.gameMode.intel[team].x = (float)MAP_MAX_X / 2;
-        server->protocol.gameMode.intel[team].y = (float)MAP_MAX_Y / 2;
+        server->protocol.gameMode.intel[team].x = (float) MAP_MAX_X / 2;
+        server->protocol.gameMode.intel[team].y = (float) MAP_MAX_Y / 2;
         server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2);
         server->protocol.gameMode.intel[server->player[playerID].team] = server->protocol.gameMode.intel[team];
         SendMoveObject(
@@ -226,6 +241,9 @@ void SendIntelDrop(Server* server, uint8 playerID)
 
 void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 30, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_GRENADE_PACKET);
@@ -245,6 +263,9 @@ void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, 
 void SendPlayerLeft(Server* server, uint8 playerID)
 {
     LOG_INFO("Player %s disconnected", server->player[playerID].name);
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && isPastStateData(server, i)) {
             ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
@@ -261,6 +282,9 @@ void SendPlayerLeft(Server* server, uint8 playerID)
 
 void SendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint8 clip, uint8 reserve)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 4, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WEAPON_RELOAD);
@@ -295,6 +319,9 @@ void SendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint
 
 void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
@@ -310,6 +337,9 @@ void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
 
 void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_SET_COLOR);
@@ -324,6 +354,9 @@ void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
 
 void SendSetTool(Server* server, uint8 playerID, uint8 tool)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_SET_TOOL);
@@ -336,6 +369,9 @@ void SendSetTool(Server* server, uint8 playerID, uint8 tool)
 
 void SendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_BLOCK_LINE);
@@ -355,6 +391,9 @@ void SendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
 
 void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, int Y, int Z)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_BLOCK_ACTION);
@@ -372,6 +411,9 @@ void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, in
 
 void SendStateData(Server* server, uint8 playerID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 104, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_STATE_DATA);
@@ -433,6 +475,9 @@ void SendStateData(Server* server, uint8 playerID)
 
 void SendInputData(Server* server, uint8 playerID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
@@ -450,6 +495,9 @@ void sendKillPacket(Server* server,
                     uint8   respawnTime,
                     uint8   makeInvisible)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
@@ -508,6 +556,9 @@ void sendHP(Server*  server,
             uint8    isGrenade,
             Vector3f position)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     if ((server->player[playerID].allowKilling && server->globalAK && server->player[playerID].allowKilling &&
          server->player[playerID].alive) ||
         typeOfDamage == 0)
@@ -554,6 +605,9 @@ void sendHP(Server*  server,
 
 void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 28, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_EXISTING_PLAYER);
@@ -572,6 +626,9 @@ void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
 
 void SendVersionRequest(Server* server, uint8 playerID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_VERSION_REQUEST);
@@ -579,6 +636,9 @@ void SendVersionRequest(Server* server, uint8 playerID)
 }
 void SendMapStart(Server* server, uint8 playerID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     LOG_STATUS("Sending map info");
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
@@ -620,6 +680,9 @@ void SendMapChunks(Server* server, uint8 playerID)
 
 void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_CREATE_PLAYER);
@@ -646,6 +709,9 @@ void SendRespawn(Server* server, uint8 playerID)
 
 void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     uint32 packetSize = event.packet->dataLength + 1;
     uint8  ID         = ReadByte(data);
     int    meantfor   = ReadByte(data);
@@ -723,6 +789,9 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
 
 void SendWorldUpdate(Server* server, uint8 playerID)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 1 + (32 * 24), 0);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_WORLD_UPDATE);
@@ -750,6 +819,9 @@ void SendWorldUpdate(Server* server, uint8 playerID)
 
 void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float z)
 {
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
     ENetPacket* packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_POSITION_DATA);
@@ -769,44 +841,37 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
     if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 1000)) {
         return;
     }
+    Grenade* grenade = malloc(sizeof(Grenade));
     if (server->player[playerID].grenades > 0) {
-        for (int i = 0; i < 3; ++i) {
-            if (server->player[playerID].grenade[i].sent == 0) {
-                server->player[playerID].grenade[i].fuse       = ReadFloat(data);
-                server->player[playerID].grenade[i].position.x = ReadFloat(data);
-                server->player[playerID].grenade[i].position.y = ReadFloat(data);
-                server->player[playerID].grenade[i].position.z = ReadFloat(data);
-                float velX = ReadFloat(data), velY = ReadFloat(data), velZ = ReadFloat(data);
-                if (server->player[playerID].sprinting) {
-                    return;
-                }
-                float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
-                if (length > 2)
-                    return;
-
-                float normLength                               = 1 / length;
-                server->player[playerID].grenade[i].velocity.x = velX * normLength;
-                server->player[playerID].grenade[i].velocity.y = velY * normLength;
-                server->player[playerID].grenade[i].velocity.z = velZ * normLength;
-                Vector3f posZ1                                 = server->player[playerID].grenade[i].position;
-                posZ1.z += 1;
-                Vector3f posZ2 = server->player[playerID].grenade[i].position;
-                posZ2.z += 2;
-                if (vecfValidPos(server->player[playerID].grenade[i].position) ||
-                    (vecfValidPos(posZ1) && server->player[playerID].movement.position.z < 0) ||
-                    (vecfValidPos(posZ2) && server->player[playerID].movement.position.z < 0))
-                {
-                    SendGrenade(server,
-                                playerID,
-                                server->player[playerID].grenade[i].fuse,
-                                server->player[playerID].grenade[i].position,
-                                server->player[playerID].grenade[i].velocity);
-                    server->player[playerID].grenade[i].sent          = 1;
-                    server->player[playerID].grenade[i].timeSinceSent = get_nanos();
-                }
-                break;
-            }
+        grenade->fuse       = ReadFloat(data);
+        grenade->position.x = ReadFloat(data);
+        grenade->position.y = ReadFloat(data);
+        grenade->position.z = ReadFloat(data);
+        float velX = ReadFloat(data), velY = ReadFloat(data), velZ = ReadFloat(data);
+        if (server->player[playerID].sprinting) {
+            return;
         }
+        float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
+        if (length > 2)
+            return;
+
+        float normLength   = 1 / length;
+        grenade->velocity.x = velX * normLength;
+        grenade->velocity.y = velY * normLength;
+        grenade->velocity.z = velZ * normLength;
+        Vector3f posZ1     = grenade->position;
+        posZ1.z += 1;
+        Vector3f posZ2 = grenade->position;
+        posZ2.z += 2;
+        if (vecfValidPos(grenade->position) ||
+            (vecfValidPos(posZ1) && server->player[playerID].movement.position.z < 0) ||
+            (vecfValidPos(posZ2) && server->player[playerID].movement.position.z < 0))
+        {
+            SendGrenade(server, playerID, grenade->fuse, grenade->position, grenade->velocity);
+            grenade->sent          = 1;
+            grenade->timeSinceSent = get_nanos();
+        }
+        DL_APPEND(server->player[playerID].grenade, grenade);
         server->player[playerID].grenades--;
     }
 }

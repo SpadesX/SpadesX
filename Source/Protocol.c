@@ -5,6 +5,7 @@
 #include "Physics.h"
 #include "Server.h"
 #include "Structs.h"
+#include "Utlist.h"
 
 #include <DataStream.h>
 #include <Enums.h>
@@ -97,19 +98,16 @@ uint8 getPlayerUnstuck(Server* server, uint8 playerID)
     return 0;
 }
 
-uint8 getGrenadeDamage(Server* server, uint8 damageID, uint8 throwerID, uint8 grenadeID)
+uint8 getGrenadeDamage(Server* server, uint8 damageID, Grenade* grenade)
 {
-    double diffX =
-    fabs(server->player[damageID].movement.position.x - server->player[throwerID].grenade[grenadeID].position.x);
-    double diffY =
-    fabs(server->player[damageID].movement.position.y - server->player[throwerID].grenade[grenadeID].position.y);
-    double diffZ =
-    fabs(server->player[damageID].movement.position.z - server->player[throwerID].grenade[grenadeID].position.z);
+    double   diffX      = fabs(server->player[damageID].movement.position.x - grenade->position.x);
+    double   diffY      = fabs(server->player[damageID].movement.position.y - grenade->position.y);
+    double   diffZ      = fabs(server->player[damageID].movement.position.z - grenade->position.z);
     Vector3f playerPos  = server->player[damageID].movement.position;
-    Vector3f grenadePos = server->player[damageID].grenade[grenadeID].position;
+    Vector3f grenadePos = grenade->position;
     if (diffX < 16 && diffY < 16 && diffZ < 16 &&
         can_see(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
-        server->player[throwerID].grenade[grenadeID].position.z < 62)
+        grenade->position.z < 62)
     {
         double diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
         if (diff == 0) {
@@ -162,6 +160,7 @@ void initPlayer(Server*  server,
         for (unsigned long x = 0; x < sizeof(roleList) / sizeof(PermLevel); ++x) {
             server->player[playerID].roleList[x] = roleList[x];
         }
+        server->player[playerID].grenade = NULL;
     }
     server->player[playerID].airborne                         = 0;
     server->player[playerID].wade                             = 0;
@@ -948,37 +947,34 @@ void handleTentAndIntel(Server* server, uint8 playerID)
 
 void handleGrenade(Server* server, uint8 playerID)
 {
-    for (int i = 0; i < 3; ++i) {
-        if (server->player[playerID].grenade[i].sent) {
-            move_grenade(server, playerID, i);
-            if ((get_nanos() - server->player[playerID].grenade[i].timeSinceSent) / 1000000000.f >=
-                server->player[playerID].grenade[i].fuse)
-            {
+    Grenade* grenade;
+    Grenade* tmp;
+    DL_FOREACH_SAFE(server->player[playerID].grenade, grenade, tmp)
+    {
+        if (grenade->sent) {
+            move_grenade(server, grenade);
+            if ((get_nanos() - grenade->timeSinceSent) / 1000000000.f >= grenade->fuse) {
                 uint8 allowToDestroy = 0;
-                if (grenadeGamemodeCheck(server, server->player[playerID].grenade[i].position)) {
+                if (grenadeGamemodeCheck(server, grenade->position)) {
                     SendBlockAction(server,
                                     playerID,
                                     3,
-                                    floor(server->player[playerID].grenade[i].position.x),
-                                    floor(server->player[playerID].grenade[i].position.y),
-                                    floor(server->player[playerID].grenade[i].position.z));
+                                    floor(grenade->position.x),
+                                    floor(grenade->position.y),
+                                    floor(grenade->position.z));
                     allowToDestroy = 1;
                 }
                 for (int y = 0; y < server->protocol.maxPlayers; ++y) {
                     if (server->player[y].state == STATE_READY) {
-                        uint8 value = getGrenadeDamage(server, y, playerID, i);
+                        uint8 value = getGrenadeDamage(server, y, grenade);
                         if (value > 0) {
-                            sendHP(
-                            server, playerID, y, value, 1, 3, 5, 1, server->player[playerID].grenade[i].position);
+                            sendHP(server, playerID, y, value, 1, 3, 5, 1, grenade->position);
                         }
                     }
                 }
-                float x = server->player[playerID].grenade[i].position.x;
-                float y = server->player[playerID].grenade[i].position.y;
-                for (int z = server->player[playerID].grenade[i].position.z - 1;
-                     z <= server->player[playerID].grenade[i].position.z + 1;
-                     ++z)
-                {
+                float x = grenade->position.x;
+                float y = grenade->position.y;
+                for (int z = grenade->position.z - 1; z <= grenade->position.z + 1; ++z) {
                     if (z < 62 &&
                         (x >= 0 && x <= MAP_MAX_X && x - 1 >= 0 && x - 1 <= MAP_MAX_X && x + 1 >= 0 &&
                          x + 1 <= MAP_MAX_X) &&
@@ -997,9 +993,9 @@ void handleGrenade(Server* server, uint8 playerID)
                             mapvxlSetAir(&server->map.map, x + 1, y + 1, z);
                         }
                         Vector3i pos;
-                        pos.x = server->player[playerID].grenade[i].position.x;
-                        pos.y = server->player[playerID].grenade[i].position.y;
-                        pos.z = server->player[playerID].grenade[i].position.z;
+                        pos.x = grenade->position.x;
+                        pos.y = grenade->position.y;
+                        pos.z = grenade->position.z;
 
                         Vector3i* neigh = getGrenadeNeighbors(pos);
                         for (int index = 0; index < 54; ++index) {
@@ -1009,7 +1005,10 @@ void handleGrenade(Server* server, uint8 playerID)
                         }
                     }
                 }
-                server->player[playerID].grenade[i].sent = 0;
+                grenade->sent = 0;
+                LOG_STATUS("We did explode");
+                DL_DELETE(server->player[playerID].grenade, grenade);
+                free(grenade);
                 moveIntelAndTentDown(server);
             }
         }

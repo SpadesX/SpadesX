@@ -13,7 +13,7 @@
 #include <signal.h>
 #include <time.h>
 
-#define VERSION       "0.0.60"
+#define VERSION       "0.1.00"
 #define MAX_MAP_COUNT 64 // Change this if you have more then 64 maps. Tho ask yourself first WHY.
 
 #define MAP_MAX_X MAP_X_MAX
@@ -35,7 +35,7 @@ typedef struct
     uint8        permLevelOffset;
 } PermLevel;
 
-typedef struct
+typedef struct Grenade
 {
     uint8    sent;
     float    fuse;
@@ -44,6 +44,7 @@ typedef struct
     Vector3f velocity;
     uint64   timeSinceSent;
     uint64   timeNow;
+    struct Grenade *next, *prev;
 } Grenade;
 
 typedef struct
@@ -171,7 +172,7 @@ typedef struct
     uint8                muted;
     uint8                adminMuted;
     uint8                canBuild;
-    Grenade              grenade[3];
+    Grenade*             grenade;
     uint8                toldToMaster;
     uint8                hasIntel;
     uint8                isInvisible;
