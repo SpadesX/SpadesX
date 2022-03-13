@@ -838,7 +838,9 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet", playerID, ID);
     }
     uint64 timeNow = get_nanos();
-    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500) || !diffIsOlderThen(timeNow, &server->player[playerID].timers.sincePossibleSpadenade, (long)NANO_IN_MILLI * 1000)) {
+    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500) ||
+        !diffIsOlderThen(timeNow, &server->player[playerID].timers.sincePossibleSpadenade, (long) NANO_IN_MILLI * 1000))
+    {
         return;
     }
     Grenade* grenade = malloc(sizeof(Grenade));
@@ -854,7 +856,9 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
         if (length > 2)
             return;
-
+        if (length == 0) {
+            length = 1; // In case we get 000 velocity without this normalization would produce -nan
+        }
         float normLength    = 1 / length;
         grenade->velocity.x = velX * normLength;
         grenade->velocity.y = velY * normLength;
