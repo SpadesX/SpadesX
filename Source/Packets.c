@@ -838,7 +838,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet", playerID, ID);
     }
     uint64 timeNow = get_nanos();
-    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 1000)) {
+    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500)) {
         return;
     }
     Grenade* grenade = malloc(sizeof(Grenade));
