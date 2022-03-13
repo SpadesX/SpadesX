@@ -201,6 +201,13 @@ void initPlayer(Server*  server,
     server->player[playerID].version_revision                 = 0;
     if (reset == 0) {
         server->player[playerID].permLevel = 0;
+    } else if (reset == 1) {
+        Grenade* grenade;
+        Grenade* tmp;
+        DL_FOREACH_SAFE(server->player[playerID].grenade,grenade, tmp) {
+            DL_DELETE(server->player[playerID].grenade, grenade);
+            free(grenade);
+        }
     }
     server->player[playerID].isInvisible = 0;
     server->player[playerID].kills       = 0;
@@ -1006,7 +1013,6 @@ void handleGrenade(Server* server, uint8 playerID)
                     }
                 }
                 grenade->sent = 0;
-                LOG_STATUS("We did explode");
                 DL_DELETE(server->player[playerID].grenade, grenade);
                 free(grenade);
                 moveIntelAndTentDown(server);
