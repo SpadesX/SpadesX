@@ -186,12 +186,12 @@ void SendIntelDrop(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_INTEL_DROP);
     WriteByte(&stream, playerID);
     if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-        WriteFloat(&stream, MAP_MAX_X / 2);
-        WriteFloat(&stream, MAP_MAX_Y / 2);
+        WriteFloat(&stream, (float)MAP_MAX_X / 2);
+        WriteFloat(&stream, (float)MAP_MAX_Y / 2);
         WriteFloat(&stream, (float) mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2));
 
-        server->protocol.gameMode.intel[team].x = MAP_MAX_X / 2;
-        server->protocol.gameMode.intel[team].y = MAP_MAX_Y / 2;
+        server->protocol.gameMode.intel[team].x = (float)MAP_MAX_X / 2;
+        server->protocol.gameMode.intel[team].y = (float)MAP_MAX_Y / 2;
         server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2);
         server->protocol.gameMode.intel[server->player[playerID].team] = server->protocol.gameMode.intel[team];
         SendMoveObject(
