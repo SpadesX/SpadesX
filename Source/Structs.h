@@ -43,7 +43,6 @@ typedef struct Grenade
     Vector3f position;
     Vector3f velocity;
     uint64   timeSinceSent;
-    uint64   timeNow;
     struct Grenade *next, *prev;
 } Grenade;
 
