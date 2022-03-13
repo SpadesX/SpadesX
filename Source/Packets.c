@@ -838,7 +838,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet", playerID, ID);
     }
     uint64 timeNow = get_nanos();
-    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500)) {
+    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500) || !diffIsOlderThen(timeNow, &server->player[playerID].timers.sincePossibleSpadenade, (long)NANO_IN_MILLI * 1000)) {
         return;
     }
     Grenade* grenade = malloc(sizeof(Grenade));
@@ -855,11 +855,11 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         if (length > 2)
             return;
 
-        float normLength   = 1 / length;
+        float normLength    = 1 / length;
         grenade->velocity.x = velX * normLength;
         grenade->velocity.y = velY * normLength;
         grenade->velocity.z = velZ * normLength;
-        Vector3f posZ1     = grenade->position;
+        Vector3f posZ1      = grenade->position;
         posZ1.z += 1;
         Vector3f posZ2 = grenade->position;
         posZ2.z += 2;
@@ -1425,6 +1425,8 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
 
     if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
         server->player[playerID].locAtClick = server->player[playerID].movement.position;
+    } else if (server->player[playerID].secondary_fire && server->player[playerID].item == 0) {
+        server->player[playerID].timers.sincePossibleSpadenade = get_nanos();
     }
 
     else if (server->player[playerID].weaponClip > 0)
