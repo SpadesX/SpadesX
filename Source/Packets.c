@@ -837,6 +837,11 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet", playerID, ID);
     }
+    if (server->player[playerID].primary_fire && server->player[playerID].item == 1) {
+        sendServerNotice(server, playerID, "InstaSuicideNade detected. Grenade ineffective");
+        sendMessageToStaff(server, "Player %s (%d) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
+        return;
+    }
     uint64 timeNow = get_nanos();
     if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500) ||
         !diffIsOlderThen(timeNow, &server->player[playerID].timers.sincePossibleSpadenade, (long) NANO_IN_MILLI * 1000))
@@ -1388,6 +1393,7 @@ static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set tool packet", playerID, ID);
     }
+    
     server->player[playerID].item = tool;
     SendSetTool(server, playerID, tool);
 }
