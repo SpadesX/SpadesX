@@ -5,9 +5,10 @@
 #include "Map.h"
 #include "Master.h"
 #include "Packets.h"
+#include "Ping.h"
 #include "Protocol.h"
 #include "Structs.h"
-#include "Ping.h"
+#include "Utlist.h"
 
 #include <Commands.h>
 #include <Compress.h>
@@ -33,8 +34,18 @@
 Server    server;
 pthread_t thread[3];
 
-Server* getServer() {
+Server* getServer()
+{
     return &server; // Needed when we cant pass Server as argument into function
+}
+
+static void freeStringNodes(stringNode* root) {
+    stringNode *el, *tmp;
+    DL_FOREACH_SAFE(root, el, tmp) {
+        free(el->string);
+        DL_DELETE(root, el);
+        free(el);
+    }
 }
 
 static unsigned long long get_nanos(void)
@@ -136,8 +147,6 @@ static void* calculatePhysics()
 
 static void ServerInit(Server*     server,
                        uint32      connections,
-                       char        mapArray[][64],
-                       uint8       mapCount,
                        const char* serverName,
                        const char* team1Name,
                        const char* team2Name,
@@ -155,35 +164,31 @@ static void ServerInit(Server*     server,
     server->map.compressedMap   = NULL;
     server->map.compressedSize  = 0;
     server->protocol.inputFlags = 0;
-    if (reset == 0) {
-        for (int i = 0; i < mapCount; ++i) {
-            memcpy(server->map.mapArray, mapArray[i], strlen(mapArray[i]));
-        }
-        server->map.mapCount = mapCount;
-    }
 
     char  vxlMap[64];
     uint8 index;
     if (reset == 0) {
         srand(time(0));
-        index = rand() % mapCount;
-    } else {
-        index = rand() % server->map.mapCount;
     }
-    server->map.mapIndex = index;
-    if (reset == 0) {
-        memcpy(server->mapName, mapArray[index], strlen(mapArray[index]) + 1);
-    } else {
-        memcpy(server->mapName, server->map.mapArray[index], strlen(server->map.mapArray[index]) + 1);
+    index = rand() % server->map.mapCount;
+    server->map.currentMap = server->map.mapList;
+    for (int i = 0; i <= index; ++i) {
+        if (server->map.currentMap->next != NULL) {
+            server->map.currentMap = server->map.currentMap->next;
+        }
+        else {
+            break; //Safety if we by some magical reason go beyond the list
+        }
     }
+    snprintf(server->mapName, fmin(strlen(server->map.currentMap->string) + 1, 20), "%s", server->map.currentMap->string);
     LOG_STATUS("Selecting %s as map", server->mapName);
 
-    snprintf(vxlMap, 64, "%s.vxl", server->mapName);
+    snprintf(vxlMap, 64, "%s.vxl", server->map.currentMap->string);
     LoadMap(server, vxlMap);
 
     LOG_STATUS("Loading spawn ranges from map file");
     char mapConfig[64];
-    snprintf(mapConfig, 64, "%s.json", server->mapName);
+    snprintf(mapConfig, 64, "%s.json", server->map.currentMap->string);
 
     struct json_object* parsed_map_json;
     parsed_map_json = json_object_from_file(mapConfig);
@@ -250,8 +255,6 @@ void ServerReset(Server* server)
 {
     ServerInit(server,
                server->protocol.maxPlayers,
-               server->map.mapArray,
-               server->map.mapCount,
                server->serverName,
                server->protocol.nameTeam[0],
                server->protocol.nameTeam[1],
@@ -463,8 +466,10 @@ void StartServer(uint16      port,
                  uint32      inBandwidth,
                  uint32      outBandwidth,
                  uint8       master,
-                 char        mapArray[][64],
+                 stringNode* mapList,
                  uint8       mapCount,
+                 stringNode* welcomeMessageList,
+                 uint8       welcomeMessageListLen,
                  const char* managerPasswd,
                  const char* adminPasswd,
                  const char* modPasswd,
@@ -511,8 +516,12 @@ void StartServer(uint16      port,
 
     LOG_STATUS("Intializing server");
     server.running = 1;
+    server.map.mapList = mapList;
+    server.map.mapCount = mapCount;
+    server.welcomeMessages = welcomeMessageList;
+    server.welcomeMessageCount = welcomeMessageListLen;
     ServerInit(
-    &server, connections, mapArray, mapCount, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
+    &server, connections, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
 
     populateCommands(&server);
 
@@ -544,6 +553,9 @@ void StartServer(uint16      port,
     free(server.map.compressedMap);
 
     freeCommands(&server);
+
+    freeStringNodes(server.welcomeMessages);
+    freeStringNodes(server.map.mapList);
 
     LOG_STATUS("Exiting");
     enet_host_destroy(server.host);

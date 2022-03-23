@@ -12,5 +12,11 @@
 	"team2_name": "Blue Team",
 	"team1_color": [255, 0, 0],
 	"team2_color": [0, 0, 255],
-	"gamemode": 0
+	"gamemode": 0,
+	"welcome_messages": [
+		"We stand with Ukraine. Please take a minute and go check out https://helpukrainewin.org",
+		"If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8",
+		"SpadesX is still in development and thus bugs are expected",
+		"Welcome to SpadesX Server"
+	]
 }

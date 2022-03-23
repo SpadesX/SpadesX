@@ -839,7 +839,8 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
     }
     if (server->player[playerID].primary_fire && server->player[playerID].item == 1) {
         sendServerNotice(server, playerID, "InstaSuicideNade detected. Grenade ineffective");
-        sendMessageToStaff(server, "Player %s (%d) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
+        sendMessageToStaff(
+        server, "Player %s (%d) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
         return;
     }
     uint64 timeNow = get_nanos();
@@ -1200,13 +1201,10 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     }
     server->player[playerID].state = STATE_SPAWNING;
     if (server->player[playerID].welcomeSent == 0) {
-        sendServerNotice(server, playerID, "Please take a minute and go check out https://helpukrainewin.org");
-        sendServerNotice(
-        server, playerID, "We fully support Ukraine, And since the current situation at Ukraine is at best BAD!");
-        sendServerNotice(
-        server, playerID, "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8");
-        sendServerNotice(server, playerID, "SpadesX is still in development and thus bugs are expected");
-        sendServerNotice(server, playerID, "Welcome to SpadesX server.");
+        stringNode* welcomeMessage;
+        DL_FOREACH(server->welcomeMessages, welcomeMessage) {
+            sendServerNotice(server, playerID, welcomeMessage->string);
+        }
         if (invName) {
             char message[122] =
             "Your name was either empty, had # in front of it or contained something nasty. Your name has been set to ";
@@ -1393,7 +1391,7 @@ static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set tool packet", playerID, ID);
     }
-    
+
     server->player[playerID].item = tool;
     SendSetTool(server, playerID, tool);
 }

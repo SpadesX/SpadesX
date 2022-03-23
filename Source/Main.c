@@ -1,6 +1,7 @@
 // Copyright DarkNeutrino 2021
 #include "Server.h"
 #include "Structs.h"
+#include "Utlist.h"
 
 #include <Types.h>
 #include <JSONHelpers.h>
@@ -27,6 +28,7 @@ int main(void)
 
     struct json_object* parsed_json;
     struct json_object* mapInConfig;
+    struct json_object* welcomeMessagesInConfig;
 
     parsed_json = json_object_from_file("config.json");
     READ_INT_FROM_JSON(parsed_json, port, port, "port number", DEFAULT_SERVER_PORT)
@@ -34,6 +36,10 @@ int main(void)
     READ_INT_FROM_JSON(parsed_json, gamemode, gamemode, "gamemode", 0)
     if (json_object_object_get_ex(parsed_json, "map", &mapInConfig) == 0) {
         LOG_ERROR("Failed to find map name in config");
+        return -1;
+    }
+    if (json_object_object_get_ex(parsed_json, "welcome_messages", &welcomeMessagesInConfig) == 0) {
+        LOG_ERROR("Failed to find welcome messages in config");
         return -1;
     }
     READ_STR_FROM_JSON(parsed_json, managerPasswd, manager_password, "manager password", "")
@@ -48,16 +54,34 @@ int main(void)
     READ_INT_ARR_FROM_JSON(parsed_json, team1Color, team1_color, "team1 color", ((uint8[]){0, 0, 255}), 3)
     READ_INT_ARR_FROM_JSON(parsed_json, team2Color, team2_color, "team2 color", ((uint8[]){255, 0, 0}), 3)
 
-    uint8 mapArrayLen = json_object_array_length(mapInConfig);
-    char  mapArray[mapArrayLen][64];
+    uint8 mapListLen = json_object_array_length(mapInConfig);
+    stringNode* mapList = NULL;
 
-    for (int i = 0; i < mapArrayLen; ++i) {
+    for (int i = 0; i < mapListLen; ++i) {
         json_object* temp      = json_object_array_get_idx(mapInConfig, i);
         uint8        stringLen = json_object_get_string_len(temp);
-        if (stringLen > 64) {
+        stringNode* mapName = malloc(sizeof(stringNode));
+        char* map = malloc(sizeof(char) * stringLen + 1);
+        memcpy(map, json_object_get_string(temp), stringLen + 1);
+        mapName->string = map;
+        DL_APPEND(mapList, mapName);
+    }
+
+    uint8 welcomeMessageListLen = json_object_array_length(welcomeMessagesInConfig);
+    stringNode* welcomeMessageList = NULL;
+
+    for (int i = 0; i < welcomeMessageListLen; ++i) {
+        json_object* temp      = json_object_array_get_idx(welcomeMessagesInConfig, i);
+        uint8        stringLen = json_object_get_string_len(temp);
+        if (stringLen > 128) {
+            LOG_WARNING("Welcome message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
             continue;
         }
-        memcpy(mapArray[i], json_object_get_string(temp), stringLen + 1);
+        stringNode* welcomeMessage = malloc(sizeof(stringNode));
+        char* welcomeMessageString = malloc(sizeof(char) * stringLen + 1);
+        memcpy(welcomeMessageString, json_object_get_string(temp), stringLen + 1);
+        welcomeMessage->string = welcomeMessageString;
+        DL_APPEND(welcomeMessageList, welcomeMessage);
     }
 
     StartServer(port,
@@ -66,8 +90,10 @@ int main(void)
                 0,
                 0,
                 master,
-                mapArray,
-                mapArrayLen,
+                mapList,
+                mapListLen,
+                welcomeMessageList,
+                welcomeMessageListLen,
                 managerPasswd,
                 adminPasswd,
                 modPasswd,

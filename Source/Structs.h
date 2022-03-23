@@ -13,8 +13,7 @@
 #include <signal.h>
 #include <time.h>
 
-#define VERSION       "0.1.00"
-#define MAX_MAP_COUNT 64 // Change this if you have more then 64 maps. Tho ask yourself first WHY.
+#define VERSION       "0.1.1"
 
 #define MAP_MAX_X MAP_X_MAX
 #define MAP_MAX_Y MAP_Y_MAX
@@ -37,12 +36,12 @@ typedef struct
 
 typedef struct Grenade
 {
-    uint8    sent;
-    float    fuse;
-    uint8    exploded;
-    Vector3f position;
-    Vector3f velocity;
-    uint64   timeSinceSent;
+    uint8           sent;
+    float           fuse;
+    uint8           exploded;
+    Vector3f        position;
+    Vector3f        velocity;
+    uint64          timeSinceSent;
     struct Grenade *next, *prev;
 } Grenade;
 
@@ -65,17 +64,23 @@ typedef struct
     Vector3f height;
 } Orientation;
 
+typedef struct stringNode
+{
+    char*              string;
+    struct stringNode *next, *prev;
+} stringNode;
+
 typedef struct
 {
-    uint8 mapCount;
-    uint8 mapIndex;
+    uint8       mapCount;
+    stringNode* currentMap;
     // compressed map
     Queue*            compressedMap;
     uint32            compressedSize;
     Vector3i          resultLine[50];
     long unsigned int mapSize;
     MapVxl            map;
-    char              mapArray[MAX_MAP_COUNT][64];
+    stringNode*       mapList;
 } Map;
 
 typedef struct
@@ -225,9 +230,9 @@ typedef struct Command
     char id[30];
     void (*command)(void* serverP, CommandArguments arguments);
     uint32          PermLevel; // 32 roles should be more then enough for anyone
-    char commandDesc[1024];
+    char            commandDesc[1024];
     UT_hash_handle  hh;
-    struct Command *next;
+    struct Command* next;
 } Command;
 
 // Command but with removed hash map and linked list stuff for easy managment
@@ -236,7 +241,7 @@ typedef struct
     char id[30];
     void (*command)(void* serverP, CommandArguments arguments);
     uint32 PermLevel; // 32 roles should be more then enough for anyone
-    char commandDesc[1024];
+    char   commandDesc[1024];
 } CommandManager;
 
 typedef struct
@@ -250,6 +255,8 @@ typedef struct
     GlobalTimers          globalTimers;
     Command*              commandsMap;
     Command*              commandsList;
+    stringNode*           welcomeMessages;
+    uint8                 welcomeMessageCount;
     uint8                 globalAK;
     uint8                 globalAB;
     const char*           managerPasswd;
@@ -257,8 +264,8 @@ typedef struct
     const char*           modPasswd;
     const char*           guardPasswd;
     const char*           trustedPasswd;
-    char                  serverName[31];
     char                  mapName[20];
+    char                  serverName[31];
     char                  gamemodeName[7];
     volatile sig_atomic_t running; // volatile keyword is required to have an access to this variable in any thread
 } Server;
