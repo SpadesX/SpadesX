@@ -201,6 +201,7 @@ void initPlayer(Server*  server,
     server->player[playerID].version_revision                 = 0;
     server->player[playerID].periodicDelayIndex               = 0;
     server->player[playerID].currentPeriodicMessage           = server->periodicMessages;
+    server->player[playerID].welcomeSent                      = 0;
     if (reset == 0) {
         server->player[playerID].permLevel = 0;
     } else if (reset == 1) {
