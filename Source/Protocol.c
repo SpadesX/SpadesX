@@ -199,12 +199,15 @@ void initPlayer(Server*  server,
     server->player[playerID].version_minor                    = 0;
     server->player[playerID].version_major                    = 0;
     server->player[playerID].version_revision                 = 0;
+    server->player[playerID].periodicDelayIndex               = 0;
+    server->player[playerID].currentPeriodicMessage           = server->periodicMessages;
     if (reset == 0) {
         server->player[playerID].permLevel = 0;
     } else if (reset == 1) {
         Grenade* grenade;
         Grenade* tmp;
-        DL_FOREACH_SAFE(server->player[playerID].grenade,grenade, tmp) {
+        DL_FOREACH_SAFE(server->player[playerID].grenade, grenade, tmp)
+        {
             DL_DELETE(server->player[playerID].grenade, grenade);
             free(grenade);
         }

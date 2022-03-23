@@ -11,9 +11,10 @@
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 #include <signal.h>
+#include <sys/types.h>
 #include <time.h>
 
-#define VERSION       "0.1.1"
+#define VERSION "0.1.1"
 
 #define MAP_MAX_X MAP_X_MAX
 #define MAP_MAX_Y MAP_Y_MAX
@@ -129,6 +130,7 @@ typedef struct
     uint64 sinceLastMessageForSpam;
     uint64 sinceLastMessage;
     uint64 sincePossibleSpadenade;
+    uint64 sincePeriodicMessage;
 } Timers;
 
 typedef struct
@@ -186,6 +188,8 @@ typedef struct
     uint8                reloading;
     uint64               permLevel;
     uint8                spamCounter;
+    uint8                periodicDelayIndex;
+    stringNode*          currentPeriodicMessage;
 
     uint8    movForward;
     uint8    movBackwards;
@@ -257,6 +261,9 @@ typedef struct
     Command*              commandsList;
     stringNode*           welcomeMessages;
     uint8                 welcomeMessageCount;
+    stringNode*           periodicMessages;
+    uint8                 periodicMessageCount;
+    uint8*                periodicDelays;
     uint8                 globalAK;
     uint8                 globalAB;
     const char*           managerPasswd;

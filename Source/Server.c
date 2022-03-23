@@ -39,9 +39,11 @@ Server* getServer()
     return &server; // Needed when we cant pass Server as argument into function
 }
 
-static void freeStringNodes(stringNode* root) {
+static void freeStringNodes(stringNode* root)
+{
     stringNode *el, *tmp;
-    DL_FOREACH_SAFE(root, el, tmp) {
+    DL_FOREACH_SAFE(root, el, tmp)
+    {
         free(el->string);
         DL_DELETE(root, el);
         free(el);
@@ -130,6 +132,18 @@ static void forPlayers()
                     }
                 }
             }
+            if (diffIsOlderThen(timeNow,
+                                &server.player[playerID].timers.sincePeriodicMessage,
+                                (uint64) (server.periodicDelays[server.player[playerID].periodicDelayIndex] * 60) *
+                                NANO_IN_SECOND))
+            {
+                stringNode* message;
+                DL_FOREACH(server.periodicMessages, message)
+                {
+                    sendServerNotice(&server, playerID, message->string);
+                }
+                server.player[playerID].periodicDelayIndex = fmin(server.player[playerID].periodicDelayIndex + 1, 4);
+            }
         } else if (isPastStateData(&server, playerID)) {
         }
     }
@@ -170,17 +184,17 @@ static void ServerInit(Server*     server,
     if (reset == 0) {
         srand(time(0));
     }
-    index = rand() % server->map.mapCount;
+    index                  = rand() % server->map.mapCount;
     server->map.currentMap = server->map.mapList;
     for (int i = 0; i <= index; ++i) {
         if (server->map.currentMap->next != NULL) {
             server->map.currentMap = server->map.currentMap->next;
-        }
-        else {
-            break; //Safety if we by some magical reason go beyond the list
+        } else {
+            break; // Safety if we by some magical reason go beyond the list
         }
     }
-    snprintf(server->mapName, fmin(strlen(server->map.currentMap->string) + 1, 20), "%s", server->map.currentMap->string);
+    snprintf(
+    server->mapName, fmin(strlen(server->map.currentMap->string) + 1, 20), "%s", server->map.currentMap->string);
     LOG_STATUS("Selecting %s as map", server->mapName);
 
     snprintf(vxlMap, 64, "%s.vxl", server->map.currentMap->string);
@@ -199,11 +213,11 @@ static void ServerInit(Server*     server,
     int         team2End[2];
     const char* author;
 
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0}), 2)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10}), 2)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]){20, 20}), 2)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]){30, 30}), 2)
-    READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown")
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]){20, 20}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]){30, 30}), 2, 0)
+    READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
     (void) author;
 
     json_object_put(parsed_map_json);
@@ -426,6 +440,9 @@ static void ServerUpdate(Server* server, int timeout)
                            server->player[playerID].ipUnion.ip[3],
                            event.peer->address.port,
                            playerID);
+                server->player[playerID].timers.sincePeriodicMessage = get_nanos();
+                server->player[playerID].currentPeriodicMessage      = server->periodicMessages;
+                server->player[playerID].periodicDelayIndex          = 0;
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 playerID = (uint8) ((size_t) event.peer->data);
@@ -470,6 +487,9 @@ void StartServer(uint16      port,
                  uint8       mapCount,
                  stringNode* welcomeMessageList,
                  uint8       welcomeMessageListLen,
+                 stringNode* periodicMessageList,
+                 uint8       periodicMessageListLen,
+                 uint8*      periodicDelays,
                  const char* managerPasswd,
                  const char* adminPasswd,
                  const char* modPasswd,
@@ -515,13 +535,15 @@ void StartServer(uint16      port,
     server.host->intercept = &rawUdpInterceptCallback;
 
     LOG_STATUS("Intializing server");
-    server.running = 1;
-    server.map.mapList = mapList;
-    server.map.mapCount = mapCount;
-    server.welcomeMessages = welcomeMessageList;
-    server.welcomeMessageCount = welcomeMessageListLen;
-    ServerInit(
-    &server, connections, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
+    server.running              = 1;
+    server.map.mapList          = mapList;
+    server.map.mapCount         = mapCount;
+    server.welcomeMessages      = welcomeMessageList;
+    server.welcomeMessageCount  = welcomeMessageListLen;
+    server.periodicMessages     = periodicMessageList;
+    server.periodicMessageCount = periodicMessageListLen;
+    server.periodicDelays       = periodicDelays;
+    ServerInit(&server, connections, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
 
     populateCommands(&server);
 
@@ -556,6 +578,7 @@ void StartServer(uint16      port,
 
     freeStringNodes(server.welcomeMessages);
     freeStringNodes(server.map.mapList);
+    freeStringNodes(server.periodicMessages);
 
     LOG_STATUS("Exiting");
     enet_host_destroy(server.host);

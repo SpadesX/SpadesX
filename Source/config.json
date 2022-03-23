@@ -18,5 +18,8 @@
 		"If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8",
 		"SpadesX is still in development and thus bugs are expected",
 		"Welcome to SpadesX Server"
+	],
+	"periodic_messages": [
+		"This server is powered by SpadesX"
 	]
 }
