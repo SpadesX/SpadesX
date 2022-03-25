@@ -524,7 +524,7 @@ void populateCommands(Server* server)
     server->commandsList = NULL; // UTlist requires root to be initialized to NULL
     //  Add custom commands into this array definition
     CommandManager CommandArray[] = {
-    {"/admin", 0, adminCommand, 0, "Sends a message to all online admins."},
+    {"/admin", 0, &adminCommand, 0, "Sends a message to all online admins."},
 //    {"/adminmute", &adminMuteCommand, 30, "Mutes or unmutes player from /admin usage"},
 //    {"/banip", &banIPCommand, 30, "Puts specified IP into ban list"},
     // We can have 2+ commands for same function even with different permissions and name
