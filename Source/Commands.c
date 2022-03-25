@@ -11,6 +11,7 @@
 #include <Enums.h>
 #include <ctype.h>
 #include <enet/enet.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdarg.h>
@@ -25,20 +26,19 @@ static uint32 commandCompare(Command* first, Command* second)
 static void adminCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    char    staffMessage[1024];
-    if (sscanf(arguments.message, "%s %[^\n]", arguments.command, staffMessage) == 2) {
+    if (arguments.argc > 1) {
         if (server->player[arguments.player].adminMuted == 1) {
             sendServerNotice(server, arguments.player, "You are not allowed to use this command (Admin muted)");
             return;
         }
-        sendMessageToStaff(server, "Staff from %s: %s", server->player[arguments.player].name, staffMessage);
+        sendMessageToStaff(server, "Staff from %s: %s", server->player[arguments.player].name, arguments.argv[1]);
         sendServerNotice(server, arguments.player, "Message sent to all staff members online");
     } else {
         sendServerNotice(server, arguments.player, "Invalid message");
     }
 }
 
-static void adminMuteCommand(void* serverP, CommandArguments arguments)
+/*static void adminMuteCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     int     ID     = 33;
@@ -92,13 +92,13 @@ static void banIPCommand(void* serverP, CommandArguments arguments)
     } else {
         sendServerNotice(server, arguments.player, "You did not enter ID or entered incorrect argument");
     }
-}
+}*/
 
 static void clinCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     int     ID     = 33;
-    if (sscanf(arguments.message, "%s #%d", arguments.command, &ID) == 2) {
+    if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID)) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             char client[15];
             if (server->player[arguments.player].client == 'o') {
@@ -125,7 +125,7 @@ static void clinCommand(void* serverP, CommandArguments arguments)
     }
 }
 
-static void helpCommand(void* serverP, CommandArguments arguments)
+/*static void helpCommand(void* serverP, CommandArguments arguments)
 {
     Server*  server = (Server*) serverP;
     Command* command;
@@ -500,17 +500,19 @@ static void upsCommand(void* serverP, CommandArguments arguments)
     } else {
         sendServerNotice(server, arguments.player, "Changing UPS failed. Please select value between 1 and 300");
     }
-}
+}*/
 
 void createCommand(Server* server,
+                   uint8 parseArguments,
                    void (*command)(void* serverP, CommandArguments arguments),
                    char   id[30],
                    char   commandDesc[1024],
                    uint32 permLevel)
 {
-    Command* structCommand   = malloc(sizeof(Command));
-    structCommand->command   = command;
-    structCommand->PermLevel = permLevel;
+    Command* structCommand        = malloc(sizeof(Command));
+    structCommand->command        = command;
+    structCommand->parseArguments = parseArguments;
+    structCommand->PermLevel      = permLevel;
     strcpy(structCommand->commandDesc, commandDesc);
     strcpy(structCommand->id, id);
     HASH_ADD_STR(server->commandsMap, id, structCommand);
@@ -522,34 +524,35 @@ void populateCommands(Server* server)
     server->commandsList = NULL; // UTlist requires root to be initialized to NULL
     //  Add custom commands into this array definition
     CommandManager CommandArray[] = {
-    {"/admin", &adminCommand, 0, "Sends a message to all online admins."},
-    {"/adminmute", &adminMuteCommand, 30, "Mutes or unmutes player from /admin usage"},
-    {"/banip", &banIPCommand, 30, "Puts specified IP into ban list"},
+    {"/admin", 0, adminCommand, 0, "Sends a message to all online admins."},
+//    {"/adminmute", &adminMuteCommand, 30, "Mutes or unmutes player from /admin usage"},
+//    {"/banip", &banIPCommand, 30, "Puts specified IP into ban list"},
     // We can have 2+ commands for same function even with different permissions and name
-    {"/client", &clinCommand, 0, "Shows players client info"},
-    {"/clin", &clinCommand, 0, "Shows players client info"},
-    {"/help", &helpCommand, 0, "Shows commands and their description"},
-    {"/intel", &intelCommand, 0, "Shows info about intel"},
-    {"/inv", &invCommand, 30, "Makes you go invisible"},
-    {"/kick", &kickCommand, 30, "Kicks specified player from the server"},
-    {"/kill", &killCommand, 0, "Kills player who sent it or player specified in argument"},
-    {"/login", &loginCommand, 0, "Login command. First argument is a role. Second password"},
-    {"/logout", &logoutCommand, 31, "Logs out logged in player"},
-    {"/master", &masterCommand, 28, "Toggles master connection"},
-    {"/mute", &muteCommand, 30, "Mutes or unmutes specified player"},
-    {"/pban", &pbanCommand, 30, "Permanently bans a specified player"},
-    {"/pm", &pmCommand, 0, "Private message to specified player"},
-    {"/ratio", &ratioCommand, 0, "Shows yours or requested player ratio"},
-    {"/say", &sayCommand, 30, "Send message to everyone as the server"},
-    {"/server", &serverCommand, 0, "Shows info about the server"},
-    {"/tb", &toggleBuildCommand, 30, "Toggles ability to build for everyone or specified player"},
-    {"/tk", &toggleKillCommand, 30, "Toggles ability to kill for everyone or specified player"},
-    {"/tpc", &tpcCommand, 24, "Teleports to specified cordinates"},
-    {"/ttk", &toggleTeamKillCommand, 30, "Toggles ability to team kill for everyone or specified player"},
-    {"/ups", &upsCommand, 0, "Sets UPS of player to requested ammount. Range: 1-300"}};
+    {"/client", 1, &clinCommand, 0, "Shows players client info"},
+    {"/clin", 1, &clinCommand, 0, "Shows players client info"},
+//    {"/help", &helpCommand, 0, "Shows commands and their description"},
+//    {"/intel", 0, &intelCommand, 0, "Shows info about intel"},
+//    {"/inv", 0, &invCommand, 30, "Makes you go invisible"},
+//    {"/kick", &kickCommand, 30, "Kicks specified player from the server"},
+//    {"/kill", &killCommand, 0, "Kills player who sent it or player specified in argument"},
+//    {"/login", &loginCommand, 0, "Login command. First argument is a role. Second password"},
+//    {"/logout", &logoutCommand, 31, "Logs out logged in player"},
+//    {"/master", &masterCommand, 28, "Toggles master connection"},
+//    {"/mute", &muteCommand, 30, "Mutes or unmutes specified player"},
+//    {"/pban", &pbanCommand, 30, "Permanently bans a specified player"},
+//    {"/pm", &pmCommand, 0, "Private message to specified player"},
+//    {"/ratio", &ratioCommand, 0, "Shows yours or requested player ratio"},
+//    {"/say", 0, &sayCommand, 30, "Send message to everyone as the server"},
+//    {"/server", 0, &serverCommand, 0, "Shows info about the server"},
+//    {"/tb", 1, &toggleBuildCommand, 30, "Toggles ability to build for everyone or specified player"},
+//    {"/tk", &toggleKillCommand, 30, "Toggles ability to kill for everyone or specified player"},
+//    {"/tpc", &tpcCommand, 24, "Teleports to specified cordinates"},
+//    {"/ttk", &toggleTeamKillCommand, 30, "Toggles ability to team kill for everyone or specified player"},
+//    {"/ups", 1, &upsCommand, 0, "Sets UPS of player to requested ammount. Range: 1-300"}
+    };
     for (unsigned long i = 0; i < sizeof(CommandArray) / sizeof(CommandManager); i++) {
         createCommand(
-        server, CommandArray[i].command, CommandArray[i].id, CommandArray[i].commandDesc, CommandArray[i].PermLevel);
+        server, CommandArray[i].parseArguments, CommandArray[i].command, CommandArray[i].id, CommandArray[i].commandDesc, CommandArray[i].PermLevel);
     }
     LL_SORT(server->commandsList, commandCompare);
 }
@@ -577,33 +580,120 @@ void handleCommands(Server* server, uint8 player, char* message)
     Player srvPlayer = server->player[player];
     char*  command   = calloc(1000, sizeof(uint8));
     sscanf(message, "%s", command);
-    uint8 strLenght = strlen(command);
-    for (uint8 i = 1; i < strLenght; ++i) {
+    uint8 commandLength = strlen(command);
+    for (uint8 i = 1; i < commandLength; ++i) {
         message[i] = command[i] = tolower(command[i]);
     }
-    CommandArguments arguments;
-    arguments.command = calloc(strlen(command) + 1, sizeof(command[0]));
-    strcpy(arguments.command, command);
-    arguments.message = calloc(strlen(message) + 1, sizeof(message[0]));
-    strcpy(arguments.message, message);
-    arguments.player    = player;
-    arguments.srvPlayer = srvPlayer;
-    Command* commandStruct;
 
+    Command* commandStruct;
     HASH_FIND_STR(server->commandsMap, command, commandStruct);
     if (commandStruct == NULL) {
-        free(arguments.command);
-        free(arguments.message);
         free(command);
         return;
     }
+
+    CommandArguments arguments;
+    arguments.player    = player;
+    arguments.srvPlayer = srvPlayer;
     arguments.commandPermissions = commandStruct->PermLevel;
+
+    arguments.argv[0] = command;
+    arguments.argc = 1;
+
+    uint8 messageLength;
+    if (commandStruct->parseArguments) {
+        char* p = message + commandLength + 1; // message beginning + command length + one space symbol (pointer math ooOOooOOOOoOO)
+        while (*p != '\0' && arguments.argc < 32) {
+            uint8 escaped = 0, quotesCount = 0, argumentLength;
+            while (*p == ' ' || *p == '\t') p++; // rewinding
+            if (*p == '\0')
+                break;
+
+            char* end = p;
+            if (*end == '"') {
+                quotesCount++;
+                p++;
+                end++;
+            }
+            while (*end) {
+                if (escaped) {
+                    escaped = 0;
+                } else {
+                    switch (*end) {
+                    case ' ':
+                    case '\t':
+                        if (quotesCount == 0) {
+                            goto argparse_loop_exit;
+                        }
+                        break;
+                    case '\\':
+                        escaped = 1;
+                        break;
+                    case '"':
+                        if (quotesCount == 0) {
+                            sendServerNotice(server, player, "Failed to parse the command: found a stray \" symbol");
+                            goto epic_parsing_fail;
+                        }
+                        char next = *(end + 1);
+                        if (next != ' ' && next != '\t' && next != '\0') {
+                            sendServerNotice(server, player, "Failed to parse the command: found more symbols after the \" symbol");
+                            goto epic_parsing_fail;
+                        }
+                        quotesCount++;
+                        end++;
+                        goto argparse_loop_exit;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                end++;
+            }
+            if (quotesCount == 1) {
+                sendServerNotice(server, player, "Failed to parse the command: missing a \" symbol");
+                goto epic_parsing_fail;
+            }
+            argparse_loop_exit:
+            argumentLength = end - p;
+            if (quotesCount == 2) {
+                argumentLength--; // don't need that last quote mark
+            }
+            if (argumentLength) {
+                char* argument = malloc(argumentLength + 1); // Don't forget about the null terminator!
+                argument[argumentLength] = '\0';
+                memcpy(argument, p, argumentLength);
+                arguments.argv[arguments.argc++] = argument;
+            }
+            p = end;
+        }
+    } else if ((messageLength = strlen(message)) - commandLength > 2) { // if we have something other than the command itself
+        char* argument = calloc(messageLength - commandLength, sizeof(message[0]));
+        strcpy(message + commandLength + 1, argument);
+        arguments.argv[arguments.argc++] = argument;
+    }
+
     if (playerHasPermission(server, player, commandStruct->PermLevel) > 0 || commandStruct->PermLevel == 0) {
         commandStruct->command((void*) server, arguments);
     } else {
         sendServerNotice(server, player, "You do not have permissions to use this command");
     }
-    free(arguments.command);
-    free(arguments.message);
+    epic_parsing_fail:
+    for (uint8 i = 1; i < arguments.argc; i++) { // Starting from 1 since we'll free the command anyway
+        free(arguments.argv[i]);
+    }
     free(command);
+}
+
+uint8 parsePlayer(char* s, int* id)
+{
+    uint8 sLength;
+    char* end;
+    if (s[0] != '#' || (sLength = strlen(s)) < 2) { // TODO: look up a player by their nickname if the argument doesn't start with #
+        return 0;
+    }
+    *id = strtoimax(s + 1, &end, 10);
+    if (!end || *end != '\0') { // In normal conditions `end` should point at the end of string
+        return 0;
+    }
+    return 1;
 }
