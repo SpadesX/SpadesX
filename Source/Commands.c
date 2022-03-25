@@ -581,6 +581,15 @@ void handleCommands(Server* server, uint8 player, char* message)
     for (uint8 i = 1; i < strLenght; ++i) {
         message[i] = command[i] = tolower(command[i]);
     }
+
+    Command* commandStruct;
+
+    HASH_FIND_STR(server->commandsMap, command, commandStruct);
+    if (commandStruct == NULL) {
+        free(command);
+        return;
+    }
+
     CommandArguments arguments;
     arguments.command = calloc(strlen(command) + 1, sizeof(command[0]));
     strcpy(arguments.command, command);
@@ -588,15 +597,7 @@ void handleCommands(Server* server, uint8 player, char* message)
     strcpy(arguments.message, message);
     arguments.player    = player;
     arguments.srvPlayer = srvPlayer;
-    Command* commandStruct;
 
-    HASH_FIND_STR(server->commandsMap, command, commandStruct);
-    if (commandStruct == NULL) {
-        free(arguments.command);
-        free(arguments.message);
-        free(command);
-        return;
-    }
     arguments.commandPermissions = commandStruct->PermLevel;
     if (playerHasPermission(server, player, commandStruct->PermLevel) > 0 || commandStruct->PermLevel == 0) {
         commandStruct->command((void*) server, arguments);
