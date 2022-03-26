@@ -446,8 +446,8 @@ static void ServerUpdate(Server* server, int timeout)
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 playerID = (uint8) ((size_t) event.peer->data);
-                SendPlayerLeft(server, playerID);
                 SendIntelDrop(server, playerID);
+                SendPlayerLeft(server, playerID);
                 Vector3f empty   = {0, 0, 0};
                 Vector3f forward = {1, 0, 0};
                 Vector3f height  = {0, 0, 1};
