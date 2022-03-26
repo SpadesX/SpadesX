@@ -18,7 +18,7 @@ void createCommand(Server* server,
                    uint32 permLevel);
 void deleteCommand(Server* server, Command* command);
 
-uint8 parsePlayer(char* s, int* id, char** end);
+uint8 parsePlayer(char* s, uint8* id, char** end);
 uint8 parseByte(char* s, uint8* byte, char** end);
 uint8 parseFloat(char* s, float* value, char** end);
 uint8 parseIP(char* s, IPUnion* ip);

@@ -17,6 +17,76 @@
 #include <stdio.h>
 #include <string.h>
 
+uint8 parsePlayer(char* s, uint8* id, char** end)
+{
+    uint8 sLength;
+    char* _end;
+    if (s[0] != '#' || (sLength = strlen(s)) < 2)
+    { // TODO: look up a player by their nickname if the argument doesn't start with #
+        return 0;
+    }
+
+    *id = strtoimax(s + 1, &_end, 10);
+    if (!_end || _end == s) {
+        return 0;
+    }
+
+    if (end) {
+        *end = _end;
+    }
+    return 1;
+}
+
+uint8 parseByte(char* s, uint8* byte, char** end)
+{
+    char* _end;
+    int   parsed = strtoimax(s, &_end, 10);
+    if (!_end || _end == s || parsed < 0 || parsed > 255) {
+        return 0;
+    }
+
+    *byte = parsed & 0xFF;
+    if (end) {
+        *end = _end;
+    }
+    return 1;
+}
+
+uint8 parseFloat(char* s, float* value, char** end)
+{
+    char*  _end;
+    double parsed = strtod(s, &_end);
+    if (!_end || _end == s) {
+        return 0;
+    }
+
+    *value = (float) parsed;
+    if (end) {
+        *end = _end;
+    }
+    return 1;
+}
+
+uint8 parseIP(char* s, IPUnion* ip)
+{
+    if (!parseByte(s, &ip->ip[0], &s)) {
+        return 0;
+    }
+
+    for (int i = 1; i < 4; i++) {
+        if (*s++ != '.' || !parseByte(s, &ip->ip[i], &s)) {
+            return 0;
+        }
+    }
+
+    if (*s != '\0')
+    { // The pointer should point at the end of string in case it has no more characters. Fail otherwise.
+        return 0;
+    }
+
+    return 1;
+}
+
 static uint32 commandCompare(Command* first, Command* second)
 {
     return strcmp(first->id, second->id);
@@ -40,7 +110,7 @@ static void adminCommand(void* serverP, CommandArguments arguments)
 static void adminMuteCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID     = 33;
+    uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             if (server->player[ID].adminMuted) {
@@ -95,7 +165,7 @@ static void banIPCommand(void* serverP, CommandArguments arguments)
 static void clinCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID     = 33;
+    uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             char client[15];
@@ -180,7 +250,7 @@ static void invCommand(void* serverP, CommandArguments arguments)
 static void kickCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID     = 33;
+    uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             enet_peer_disconnect(server->player[ID].peer, REASON_KICKED);
@@ -207,7 +277,8 @@ static void killCommand(void* serverP, CommandArguments arguments)
         if (strcmp(arguments.argv[1], "all") == 0) { // KILL THEM ALL!!!! >:D
             int count = 0;
             for (int i = 0; i < server->protocol.maxPlayers; ++i) {
-                if (isPastJoinScreen(server, i) && server->player[i].HP > 0 && server->player[i].team != TEAM_SPECTATOR) {
+                if (isPastJoinScreen(server, i) && server->player[i].HP > 0 && server->player[i].team != TEAM_SPECTATOR)
+                {
                     sendKillPacket(server, i, i, 0, 5, 0);
                     count++;
                 }
@@ -216,14 +287,14 @@ static void killCommand(void* serverP, CommandArguments arguments)
             return;
         }
 
-        int id = 0;
+        uint8 ID = 0;
         for (uint32 i = 1; i < arguments.argc; i++) {
-            if (!parsePlayer(arguments.argv[i], &id, NULL)) {
+            if (!parsePlayer(arguments.argv[i], &ID, NULL)) {
                 sendServerNotice(server, arguments.player, "Invalid player \"%s\"!", arguments.argv[i]);
                 return;
             }
-            sendKillPacket(server, id, id, 0, 5, 0);
-            sendServerNotice(server, arguments.player, "Killing player #%i...", id);
+            sendKillPacket(server, ID, ID, 0, 5, 0);
+            sendServerNotice(server, arguments.player, "Killing player #%i...", ID);
         }
     }
 }
@@ -233,8 +304,8 @@ static void loginCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     if (server->player[arguments.player].permLevel == 0) {
         if (arguments.argc == 3) {
-            char *level = arguments.argv[1];
-            char *password = arguments.argv[2];
+            char* level    = arguments.argv[1];
+            char* password = arguments.argv[2];
             uint8 levelLen = strlen(level);
             for (uint8 j = 0; j < levelLen; ++j) {
                 level[j] = tolower(level[j]);
@@ -296,7 +367,7 @@ static void masterCommand(void* serverP, CommandArguments arguments)
 static void muteCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID     = 33;
+    uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             if (server->player[ID].muted) {
@@ -317,7 +388,7 @@ static void muteCommand(void* serverP, CommandArguments arguments)
 static void pbanCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID     = 33;
+    uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             FILE* fp;
@@ -348,7 +419,7 @@ static void pmCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     char*   PM;
-    int     ID = 33;
+    uint8   ID = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, &PM) && strlen(++PM) > 0) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             sendServerNotice(server, ID, "PM from %s: %s", server->player[arguments.player].name, PM);
@@ -364,7 +435,7 @@ static void pmCommand(void* serverP, CommandArguments arguments)
 static void ratioCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID     = 33;
+    uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             sendServerNotice(server,
@@ -412,7 +483,7 @@ static void serverCommand(void* serverP, CommandArguments arguments)
 static void toggleBuildCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID;
+    uint8   ID;
     if (arguments.argc == 1) {
         if (server->globalAB == 1) {
             server->globalAB = 0;
@@ -439,7 +510,7 @@ static void toggleBuildCommand(void* serverP, CommandArguments arguments)
 static void toggleKillCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID;
+    uint8   ID;
     if (arguments.argc == 1) {
         if (server->globalAK == 1) {
             server->globalAK = 0;
@@ -466,7 +537,7 @@ static void toggleKillCommand(void* serverP, CommandArguments arguments)
 static void toggleTeamKillCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    int     ID     = 33;
+    uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
             if (server->player[ID].allowTeamKilling) {
@@ -481,6 +552,34 @@ static void toggleTeamKillCommand(void* serverP, CommandArguments arguments)
         }
     } else {
         sendServerNotice(server, arguments.player, "You did not enter ID or entered incorrect argument");
+    }
+}
+
+static void tpCommand(void* serverP, CommandArguments arguments)
+{
+    Server* server               = (Server*) serverP;
+    uint8   playerToBeTeleported = 33;
+    uint8   playerToTeleportTo   = 33;
+    if (arguments.argc == 3 && parsePlayer(arguments.argv[1], &playerToBeTeleported, NULL),
+        parsePlayer(arguments.argv[2], &playerToTeleportTo, NULL))
+    {
+        if (vecfValidPos(server->player[playerToTeleportTo].movement.position)) {
+            server->player[playerToBeTeleported].movement.position.x =
+            server->player[playerToTeleportTo].movement.position.x - 0.5f;
+            server->player[playerToBeTeleported].movement.position.y =
+            server->player[playerToTeleportTo].movement.position.y - 0.5f;
+            server->player[playerToBeTeleported].movement.position.z =
+            server->player[playerToTeleportTo].movement.position.z - 2.36f;
+            SendPositionPacket(server,
+                               playerToBeTeleported,
+                               server->player[playerToBeTeleported].movement.position.x,
+                               server->player[playerToBeTeleported].movement.position.y,
+                               server->player[playerToBeTeleported].movement.position.z);
+        } else {
+            sendServerNotice(server, arguments.player, "Player %d is at invalid position", playerToTeleportTo);
+        }
+    } else {
+        sendServerNotice(server, arguments.player, "Incorrect amount of arguments or wrong argument type");
     }
 }
 
@@ -524,7 +623,7 @@ static void upsCommand(void* serverP, CommandArguments arguments)
 }
 
 void createCommand(Server* server,
-                   uint8 parseArguments,
+                   uint8   parseArguments,
                    void (*command)(void* serverP, CommandArguments arguments),
                    char   id[30],
                    char   commandDesc[1024],
@@ -567,13 +666,17 @@ void populateCommands(Server* server)
     {"/server", 0, &serverCommand, 0, "Shows info about the server"},
     {"/tb", 1, &toggleBuildCommand, 30, "Toggles ability to build for everyone or specified player"},
     {"/tk", 1, &toggleKillCommand, 30, "Toggles ability to kill for everyone or specified player"},
+    {"/tp", 1, &tpCommand, 24, "Teleports specified player to another specified player"},
     {"/tpc", 1, &tpcCommand, 24, "Teleports to specified cordinates"},
     {"/ttk", 1, &toggleTeamKillCommand, 30, "Toggles ability to team kill for everyone or specified player"},
-    {"/ups", 1, &upsCommand, 0, "Sets UPS of player to requested ammount. Range: 1-300"}
-    };
+    {"/ups", 1, &upsCommand, 0, "Sets UPS of player to requested ammount. Range: 1-300"}};
     for (unsigned long i = 0; i < sizeof(CommandArray) / sizeof(CommandManager); i++) {
-        createCommand(
-        server, CommandArray[i].parseArguments, CommandArray[i].command, CommandArray[i].id, CommandArray[i].commandDesc, CommandArray[i].PermLevel);
+        createCommand(server,
+                      CommandArray[i].parseArguments,
+                      CommandArray[i].command,
+                      CommandArray[i].id,
+                      CommandArray[i].commandDesc,
+                      CommandArray[i].PermLevel);
     }
     LL_SORT(server->commandsList, commandCompare);
 }
@@ -598,10 +701,12 @@ void deleteCommand(Server* server, Command* command)
 
 uint8 parseArguments(Server* server, CommandArguments* arguments, char* message, uint8 commandLength)
 {
-    char* p = message + commandLength + 1; // message beginning + command length + one space symbol (pointer math ooOOooOOOOoOO)
+    char* p =
+    message + commandLength + 1; // message beginning + command length + one space symbol (pointer math ooOOooOOOOoOO)
     while (*p != '\0' && arguments->argc < 32) {
         uint8 escaped = 0, quotesCount = 0, argumentLength;
-        while (*p == ' ' || *p == '\t') p++; // rewinding
+        while (*p == ' ' || *p == '\t')
+            p++; // rewinding
         if (*p == '\0')
             break;
         char* end = p;
@@ -615,31 +720,34 @@ uint8 parseArguments(Server* server, CommandArguments* arguments, char* message,
                 escaped = 0;
             } else {
                 switch (*end) {
-                case ' ':
-                case '\t':
-                    if (quotesCount == 0) {
+                    case ' ':
+                    case '\t':
+                        if (quotesCount == 0) {
+                            goto argparse_loop_exit;
+                        }
+                        break;
+                    case '\\':
+                        escaped = 1;
+                        break;
+                    case '"':
+                        if (quotesCount == 0) {
+                            sendServerNotice(
+                            server, arguments->player, "Failed to parse the command: found a stray \" symbol");
+                            return 0;
+                        }
+                        char next = *(end + 1);
+                        if (next != ' ' && next != '\t' && next != '\0') {
+                            sendServerNotice(server,
+                                             arguments->player,
+                                             "Failed to parse the command: found more symbols after the \" symbol");
+                            return 0;
+                        }
+                        quotesCount++;
+                        end++;
                         goto argparse_loop_exit;
-                    }
-                    break;
-                case '\\':
-                    escaped = 1;
-                    break;
-                case '"':
-                    if (quotesCount == 0) {
-                        sendServerNotice(server, arguments->player, "Failed to parse the command: found a stray \" symbol");
-                        return 0;
-                    }
-                    char next = *(end + 1);
-                    if (next != ' ' && next != '\t' && next != '\0') {
-                        sendServerNotice(server, arguments->player, "Failed to parse the command: found more symbols after the \" symbol");
-                        return 0;
-                    }
-                    quotesCount++;
-                    end++;
-                    goto argparse_loop_exit;
-                    break;
-                default:
-                    break;
+                        break;
+                    default:
+                        break;
                 }
             }
             end++;
@@ -648,13 +756,13 @@ uint8 parseArguments(Server* server, CommandArguments* arguments, char* message,
             sendServerNotice(server, arguments->player, "Failed to parse the command: missing a \" symbol");
             return 0;
         }
-        argparse_loop_exit:
+    argparse_loop_exit:
         argumentLength = end - p;
         if (quotesCount == 2) {
             argumentLength--; // don't need that last quote mark
         }
         if (argumentLength) {
-            char* argument = malloc(argumentLength + 1); // Don't forget about the null terminator!
+            char* argument           = malloc(argumentLength + 1); // Don't forget about the null terminator!
             argument[argumentLength] = '\0';
             memcpy(argument, p, argumentLength);
             arguments->argv[arguments->argc++] = argument;
@@ -687,14 +795,15 @@ void handleCommands(Server* server, uint8 player, char* message)
     arguments.commandPermissions = commandStruct->PermLevel;
 
     arguments.argv[0] = command;
-    arguments.argc = 1;
+    arguments.argc    = 1;
 
     uint8 messageLength;
     if (commandStruct->parseArguments) {
         if (!parseArguments(server, &arguments, message, commandLength)) {
             goto epic_parsing_fail;
         }
-    } else if ((messageLength = strlen(message)) - commandLength > 1) { // if we have something other than the command itself
+    } else if ((messageLength = strlen(message)) - commandLength > 1)
+    { // if we have something other than the command itself
         char* argument = calloc(messageLength - commandLength, sizeof(message[0]));
         strcpy(argument, message + commandLength + 1);
         arguments.argv[arguments.argc++] = argument;
@@ -706,77 +815,9 @@ void handleCommands(Server* server, uint8 player, char* message)
     } else {
         sendServerNotice(server, player, "You do not have permissions to use this command");
     }
-    epic_parsing_fail:
+epic_parsing_fail:
     for (uint8 i = 1; i < arguments.argc; i++) { // Starting from 1 since we'll free the command anyway
         free(arguments.argv[i]);
     }
     free(command);
-}
-
-uint8 parsePlayer(char* s, int* id, char** end)
-{
-    uint8 sLength;
-    char* _end;
-    if (s[0] != '#' || (sLength = strlen(s)) < 2) { // TODO: look up a player by their nickname if the argument doesn't start with #
-        return 0;
-    }
-
-    *id = strtoimax(s + 1, &_end, 10);
-    if (!_end || _end == s) {
-        return 0;
-    }
-
-    if (end) {
-        *end = _end;
-    }
-    return 1;
-}
-
-uint8 parseByte(char* s, uint8* byte, char** end)
-{
-    char* _end;
-    int parsed = strtoimax(s, &_end, 10);
-    if (!_end || _end == s || parsed < 0 || parsed > 255) {
-        return 0;
-    }
-
-    *byte = parsed & 0xFF;
-    if (end) {
-        *end = _end;
-    }
-    return 1;
-}
-
-uint8 parseFloat(char* s, float* value, char** end)
-{
-    char* _end;
-    double parsed = strtod(s, &_end);
-    if (!_end || _end == s) {
-        return 0;
-    }
-
-    *value = (float) parsed;
-    if (end) {
-        *end = _end;
-    }
-    return 1;
-}
-
-uint8 parseIP(char* s, IPUnion* ip)
-{
-    if (!parseByte(s, &ip->ip[0], &s)) {
-        return 0;
-    }
-
-    for (int i = 1; i < 4; i++) {
-        if (*s++ != '.' || !parseByte(s, &ip->ip[i], &s)) {
-             return 0;
-        }
-    }
-
-    if (*s != '\0') { // The pointer should point at the end of string in case it has no more characters. Fail otherwise.
-        return 0;
-    }
-
-    return 1;
 }
