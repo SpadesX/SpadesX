@@ -112,7 +112,7 @@ static void adminMuteCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].adminMuted) {
                 server->player[ID].adminMuted = 0;
                 sendServerNotice(server, arguments.player, "%s has been admin unmuted", server->player[ID].name);
@@ -167,7 +167,7 @@ static void clinCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             char client[15];
             if (server->player[arguments.player].client == 'o') {
                 snprintf(client, 12, "OpenSpades");
@@ -252,7 +252,7 @@ static void kickCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             enet_peer_disconnect(server->player[ID].peer, REASON_KICKED);
             broadcastServerNotice(server, "Player %s has been kicked", server->player[ID].name);
         } else {
@@ -369,7 +369,7 @@ static void muteCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].muted) {
                 server->player[ID].muted = 0;
                 broadcastServerNotice(server, "%s has been unmuted", server->player[ID].name);
@@ -390,7 +390,7 @@ static void pbanCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             FILE* fp;
             fp = fopen("BanList.txt", "a");
             if (fp == NULL) {
@@ -421,7 +421,7 @@ static void pmCommand(void* serverP, CommandArguments arguments)
     char*   PM;
     uint8   ID = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, &PM) && strlen(++PM) > 0) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             sendServerNotice(server, ID, "PM from %s: %s", server->player[arguments.player].name, PM);
             sendServerNotice(server, arguments.player, "PM sent to %s", server->player[ID].name);
         } else {
@@ -437,7 +437,7 @@ static void ratioCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             sendServerNotice(server,
                              arguments.player,
                              "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
@@ -493,7 +493,7 @@ static void toggleBuildCommand(void* serverP, CommandArguments arguments)
             broadcastServerNotice(server, "Building has been enabled");
         }
     } else if (parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].canBuild == 1) {
                 server->player[ID].canBuild = 0;
                 broadcastServerNotice(server, "Building has been disabled for %s", server->player[ID].name);
@@ -520,7 +520,7 @@ static void toggleKillCommand(void* serverP, CommandArguments arguments)
             broadcastServerNotice(server, "Killing has been enabled");
         }
     } else if (parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].allowKilling == 1) {
                 server->player[ID].allowKilling = 0;
                 broadcastServerNotice(server, "Killing has been disabled for %s", server->player[ID].name);
@@ -539,7 +539,7 @@ static void toggleTeamKillCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID >= 0 && ID < 31 && isPastJoinScreen(server, ID)) {
+        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].allowTeamKilling) {
                 server->player[ID].allowTeamKilling = 0;
                 broadcastServerNotice(server, "Team killing has been disabled for %s", server->player[ID].name);
@@ -560,7 +560,7 @@ static void tpCommand(void* serverP, CommandArguments arguments)
     Server* server               = (Server*) serverP;
     uint8   playerToBeTeleported = 33;
     uint8   playerToTeleportTo   = 33;
-    if (arguments.argc == 3 && parsePlayer(arguments.argv[1], &playerToBeTeleported, NULL),
+    if (arguments.argc == 3 && parsePlayer(arguments.argv[1], &playerToBeTeleported, NULL) &&
         parsePlayer(arguments.argv[2], &playerToTeleportTo, NULL))
     {
         if (vecfValidPos(server->player[playerToTeleportTo].movement.position)) {
