@@ -11,7 +11,6 @@
 #include <Enums.h>
 #include <ctype.h>
 #include <enet/enet.h>
-#include <errno.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdarg.h>
