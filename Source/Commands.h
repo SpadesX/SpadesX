@@ -4,6 +4,9 @@
 
 #include "Structs.h"
 
+#define FORMAT_IP(dest, src) snprintf(dest, 16, "%hhu.%hhu.%hhu.%hhu", src.ip[0], src.ip[1], src.ip[2], src.ip[3])
+#define PARSE_VECTOR3F(argument, offset, dest) (parseFloat(argument.argv[offset], dest.x, NULL) && parseFloat(argument.argv[offset + 1], dest.y, NULL) && parseFloat(argument.argv[offset + 2], dest.z, NULL))
+
 void handleCommands(Server* server, uint8 player, char* message);
 void populateCommands(Server* server);
 void freeCommands(Server* server);
@@ -15,6 +18,9 @@ void createCommand(Server* server,
                    uint32 permLevel);
 void deleteCommand(Server* server, Command* command);
 
-uint8 parsePlayer(char* s, int* id);
+uint8 parsePlayer(char* s, int* id, char** end);
+uint8 parseByte(char* s, uint8* byte, char** end);
+uint8 parseFloat(char* s, float* value, char** end);
+uint8 parseIP(char* s, IPUnion* ip);
 
 #endif
