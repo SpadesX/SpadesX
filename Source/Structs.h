@@ -225,13 +225,14 @@ typedef struct
     Player srvPlayer;
     uint8  player;
     uint32 commandPermissions;
-    char*  command;
-    char*  message;
+    uint32 argc;
+    char*  argv[32]; // 32 roles^W commands should be more than enough for anyone
 } CommandArguments;
 
 typedef struct Command
 {
     char id[30];
+    uint8           parseArguments; // Should we even bother parsing it? Would be useful for commands whose one and only argument is a message, or which don't even have any arguments
     void (*command)(void* serverP, CommandArguments arguments);
     uint32          PermLevel; // 32 roles should be more then enough for anyone
     char            commandDesc[1024];
@@ -243,6 +244,7 @@ typedef struct Command
 typedef struct
 {
     char id[30];
+    uint8           parseArguments; // Should we even bother parsing it? Would be useful for commands whose one and only argument is a message, or which don't even have any arguments
     void (*command)(void* serverP, CommandArguments arguments);
     uint32 PermLevel; // 32 roles should be more then enough for anyone
     char   commandDesc[1024];
