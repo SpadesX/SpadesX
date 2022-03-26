@@ -575,6 +575,74 @@ void deleteCommand(Server* server, Command* command)
     free(command);
 }
 
+uint8 parseArguments(Server* server, CommandArguments* arguments, char* message, uint8 commandLength)
+{
+    char* p = message + commandLength + 1; // message beginning + command length + one space symbol (pointer math ooOOooOOOOoOO)
+    while (*p != '\0' && arguments->argc < 32) {
+        uint8 escaped = 0, quotesCount = 0, argumentLength;
+        while (*p == ' ' || *p == '\t') p++; // rewinding
+        if (*p == '\0')
+            break;
+        char* end = p;
+        if (*end == '"') {
+            quotesCount++;
+            p++;
+            end++;
+        }
+        while (*end) {
+            if (escaped) {
+                escaped = 0;
+            } else {
+                switch (*end) {
+                case ' ':
+                case '\t':
+                    if (quotesCount == 0) {
+                        goto argparse_loop_exit;
+                    }
+                    break;
+                case '\\':
+                    escaped = 1;
+                    break;
+                case '"':
+                    if (quotesCount == 0) {
+                        sendServerNotice(server, arguments->player, "Failed to parse the command: found a stray \" symbol");
+                        return 0;
+                    }
+                    char next = *(end + 1);
+                    if (next != ' ' && next != '\t' && next != '\0') {
+                        sendServerNotice(server, arguments->player, "Failed to parse the command: found more symbols after the \" symbol");
+                        return 0;
+                    }
+                    quotesCount++;
+                    end++;
+                    goto argparse_loop_exit;
+                    break;
+                default:
+                    break;
+                }
+            }
+            end++;
+        }
+        if (quotesCount == 1) {
+            sendServerNotice(server, arguments->player, "Failed to parse the command: missing a \" symbol");
+            return 0;
+        }
+        argparse_loop_exit:
+        argumentLength = end - p;
+        if (quotesCount == 2) {
+            argumentLength--; // don't need that last quote mark
+        }
+        if (argumentLength) {
+            char* argument = malloc(argumentLength + 1); // Don't forget about the null terminator!
+            argument[argumentLength] = '\0';
+            memcpy(argument, p, argumentLength);
+            arguments->argv[arguments->argc++] = argument;
+        }
+        p = end;
+    }
+    return 1;
+}
+
 void handleCommands(Server* server, uint8 player, char* message)
 {
     Player srvPlayer = server->player[player];
@@ -602,69 +670,8 @@ void handleCommands(Server* server, uint8 player, char* message)
 
     uint8 messageLength;
     if (commandStruct->parseArguments) {
-        char* p = message + commandLength + 1; // message beginning + command length + one space symbol (pointer math ooOOooOOOOoOO)
-        while (*p != '\0' && arguments.argc < 32) {
-            uint8 escaped = 0, quotesCount = 0, argumentLength;
-            while (*p == ' ' || *p == '\t') p++; // rewinding
-            if (*p == '\0')
-                break;
-
-            char* end = p;
-            if (*end == '"') {
-                quotesCount++;
-                p++;
-                end++;
-            }
-            while (*end) {
-                if (escaped) {
-                    escaped = 0;
-                } else {
-                    switch (*end) {
-                    case ' ':
-                    case '\t':
-                        if (quotesCount == 0) {
-                            goto argparse_loop_exit;
-                        }
-                        break;
-                    case '\\':
-                        escaped = 1;
-                        break;
-                    case '"':
-                        if (quotesCount == 0) {
-                            sendServerNotice(server, player, "Failed to parse the command: found a stray \" symbol");
-                            goto epic_parsing_fail;
-                        }
-                        char next = *(end + 1);
-                        if (next != ' ' && next != '\t' && next != '\0') {
-                            sendServerNotice(server, player, "Failed to parse the command: found more symbols after the \" symbol");
-                            goto epic_parsing_fail;
-                        }
-                        quotesCount++;
-                        end++;
-                        goto argparse_loop_exit;
-                        break;
-                    default:
-                        break;
-                    }
-                }
-                end++;
-            }
-            if (quotesCount == 1) {
-                sendServerNotice(server, player, "Failed to parse the command: missing a \" symbol");
-                goto epic_parsing_fail;
-            }
-            argparse_loop_exit:
-            argumentLength = end - p;
-            if (quotesCount == 2) {
-                argumentLength--; // don't need that last quote mark
-            }
-            if (argumentLength) {
-                char* argument = malloc(argumentLength + 1); // Don't forget about the null terminator!
-                argument[argumentLength] = '\0';
-                memcpy(argument, p, argumentLength);
-                arguments.argv[arguments.argc++] = argument;
-            }
-            p = end;
+        if (!parseArguments(server, &arguments, message, commandLength)) {
+            goto epic_parsing_fail;
         }
     } else if ((messageLength = strlen(message)) - commandLength > 2) { // if we have something other than the command itself
         char* argument = calloc(messageLength - commandLength, sizeof(message[0]));
