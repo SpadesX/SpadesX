@@ -73,7 +73,7 @@ static void forPlayers()
                         }
                         case WEAPON_SMG:
                         {
-                            milliseconds = 110;
+                            milliseconds = 100;
                             break;
                         }
                         case WEAPON_SHOTGUN:
