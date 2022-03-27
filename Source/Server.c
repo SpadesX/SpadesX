@@ -100,7 +100,6 @@ static void forPlayers()
                                 server.player[playerID].toRefill -= server.player[playerID].weaponReserve;
                                 server.player[playerID].weaponReserve = 0;
                                 server.player[playerID].reloading     = 0;
-                                server.player[playerID].toRefill      = 0;
                                 SendWeaponReload(&server, playerID, 0, 0, 0);
                                 break;
                             }
