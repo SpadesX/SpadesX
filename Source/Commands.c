@@ -81,12 +81,14 @@ uint8 parseIP(char* s, IPStruct* ip)
         }
     }
 
-    if (*s != '\0')
-    { // The pointer should point at the end of string in case it has no more characters. Fail otherwise.
-        return 0;
+    if (*s == '/')
+    { // We have a slash after the last number. That means we are dealing with CIDR.
+        if (!parseByte(++s, &ip->CIDR, &s) || ip->CIDR > 32) {
+            return 0;
+        }
     }
 
-    return 1;
+    return *s == '\0'; // The pointer should point at the end of string in case it has no more characters.
 }
 
 static uint32 commandCompare(Command* first, Command* second)
