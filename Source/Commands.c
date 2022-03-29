@@ -11,85 +11,14 @@
 #include <Enums.h>
 #include <ctype.h>
 #include <enet/enet.h>
-#include <inttypes.h>
+#include <json-c/json_util.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <ParseConvert.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
-
-uint8 parsePlayer(char* s, uint8* id, char** end)
-{
-    uint8 sLength;
-    char* _end;
-    if (s[0] != '#' || (sLength = strlen(s)) < 2)
-    { // TODO: look up a player by their nickname if the argument doesn't start with #
-        return 0;
-    }
-
-    *id = strtoimax(s + 1, &_end, 10);
-    if (!_end || _end == s) {
-        return 0;
-    }
-
-    if (end) {
-        *end = _end;
-    }
-    return 1;
-}
-
-uint8 parseByte(char* s, uint8* byte, char** end)
-{
-    char* _end;
-    int   parsed = strtoimax(s, &_end, 10);
-    if (!_end || _end == s || parsed < 0 || parsed > 255) {
-        return 0;
-    }
-
-    *byte = parsed & 0xFF;
-    if (end) {
-        *end = _end;
-    }
-    return 1;
-}
-
-uint8 parseFloat(char* s, float* value, char** end)
-{
-    char*  _end;
-    double parsed = strtod(s, &_end);
-    if (!_end || _end == s) {
-        return 0;
-    }
-
-    *value = (float) parsed;
-    if (end) {
-        *end = _end;
-    }
-    return 1;
-}
-
-uint8 parseIP(char* s, IPStruct* ip)
-{
-    if (!parseByte(s, &ip->Union.ip[0], &s)) {
-        return 0;
-    }
-
-    for (int i = 1; i < 4; i++) {
-        if (*s++ != '.' || !parseByte(s, &ip->Union.ip[i], &s)) {
-            return 0;
-        }
-    }
-
-    if (*s == '/')
-    { // We have a slash after the last number. That means we are dealing with CIDR.
-        if (!parseByte(++s, &ip->CIDR, &s) || ip->CIDR > 32) {
-            return 0;
-        }
-    }
-
-    return *s == '\0'; // The pointer should point at the end of string in case it has no more characters.
-}
 
 static uint32 commandCompare(Command* first, Command* second)
 {
@@ -136,27 +65,36 @@ static void banIPCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     IPStruct ip;
+    char *reason;
     if (arguments.argc == 2) {
-        if (parseIP(arguments.argv[1], &ip)) {
-            char ipString[16];
-            FORMAT_IP(ipString, ip); // Reformatting the IP to avoid stuff like 001.02.3.4
-            FILE* fp;
-            fp = fopen("BanList.txt", "a");
-            if (fp == NULL) {
-                sendServerNotice(server, arguments.player, "IP could not be banned. File failed to open");
-                return;
-            }
+        if (parseIP(arguments.argv[1], &ip, &reason)) {
+            char ipString[19];
+            formatIPToString(ipString, ip); // Reformatting the IP to avoid stuff like 001.02.3.4
+            struct json_object* array;
+            struct json_object* ban = json_object_new_object();
+            struct json_object* root = json_object_from_file("Bans.json");
+            char *nameString = "Deuce";
+            json_object_object_get_ex(root, "Bans", &array);
+
             uint8 banned = 0;
             for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
                 if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipStruct.Union.ip32 == ip.Union.ip32) {
                     if (banned == 0) {
-                        fprintf(fp, "%s, %s,\n", ipString, server->player[ID].name);
-                        fclose(fp);
+                        nameString = server->player[ID].name;
                         banned = 1; // Do not add multiples of the same IP. Its pointless.
                     }
                     enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
                 }
             }
+            json_object_object_add(ban, "Name", json_object_new_string(nameString));
+            json_object_object_add(ban, "IP", json_object_new_string(ipString));
+            json_object_object_add(ban, "Time", json_object_new_uint64(0));
+            if (*reason == 32 && strlen(++reason) > 0) {
+                json_object_object_add(ban, "Reason", json_object_new_string(reason));
+            }
+            json_object_array_add(array, ban);
+            json_object_to_file("Bans.json", root);
+            json_object_put(root);
             sendServerNotice(server, arguments.player, "IP %s has been permanently banned", ipString);
         } else {
             sendServerNotice(server, arguments.player, "Invalid IP format");
@@ -393,22 +331,30 @@ static void pbanCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
-    if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
+    char *reason;
+    if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, &reason)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
-            FILE* fp;
-            fp = fopen("BanList.txt", "a");
-            if (fp == NULL) {
-                sendServerNotice(server, arguments.player, "Player could not be banned. File failed to open");
-                return;
-            }
-            fprintf(fp,
-                    "%hhu.%hhu.%hhu.%hhu, %s,\n",
+            char ipString[16];
+            snprintf(ipString,
+                    16,
+                    "%hhu.%hhu.%hhu.%hhu",
                     server->player[ID].ipStruct.Union.ip[0],
                     server->player[ID].ipStruct.Union.ip[1],
                     server->player[ID].ipStruct.Union.ip[2],
-                    server->player[ID].ipStruct.Union.ip[3],
-                    server->player[ID].name);
-            fclose(fp);
+                    server->player[ID].ipStruct.Union.ip[3]);
+            struct json_object* array;
+            struct json_object* ban = json_object_new_object();
+            struct json_object* root = json_object_from_file("Bans.json");
+            json_object_object_get_ex(root, "Bans", &array);
+            json_object_object_add(ban, "Name", json_object_new_string(server->player[ID].name));
+            json_object_object_add(ban, "IP", json_object_new_string(ipString));
+            json_object_object_add(ban, "Time", json_object_new_uint64(0));
+            if (strlen(++reason) > 0) {
+                json_object_object_add(ban, "Reason", json_object_new_string(reason));
+            }
+            json_object_array_add(array, ban);
+            json_object_to_file("Bans.json", root);
+            json_object_put(root);
             enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
             broadcastServerNotice(server, "%s has been permanently banned", server->player[ID].name);
         } else {
@@ -650,7 +596,7 @@ void populateCommands(Server* server)
     CommandManager CommandArray[] = {
     {"/admin", 0, &adminCommand, 0, "Sends a message to all online admins."},
     {"/adminmute", 1, &adminMuteCommand, 30, "Mutes or unmutes player from /admin usage"},
-    {"/banip", 1, &banIPCommand, 30, "Puts specified IP into ban list"},
+    {"/banip", 0, &banIPCommand, 30, "Puts specified IP into ban list"},
     // We can have 2+ commands for same function even with different permissions and name
     {"/client", 1, &clinCommand, 0, "Shows players client info"},
     {"/clin", 1, &clinCommand, 0, "Shows players client info"},
@@ -663,7 +609,7 @@ void populateCommands(Server* server)
     {"/logout", 0, &logoutCommand, 31, "Logs out logged in player"},
     {"/master", 0, &masterCommand, 28, "Toggles master connection"},
     {"/mute", 1, &muteCommand, 30, "Mutes or unmutes specified player"},
-    {"/pban", 1, &pbanCommand, 30, "Permanently bans a specified player"},
+    {"/pban", 0, &pbanCommand, 30, "Permanently bans a specified player"},
     {"/pm", 0, &pmCommand, 0, "Private message to specified player"},
     {"/ratio", 1, &ratioCommand, 0, "Shows yours or requested player ratio"},
     {"/say", 0, &sayCommand, 30, "Send message to everyone as the server"},

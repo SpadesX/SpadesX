@@ -1082,7 +1082,9 @@ void sendServerNotice(Server* server, uint8 playerID, const char* message, ...)
     WriteByte(&stream, playerID);
     WriteByte(&stream, 2);
     WriteArray(&stream, fMessage, fMessageSize);
-    enet_peer_send(server->player[playerID].peer, 0, packet);
+    if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void broadcastServerNotice(Server* server, const char* message, ...)
@@ -1101,10 +1103,16 @@ void broadcastServerNotice(Server* server, const char* message, ...)
     WriteByte(&stream, 33);
     WriteByte(&stream, 2);
     WriteArray(&stream, fMessage, fMessageSize);
+    uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastJoinScreen(server, player)) {
-            enet_peer_send(server->player[player].peer, 0, packet);
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sent = 1;
+            }
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
     }
 }
 

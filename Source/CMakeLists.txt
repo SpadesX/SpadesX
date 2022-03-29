@@ -13,6 +13,7 @@ set(SERVER_HEADERS
     Commands.h
     Gamemodes.h
     Ping.h
+    ParseConvert.h
 )
 
 set(SERVER_SOURCES
@@ -25,6 +26,7 @@ set(SERVER_SOURCES
     Commands.c
     Gamemodes.c
     Ping.c
+    ParseConvert.c
 )
 
 target_sources(SpadesX

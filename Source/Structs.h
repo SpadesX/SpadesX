@@ -3,13 +3,12 @@
 #define STRUCTS_H
 
 #include "Uthash.h"
-#include "enet/protocol.h"
 
 #include <Enums.h>
 #include <Queue.h>
 #include <Types.h>
 #include <enet/enet.h>
-#include <libmapvxl/libmapvxl.h>
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include <signal.h>
 #include <sys/types.h>
 #include <time.h>

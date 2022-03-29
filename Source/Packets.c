@@ -102,7 +102,9 @@ void SendRestock(Server* server, uint8 playerID)
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_RESTOCK);
     WriteByte(&stream, playerID);
-    enet_peer_send(server->player[playerID].peer, 0, packet);
+    if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
@@ -118,10 +120,17 @@ void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
     WriteFloat(&stream, pos.x);
     WriteFloat(&stream, pos.y);
     WriteFloat(&stream, pos.z);
+
+    uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
-            enet_peer_send(server->player[player].peer, 0, packet);
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sent = 1;
+            }
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
     }
 }
 
@@ -146,10 +155,17 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
     WriteByte(&stream, winning);
     server->player[playerID].hasIntel         = 0;
     server->protocol.gameMode.intelHeld[team] = 0;
+
+    uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
-            enet_peer_send(server->player[player].peer, 0, packet);
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sent = 1;
+            }
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
     }
 }
 
@@ -175,10 +191,16 @@ void SendIntelPickup(Server* server, uint8 playerID)
     server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = playerID;
     server->protocol.gameMode.intelHeld[team]                                = 1;
 
+    uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
-            enet_peer_send(server->player[player].peer, 0, packet);
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sent = 1;
+            }
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
     }
 }
 
@@ -232,10 +254,16 @@ void SendIntelDrop(Server* server, uint8 playerID)
              (int) server->protocol.gameMode.intel[team].x,
              (int) server->protocol.gameMode.intel[team].y,
              (int) server->protocol.gameMode.intel[team].z);
+    uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
-            enet_peer_send(server->player[player].peer, 0, packet);
+           if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+               sent = 1;
+           }
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
     }
 }
 
@@ -275,6 +303,7 @@ void SendPlayerLeft(Server* server, uint8 playerID)
 
             if (enet_peer_send(server->player[i].peer, 0, packet) != 0) {
                 LOG_WARNING("Failed to send player left event");
+                enet_packet_destroy(packet);
             }
         }
     }
@@ -382,10 +411,16 @@ void SendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
     WriteInt(&stream, end.x);
     WriteInt(&stream, end.y);
     WriteInt(&stream, end.z);
+    uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
-            enet_peer_send(server->player[player].peer, 0, packet);
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sent = 1;
+            }
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
     }
 }
 
@@ -402,10 +437,16 @@ void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, in
     WriteInt(&stream, X);
     WriteInt(&stream, Y);
     WriteInt(&stream, Z);
+    uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
-            enet_peer_send(server->player[player].peer, 0, packet);
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sent = 1;
+            }
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
     }
 }
 
@@ -471,6 +512,9 @@ void SendStateData(Server* server, uint8 playerID)
     if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
         server->player[playerID].state = STATE_PICK_SCREEN;
     }
+    else {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendInputData(Server* server, uint8 playerID)
@@ -505,11 +549,18 @@ void sendKillPacket(Server* server,
     WriteByte(&stream, killerID);    // Player that killed.
     WriteByte(&stream, killReason);  // Killing reason (1 is headshot)
     WriteByte(&stream, respawnTime); // Time before respawn happens
+    uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         uint8 isPast = isPastStateData(server, player);
         if ((makeInvisible && player != playerID && isPast) || (isPast && !makeInvisible)) {
-            enet_peer_send(server->player[player].peer, 0, packet);
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sent = 1;
+            }
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
+        return; //Do not kill the player since sending the packet failed
     }
     if (!makeInvisible && server->player[playerID].isInvisible == 0) {
         if (killerID != playerID) {
@@ -598,7 +649,9 @@ void sendHP(Server*  server,
                 WriteFloat(&stream, 0);
                 WriteFloat(&stream, 0);
             }
-            enet_peer_send(server->player[hitPlayerID].peer, 0, packet);
+            if (enet_peer_send(server->player[hitPlayerID].peer, 0, packet) != 0) {
+                enet_packet_destroy(packet);
+            }
         }
     }
 }
@@ -621,6 +674,7 @@ void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         LOG_WARNING("Failed to send player state");
+        enet_packet_destroy(packet);
     }
 }
 
@@ -632,7 +686,9 @@ void SendVersionRequest(Server* server, uint8 playerID)
     ENetPacket* packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_VERSION_REQUEST);
-    enet_peer_send(server->player[playerID].peer, 0, packet);
+    if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
+        enet_packet_destroy(packet);
+    }
 }
 void SendMapStart(Server* server, uint8 playerID)
 {
@@ -694,6 +750,7 @@ void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         LOG_WARNING("Failed to send player state");
+        enet_packet_destroy(packet);
     }
 }
 
@@ -814,7 +871,9 @@ void SendWorldUpdate(Server* server, uint8 playerID)
             WriteVector3f(&stream, empty);
         }
     }
-    enet_peer_send(server->player[playerID].peer, 0, packet);
+    if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float z)
@@ -828,7 +887,9 @@ void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float 
     WriteFloat(&stream, x);
     WriteFloat(&stream, y);
     WriteFloat(&stream, z);
-    enet_peer_send(server->player[playerID].peer, 0, packet);
+    if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
+        enet_packet_destroy(packet);
+    }
 }
 
 static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* data)
