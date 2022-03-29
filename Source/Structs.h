@@ -22,15 +22,12 @@
 
 //#define DEBUG
 
-typedef union
-{
-    uint8  ip[4];
-    uint32 ip32;
-} IPUnion;
-
 typedef struct
 {
-    IPUnion Union;
+    union {
+        uint8  ip[4];
+        uint32 ip32;
+    } Union;
     uint8   CIDR;
 } IPStruct;
 
