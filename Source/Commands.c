@@ -16,6 +16,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <json-c/json.h>
+#include <json-c/json_object.h>
 
 uint8 parsePlayer(char* s, uint8* id, char** end)
 {
@@ -67,14 +69,14 @@ uint8 parseFloat(char* s, float* value, char** end)
     return 1;
 }
 
-uint8 parseIP(char* s, IPUnion* ip)
+uint8 parseIP(char* s, IPStruct* ip)
 {
-    if (!parseByte(s, &ip->ip[0], &s)) {
+    if (!parseByte(s, &ip->Union.ip[0], &s)) {
         return 0;
     }
 
     for (int i = 1; i < 4; i++) {
-        if (*s++ != '.' || !parseByte(s, &ip->ip[i], &s)) {
+        if (*s++ != '.' || !parseByte(s, &ip->Union.ip[i], &s)) {
             return 0;
         }
     }
@@ -131,7 +133,7 @@ static void adminMuteCommand(void* serverP, CommandArguments arguments)
 static void banIPCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    IPUnion ip;
+    IPStruct ip;
     if (arguments.argc == 2) {
         if (parseIP(arguments.argv[1], &ip)) {
             char ipString[16];
@@ -144,7 +146,7 @@ static void banIPCommand(void* serverP, CommandArguments arguments)
             }
             uint8 banned = 0;
             for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
-                if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipUnion.ip32 == ip.ip32) {
+                if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipStruct.Union.ip32 == ip.Union.ip32) {
                     if (banned == 0) {
                         fprintf(fp, "%s, %s,\n", ipString, server->player[ID].name);
                         fclose(fp);
@@ -399,10 +401,10 @@ static void pbanCommand(void* serverP, CommandArguments arguments)
             }
             fprintf(fp,
                     "%hhu.%hhu.%hhu.%hhu, %s,\n",
-                    server->player[ID].ipUnion.ip[0],
-                    server->player[ID].ipUnion.ip[1],
-                    server->player[ID].ipUnion.ip[2],
-                    server->player[ID].ipUnion.ip[3],
+                    server->player[ID].ipStruct.Union.ip[0],
+                    server->player[ID].ipStruct.Union.ip[1],
+                    server->player[ID].ipStruct.Union.ip[2],
+                    server->player[ID].ipStruct.Union.ip[3],
                     server->player[ID].name);
             fclose(fp);
             enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);

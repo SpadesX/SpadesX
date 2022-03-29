@@ -30,6 +30,12 @@ typedef union
 
 typedef struct
 {
+    IPUnion Union;
+    uint8   CIDR;
+} IPStruct;
+
+typedef struct
+{
     char         accessLevel[32];
     const char** accessPassword;
     uint8        permLevelOffset;
@@ -170,7 +176,7 @@ typedef struct
     uint8                weaponReserve;
     short                weaponClip;
     Vector3i             resultLine[50];
-    IPUnion              ipUnion;
+    IPStruct             ipStruct;
     uint8                alive;
     uint8                input;
     uint8                allowKilling;
