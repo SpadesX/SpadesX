@@ -1,11 +1,11 @@
 // Copyright DarkNeutrino 2021
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include "Structs.h"
-
 #include "Util/Compress.h"
 #include "Util/DataStream.h"
-#include <Queue.h>
-#include <Types.h>
-#include "../Extern/libmapvxl/libmapvxl.h"
+#include "Util/Queue.h"
+#include "Util/Types.h"
+
 #include <stdio.h>
 
 void LoadMap(Server* server, const char* path)
@@ -26,7 +26,7 @@ void LoadMap(Server* server, const char* path)
     server->map.mapSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    server->map.mapSize = 1024*1024*10; //Absolute hack to get some maps to even load.
+    server->map.mapSize = 1024 * 1024 * 10; // Absolute hack to get some maps to even load.
 
     uint8* buffer = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
     uint8* mapOut = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
@@ -39,7 +39,7 @@ void LoadMap(Server* server, const char* path)
     LOG_STATUS("Compressing map data");
 
     mapvxlWriteMap(&server->map.map, mapOut);
-    
+
     server->map.compressedMap = CompressData(mapOut, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
     free(mapOut);
 
