@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <time.h>
 
-#define VERSION "0.1.1"
+#define VERSION "Beta 1.0"
 
 #define MAP_MAX_X MAP_X_MAX
 #define MAP_MAX_Y MAP_Y_MAX
