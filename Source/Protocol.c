@@ -12,7 +12,7 @@
 
 #include <ctype.h>
 #include <enet/enet.h>
-#include <libmapvxl/libmapvxl.h>
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

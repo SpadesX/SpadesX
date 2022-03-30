@@ -5,7 +5,7 @@
 #include "Util/DataStream.h"
 #include <Queue.h>
 #include <Types.h>
-#include <libmapvxl/libmapvxl.h>
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include <stdio.h>
 
 void LoadMap(Server* server, const char* path)

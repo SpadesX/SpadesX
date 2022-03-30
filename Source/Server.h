@@ -9,7 +9,7 @@
 #include "Util/Types.h"
 
 #include <enet/enet.h>
-#include <libmapvxl/libmapvxl.h>
+#include "../Extern/libmapvxl/libmapvxl.h"
 
 #ifndef DEFAULT_SERVER_PORT
     #define DEFAULT_SERVER_PORT 32887

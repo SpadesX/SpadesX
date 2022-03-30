@@ -3,7 +3,7 @@
 #include "Types.h"
 #include "Util/Enums.h"
 
-#include <libmapvxl/libmapvxl.h>
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
