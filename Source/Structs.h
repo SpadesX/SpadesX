@@ -2,13 +2,13 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#include "Uthash.h"
-
-#include <Enums.h>
-#include <Queue.h>
-#include <Types.h>
-#include <enet/enet.h>
 #include "../Extern/libmapvxl/libmapvxl.h"
+#include "Util/Enums.h"
+#include "Util/Queue.h"
+#include "Util/Types.h"
+#include "Util/Uthash.h"
+
+#include <enet/enet.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <time.h>
@@ -23,11 +23,12 @@
 
 typedef struct
 {
-    union {
+    union
+    {
         uint8  ip[4];
         uint32 ip32;
     } Union;
-    uint8   CIDR;
+    uint8 CIDR;
 } IPStruct;
 
 typedef struct
@@ -233,8 +234,9 @@ typedef struct
 
 typedef struct Command
 {
-    char id[30];
-    uint8           parseArguments; // Should we even bother parsing it? Would be useful for commands whose one and only argument is a message, or which don't even have any arguments
+    char  id[30];
+    uint8 parseArguments; // Should we even bother parsing it? Would be useful for commands whose one and only argument
+                          // is a message, or which don't even have any arguments
     void (*command)(void* serverP, CommandArguments arguments);
     uint32          PermLevel; // 32 roles should be more then enough for anyone
     char            commandDesc[1024];
@@ -245,8 +247,9 @@ typedef struct Command
 // Command but with removed hash map and linked list stuff for easy managment
 typedef struct
 {
-    char id[30];
-    uint8           parseArguments; // Should we even bother parsing it? Would be useful for commands whose one and only argument is a message, or which don't even have any arguments
+    char  id[30];
+    uint8 parseArguments; // Should we even bother parsing it? Would be useful for commands whose one and only argument
+                          // is a message, or which don't even have any arguments
     void (*command)(void* serverP, CommandArguments arguments);
     uint32 PermLevel; // 32 roles should be more then enough for anyone
     char   commandDesc[1024];

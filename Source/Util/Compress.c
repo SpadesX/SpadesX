@@ -1,10 +1,12 @@
 // Copyright CircumScriptor and DarkNeutrino 2021
 #include "Compress.h"
+
 #include "Queue.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
+
 
 static z_stream* GlobalCompressor = NULL;
 

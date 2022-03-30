@@ -1,9 +1,9 @@
 #include "Protocol.h"
 #include "Structs.h"
 #include "Types.h"
-#include "libmapvxl.h"
+#include "Util/Enums.h"
 
-#include <Enums.h>
+#include <libmapvxl/libmapvxl.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>

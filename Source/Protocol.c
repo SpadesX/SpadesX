@@ -5,11 +5,11 @@
 #include "Physics.h"
 #include "Server.h"
 #include "Structs.h"
+#include "Util/DataStream.h"
+#include "Util/Enums.h"
+#include "Util/Types.h"
 #include "Utlist.h"
 
-#include <DataStream.h>
-#include <Enums.h>
-#include <Types.h>
 #include <ctype.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>

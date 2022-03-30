@@ -93,14 +93,14 @@ void ReadColor4i(DataStream* stream, Color4i color)
 void ReadArray(DataStream* stream, void* output, uint32 length)
 {
     ACCESS_CHECK_N(stream, length);
-    memcpy(output, stream->data + stream->pos, length); //Replace me
+    memcpy(output, stream->data + stream->pos, length); // Replace me
     stream->pos += length;
 }
 
 void WriteArray(DataStream* stream, const void* array, uint32 length)
 {
     ACCESS_CHECK_N(stream, length);
-    memcpy(stream->data + stream->pos, array, length); //Replace me
+    memcpy(stream->data + stream->pos, array, length); // Replace me
     stream->pos += length;
 }
 

@@ -2,23 +2,23 @@
 
 #include "Master.h"
 #include "Packets.h"
+#include "ParseConvert.h"
 #include "Protocol.h"
 #include "Structs.h"
 #include "Types.h"
 #include "Uthash.h"
+#include "Util/Enums.h"
 #include "Utlist.h"
 
-#include <Enums.h>
 #include <ctype.h>
 #include <enet/enet.h>
+#include <json-c/json.h>
+#include <json-c/json_object.h>
 #include <json-c/json_util.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <ParseConvert.h>
-#include <json-c/json.h>
-#include <json-c/json_object.h>
 
 static uint32 commandCompare(Command* first, Command* second)
 {
@@ -63,25 +63,26 @@ static void adminMuteCommand(void* serverP, CommandArguments arguments)
 
 static void banIPCommand(void* serverP, CommandArguments arguments)
 {
-    Server* server = (Server*) serverP;
+    Server*  server = (Server*) serverP;
     IPStruct ip;
-    char *reason;
+    char*    reason;
     if (arguments.argc == 2) {
         if (parseIP(arguments.argv[1], &ip, &reason)) {
             char ipString[19];
             formatIPToString(ipString, ip); // Reformatting the IP to avoid stuff like 001.02.3.4
             struct json_object* array;
-            struct json_object* ban = json_object_new_object();
-            struct json_object* root = json_object_from_file("Bans.json");
-            char *nameString = "Deuce";
+            struct json_object* ban        = json_object_new_object();
+            struct json_object* root       = json_object_from_file("Bans.json");
+            char*               nameString = "Deuce";
             json_object_object_get_ex(root, "Bans", &array);
 
             uint8 banned = 0;
             for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
-                if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ipStruct.Union.ip32 == ip.Union.ip32) {
+                if (server->player[ID].state != STATE_DISCONNECTED &&
+                    server->player[ID].ipStruct.Union.ip32 == ip.Union.ip32) {
                     if (banned == 0) {
                         nameString = server->player[ID].name;
-                        banned = 1; // Do not add multiples of the same IP. Its pointless.
+                        banned     = 1; // Do not add multiples of the same IP. Its pointless.
                     }
                     enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
                 }
@@ -331,19 +332,19 @@ static void pbanCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
-    char *reason;
+    char*   reason;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, &reason)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             char ipString[16];
             snprintf(ipString,
-                    16,
-                    "%hhu.%hhu.%hhu.%hhu",
-                    server->player[ID].ipStruct.Union.ip[0],
-                    server->player[ID].ipStruct.Union.ip[1],
-                    server->player[ID].ipStruct.Union.ip[2],
-                    server->player[ID].ipStruct.Union.ip[3]);
+                     16,
+                     "%hhu.%hhu.%hhu.%hhu",
+                     server->player[ID].ipStruct.Union.ip[0],
+                     server->player[ID].ipStruct.Union.ip[1],
+                     server->player[ID].ipStruct.Union.ip[2],
+                     server->player[ID].ipStruct.Union.ip[3]);
             struct json_object* array;
-            struct json_object* ban = json_object_new_object();
+            struct json_object* ban  = json_object_new_object();
             struct json_object* root = json_object_from_file("Bans.json");
             json_object_object_get_ex(root, "Bans", &array);
             json_object_object_add(ban, "Name", json_object_new_string(server->player[ID].name));

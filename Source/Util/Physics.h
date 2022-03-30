@@ -50,7 +50,7 @@
 #define VSIDSQ               (VSID * VSID)
 #define CUBE_ARRAY_LENGTH    64
 
-#include <libmapvxl/libmapvxl.h>
+#include "../../Extern/libmapvxl/libmapvxl.h"
 #include <math.h>
 #include <stddef.h>
 

@@ -8,7 +8,7 @@ void handleCommands(Server* server, uint8 player, char* message);
 void populateCommands(Server* server);
 void freeCommands(Server* server);
 void createCommand(Server* server,
-                   uint8 parseArguments,
+                   uint8   parseArguments,
                    void (*command)(void* serverP, CommandArguments arguments),
                    char   id[30],
                    char   commandDesc[1024],

@@ -3,11 +3,11 @@
 #define SERVER_H
 
 #include "Protocol.h"
+#include "Util/Enums.h"
 #include "Util/Line.h"
+#include "Util/Queue.h"
+#include "Util/Types.h"
 
-#include <Enums.h>
-#include <Queue.h>
-#include <Types.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
 

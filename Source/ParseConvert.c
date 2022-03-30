@@ -1,10 +1,18 @@
+#include "Structs.h"
+
 #include <inttypes.h>
 #include <stdio.h>
-#include "Structs.h"
-void formatIPToString(char *dest, IPStruct src)
+void formatIPToString(char* dest, IPStruct src)
 {
     if (src.CIDR != 0) {
-        snprintf(dest, 19, "%hhu.%hhu.%hhu.%hhu/%hhu", src.Union.ip[0], src.Union.ip[1], src.Union.ip[2], src.Union.ip[3], src.CIDR);
+        snprintf(dest,
+                 19,
+                 "%hhu.%hhu.%hhu.%hhu/%hhu",
+                 src.Union.ip[0],
+                 src.Union.ip[1],
+                 src.Union.ip[2],
+                 src.Union.ip[3],
+                 src.CIDR);
         return;
     }
     snprintf(dest, 16, "%hhu.%hhu.%hhu.%hhu", src.Union.ip[0], src.Union.ip[1], src.Union.ip[2], src.Union.ip[3]);
@@ -60,7 +68,7 @@ uint8 parseFloat(char* s, float* value, char** end)
     return 1;
 }
 
-uint8 parseIP(char* s, IPStruct* ip, char **end)
+uint8 parseIP(char* s, IPStruct* ip, char** end)
 {
     if (!parseByte(s, &ip->Union.ip[0], &s)) {
         return 0;
@@ -72,14 +80,11 @@ uint8 parseIP(char* s, IPStruct* ip, char **end)
         }
     }
 
-    if (*s == '/')
-    { // We have a slash after the last number. That means we are dealing with CIDR.
+    if (*s == '/') { // We have a slash after the last number. That means we are dealing with CIDR.
         if (!parseByte(++s, &ip->CIDR, &s) || ip->CIDR > 32) {
             return 0;
         }
-    }
-    else
-    {
+    } else {
         ip->CIDR = 0;
     }
 

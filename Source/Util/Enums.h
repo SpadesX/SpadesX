@@ -70,10 +70,10 @@ typedef enum {
 } PacketID;
 
 typedef enum {
-    GAME_MODE_CTF = 0,
-    GAME_MODE_TC  = 1,
-    GAME_MODE_BABEL  = 2,
-    GAME_MODE_ARENA  = 3,
+    GAME_MODE_CTF   = 0,
+    GAME_MODE_TC    = 1,
+    GAME_MODE_BABEL = 2,
+    GAME_MODE_ARENA = 3,
 } GameMode;
 
 typedef enum {
@@ -89,8 +89,8 @@ typedef enum {
 } Weapon;
 
 typedef enum {
-    INTEL_TEAM_A = 1,
-    INTEL_TEAM_B = 2,
+    INTEL_TEAM_A    = 1,
+    INTEL_TEAM_B    = 2,
     INTEL_TEAM_BOTH = 3,
 } IntelFlag;
 
@@ -110,14 +110,14 @@ typedef enum {
 } Hit;
 
 typedef enum {
-    RIFLE_DEFAULT_CLIP = 10,
-    SMG_DEFAULT_CLIP = 30,
+    RIFLE_DEFAULT_CLIP   = 10,
+    SMG_DEFAULT_CLIP     = 30,
     SHOTGUN_DEFAULT_CLIP = 6,
 } WeaponDefaultClip;
 
 typedef enum {
-    RIFLE_DEFAULT_RESERVE = 50,
-    SMG_DEFAULT_RESERVE = 120,
+    RIFLE_DEFAULT_RESERVE   = 50,
+    SMG_DEFAULT_RESERVE     = 120,
     SHOTGUN_DEFAULT_RESERVE = 48,
 } WeaponDefaultReserve;
 
@@ -129,9 +129,9 @@ typedef enum {
 } ColorChannels;
 
 typedef enum {
-    BLOCK_DELAY = NANO_IN_MILLI * 500,
-    SPADE_DELAY = NANO_IN_MILLI * 400,
-    GRENADE_DELAY = NANO_IN_MILLI * 500,
+    BLOCK_DELAY      = NANO_IN_MILLI * 500,
+    SPADE_DELAY      = NANO_IN_MILLI * 400,
+    GRENADE_DELAY    = NANO_IN_MILLI * 500,
     THREEBLOCK_DELAY = NANO_IN_MILLI * 1000,
 } ToolDelays;
 

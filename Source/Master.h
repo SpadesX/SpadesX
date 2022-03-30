@@ -3,9 +3,8 @@
 #define MASTER_H
 
 #include "Structs.h"
-
-#include <Enums.h>
-#include <Types.h>
+#include "Util/Enums.h"
+#include "Util/Types.h"
 
 void* keepMasterAlive(void* server);
 int   ConnectMaster(Server* server, uint16 port);

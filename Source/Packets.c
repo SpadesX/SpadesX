@@ -1,18 +1,18 @@
 // Copyright DarkNeutrino 2021
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include "Commands.h"
 #include "Protocol.h"
 #include "Structs.h"
+#include "Util/Compress.h"
+#include "Util/DataStream.h"
+#include "Util/Enums.h"
+#include "Util/Line.h"
+#include "Util/Queue.h"
+#include "Util/Types.h"
 #include "Utlist.h"
 
-#include <Compress.h>
-#include <DataStream.h>
-#include <Enums.h>
-#include <Line.h>
-#include <Queue.h>
-#include <Types.h>
 #include <ctype.h>
 #include <enet/enet.h>
-#include <libmapvxl/libmapvxl.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -257,9 +257,9 @@ void SendIntelDrop(Server* server, uint8 playerID)
     uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastStateData(server, player)) {
-           if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
-               sent = 1;
-           }
+            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+                sent = 1;
+            }
         }
     }
     if (sent == 0) {
@@ -511,8 +511,7 @@ void SendStateData(Server* server, uint8 playerID)
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
         server->player[playerID].state = STATE_PICK_SCREEN;
-    }
-    else {
+    } else {
         enet_packet_destroy(packet);
     }
 }
@@ -560,7 +559,7 @@ void sendKillPacket(Server* server,
     }
     if (sent == 0) {
         enet_packet_destroy(packet);
-        return; //Do not kill the player since sending the packet failed
+        return; // Do not kill the player since sending the packet failed
     }
     if (!makeInvisible && server->player[playerID].isInvisible == 0) {
         if (killerID != playerID) {
@@ -1263,7 +1262,8 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     server->player[playerID].state = STATE_SPAWNING;
     if (server->player[playerID].welcomeSent == 0) {
         stringNode* welcomeMessage;
-        DL_FOREACH(server->welcomeMessages, welcomeMessage) {
+        DL_FOREACH(server->welcomeMessages, welcomeMessage)
+        {
             sendServerNotice(server, playerID, welcomeMessage->string);
         }
         if (invName) {

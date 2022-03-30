@@ -3,9 +3,8 @@
 #define MAP_H
 
 #include "Structs.h"
-
-#include <Queue.h>
-#include <Types.h>
+#include "Util/Queue.h"
+#include "Util/Types.h"
 
 void LoadMap(Server* server, const char* path);
 

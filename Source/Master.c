@@ -2,7 +2,7 @@
 #include "Protocol.h"
 #include "Structs.h"
 
-#include <DataStream.h>
+#include "Util/DataStream.h"
 #include <Types.h>
 #include <stdio.h>
 #include <string.h>

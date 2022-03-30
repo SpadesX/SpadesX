@@ -1,6 +1,7 @@
 // Copyright DarkNeutrino 2021
 #include "Server.h"
 
+#include "Commands.h"
 #include "Conversion.h"
 #include "Map.h"
 #include "Master.h"
@@ -8,17 +9,16 @@
 #include "Ping.h"
 #include "Protocol.h"
 #include "Structs.h"
+#include "Util/Compress.h"
+#include "Util/DataStream.h"
+#include "Util/Enums.h"
+#include "Util/JSONHelpers.h"
+#include "Util/Line.h"
+#include "Util/Queue.h"
+#include "Util/Types.h"
 #include "Utlist.h"
 
-#include <Commands.h>
-#include <Compress.h>
-#include <DataStream.h>
-#include <Enums.h>
 #include <Gamemodes.h>
-#include <JSONHelpers.h>
-#include <Line.h>
-#include <Queue.h>
-#include <Types.h>
 #include <enet/enet.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
