@@ -758,7 +758,6 @@ void handleCommands(Server* server, uint8 player, char* message)
         char* argument = calloc(messageLength - commandLength, sizeof(message[0]));
         strcpy(argument, message + commandLength + 1);
         arguments.argv[arguments.argc++] = argument;
-        LOG_DEBUG("%s", argument);
     }
 
     if (playerHasPermission(server, player, commandStruct->PermLevel) > 0 || commandStruct->PermLevel == 0) {
