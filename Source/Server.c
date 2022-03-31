@@ -418,10 +418,10 @@ static void ServerUpdate(Server* server, int timeout)
 
                             LOG_WARNING("Banned user %s tried to join with IP: %hhu.%hhu.%hhu.%hhu Banned for: %s",
                                         nameOfPlayer,
-                                        ipStruct.Union.ip[0],
-                                        ipStruct.Union.ip[1],
-                                        ipStruct.Union.ip[2],
-                                        ipStruct.Union.ip[3],
+                                        hostIP.Union.ip[0],
+                                        hostIP.Union.ip[1],
+                                        hostIP.Union.ip[2],
+                                        hostIP.Union.ip[3],
                                         reason);
                             bannedUser = 1;
                             break;
