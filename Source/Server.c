@@ -2,10 +2,10 @@
 #include "Server.h"
 
 #include "Commands.h"
-#include "Conversion.h"
 #include "Map.h"
 #include "Master.h"
 #include "Packets.h"
+#include "ParseConvert.h"
 #include "Ping.h"
 #include "Protocol.h"
 #include "Structs.h"
@@ -397,8 +397,8 @@ static void ServerUpdate(Server* server, int timeout)
                     json_object_object_add(root, "Bans", json_object_new_array());
                     json_object_to_file("Bans.json", root);
                 }
-                uint8* hostIP;
-                hostIP = uint32ToUint8(event.peer->address.host);
+                IPStruct hostIP;
+                hostIP.Union.ip32 = event.peer->address.host;
                 struct json_object* array;
                 json_object_object_get_ex(root, "Bans", &array);
                 int count = json_object_array_length(array);
@@ -407,42 +407,8 @@ static void ServerUpdate(Server* server, int timeout)
                     const char*         IP;
                     READ_STR_FROM_JSON(objectAtIndex, IP, IP, "IP", "0.0.0.0", 0);
                     IPStruct ipStruct;
-                    if (sscanf(IP,
-                               "%hhu.%hhu.%hhu.%hhu/%hhu",
-                               &ipStruct.Union.ip[0],
-                               &ipStruct.Union.ip[1],
-                               &ipStruct.Union.ip[2],
-                               &ipStruct.Union.ip[3],
-                               &ipStruct.CIDR) == 5)
-                    {
-                        if (ipStruct.Union.ip[0] == hostIP[0] && ipStruct.Union.ip[1] == hostIP[1] &&
-                            ipStruct.Union.ip[2] == hostIP[2] && ipStruct.Union.ip[3] == hostIP[3])
-                        {
-                            const char* nameOfPlayer;
-                            const char* reason;
-                            READ_STR_FROM_JSON(objectAtIndex, nameOfPlayer, Name, "Name", "Deuce", 0);
-                            READ_STR_FROM_JSON(objectAtIndex, reason, Reason, "Reason", "None", 0);
-                            enet_peer_disconnect(event.peer, REASON_BANNED);
-
-                            LOG_WARNING("Banned user %s tried to join with IP: %hhu.%hhu.%hhu.%hhu Banned for: %s",
-                                        nameOfPlayer,
-                                        ipStruct.Union.ip[0],
-                                        ipStruct.Union.ip[1],
-                                        ipStruct.Union.ip[2],
-                                        ipStruct.Union.ip[3],
-                                        reason);
-                            bannedUser = 1;
-                            break;
-                        }
-                    } else if (sscanf(IP,
-                                      "%hhu.%hhu.%hhu.%hhu",
-                                      &ipStruct.Union.ip[0],
-                                      &ipStruct.Union.ip[1],
-                                      &ipStruct.Union.ip[2],
-                                      &ipStruct.Union.ip[3]) == 4)
-                    {
-                        if (ipStruct.Union.ip[0] == hostIP[0] && ipStruct.Union.ip[1] == hostIP[1] &&
-                            ipStruct.Union.ip[2] == hostIP[2] && ipStruct.Union.ip[3] == hostIP[3])
+                    if (formatStringToIP((char*)IP, &ipStruct)) {
+                        if (ipStruct.Union.ip32 == hostIP.Union.ip32)
                         {
                             const char* nameOfPlayer;
                             const char* reason;
@@ -463,7 +429,6 @@ static void ServerUpdate(Server* server, int timeout)
                     }
                 }
                 json_object_put(root);
-                free(hostIP);
 
                 if (bannedUser) {
                     break;

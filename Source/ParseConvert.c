@@ -2,6 +2,30 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+
+uint8 formatStringToIP(char* src, IPStruct* dest)
+{
+    if (sscanf(src,
+               "%hhu.%hhu.%hhu.%hhu/%hhu",
+               &dest->Union.ip[0],
+               &dest->Union.ip[1],
+               &dest->Union.ip[2],
+               &dest->Union.ip[3],
+               &dest->CIDR) == 5)
+    {
+        return 1;
+    } else if (sscanf(src,
+                      "%hhu.%hhu.%hhu.%hhu",
+                      &dest->Union.ip[0],
+                      &dest->Union.ip[1],
+                      &dest->Union.ip[2],
+                      &dest->Union.ip[3]) == 4)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 void formatIPToString(char* dest, IPStruct src)
 {
     if (src.CIDR != 0) {

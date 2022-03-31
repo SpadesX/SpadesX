@@ -9,7 +9,6 @@ set(SERVER_HEADERS
     Structs.h
     Map.h
     Packets.h
-    Conversion.h
     Commands.h
     Gamemodes.h
     Ping.h
