@@ -800,7 +800,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         server->player[player].spamCounter                    = 0;
     }
 
-    if (!diffIsOlderThen(get_nanos(), &server->player[player].timers.sinceLastMessage, (uint64) NANO_IN_MILLI * 500) &&
+    if (!diffIsOlderThen(get_nanos(), &server->player[player].timers.sinceLastMessage, (uint64) NANO_IN_MILLI * 400) &&
         server->player[player].permLevel <= 1)
     {
         sendServerNotice(
