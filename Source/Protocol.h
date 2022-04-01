@@ -3,11 +3,11 @@
 #define PROTOCOL_H
 
 #include "Map.h"
-
 #include "Util/DataStream.h"
-#include <Enums.h>
-#include <Queue.h>
-#include <Types.h>
+#include "Util/Enums.h"
+#include "Util/Queue.h"
+#include "Util/Types.h"
+
 #include <enet/enet.h>
 #include <stdarg.h>
 
@@ -19,6 +19,8 @@ void      initPlayer(Server*  server,
                      Vector3f forward,
                      Vector3f strafe,
                      Vector3f height);
+uint8     octetsInRange(IPStruct start, IPStruct end, IPStruct host);
+uint8     IPInRange(IPStruct host, IPStruct banned, IPStruct startOfRange, IPStruct endOfRange);
 uint8     playerHasPermission(Server* server, uint8 playerID, uint32 permission);
 uint8     gamemodeBlockChecks(Server* server, int x, int y, int z);
 uint8     isPastStateData(Server* server, uint8 playerID);
@@ -44,7 +46,7 @@ void      updateMovementAndGrenades(Server* server);
 void      SetPlayerRespawnPoint(Server* server, uint8 playerID);
 Vector3f  SetIntelTentSpawnPoint(Server* server, uint8 team);
 void      sendServerNotice(Server* server, uint8 playerID, const char* message, ...);
-void broadcastServerNotice(Server* server, const char* message, ...);
+void      broadcastServerNotice(Server* server, const char* message, ...);
 uint8     SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID);
 uint8     SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
 uint8     SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID);
@@ -56,7 +58,7 @@ uint8     diffIsOlderThen(uint64 timeNow, uint64* timeBefore, uint64 timeDiff);
 uint8     diffIsOlderThenDontUpdate(uint64 timeNow, uint64 timeBefore, uint64 timeDiff);
 uint8     isStaff(Server* server, uint8 playerID);
 void      sendMessageToStaff(Server* server, const char* format, ...);
-uint8 getGrenadeDamage(Server* server, uint8 damageID, Grenade* grenade);
+uint8     getGrenadeDamage(Server* server, uint8 damageID, Grenade* grenade);
 uint8     getPlayerUnstuck(Server* server, uint8 playerID);
 
 #endif

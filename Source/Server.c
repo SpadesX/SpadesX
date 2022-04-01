@@ -405,10 +405,15 @@ static void ServerUpdate(Server* server, int timeout)
                 for (int i = 0; i < count; ++i) {
                     struct json_object* objectAtIndex = json_object_array_get_idx(array, i);
                     const char*         IP;
-                    READ_STR_FROM_JSON(objectAtIndex, IP, IP, "IP", "0.0.0.0", 0);
+                    const char* startOfRangeString;
+                    const char* endOfRangeString;
+                    READ_STR_FROM_JSON(objectAtIndex, startOfRangeString, start_of_range, "start of range", "0.0.0.0", 1);
+                    READ_STR_FROM_JSON(objectAtIndex, endOfRangeString, end_of_range, "end of range", "0.0.0.0", 1);
+                    READ_STR_FROM_JSON(objectAtIndex, IP, IP, "IP", "0.0.0.0", 1);
                     IPStruct ipStruct;
-                    if (formatStringToIP((char*)IP, &ipStruct)) {
-                        if (ipStruct.Union.ip32 == hostIP.Union.ip32)
+                    IPStruct startOfRange, endOfRange;
+                    if (formatStringToIP((char*)IP, &ipStruct) && (formatStringToIP((char*)startOfRangeString, &startOfRange) && formatStringToIP((char*)endOfRangeString, &endOfRange))) {
+                        if (IPInRange(hostIP, ipStruct, startOfRange, endOfRange))
                         {
                             const char* nameOfPlayer;
                             const char* reason;

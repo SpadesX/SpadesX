@@ -1,7 +1,9 @@
 // Copyright DarkNeutrino 2021
 #include "Protocol.h"
 
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include "Packets.h"
+#include "ParseConvert.h"
 #include "Physics.h"
 #include "Server.h"
 #include "Structs.h"
@@ -12,8 +14,8 @@
 
 #include <ctype.h>
 #include <enet/enet.h>
-#include "../Extern/libmapvxl/libmapvxl.h"
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +37,83 @@ static unsigned long long get_nanos(void)
         And possibly more im missing
 
 }*/
+
+static void copyBits(uint32* dest, uint32 src, uint32 endPos, uint32 startPos)
+{
+    uint32 numBitsToCopy = endPos - startPos + 1;
+    uint32 numBitsInInt  = sizeof(uint32) * 8;
+    uint32 zeroMask;
+    uint32 onesMask = ~((uint32) 0);
+
+    onesMask = onesMask >> (numBitsInInt - numBitsToCopy);
+    onesMask = onesMask << startPos;
+    zeroMask = ~onesMask;
+    *dest    = *dest & zeroMask;
+    src      = src & onesMask;
+    *dest    = *dest | src;
+}
+
+static void swapIPStruct(IPStruct* ip)
+{
+    uint8 tmp;
+    tmp             = ip->Union.ip[0];
+    ip->Union.ip[0] = ip->Union.ip[3];
+    ip->Union.ip[3] = tmp;
+    tmp             = ip->Union.ip[1];
+    ip->Union.ip[1] = ip->Union.ip[2];
+    ip->Union.ip[2] = tmp;
+}
+
+uint8 octetsInRange(IPStruct start, IPStruct end, IPStruct host)
+{
+    for (int i = 0; i < 4; ++i) {
+        if (!(host.Union.ip[i] >= start.Union.ip[i] && host.Union.ip[i] <= end.Union.ip[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+uint8 IPInRange(IPStruct host, IPStruct banned, IPStruct startOfRange, IPStruct endOfRange)
+{
+    uint32 max = UINT32_MAX;
+    IPStruct startRange;
+    IPStruct endRange;
+    startRange.Union.ip32 = startOfRange.Union.ip32;
+    endRange.Union.ip32 = endOfRange.Union.ip32;
+    if (banned.CIDR > 0 && banned.CIDR < 32) {
+        uint32 subMax = 0;
+        copyBits(&subMax, max, 31 - banned.CIDR, 0);
+        swapIPStruct(&banned);
+        uint32 ourRange = 0;
+        copyBits(&ourRange, banned.Union.ip32, 32 - banned.CIDR, 0);
+        swapIPStruct(&banned);
+        uint32   times = ourRange / (subMax + 1);
+        uint32   start = times * (subMax + 1);
+        IPStruct startIP;
+        IPStruct endIP;
+        startIP.Union.ip32 = banned.Union.ip32;
+        endIP.Union.ip32   = banned.Union.ip32;
+        startIP.CIDR       = 0;
+        endIP.CIDR         = 0;
+        swapIPStruct(&startIP);
+        swapIPStruct(&endIP);
+        uint32 end = ((times + 1) * subMax);
+        end |= 1;
+        copyBits(&startIP.Union.ip32, start, 32 - banned.CIDR, 0);
+        copyBits(&endIP.Union.ip32, end, 32 - banned.CIDR, 0);
+        swapIPStruct(&startIP);
+        swapIPStruct(&endIP);
+        if (octetsInRange(startIP, endIP, host)) {
+            return 1;
+        }
+    } else if (octetsInRange(startRange, endRange, host)) {
+        return 1;
+    } else if (host.Union.ip32 == banned.Union.ip32) {
+        return 1;
+    }
+    return 0;
+}
 
 static uint8 grenadeGamemodeCheck(Server* server, Vector3f pos)
 {

@@ -105,6 +105,54 @@ static void banIPCommand(void* serverP, CommandArguments arguments)
     }
 }
 
+static void banRangeCommand (void* serverP, CommandArguments arguments) {
+    Server*  server = (Server*) serverP;
+    IPStruct startRange;
+    IPStruct endRange;
+    char*    reason;
+    char* end;
+    if (arguments.argc == 2) {
+        if (parseIP(arguments.argv[1], &startRange, &end) && parseIP(++end, &endRange, &reason)) {
+            char ipStringStart[16];
+            char ipStringEnd[16];
+            formatIPToString(ipStringStart, startRange); // Reformatting the IP to avoid stuff like 001.02.3.4
+            formatIPToString(ipStringEnd, endRange);
+            struct json_object* array;
+            struct json_object* ban        = json_object_new_object();
+            struct json_object* root       = json_object_from_file("Bans.json");
+            char*               nameString = "Deuce";
+            json_object_object_get_ex(root, "Bans", &array);
+
+            uint8 banned = 0;
+            for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
+                if (server->player[ID].state != STATE_DISCONNECTED &&
+                    octetsInRange(startRange, endRange, server->player[ID].ipStruct)) {
+                    if (banned == 0) {
+                        nameString = server->player[ID].name;
+                        banned     = 1; // Do not add multiples of the same IP. Its pointless.
+                    }
+                    enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
+                }
+            }
+            json_object_object_add(ban, "Name", json_object_new_string(nameString));
+            json_object_object_add(ban, "start_of_range", json_object_new_string(ipStringStart));
+            json_object_object_add(ban, "end_of_range", json_object_new_string(ipStringEnd));
+            json_object_object_add(ban, "Time", json_object_new_uint64(0));
+            if (*reason == 32 && strlen(++reason) > 0) {
+                json_object_object_add(ban, "Reason", json_object_new_string(reason));
+            }
+            json_object_array_add(array, ban);
+            json_object_to_file("Bans.json", root);
+            json_object_put(root);
+            sendServerNotice(server, arguments.player, "IP range %s-%s has been permanently banned", ipStringStart, ipStringEnd);
+        } else {
+            sendServerNotice(server, arguments.player, "Invalid IP format");
+        }
+    } else {
+        sendServerNotice(server, arguments.player, "You did not enter IP or entered incorrect argument");
+    }
+}
+
 static void clinCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
@@ -598,6 +646,7 @@ void populateCommands(Server* server)
     {"/admin", 0, &adminCommand, 0, "Sends a message to all online admins."},
     {"/adminmute", 1, &adminMuteCommand, 30, "Mutes or unmutes player from /admin usage"},
     {"/banip", 0, &banIPCommand, 30, "Puts specified IP into ban list"},
+    {"/banrange", 0, &banRangeCommand, 30, "Bans specified IP range"},
     // We can have 2+ commands for same function even with different permissions and name
     {"/client", 1, &clinCommand, 0, "Shows players client info"},
     {"/clin", 1, &clinCommand, 0, "Shows players client info"},
