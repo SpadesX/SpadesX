@@ -405,16 +405,19 @@ static void ServerUpdate(Server* server, int timeout)
                 for (int i = 0; i < count; ++i) {
                     struct json_object* objectAtIndex = json_object_array_get_idx(array, i);
                     const char*         IP;
-                    const char* startOfRangeString;
-                    const char* endOfRangeString;
-                    READ_STR_FROM_JSON(objectAtIndex, startOfRangeString, start_of_range, "start of range", "0.0.0.0", 1);
+                    const char*         startOfRangeString;
+                    const char*         endOfRangeString;
+                    READ_STR_FROM_JSON(
+                    objectAtIndex, startOfRangeString, start_of_range, "start of range", "0.0.0.0", 1);
                     READ_STR_FROM_JSON(objectAtIndex, endOfRangeString, end_of_range, "end of range", "0.0.0.0", 1);
                     READ_STR_FROM_JSON(objectAtIndex, IP, IP, "IP", "0.0.0.0", 1);
                     IPStruct ipStruct;
                     IPStruct startOfRange, endOfRange;
-                    if (formatStringToIP((char*)IP, &ipStruct) && (formatStringToIP((char*)startOfRangeString, &startOfRange) && formatStringToIP((char*)endOfRangeString, &endOfRange))) {
-                        if (IPInRange(hostIP, ipStruct, startOfRange, endOfRange))
-                        {
+                    if (formatStringToIP((char*) IP, &ipStruct) &&
+                        (formatStringToIP((char*) startOfRangeString, &startOfRange) &&
+                         formatStringToIP((char*) endOfRangeString, &endOfRange)))
+                    {
+                        if (IPInRange(hostIP, ipStruct, startOfRange, endOfRange)) {
                             const char* nameOfPlayer;
                             const char* reason;
                             READ_STR_FROM_JSON(objectAtIndex, nameOfPlayer, Name, "Name", "Deuce", 0);
@@ -428,7 +431,8 @@ static void ServerUpdate(Server* server, int timeout)
                                         hostIP.Union.ip[2],
                                         hostIP.Union.ip[3],
                                         reason);
-                            bannedUser = 1;
+                            bannedUser       = 1;
+                            event.peer->data = (void*) ((size_t) server->protocol.maxPlayers - 1);
                             break;
                         }
                     }
@@ -465,17 +469,19 @@ static void ServerUpdate(Server* server, int timeout)
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 playerID = (uint8) ((size_t) event.peer->data);
-                SendIntelDrop(server, playerID);
-                SendPlayerLeft(server, playerID);
-                Vector3f empty   = {0, 0, 0};
-                Vector3f forward = {1, 0, 0};
-                Vector3f height  = {0, 0, 1};
-                Vector3f strafe  = {0, 1, 0};
-                initPlayer(server, playerID, 0, 1, empty, forward, strafe, height);
-                server->protocol.numPlayers--;
-                server->protocol.teamUserCount[server->player[playerID].team]--;
-                if (server->master.enableMasterConnection == 1) {
-                    updateMaster(server);
+                if (playerID != server->protocol.maxPlayers - 1) {
+                    SendIntelDrop(server, playerID);
+                    SendPlayerLeft(server, playerID);
+                    Vector3f empty   = {0, 0, 0};
+                    Vector3f forward = {1, 0, 0};
+                    Vector3f height  = {0, 0, 1};
+                    Vector3f strafe  = {0, 1, 0};
+                    initPlayer(server, playerID, 0, 1, empty, forward, strafe, height);
+                    server->protocol.numPlayers--;
+                    server->protocol.teamUserCount[server->player[playerID].team]--;
+                    if (server->master.enableMasterConnection == 1) {
+                        updateMaster(server);
+                    }
                 }
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
