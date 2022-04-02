@@ -66,21 +66,28 @@ static void swapIPStruct(IPStruct* ip)
 
 uint8 octetsInRange(IPStruct start, IPStruct end, IPStruct host)
 {
-    for (int i = 0; i < 4; ++i) {
-        if (!(host.Union.ip[i] >= start.Union.ip[i] && host.Union.ip[i] <= end.Union.ip[i])) {
-            return 0;
-        }
+    swapIPStruct(&start);
+    swapIPStruct(&end);
+    swapIPStruct(&host);
+    if (host.Union.ip32 >= start.Union.ip32 && host.Union.ip32 <= end.Union.ip32) {
+        return 1;
+        swapIPStruct(&start);
+        swapIPStruct(&end);
+        swapIPStruct(&host);
     }
-    return 1;
+    swapIPStruct(&start);
+    swapIPStruct(&end);
+    swapIPStruct(&host);
+    return 0;
 }
 
 uint8 IPInRange(IPStruct host, IPStruct banned, IPStruct startOfRange, IPStruct endOfRange)
 {
-    uint32 max = UINT32_MAX;
+    uint32   max = UINT32_MAX;
     IPStruct startRange;
     IPStruct endRange;
     startRange.Union.ip32 = startOfRange.Union.ip32;
-    endRange.Union.ip32 = endOfRange.Union.ip32;
+    endRange.Union.ip32   = endOfRange.Union.ip32;
     if (banned.CIDR > 0 && banned.CIDR < 32) {
         uint32 subMax = 0;
         copyBits(&subMax, max, 31 - banned.CIDR, 0);

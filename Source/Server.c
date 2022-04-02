@@ -22,6 +22,7 @@
 #include <enet/enet.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
+#include <json-c/json_types.h>
 #include <json-c/json_util.h>
 #include <math.h>
 #include <pthread.h>
@@ -420,20 +421,30 @@ static void ServerUpdate(Server* server, int timeout)
                         if (IPInRange(hostIP, ipStruct, startOfRange, endOfRange)) {
                             const char* nameOfPlayer;
                             const char* reason;
+                            double      time    = 0.0f;
+                            uint64      timeNow = get_nanos();
                             READ_STR_FROM_JSON(objectAtIndex, nameOfPlayer, Name, "Name", "Deuce", 0);
                             READ_STR_FROM_JSON(objectAtIndex, reason, Reason, "Reason", "None", 0);
-                            enet_peer_disconnect(event.peer, REASON_BANNED);
+                            READ_DOUBLE_FROM_JSON(objectAtIndex, time, Time, "Time", 0.0f, 0);
+                            if (((long double) timeNow / NANO_IN_MINUTE) > time) {
+                                json_object_array_del_idx(array, i, 1);
+                                json_object_to_file("Bans.json", root);
+                                continue; // Continue searching for bans and delete all the old ones that match host IP
+                                          // or its range
+                            } else {
+                                enet_peer_disconnect(event.peer, REASON_BANNED);
 
-                            LOG_WARNING("Banned user %s tried to join with IP: %hhu.%hhu.%hhu.%hhu Banned for: %s",
-                                        nameOfPlayer,
-                                        hostIP.Union.ip[0],
-                                        hostIP.Union.ip[1],
-                                        hostIP.Union.ip[2],
-                                        hostIP.Union.ip[3],
-                                        reason);
-                            bannedUser       = 1;
-                            event.peer->data = (void*) ((size_t) server->protocol.maxPlayers - 1);
-                            break;
+                                LOG_WARNING("Banned user %s tried to join with IP: %hhu.%hhu.%hhu.%hhu Banned for: %s",
+                                            nameOfPlayer,
+                                            hostIP.Union.ip[0],
+                                            hostIP.Union.ip[1],
+                                            hostIP.Union.ip[2],
+                                            hostIP.Union.ip[3],
+                                            reason);
+                                bannedUser       = 1;
+                                event.peer->data = (void*) ((size_t) server->protocol.maxPlayers - 1);
+                                break;
+                            }
                         }
                     }
                 }
