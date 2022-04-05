@@ -1,6 +1,6 @@
 #include "Commands.h"
 
-#include "JSONHelpers.h"
+#include "Util/JSONHelpers.h"
 #include "Master.h"
 #include "Packets.h"
 #include "ParseConvert.h"
