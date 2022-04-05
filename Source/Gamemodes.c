@@ -1,7 +1,7 @@
 #include "../Extern/libmapvxl/libmapvxl.h"
 #include "Protocol.h"
 #include "Structs.h"
-#include "Types.h"
+#include "Util/Types.h"
 #include "Util/Enums.h"
 
 #include <math.h>

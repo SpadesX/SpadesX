@@ -281,7 +281,7 @@ void ServerReset(Server* server)
 
 static void SendJoiningData(Server* server, uint8 playerID)
 {
-    LOG_STATUS("Sending state");
+    LOG_INFO("Sending state");
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && isPastStateData(server, i)) {
             SendPlayerState(server, playerID, i);
@@ -466,7 +466,7 @@ static void ServerUpdate(Server* server, int timeout)
                 event.peer->data                             = (void*) ((size_t) playerID);
                 server->player[playerID].HP                  = 100;
                 server->player[playerID].ipStruct.Union.ip32 = event.peer->address.host;
-                LOG_STATUS("Connected %u (%d.%d.%d.%d):%u, id %u",
+                LOG_INFO("Connected %u (%d.%d.%d.%d):%u, id %u",
                            event.peer->address.host,
                            server->player[playerID].ipStruct.Union.ip[0],
                            server->player[playerID].ipStruct.Union.ip[1],

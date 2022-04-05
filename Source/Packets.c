@@ -694,7 +694,7 @@ void SendMapStart(Server* server, uint8 playerID)
     if (server->protocol.numPlayers == 0) {
         return;
     }
-    LOG_STATUS("Sending map info");
+    LOG_INFO("Sending map info");
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_MAP_START);
@@ -719,7 +719,7 @@ void SendMapChunks(Server* server, uint8 playerID)
         }
         SendVersionRequest(server, playerID);
         server->player[playerID].state = STATE_JOINING;
-        LOG_STATUS("Loading chunks done");
+        LOG_INFO("Loading chunks done");
     } else {
         ENetPacket* packet =
         enet_packet_create(NULL, server->player[playerID].queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
