@@ -1,5 +1,6 @@
 #include "Commands.h"
 
+#include "JSONHelpers.h"
 #include "Master.h"
 #include "Packets.h"
 #include "ParseConvert.h"
@@ -198,8 +199,13 @@ static void banRangeCommand(void* serverP, CommandArguments arguments)
             json_object_object_add(ban, "Name", json_object_new_string(nameString));
             json_object_object_add(ban, "start_of_range", json_object_new_string(ipStringStart));
             json_object_object_add(ban, "end_of_range", json_object_new_string(ipStringEnd));
-            json_object_object_add(
-            ban, "Time", json_object_new_double(((long double) get_nanos() / (uint64) NANO_IN_MINUTE) + time));
+            if (time == 0) {
+                json_object_object_add(
+                ban, "Time", json_object_new_double(((long double) get_nanos() / (uint64) NANO_IN_MINUTE) + time));
+            } else {
+                json_object_object_add(ban, "Time", json_object_new_double(time));
+            }
+
             if (*reason == 32 && strlen(++reason) > 0) {
                 json_object_object_add(ban, "Reason", json_object_new_string(reason));
             }
@@ -629,6 +635,105 @@ static void tpcCommand(void* serverP, CommandArguments arguments)
     }
 }
 
+static void unbanCommand(void* serverP, CommandArguments arguments)
+{
+    Server*  server = (Server*) serverP;
+    IPStruct IP;
+    uint8    unbanned = 0;
+    if (arguments.argc == 2 && parseIP(arguments.argv[1], &IP, NULL)) {
+        struct json_object* array;
+        struct json_object* root = json_object_from_file("Bans.json");
+        json_object_object_get_ex(root, "Bans", &array);
+        int         count = json_object_array_length(array);
+        const char* IPString;
+        char        unbanIPString[19];
+        formatIPToString(unbanIPString, IP);
+        for (int i = 0; i < count; ++i) {
+            struct json_object* objectAtIndex = json_object_array_get_idx(array, i);
+            READ_STR_FROM_JSON(objectAtIndex, IPString, IP, "IP", "0.0.0.0", 1);
+            if (strcmp(unbanIPString, IPString) == 0) {
+                json_object_array_del_idx(array, i, 1);
+                json_object_to_file("Bans.json", root);
+                unbanned = 1;
+            }
+        }
+        if (unbanned) {
+            sendServerNotice(server, arguments.player, "IP %s unbanned", IPString);
+        } else {
+            sendServerNotice(server, arguments.player, "IP %s not found in banned IP list", IPString);
+        }
+    } else {
+        sendServerNotice(server, arguments.player, "Incorrect amount of arguments or invalid IP");
+    }
+}
+
+static void unbanRangeCommand(void* serverP, CommandArguments arguments)
+{
+    Server*  server = (Server*) serverP;
+    IPStruct startRange, endRange;
+    char*    end;
+    uint8    unbanned = 0;
+    if (arguments.argc == 2 && parseIP(arguments.argv[1], &startRange, &end) && parseIP(end, &endRange, NULL)) {
+        struct json_object* array;
+        struct json_object* root = json_object_from_file("Bans.json");
+        json_object_object_get_ex(root, "Bans", &array);
+        int         count = json_object_array_length(array);
+        const char* startIPString;
+        const char* endIPString;
+        char        unbanStartRangeString[19];
+        char        unbanEndRangeString[19];
+        formatIPToString(unbanStartRangeString, startRange);
+        formatIPToString(unbanEndRangeString, endRange);
+        for (int i = 0; i < count; ++i) {
+            struct json_object* objectAtIndex = json_object_array_get_idx(array, i);
+            READ_STR_FROM_JSON(objectAtIndex, startIPString, start_of_range, "start of range", "0.0.0.0", 0);
+            READ_STR_FROM_JSON(objectAtIndex, endIPString, end_of_range, "end of range", "0.0.0.0", 0);
+            if (strcmp(unbanStartRangeString, startIPString) == 0 && strcmp(unbanEndRangeString, endIPString) == 0) {
+                json_object_array_del_idx(array, i, 1);
+                json_object_to_file("Bans.json", root);
+                unbanned = 1;
+            }
+        }
+        if (unbanned) {
+            sendServerNotice(server, arguments.player, "IP range %s-%s unbanned", startIPString, endIPString);
+        } else {
+            sendServerNotice(
+            server, arguments.player, "IP range %s-%s not found in banned IP ranges", unbanStartRangeString, unbanEndRangeString);
+        }
+    } else {
+        sendServerNotice(server, arguments.player, "Incorrect amount of arguments or invalid IP");
+    }
+}
+
+static void undobanCommand(void* serverP, CommandArguments arguments)
+{
+    Server*     server = (Server*) serverP;
+    const char* IPString;
+    const char* startIP;
+    const char* endIP;
+    if (arguments.argc == 1) {
+        struct json_object* array;
+        struct json_object* root = json_object_from_file("Bans.json");
+        json_object_object_get_ex(root, "Bans", &array);
+        int                 count         = json_object_array_length(array);
+        struct json_object* objectAtIndex = json_object_array_get_idx(array, count - 1);
+        READ_STR_FROM_JSON(objectAtIndex, IPString, IP, "IP", "0.0.0.0", 1);
+        if (IPString[0] == '0') {
+            READ_STR_FROM_JSON(objectAtIndex, startIP, start_of_range, "start of range", "0.0.0.0", 0);
+            READ_STR_FROM_JSON(objectAtIndex, endIP, end_of_range, "end of range", "0.0.0.0", 0);
+            json_object_array_del_idx(array, count - 1, 1);
+            json_object_to_file("Bans.json", root);
+            sendServerNotice(server, arguments.player, "IP range %s-%s unbanned", startIP, endIP);
+        } else {
+            json_object_array_del_idx(array, count - 1, 1);
+            json_object_to_file("Bans.json", root);
+            sendServerNotice(server, arguments.player, "IP %s unbanned", IPString);
+        }
+    } else {
+        sendServerNotice(server, arguments.player, "Too many arguments given to command");
+    }
+}
+
 static void upsCommand(void* serverP, CommandArguments arguments)
 {
     if (arguments.argc != 2) {
@@ -697,6 +802,9 @@ void populateCommands(Server* server)
     {"/tp", 1, &tpCommand, 24, "Teleports specified player to another specified player"},
     {"/tpc", 1, &tpcCommand, 24, "Teleports to specified cordinates"},
     {"/ttk", 1, &toggleTeamKillCommand, 30, "Toggles ability to team kill for everyone or specified player"},
+    {"/unban", 0, &unbanCommand, 30, "Unbans specified IP"},
+    {"/unbanrange", 0, &unbanRangeCommand, 30, "Unbans specified IP range"},
+    {"/undoban", 0, &undobanCommand, 30, "Reverts the last ban"},
     {"/ups", 1, &upsCommand, 0, "Sets UPS of player to requested ammount. Range: 1-300"},
     {"/wban", 0, &banCustomCommand, 30, "Bans specified player for a week"}};
     for (unsigned long i = 0; i < sizeof(CommandArray) / sizeof(CommandManager); i++) {
