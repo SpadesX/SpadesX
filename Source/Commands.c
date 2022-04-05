@@ -64,7 +64,7 @@ static void genBan(Server* server, CommandArguments arguments, float time, IPStr
     if (time == 0) {
         sendServerNotice(server, arguments.player, "IP %s has been permanently banned", ipString);
     } else {
-        sendServerNotice(server, arguments.player, "IP %s has been for %f seconds", ipString, time);
+        sendServerNotice(server, arguments.player, "IP %s has been for %f minutes", ipString, time);
     }
 }
 
@@ -110,82 +110,50 @@ static void banCustomCommand(void* serverP, CommandArguments arguments)
     IPStruct ip;
     char*    reason;
     uint8    ID;
+    uint8    customBan = 0;
     if (arguments.argc == 2) {
-        if (parseIP(arguments.argv[1], &ip, &reason)) {
-            char* temp = reason;
-            float time = 0.0f;
-            parseFloat(++temp, &time, &reason);
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + time, ip, reason);
-        } else if (parsePlayer(arguments.argv[1], &ID, &reason)) {
-            char* temp = reason;
-            float time = 0.0f;
-            parseFloat(++temp, &time, &reason);
-            ip.Union.ip32 = server->player[ID].ipStruct.Union.ip32;
-            ip.CIDR       = server->player[ID].ipStruct.CIDR;
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + time, ip, reason);
+        float time = 0.0f;
+        if (strcmp(arguments.argv[0], "/pban") == 0) {
+            time = 0.0f;
+        } else if (strcmp(arguments.argv[0], "/hban") == 0) {
+            time = 360.0f;
+        } else if (strcmp(arguments.argv[0], "/dban") == 0) {
+            time = 1440.0f;
+        } else if (strcmp(arguments.argv[0], "/wban") == 0) {
+            time = 10080.0f;
+        } else if (strcmp(arguments.argv[0], "/mban") == 0) {
+            time = 44640.0f;
+        } else if (strcmp(arguments.argv[0], "/ban") == 0) {
+            customBan = 1;
         } else {
-            sendServerNotice(server, arguments.player, "Invalid IP format");
+            LOG_WARNING("Cant recognize ban command"); // Should never happen
         }
-    } else {
-        sendServerNotice(server, arguments.player, "You did not enter IP or entered incorrect argument");
-    }
-}
 
-static void banDayCommand(void* serverP, CommandArguments arguments)
-{
-    Server*  server = (Server*) serverP;
-    IPStruct ip;
-    char*    reason;
-    uint8    ID;
-    if (arguments.argc == 2) {
         if (parseIP(arguments.argv[1], &ip, &reason)) {
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + 1440.0f, ip, reason);
+            if (customBan) {
+                char* temp = reason;
+                parseFloat(++temp, &time, &reason);
+            }
+            if (time > 0) {
+                genBan(server, arguments, ((long double) get_nanos() / (uint64) NANO_IN_MINUTE) + time, ip, reason);
+            } else {
+                genBan(server, arguments, time, ip, reason);
+            }
         } else if (parsePlayer(arguments.argv[1], &ID, &reason)) {
+            if (server->player[ID].state == STATE_DISCONNECTED || ID > 31) {
+                sendServerNotice(server, arguments.player, "Player with ID %hhu does not exist");
+            }
+            if (customBan) {
+                char* temp = reason;
+                parseFloat(++temp, &time, &reason);
+            }
             ip.Union.ip32 = server->player[ID].ipStruct.Union.ip32;
             ip.CIDR       = server->player[ID].ipStruct.CIDR;
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + 1440.0f, ip, reason);
-        } else {
-            sendServerNotice(server, arguments.player, "Invalid IP format");
-        }
-    } else {
-        sendServerNotice(server, arguments.player, "You did not enter IP or entered incorrect argument");
-    }
-}
-
-static void banHoursCommand(void* serverP, CommandArguments arguments)
-{
-    Server*  server = (Server*) serverP;
-    IPStruct ip;
-    char*    reason;
-    uint8    ID;
-    if (arguments.argc == 2) {
-        if (parseIP(arguments.argv[1], &ip, &reason)) {
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + 360.0f, ip, reason);
-        } else if (parsePlayer(arguments.argv[1], &ID, &reason)) {
-            ip.Union.ip32 = server->player[ID].ipStruct.Union.ip32;
-            ip.CIDR       = server->player[ID].ipStruct.CIDR;
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + 360.0f, ip, reason);
-        } else {
-            sendServerNotice(server, arguments.player, "Invalid IP format");
-        }
-    } else {
-        sendServerNotice(server, arguments.player, "You did not enter IP or entered incorrect argument");
-    }
-}
-
-static void banMonthCommand(void* serverP, CommandArguments arguments)
-{
-    Server*  server = (Server*) serverP;
-    IPStruct ip;
-    char*    reason;
-    uint8    ID;
-    if (arguments.argc == 2) {
-        if (parseIP(arguments.argv[1], &ip, &reason)) {
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + 44640.0f, ip, reason);
-        } else if (parsePlayer(arguments.argv[1], &ID, &reason)) {
-            ip.Union.ip32 = server->player[ID].ipStruct.Union.ip32;
-            ip.CIDR       = server->player[ID].ipStruct.CIDR;
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + 44640.0f, ip, reason);
+            if (time > 0) {
+                genBan(server, arguments, ((long double) get_nanos() / (uint64) NANO_IN_MINUTE) + time, ip, reason);
+            } else {
+                genBan(server, arguments, time, ip, reason);
+            }
         } else {
             sendServerNotice(server, arguments.player, "Invalid IP format");
         }
@@ -230,7 +198,8 @@ static void banRangeCommand(void* serverP, CommandArguments arguments)
             json_object_object_add(ban, "Name", json_object_new_string(nameString));
             json_object_object_add(ban, "start_of_range", json_object_new_string(ipStringStart));
             json_object_object_add(ban, "end_of_range", json_object_new_string(ipStringEnd));
-            json_object_object_add(ban, "Time", json_object_new_double(((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + time));
+            json_object_object_add(
+            ban, "Time", json_object_new_double(((long double) get_nanos() / (uint64) NANO_IN_MINUTE) + time));
             if (*reason == 32 && strlen(++reason) > 0) {
                 json_object_object_add(ban, "Reason", json_object_new_string(reason));
             }
@@ -239,48 +208,6 @@ static void banRangeCommand(void* serverP, CommandArguments arguments)
             json_object_put(root);
             sendServerNotice(
             server, arguments.player, "IP range %s-%s has been permanently banned", ipStringStart, ipStringEnd);
-        } else {
-            sendServerNotice(server, arguments.player, "Invalid IP format");
-        }
-    } else {
-        sendServerNotice(server, arguments.player, "You did not enter IP or entered incorrect argument");
-    }
-}
-
-static void banPermaCommand(void* serverP, CommandArguments arguments)
-{
-    Server*  server = (Server*) serverP;
-    IPStruct ip;
-    char*    reason;
-    uint8    ID;
-    if (arguments.argc == 2) {
-        if (parseIP(arguments.argv[1], &ip, &reason)) {
-            genBan(server, arguments, 0.0f, ip, reason);
-        } else if (parsePlayer(arguments.argv[1], &ID, &reason)) {
-            ip.Union.ip32 = server->player[ID].ipStruct.Union.ip32;
-            ip.CIDR       = server->player[ID].ipStruct.CIDR;
-            genBan(server, arguments, 0.0f, ip, reason);
-        } else {
-            sendServerNotice(server, arguments.player, "Invalid IP format");
-        }
-    } else {
-        sendServerNotice(server, arguments.player, "You did not enter IP or entered incorrect argument");
-    }
-}
-
-static void banWeekCommand(void* serverP, CommandArguments arguments)
-{
-    Server*  server = (Server*) serverP;
-    IPStruct ip;
-    char*    reason;
-    uint8    ID;
-    if (arguments.argc == 2) {
-        if (parseIP(arguments.argv[1], &ip, &reason)) {
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + 10080.0f, ip, reason);
-        } else if (parsePlayer(arguments.argv[1], &ID, &reason)) {
-            ip.Union.ip32 = server->player[ID].ipStruct.Union.ip32;
-            ip.CIDR       = server->player[ID].ipStruct.CIDR;
-            genBan(server, arguments, ((long double)get_nanos() / (uint64)NANO_IN_MINUTE) + 10080.0f, ip, reason);
         } else {
             sendServerNotice(server, arguments.player, "Invalid IP format");
         }
@@ -748,8 +675,8 @@ void populateCommands(Server* server)
     // We can have 2+ commands for same function even with different permissions and name
     {"/client", 1, &clinCommand, 0, "Shows players client info"},
     {"/clin", 1, &clinCommand, 0, "Shows players client info"},
-    {"/dban", 0, &banDayCommand, 30, "Bans specified player for a day"},
-    {"/hban", 0, &banHoursCommand, 30, "Bans specified player for 6 hours"},
+    {"/dban", 0, &banCustomCommand, 30, "Bans specified player for a day"},
+    {"/hban", 0, &banCustomCommand, 30, "Bans specified player for 6 hours"},
     {"/help", 0, &helpCommand, 0, "Shows commands and their description"},
     {"/intel", 0, &intelCommand, 0, "Shows info about intel"},
     {"/inv", 0, &invCommand, 30, "Makes you go invisible"},
@@ -758,9 +685,9 @@ void populateCommands(Server* server)
     {"/login", 1, &loginCommand, 0, "Login command. First argument is a role. Second password"},
     {"/logout", 0, &logoutCommand, 31, "Logs out logged in player"},
     {"/master", 0, &masterCommand, 28, "Toggles master connection"},
-    {"/mban", 0, &banMonthCommand, 30, "Bans specified player for a month"},
+    {"/mban", 0, &banCustomCommand, 30, "Bans specified player for a month"},
     {"/mute", 1, &muteCommand, 30, "Mutes or unmutes specified player"},
-    {"/pban", 0, &banPermaCommand, 30, "Permanently bans a specified player"},
+    {"/pban", 0, &banCustomCommand, 30, "Permanently bans a specified player"},
     {"/pm", 0, &pmCommand, 0, "Private message to specified player"},
     {"/ratio", 1, &ratioCommand, 0, "Shows yours or requested player ratio"},
     {"/say", 0, &sayCommand, 30, "Send message to everyone as the server"},
@@ -771,7 +698,7 @@ void populateCommands(Server* server)
     {"/tpc", 1, &tpcCommand, 24, "Teleports to specified cordinates"},
     {"/ttk", 1, &toggleTeamKillCommand, 30, "Toggles ability to team kill for everyone or specified player"},
     {"/ups", 1, &upsCommand, 0, "Sets UPS of player to requested ammount. Range: 1-300"},
-    {"/wban", 0, &banWeekCommand, 30, "Bans specified player for a week"}};
+    {"/wban", 0, &banCustomCommand, 30, "Bans specified player for a week"}};
     for (unsigned long i = 0; i < sizeof(CommandArray) / sizeof(CommandManager); i++) {
         createCommand(server,
                       CommandArray[i].parseArguments,

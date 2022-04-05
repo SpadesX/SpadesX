@@ -426,7 +426,7 @@ static void ServerUpdate(Server* server, int timeout)
                             READ_STR_FROM_JSON(objectAtIndex, nameOfPlayer, Name, "Name", "Deuce", 0);
                             READ_STR_FROM_JSON(objectAtIndex, reason, Reason, "Reason", "None", 0);
                             READ_DOUBLE_FROM_JSON(objectAtIndex, time, Time, "Time", 0.0f, 0);
-                            if (((long double) timeNow / NANO_IN_MINUTE) > time) {
+                            if (((long double) timeNow / NANO_IN_MINUTE) > time && time != 0) {
                                 json_object_array_del_idx(array, i, 1);
                                 json_object_to_file("Bans.json", root);
                                 continue; // Continue searching for bans and delete all the old ones that match host IP
