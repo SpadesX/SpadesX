@@ -660,7 +660,7 @@ static void unbanCommand(void* serverP, CommandArguments arguments)
         if (unbanned) {
             sendServerNotice(server, arguments.player, "IP %s unbanned", IPString);
         } else {
-            sendServerNotice(server, arguments.player, "IP %s not found in banned IP list", IPString);
+            sendServerNotice(server, arguments.player, "IP %s not found in banned IP list", unbanIPString);
         }
     } else {
         sendServerNotice(server, arguments.player, "Incorrect amount of arguments or invalid IP");
