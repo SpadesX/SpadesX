@@ -11,6 +11,7 @@
 #include <enet/enet.h>
 #include <stdarg.h>
 
+uint64    getNanos(void);
 void      initPlayer(Server*  server,
                      uint8    playerID,
                      uint8    reset,

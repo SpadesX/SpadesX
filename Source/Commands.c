@@ -21,12 +21,6 @@
 #include <stdio.h>
 #include <string.h>
 
-static unsigned long long get_nanos(void)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
-}
 
 static uint32 commandCompare(Command* first, Command* second)
 {
@@ -136,7 +130,7 @@ static void banCustomCommand(void* serverP, CommandArguments arguments)
                 parseFloat(++temp, &time, &reason);
             }
             if (time > 0) {
-                genBan(server, arguments, ((long double) get_nanos() / (uint64) NANO_IN_MINUTE) + time, ip, reason);
+                genBan(server, arguments, ((long double) getNanos() / (uint64) NANO_IN_MINUTE) + time, ip, reason);
             } else {
                 genBan(server, arguments, time, ip, reason);
             }
@@ -151,7 +145,7 @@ static void banCustomCommand(void* serverP, CommandArguments arguments)
             ip.Union.ip32 = server->player[ID].ipStruct.Union.ip32;
             ip.CIDR       = server->player[ID].ipStruct.CIDR;
             if (time > 0) {
-                genBan(server, arguments, ((long double) get_nanos() / (uint64) NANO_IN_MINUTE) + time, ip, reason);
+                genBan(server, arguments, ((long double) getNanos() / (uint64) NANO_IN_MINUTE) + time, ip, reason);
             } else {
                 genBan(server, arguments, time, ip, reason);
             }
@@ -201,7 +195,7 @@ static void banRangeCommand(void* serverP, CommandArguments arguments)
             json_object_object_add(ban, "end_of_range", json_object_new_string(ipStringEnd));
             if (time == 0) {
                 json_object_object_add(
-                ban, "Time", json_object_new_double(((long double) get_nanos() / (uint64) NANO_IN_MINUTE) + time));
+                ban, "Time", json_object_new_double(((long double) getNanos() / (uint64) NANO_IN_MINUTE) + time));
             } else {
                 json_object_object_add(ban, "Time", json_object_new_double(time));
             }
@@ -295,14 +289,14 @@ static void invCommand(void* serverP, CommandArguments arguments)
         server->player[arguments.player].allowKilling = 1;
         for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
             if (isPastJoinScreen(server, i) && i != arguments.player) {
-                SendRespawnState(server, i, arguments.player);
+                sendCreatePlayer(server, i, arguments.player);
             }
         }
         sendServerNotice(server, arguments.player, "You are no longer invisible");
     } else if (server->player[arguments.player].isInvisible == 0) {
         server->player[arguments.player].isInvisible  = 1;
         server->player[arguments.player].allowKilling = 0;
-        sendKillPacket(server, arguments.player, arguments.player, 0, 0, 1);
+        sendKillActionPacket(server, arguments.player, arguments.player, 0, 0, 1);
         sendServerNotice(server, arguments.player, "You are now invisible");
     }
 }
@@ -327,7 +321,7 @@ static void killCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.argc == 1) {
-        sendKillPacket(server, arguments.player, arguments.player, 0, 5, 0);
+        sendKillActionPacket(server, arguments.player, arguments.player, 0, 5, 0);
     } else {
         if (!playerHasPermission(server, arguments.player, 30)) {
             sendServerNotice(server, arguments.player, "You have no permission to use this command.");
@@ -339,7 +333,7 @@ static void killCommand(void* serverP, CommandArguments arguments)
             for (int i = 0; i < server->protocol.maxPlayers; ++i) {
                 if (isPastJoinScreen(server, i) && server->player[i].HP > 0 && server->player[i].team != TEAM_SPECTATOR)
                 {
-                    sendKillPacket(server, i, i, 0, 5, 0);
+                    sendKillActionPacket(server, i, i, 0, 5, 0);
                     count++;
                 }
             }
@@ -353,7 +347,7 @@ static void killCommand(void* serverP, CommandArguments arguments)
                 sendServerNotice(server, arguments.player, "Invalid player \"%s\"!", arguments.argv[i]);
                 return;
             }
-            sendKillPacket(server, ID, ID, 0, 5, 0);
+            sendKillActionPacket(server, ID, ID, 0, 5, 0);
             sendServerNotice(server, arguments.player, "Killing player #%i...", ID);
         }
     }

@@ -52,18 +52,11 @@ static void freeStringNodes(stringNode* root)
     }
 }
 
-static unsigned long long get_nanos(void)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
-}
-
 static void forPlayers()
 {
     for (int playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         if (isPastJoinScreen(&server, playerID)) {
-            uint64 timeNow = get_nanos();
+            uint64 timeNow = getNanos();
             if (server.player[playerID].primary_fire == 1 && server.player[playerID].reloading == 0) {
                 if (server.player[playerID].weaponClip > 0) {
                     uint64 milliseconds = 0;
@@ -102,14 +95,14 @@ static void forPlayers()
                                 server.player[playerID].toRefill -= server.player[playerID].weaponReserve;
                                 server.player[playerID].weaponReserve = 0;
                                 server.player[playerID].reloading     = 0;
-                                SendWeaponReload(&server, playerID, 0, 0, 0);
+                                sendWeaponReload(&server, playerID, 0, 0, 0);
                                 break;
                             }
                             server.player[playerID].weaponClip += server.player[playerID].toRefill;
                             server.player[playerID].weaponReserve -= server.player[playerID].toRefill;
                             server.player[playerID].reloading = 0;
                             server.player[playerID].toRefill  = 0;
-                            SendWeaponReload(&server, playerID, 0, 0, 0);
+                            sendWeaponReload(&server, playerID, 0, 0, 0);
                         }
                         break;
                     }
@@ -127,7 +120,7 @@ static void forPlayers()
                             if (server.player[playerID].toRefill == 0) {
                                 server.player[playerID].reloading = 0;
                             }
-                            SendWeaponReload(&server, playerID, 0, 0, 0);
+                            sendWeaponReload(&server, playerID, 0, 0, 0);
                         }
                         break;
                     }
@@ -152,10 +145,10 @@ static void forPlayers()
 
 static void* calculatePhysics()
 {
-    server.globalTimers.updateTime = get_nanos();
+    server.globalTimers.updateTime = getNanos();
     if (server.globalTimers.updateTime - server.globalTimers.lastUpdateTime >= (1000000000 / 60)) {
         updateMovementAndGrenades(&server);
-        server.globalTimers.lastUpdateTime = get_nanos();
+        server.globalTimers.lastUpdateTime = getNanos();
     }
     return 0;
 }
@@ -170,7 +163,7 @@ static void ServerInit(Server*     server,
                        uint8       gamemode,
                        uint8       reset)
 {
-    server->globalTimers.updateTime = server->globalTimers.lastUpdateTime = get_nanos();
+    server->globalTimers.updateTime = server->globalTimers.lastUpdateTime = getNanos();
     if (reset == 0) {
         server->protocol.numPlayers = 0;
         server->protocol.maxPlayers = (connections <= 32) ? connections : 32;
@@ -284,10 +277,10 @@ static void SendJoiningData(Server* server, uint8 playerID)
     LOG_INFO("Sending state");
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && isPastStateData(server, i)) {
-            SendPlayerState(server, playerID, i);
+            sendExistingPlayer(server, playerID, i);
         }
     }
-    SendStateData(server, playerID);
+    sendStateData(server, playerID);
 }
 
 static uint8 OnConnect(Server* server)
@@ -310,10 +303,10 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
 {
     switch (server->player[playerID].state) {
         case STATE_STARTING_MAP:
-            SendMapStart(server, playerID);
+            sendMapStart(server, playerID);
             break;
         case STATE_LOADING_CHUNKS:
-            SendMapChunks(server, playerID);
+            sendMapChunks(server, playerID);
             break;
         case STATE_JOINING:
             SendJoiningData(server, playerID);
@@ -361,11 +354,11 @@ static void* WorldUpdate()
     for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         OnPlayerUpdate(&server, playerID);
         if (isPastJoinScreen(&server, playerID)) {
-            uint64 time = get_nanos();
+            uint64 time = getNanos();
             if (time - server.player[playerID].timers.timeSinceLastWU >= (NANO_IN_SECOND / server.player[playerID].ups))
             {
                 SendWorldUpdate(&server, playerID);
-                server.player[playerID].timers.timeSinceLastWU = get_nanos();
+                server.player[playerID].timers.timeSinceLastWU = getNanos();
             }
         }
     }
@@ -422,7 +415,7 @@ static void ServerUpdate(Server* server, int timeout)
                             const char* nameOfPlayer;
                             const char* reason;
                             double      time    = 0.0f;
-                            uint64      timeNow = get_nanos();
+                            uint64      timeNow = getNanos();
                             READ_STR_FROM_JSON(objectAtIndex, nameOfPlayer, Name, "Name", "Deuce", 0);
                             READ_STR_FROM_JSON(objectAtIndex, reason, Reason, "Reason", "None", 0);
                             READ_DOUBLE_FROM_JSON(objectAtIndex, time, Time, "Time", 0.0f, 0);
@@ -474,15 +467,15 @@ static void ServerUpdate(Server* server, int timeout)
                            server->player[playerID].ipStruct.Union.ip[3],
                            event.peer->address.port,
                            playerID);
-                server->player[playerID].timers.sincePeriodicMessage = get_nanos();
+                server->player[playerID].timers.sincePeriodicMessage = getNanos();
                 server->player[playerID].currentPeriodicMessage      = server->periodicMessages;
                 server->player[playerID].periodicDelayIndex          = 0;
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 playerID = (uint8) ((size_t) event.peer->data);
                 if (playerID != server->protocol.maxPlayers - 1) {
-                    SendIntelDrop(server, playerID);
-                    SendPlayerLeft(server, playerID);
+                    sendIntelDrop(server, playerID);
+                    sendPlayerLeft(server, playerID);
                     Vector3f empty   = {0, 0, 0};
                     Vector3f forward = {1, 0, 0};
                     Vector3f height  = {0, 0, 1};
@@ -540,7 +533,7 @@ void StartServer(uint16      port,
 {
     signal(SIGINT, StopServer);
 
-    server.globalTimers.timeSinceStart = get_nanos();
+    server.globalTimers.timeSinceStart = getNanos();
     LOG_STATUS("Welcome to SpadesX server");
     LOG_STATUS("Initializing ENet");
 

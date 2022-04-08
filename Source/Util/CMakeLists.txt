@@ -16,6 +16,7 @@ set(UTIL_SOURCES
     Queue.c
     Compress.c
     DataStream.c
+    Physics.c
 )
 
 target_sources(util

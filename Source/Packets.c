@@ -10,6 +10,7 @@
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Util/Utlist.h"
+#include "Util/Physics.h"
 
 #include <ctype.h>
 #include <enet/enet.h>
@@ -24,27 +25,6 @@
     #include <bsd/string.h>
 #endif
 
-void reorient_player(Server* server, uint8 playerID, Vector3f* orientation);
-int  validate_hit(Vector3f shooter, Vector3f orientation, Vector3f otherPos, float tolerance);
-
-static unsigned long long get_nanos(void)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
-}
-
-long cast_ray(Server* server,
-              float   x0,
-              float   y0,
-              float   z0,
-              float   x1,
-              float   y1,
-              float   z1,
-              float   length,
-              long*   x,
-              long*   y,
-              long*   z);
 
 inline static uint8 allowShot(Server*  server,
                               uint8    playerID,
@@ -72,11 +52,11 @@ inline static uint8 allowShot(Server*  server,
         server->player[playerID].alive && server->player[hitPlayerID].alive &&
         (server->player[playerID].team != server->player[hitPlayerID].team ||
          server->player[playerID].allowTeamKilling) &&
-        (server->player[playerID].allowKilling && server->globalAK) && validate_hit(shotPos, shotOrien, hitPos, 5) &&
-        (cast_ray(
+        (server->player[playerID].allowKilling && server->globalAK) && validateHit(shotPos, shotOrien, hitPos, 5) &&
+        (castRay(
          server, shotEyePos.x, shotEyePos.y, shotEyePos.z, shotOrien.x, shotOrien.y, shotOrien.z, distance, x, y, z) ==
          0 ||
-         cast_ray(server,
+         castRay(server,
                   shotEyePos.x,
                   shotEyePos.y,
                   shotEyePos.z - 1,
@@ -93,7 +73,7 @@ inline static uint8 allowShot(Server*  server,
     return ret;
 }
 
-void SendRestock(Server* server, uint8 playerID)
+void sendRestock(Server* server, uint8 playerID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -107,7 +87,7 @@ void SendRestock(Server* server, uint8 playerID)
     }
 }
 
-void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
+void sendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -134,7 +114,7 @@ void SendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
     }
 }
 
-void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
+void sendIntelCapture(Server* server, uint8 playerID, uint8 winning)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -169,7 +149,7 @@ void SendIntelCapture(Server* server, uint8 playerID, uint8 winning)
     }
 }
 
-void SendIntelPickup(Server* server, uint8 playerID)
+void sendIntelPickup(Server* server, uint8 playerID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -204,7 +184,7 @@ void SendIntelPickup(Server* server, uint8 playerID)
     }
 }
 
-void SendIntelDrop(Server* server, uint8 playerID)
+void sendIntelDrop(Server* server, uint8 playerID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -231,7 +211,7 @@ void SendIntelDrop(Server* server, uint8 playerID)
         server->protocol.gameMode.intel[team].y = (float) MAP_MAX_Y / 2;
         server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2);
         server->protocol.gameMode.intel[server->player[playerID].team] = server->protocol.gameMode.intel[team];
-        SendMoveObject(
+        sendMoveObject(
         server, server->player[playerID].team, server->player[playerID].team, server->protocol.gameMode.intel[team]);
     } else {
         WriteFloat(&stream, server->player[playerID].movement.position.x);
@@ -267,7 +247,7 @@ void SendIntelDrop(Server* server, uint8 playerID)
     }
 }
 
-void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity)
+void sendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -288,7 +268,7 @@ void SendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, 
     }
 }
 
-void SendPlayerLeft(Server* server, uint8 playerID)
+void sendPlayerLeft(Server* server, uint8 playerID)
 {
     LOG_INFO("Player %s disconnected", server->player[playerID].name);
     if (server->protocol.numPlayers == 0) {
@@ -309,7 +289,7 @@ void SendPlayerLeft(Server* server, uint8 playerID)
     }
 }
 
-void SendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint8 clip, uint8 reserve)
+void sendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint8 clip, uint8 reserve)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -346,7 +326,7 @@ void SendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint
     }
 }
 
-void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
+void sendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -364,7 +344,7 @@ void SendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
     }
 }
 
-void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
+void sendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -381,7 +361,7 @@ void SendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
     }
 }
 
-void SendSetTool(Server* server, uint8 playerID, uint8 tool)
+void sendSetTool(Server* server, uint8 playerID, uint8 tool)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -396,7 +376,7 @@ void SendSetTool(Server* server, uint8 playerID, uint8 tool)
     }
 }
 
-void SendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
+void sendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -424,7 +404,7 @@ void SendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
     }
 }
 
-void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, int Y, int Z)
+void sendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, int Y, int Z)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -450,7 +430,7 @@ void SendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, in
     }
 }
 
-void SendStateData(Server* server, uint8 playerID)
+void sendStateData(Server* server, uint8 playerID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -516,7 +496,7 @@ void SendStateData(Server* server, uint8 playerID)
     }
 }
 
-void SendInputData(Server* server, uint8 playerID)
+void sendInputData(Server* server, uint8 playerID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -531,7 +511,7 @@ void SendInputData(Server* server, uint8 playerID)
     }
 }
 
-void sendKillPacket(Server* server,
+void sendKillActionPacket(Server* server,
                     uint8   killerID,
                     uint8   playerID,
                     uint8   killReason,
@@ -592,11 +572,11 @@ void sendKillPacket(Server* server,
         }
     }
     if (server->player[playerID].hasIntel) {
-        SendIntelDrop(server, playerID);
+        sendIntelDrop(server, playerID);
     }
 }
 
-void sendHP(Server*  server,
+void sendSetHP(Server*  server,
             uint8    playerID,
             uint8    hitPlayerID,
             long     HPChange,
@@ -625,7 +605,7 @@ void sendHP(Server*  server,
 
         if (server->player[hitPlayerID].HP == 0) {
             server->player[hitPlayerID].alive = 0;
-            sendKillPacket(server, playerID, hitPlayerID, killReason, respawnTime, 0);
+            sendKillActionPacket(server, playerID, hitPlayerID, killReason, respawnTime, 0);
         }
 
         else if (server->player[hitPlayerID].HP > 0 && server->player[hitPlayerID].HP < 100)
@@ -655,7 +635,7 @@ void sendHP(Server*  server,
     }
 }
 
-void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
+void sendExistingPlayer(Server* server, uint8 playerID, uint8 otherID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -677,7 +657,7 @@ void SendPlayerState(Server* server, uint8 playerID, uint8 otherID)
     }
 }
 
-void SendVersionRequest(Server* server, uint8 playerID)
+void sendVersionRequest(Server* server, uint8 playerID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -689,7 +669,7 @@ void SendVersionRequest(Server* server, uint8 playerID)
         enet_packet_destroy(packet);
     }
 }
-void SendMapStart(Server* server, uint8 playerID)
+void sendMapStart(Server* server, uint8 playerID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -711,13 +691,13 @@ void SendMapStart(Server* server, uint8 playerID)
     }
 }
 
-void SendMapChunks(Server* server, uint8 playerID)
+void sendMapChunks(Server* server, uint8 playerID)
 {
     if (server->player[playerID].queues == NULL) {
         while (server->map.compressedMap) {
             server->map.compressedMap = Pop(server->map.compressedMap);
         }
-        SendVersionRequest(server, playerID);
+        sendVersionRequest(server, playerID);
         server->player[playerID].state = STATE_JOINING;
         LOG_INFO("Loading chunks done");
     } else {
@@ -733,7 +713,7 @@ void SendMapChunks(Server* server, uint8 playerID)
     }
 }
 
-void SendRespawnState(Server* server, uint8 playerID, uint8 otherID)
+void sendCreatePlayer(Server* server, uint8 playerID, uint8 otherID)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -757,7 +737,7 @@ void SendRespawn(Server* server, uint8 playerID)
 {
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (isPastJoinScreen(server, i)) {
-            SendRespawnState(server, i, playerID);
+            sendCreatePlayer(server, i, playerID);
         }
     }
     server->player[playerID].state = STATE_READY;
@@ -779,7 +759,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     }
     uint8 resetTime = 1;
     if (!diffIsOlderThenDontUpdate(
-        get_nanos(), server->player[player].timers.sinceLastMessageForSpam, (uint64) NANO_IN_MILLI * 2000) &&
+        getNanos(), server->player[player].timers.sinceLastMessageForSpam, (uint64) NANO_IN_MILLI * 2000) &&
         !server->player[player].muted && server->player[player].permLevel <= 1)
     {
         server->player[player].spamCounter++;
@@ -796,11 +776,11 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         resetTime = 0;
     }
     if (resetTime) {
-        server->player[player].timers.sinceLastMessageForSpam = get_nanos();
+        server->player[player].timers.sinceLastMessageForSpam = getNanos();
         server->player[player].spamCounter                    = 0;
     }
 
-    if (!diffIsOlderThen(get_nanos(), &server->player[player].timers.sinceLastMessage, (uint64) NANO_IN_MILLI * 400) &&
+    if (!diffIsOlderThen(getNanos(), &server->player[player].timers.sinceLastMessage, (uint64) NANO_IN_MILLI * 400) &&
         server->player[player].permLevel <= 1)
     {
         sendServerNotice(
@@ -854,7 +834,7 @@ void SendWorldUpdate(Server* server, uint8 playerID)
 
     for (uint8 j = 0; j < server->protocol.maxPlayers; ++j) {
         if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0) {
-            /*float    dt       = (get_nanos() - server->globalTimers.lastUpdateTime) / 1000000000.f;
+            /*float    dt       = (getNanos() - server->globalTimers.lastUpdateTime) / 1000000000.f;
             Vector3f position = {server->player[j].movement.velocity.x * dt + server->player[j].movement.position.x,
                                  server->player[j].movement.velocity.y * dt + server->player[j].movement.position.y,
                                  server->player[j].movement.velocity.z * dt + server->player[j].movement.position.z};
@@ -903,7 +883,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         server, "Player %s (%d) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
         return;
     }
-    uint64 timeNow = get_nanos();
+    uint64 timeNow = getNanos();
     if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500) ||
         !diffIsOlderThen(timeNow, &server->player[playerID].timers.sincePossibleSpadenade, (long) NANO_IN_MILLI * 1000))
     {
@@ -937,9 +917,9 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
             (vecfValidPos(posZ1) && server->player[playerID].movement.position.z < 0) ||
             (vecfValidPos(posZ2) && server->player[playerID].movement.position.z < 0))
         {
-            SendGrenade(server, playerID, grenade->fuse, grenade->position, grenade->velocity);
+            sendGrenade(server, playerID, grenade->fuse, grenade->position, grenade->velocity);
             grenade->sent          = 1;
-            grenade->timeSinceSent = get_nanos();
+            grenade->timeSinceSent = getNanos();
         }
         DL_APPEND(server->player[playerID].grenade, grenade);
         server->player[playerID].grenades--;
@@ -963,7 +943,7 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
         return; // Sprinting and hitting somebody is impossible
     }
 
-    uint64 timeNow = get_nanos();
+    uint64 timeNow = getNanos();
 
     if (allowShot(server, playerID, hitPlayerID, timeNow, distance, &x, &y, &z, shotPos, shotOrien, hitPos, shotEyePos))
     {
@@ -973,22 +953,22 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
                 switch (hitType) {
                     case HIT_TYPE_HEAD:
                     {
-                        sendKillPacket(server, playerID, hitPlayerID, 1, 5, 0);
+                        sendKillActionPacket(server, playerID, hitPlayerID, 1, 5, 0);
                         break;
                     }
                     case HIT_TYPE_TORSO:
                     {
-                        sendHP(server, playerID, hitPlayerID, 49, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 49, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_ARMS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_LEGS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_MELEE:
@@ -1002,22 +982,22 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
                 switch (hitType) {
                     case HIT_TYPE_HEAD:
                     {
-                        sendHP(server, playerID, hitPlayerID, 75, 1, 1, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 75, 1, 1, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_TORSO:
                     {
-                        sendHP(server, playerID, hitPlayerID, 29, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 29, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_ARMS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_LEGS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_MELEE:
@@ -1031,22 +1011,22 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
                 switch (hitType) {
                     case HIT_TYPE_HEAD:
                     {
-                        sendHP(server, playerID, hitPlayerID, 37, 1, 1, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 37, 1, 1, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_TORSO:
                     {
-                        sendHP(server, playerID, hitPlayerID, 27, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 27, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_ARMS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_LEGS:
                     {
-                        sendHP(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
+                        sendSetHP(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
                         break;
                     }
                     case HIT_TYPE_MELEE:
@@ -1057,7 +1037,7 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
             }
         }
         if (hitType == HIT_TYPE_MELEE) {
-            sendHP(server, playerID, hitPlayerID, 80, 1, 2, 5, 0, shotPos);
+            sendSetHP(server, playerID, hitPlayerID, 80, 1, 2, 5, 0, shotPos);
         }
     }
 }
@@ -1074,7 +1054,7 @@ static void receiveOrientationData(Server* server, uint8 playerID, DataStream* d
     server->player[playerID].movement.forwardOrientation.y = y * length;
     server->player[playerID].movement.forwardOrientation.z = z * length;
 
-    reorient_player(server, playerID, &server->player[playerID].movement.forwardOrientation);
+    reorientPlayer(server, playerID, &server->player[playerID].movement.forwardOrientation);
 }
 
 static void receiveInputData(Server* server, uint8 playerID, DataStream* data)
@@ -1098,7 +1078,7 @@ static void receiveInputData(Server* server, uint8 playerID, DataStream* data)
         server->player[playerID].crouching    = bits[5];
         server->player[playerID].sneaking     = bits[6];
         server->player[playerID].sprinting    = bits[7];
-        SendInputData(server, playerID);
+        sendInputData(server, playerID);
     }
 }
 
@@ -1276,10 +1256,10 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     }
 
     if (server->protocol.gameMode.intelHeld[0] == 0) {
-        SendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
+        sendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
     }
     if (server->protocol.gameMode.intelHeld[1] == 0) {
-        SendMoveObject(server, 1, 1, server->protocol.gameMode.intel[1]);
+        sendMoveObject(server, 1, 1, server->protocol.gameMode.intel[1]);
     }
 }
 
@@ -1309,7 +1289,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                     case 0:
                     {
                         if (gamemodeBlockChecks(server, X, Y, Z)) {
-                            uint64 timeNow = get_nanos();
+                            uint64 timeNow = getNanos();
                             if (server->player[playerID].blocks > 0 &&
                                 diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLastBlockPlac, BLOCK_DELAY) &&
@@ -1321,7 +1301,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                 mapvxlSetColor(&server->map.map, X, Y, Z, server->player[playerID].toolColor.color);
                                 server->player[playerID].blocks--;
                                 moveIntelAndTentUp(server);
-                                SendBlockAction(server, playerID, actionType, X, Y, Z);
+                                sendBlockAction(server, playerID, actionType, X, Y, Z);
                             }
                         }
                     } break;
@@ -1329,7 +1309,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                     case 1:
                     {
                         if (Z < 62 && gamemodeBlockChecks(server, X, Y, Z)) {
-                            uint64 timeNow = get_nanos();
+                            uint64 timeNow = getNanos();
                             if (diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLastBlockDest, SPADE_DELAY) &&
                                 diffIsOlderThenDontUpdate(
@@ -1350,7 +1330,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                         server->player[playerID].blocks++;
                                     }
                                 }
-                                SendBlockAction(server, playerID, actionType, X, Y, Z);
+                                sendBlockAction(server, playerID, actionType, X, Y, Z);
                             }
                         }
                     } break;
@@ -1360,7 +1340,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                         if (gamemodeBlockChecks(server, X, Y, Z) && gamemodeBlockChecks(server, X, Y, Z + 1) &&
                             gamemodeBlockChecks(server, X, Y, Z - 1))
                         {
-                            uint64 timeNow = get_nanos();
+                            uint64 timeNow = getNanos();
                             if (diffIsOlderThen(
                                 timeNow, &server->player[playerID].timers.sinceLast3BlockDest, THREEBLOCK_DELAY) &&
                                 diffIsOlderThenDontUpdate(
@@ -1381,7 +1361,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                         }
                                     }
                                 }
-                                SendBlockAction(server, playerID, actionType, X, Y, Z);
+                                sendBlockAction(server, playerID, actionType, X, Y, Z);
                             }
                         }
                     } break;
@@ -1403,7 +1383,7 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", playerID, ID);
     }
-    uint64 timeNow = get_nanos();
+    uint64 timeNow = getNanos();
     if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
         server->player[playerID].item == 1 &&
         diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastBlockPlac, BLOCK_DELAY) &&
@@ -1437,7 +1417,7 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
                                server->player[playerID].toolColor.color);
             }
             moveIntelAndTentUp(server);
-            SendBlockLine(server, playerID, start, end);
+            sendBlockLine(server, playerID, start, end);
         }
     }
 }
@@ -1454,7 +1434,7 @@ static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
     }
 
     server->player[playerID].item = tool;
-    SendSetTool(server, playerID, tool);
+    sendSetTool(server, playerID, tool);
 }
 
 static void receiveSetColor(Server* server, uint8 playerID, DataStream* data)
@@ -1473,7 +1453,7 @@ static void receiveSetColor(Server* server, uint8 playerID, DataStream* data)
     server->player[playerID].toolColor.colorArray[R_CHANNEL] = R;
     server->player[playerID].toolColor.colorArray[G_CHANNEL] = G;
     server->player[playerID].toolColor.colorArray[B_CHANNEL] = B;
-    SendSetColor(server, playerID, R, G, B);
+    sendSetColor(server, playerID, R, G, B);
 }
 
 static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
@@ -1495,12 +1475,12 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
         server->player[playerID].locAtClick = server->player[playerID].movement.position;
     } else if (server->player[playerID].secondary_fire && server->player[playerID].item == 0) {
-        server->player[playerID].timers.sincePossibleSpadenade = get_nanos();
+        server->player[playerID].timers.sincePossibleSpadenade = getNanos();
     }
 
     else if (server->player[playerID].weaponClip > 0)
     {
-        SendWeaponInput(server, playerID, wInput);
+        sendWeaponInput(server, playerID, wInput);
         uint64 timeDiff = 0;
         switch (server->player[playerID].weapon) {
             case WEAPON_RIFLE:
@@ -1521,9 +1501,9 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
         }
 
         if (server->player[playerID].primary_fire &&
-            diffIsOlderThen(get_nanos(), &server->player[playerID].timers.sinceLastWeaponInput, timeDiff))
+            diffIsOlderThen(getNanos(), &server->player[playerID].timers.sinceLastWeaponInput, timeDiff))
         {
-            server->player[playerID].timers.sinceLastWeaponInput = get_nanos();
+            server->player[playerID].timers.sinceLastWeaponInput = getNanos();
             server->player[playerID].toRefill++;
             server->player[playerID].weaponClip--;
             server->player[playerID].reloading = 0;
@@ -1547,7 +1527,7 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
             server->player[playerID].movement.forwardOrientation;
         }
     } else {
-        // sendKillPacket(server, playerID, playerID, 0, 30, 0);
+        // sendKillActionPacket(server, playerID, playerID, 0, 30, 0);
     }
 }
 
@@ -1566,8 +1546,8 @@ static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data
         return;
     }
     server->player[playerID].reloading               = 1;
-    server->player[playerID].timers.sinceReloadStart = get_nanos();
-    SendWeaponReload(server, playerID, 1, clip, reserve);
+    server->player[playerID].timers.sinceReloadStart = getNanos();
+    sendWeaponReload(server, playerID, 1, clip, reserve);
 }
 
 static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
@@ -1580,7 +1560,7 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change team packet", playerID, ID);
     }
     server->protocol.teamUserCount[server->player[playerID].team]++;
-    sendKillPacket(server, playerID, playerID, 5, 5, 0);
+    sendKillActionPacket(server, playerID, playerID, 5, 5, 0);
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
 
@@ -1595,7 +1575,7 @@ static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change weapon packet", playerID, ID);
     }
-    sendKillPacket(server, playerID, playerID, 6, 5, 0);
+    sendKillActionPacket(server, playerID, playerID, 6, 5, 0);
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
 

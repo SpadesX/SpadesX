@@ -4,11 +4,11 @@
 #include "../Extern/libmapvxl/libmapvxl.h"
 #include "Packets.h"
 #include "ParseConvert.h"
-#include "Physics.h"
 #include "Server.h"
 #include "Structs.h"
 #include "Util/DataStream.h"
 #include "Util/Enums.h"
+#include "Util/Physics.h"
 #include "Util/Types.h"
 #include "Utlist.h"
 
@@ -21,11 +21,11 @@
 #include <string.h>
 #include <time.h>
 
-static unsigned long long get_nanos(void)
+uint64 getNanos(void)
 {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    return (unsigned long long) ts.tv_sec * 1000000000L + ts.tv_nsec;
+    return (uint64) ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
 /*uint8 castRaysWithTolerance(Server *server, Vector3f pos, Vector3f posOrien, Vector3f othPlayerPos) {
@@ -192,7 +192,7 @@ uint8 getGrenadeDamage(Server* server, uint8 damageID, Grenade* grenade)
     Vector3f playerPos  = server->player[damageID].movement.position;
     Vector3f grenadePos = grenade->position;
     if (diffX < 16 && diffY < 16 && diffZ < 16 &&
-        can_see(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
+        canSee(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
         grenade->position.z < 62)
     {
         double diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
@@ -229,7 +229,7 @@ void initPlayer(Server*  server,
         server->player[playerID].queues = NULL;
     }
     server->player[playerID].ups                         = 60;
-    server->player[playerID].timers.timeSinceLastWU      = get_nanos();
+    server->player[playerID].timers.timeSinceLastWU      = getNanos();
     server->player[playerID].input                       = 0;
     server->player[playerID].movement.eyePos             = empty;
     server->player[playerID].movement.forwardOrientation = forward;
@@ -780,28 +780,28 @@ void moveIntelAndTentDown(Server* server)
         Vector3f newPos = {server->protocol.gameMode.intel[0].x,
                            server->protocol.gameMode.intel[0].y,
                            server->protocol.gameMode.intel[0].z + 1};
-        SendMoveObject(server, 0, 0, newPos);
+        sendMoveObject(server, 0, 0, newPos);
         server->protocol.gameMode.intel[0] = newPos;
     }
     while (checkUnderIntel(server, 1)) {
         Vector3f newPos = {server->protocol.gameMode.intel[1].x,
                            server->protocol.gameMode.intel[1].y,
                            server->protocol.gameMode.intel[1].z + 1};
-        SendMoveObject(server, 1, 1, newPos);
+        sendMoveObject(server, 1, 1, newPos);
         server->protocol.gameMode.intel[1] = newPos;
     }
     while (checkUnderTent(server, 0) == 4) {
         Vector3f newPos = {server->protocol.gameMode.base[0].x,
                            server->protocol.gameMode.base[0].y,
                            server->protocol.gameMode.base[0].z + 1};
-        SendMoveObject(server, 2, 0, newPos);
+        sendMoveObject(server, 2, 0, newPos);
         server->protocol.gameMode.base[0] = newPos;
     }
     while (checkUnderTent(server, 1) == 4) {
         Vector3f newPos = {server->protocol.gameMode.base[1].x,
                            server->protocol.gameMode.base[1].y,
                            server->protocol.gameMode.base[1].z + 1};
-        SendMoveObject(server, 3, 1, newPos);
+        sendMoveObject(server, 3, 1, newPos);
         server->protocol.gameMode.base[1] = newPos;
     }
 }
@@ -811,22 +811,22 @@ void moveIntelAndTentUp(Server* server)
     if (checkInTent(server, 0)) {
         Vector3f newTentPos = server->protocol.gameMode.base[0];
         newTentPos.z -= 1;
-        SendMoveObject(server, 0 + 2, 0, newTentPos);
+        sendMoveObject(server, 0 + 2, 0, newTentPos);
         server->protocol.gameMode.base[0] = newTentPos;
     } else if (checkInTent(server, 1)) {
         Vector3f newTentPos = server->protocol.gameMode.base[1];
         newTentPos.z -= 1;
-        SendMoveObject(server, 1 + 2, 1, newTentPos);
+        sendMoveObject(server, 1 + 2, 1, newTentPos);
         server->protocol.gameMode.base[1] = newTentPos;
     } else if (checkInIntel(server, 1)) {
         Vector3f newIntelPos = server->protocol.gameMode.intel[1];
         newIntelPos.z -= 1;
-        SendMoveObject(server, 1, 1, newIntelPos);
+        sendMoveObject(server, 1, 1, newIntelPos);
         server->protocol.gameMode.intel[1] = newIntelPos;
     } else if (checkInIntel(server, 0)) {
         Vector3f newIntelPos = server->protocol.gameMode.intel[0];
         newIntelPos.z -= 1;
-        SendMoveObject(server, 0, 0, newIntelPos);
+        sendMoveObject(server, 0, 0, newIntelPos);
         server->protocol.gameMode.intel[0] = newIntelPos;
     }
 }
@@ -967,16 +967,16 @@ void handleTentAndIntel(Server* server, uint8 playerID)
         if (server->player[playerID].hasIntel == 0) {
 
             if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.gameMode.intelHeld[team])) {
-                SendIntelPickup(server, playerID);
+                sendIntelPickup(server, playerID);
                 if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
                     Vector3f pos = {0, 0, 64};
-                    SendMoveObject(server, server->player[playerID].team, server->player[playerID].team, pos);
+                    sendMoveObject(server, server->player[playerID].team, server->player[playerID].team, pos);
                     server->protocol.gameMode.intel[server->player[playerID].team] = pos;
                 }
             } else if (checkPlayerInTent(server, playerID) &&
                        timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15)
             {
-                SendRestock(server, playerID);
+                sendRestock(server, playerID);
                 server->player[playerID].HP       = 100;
                 server->player[playerID].grenades = 3;
                 server->player[playerID].blocks   = 50;
@@ -1002,7 +1002,7 @@ void handleTentAndIntel(Server* server, uint8 playerID)
                     server->protocol.gameMode.scoreLimit) {
                     winning = 1;
                 }
-                SendIntelCapture(server, playerID, winning);
+                sendIntelCapture(server, playerID, winning);
                 server->player[playerID].HP       = 100;
                 server->player[playerID].grenades = 3;
                 server->player[playerID].blocks   = 50;
@@ -1017,17 +1017,17 @@ void handleTentAndIntel(Server* server, uint8 playerID)
                         server->player[playerID].weaponReserve = 48;
                         break;
                 }
-                SendRestock(server, playerID);
+                sendRestock(server, playerID);
                 server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
                 if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
                     Vector3f babelIntelPos             = {255, 255, mapvxlFindTopBlock(&server->map.map, 255, 255)};
                     server->protocol.gameMode.intel[0] = babelIntelPos;
                     server->protocol.gameMode.intel[1] = babelIntelPos;
-                    SendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
-                    SendMoveObject(server, 1, 1, server->protocol.gameMode.intel[1]);
+                    sendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
+                    sendMoveObject(server, 1, 1, server->protocol.gameMode.intel[1]);
                 } else {
                     server->protocol.gameMode.intel[team] = SetIntelTentSpawnPoint(server, team);
-                    SendMoveObject(server, team, team, server->protocol.gameMode.intel[team]);
+                    sendMoveObject(server, team, team, server->protocol.gameMode.intel[team]);
                 }
                 if (winning) {
                     for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
@@ -1049,11 +1049,11 @@ void handleGrenade(Server* server, uint8 playerID)
     DL_FOREACH_SAFE(server->player[playerID].grenade, grenade, tmp)
     {
         if (grenade->sent) {
-            move_grenade(server, grenade);
-            if ((get_nanos() - grenade->timeSinceSent) / 1000000000.f >= grenade->fuse) {
+            moveGrenade(server, grenade);
+            if ((getNanos() - grenade->timeSinceSent) / 1000000000.f >= grenade->fuse) {
                 uint8 allowToDestroy = 0;
                 if (grenadeGamemodeCheck(server, grenade->position)) {
-                    SendBlockAction(server,
+                    sendBlockAction(server,
                                     playerID,
                                     3,
                                     floor(grenade->position.x),
@@ -1065,7 +1065,7 @@ void handleGrenade(Server* server, uint8 playerID)
                     if (server->player[y].state == STATE_READY) {
                         uint8 value = getGrenadeDamage(server, y, grenade);
                         if (value > 0) {
-                            sendHP(server, playerID, y, value, 1, 3, 5, 1, grenade->position);
+                            sendSetHP(server, playerID, y, value, 1, 3, 5, 1, grenade->position);
                         }
                     }
                 }
@@ -1113,15 +1113,15 @@ void handleGrenade(Server* server, uint8 playerID)
 
 void updateMovementAndGrenades(Server* server)
 {
-    set_globals((server->globalTimers.updateTime - server->globalTimers.timeSinceStart) / 1000000000.f,
+    setPhysicsGlobals((server->globalTimers.updateTime - server->globalTimers.timeSinceStart) / 1000000000.f,
                 (server->globalTimers.updateTime - server->globalTimers.lastUpdateTime) / 1000000000.f);
     for (int playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
         if (server->player[playerID].state == STATE_READY) {
             long falldamage = 0;
-            falldamage      = move_player(server, playerID);
+            falldamage      = movePlayer(server, playerID);
             if (falldamage > 0) {
                 Vector3f zero = {0, 0, 0};
-                sendHP(server, playerID, playerID, falldamage, 0, 4, 5, 0, zero);
+                sendSetHP(server, playerID, playerID, falldamage, 0, 4, 5, 0, zero);
             }
             if (server->protocol.currentGameMode != GAME_MODE_ARENA) {
                 handleTentAndIntel(server, playerID);
