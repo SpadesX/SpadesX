@@ -674,6 +674,7 @@ Vector3i* getGrenadeNeighbors(Vector3i pos)
 }
 
 #define NODE_RESERVE_SIZE 250000
+uint8 visitedMap[MAP_MAX_X][MAP_MAX_Y][MAP_MAX_Z];
 Vector3i* nodes = NULL;
 int       nodePos;
 int       nodesSize;
@@ -719,6 +720,7 @@ uint8 checkNode(Server* server, Vector3i position)
         visitedSize  = NODE_RESERVE_SIZE;
     }
     visitedPos = 0;
+    memset(visitedMap, 0, MAP_MAX_X * MAP_MAX_Y * MAP_MAX_Z);
 
     saveNode(position.x, position.y, position.z);
 
@@ -744,16 +746,9 @@ uint8 checkNode(Server* server, Vector3i position)
         position.y = currentNode->y;
 
         // already visited?
-        uint8 nodeVisited = 0;
-        for (int i = 0; i < visitedPos; ++i) {
-            if (visitedNodes[i].x == position.x && visitedNodes[i].y == position.y && visitedNodes[i].z == position.z) {
-                nodeVisited = 1;
-                break;
-            }
-        }
-        if (nodeVisited == 0) {
-            visitedNodes[visitedPos] = position;
-            visitedPos++;
+        if (visitedMap[position.x][position.y][position.z] == 0) {
+            visitedNodes[visitedPos++] = position;
+            visitedMap[position.x][position.y][position.z] = 1;
             addNode(server, position.x, position.y, position.z - 1);
             addNode(server, position.x, position.y - 1, position.z);
             addNode(server, position.x, position.y + 1, position.z);
