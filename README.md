@@ -1,9 +1,6 @@
 # SpadesX
 
 ## What is SpadesX and why ?
-TL;DR Ace of Spades server written in C (Currently in Beta)
-Now if you would like to know the full picture read bellow:
-
 SpadesX is project started by 3 people.
 We love Ace of Spades (Mainly the open source alternative OpenSpades) but we hated the fact that the only type of
 server that was there for it was Python based. 
@@ -11,6 +8,8 @@ While thats not the worst thing in the world it did give us a lot of headaches w
 Some scripts were just too much for it to handle and it would start lagging. And in FPS game thats not ideal.
 So we decided why not make it in C ?
 And thats what we did. That is what SpadesX is. Ace of Spades server fully written in C.
+
+TL;DR Ace of Spades server written in C (Currently in Beta)
 
 ## Why the SpadesX name ?
 Honestly we dont know. We just one day decided to brainstorm the name and decide on something that sounded cool
@@ -21,9 +20,12 @@ There we truly a lot of great names thrown around. But SpadesX was one day throw
 Rather simple. Are you on Unix based system ? You are in luck.
 
 First of all you need few libraries.
-zlib, json-c.
+zlib, json-c, enet.
 Both of which should be available in your package manager.
 Be sure to install the development versions of it :)
+Ubuntu 20.04 doesnt have the latest version of json-c and since SpadesX
+uses some functions that are in the later releases you either have to
+build it on your own or update to 21.04+
 
 > git clone https://github.com/SpadesX/SpadesX
 
@@ -37,7 +39,8 @@ Be sure to install the development versions of it :)
  
 > make -jX (Replace X with number of threads you have on your system)
 
-Windows users will have to use WSL.
+Windows users can use mingw. But you still have to install
+the libraries.
 
 ## HEY DEVELOPERS I HAVE A BUG. WHERE DO I REPORT IT ?
 Ok Ok calm down first of all.
