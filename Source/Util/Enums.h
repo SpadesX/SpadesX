@@ -78,9 +78,9 @@ typedef enum {
 } GameMode;
 
 typedef enum {
-    TEAM_SPECTATOR = (uint8) -1,
     TEAM_A         = 0,
     TEAM_B         = 1,
+    TEAM_SPECTATOR = 255,
 } Team;
 
 typedef enum {

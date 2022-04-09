@@ -274,7 +274,7 @@ void ServerReset(Server* server)
 
 static void SendJoiningData(Server* server, uint8 playerID)
 {
-    LOG_INFO("Sending state");
+    LOG_INFO("Sending state to %s (#%hhu)", server->player[playerID].name, playerID);
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
         if (i != playerID && isPastStateData(server, i)) {
             sendExistingPlayer(server, playerID, i);
@@ -320,7 +320,8 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
             server->player[playerID].toRefill  = 0;
             SetPlayerRespawnPoint(server, playerID);
             SendRespawn(server, playerID);
-            LOG_INFO("Player %d spawning at: %f %f %f",
+            LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
+                     server->player[playerID].name,
                      playerID,
                      server->player[playerID].movement.position.x,
                      server->player[playerID].movement.position.y,
@@ -459,14 +460,10 @@ static void ServerUpdate(Server* server, int timeout)
                 event.peer->data                             = (void*) ((size_t) playerID);
                 server->player[playerID].HP                  = 100;
                 server->player[playerID].ipStruct.Union.ip32 = event.peer->address.host;
-                LOG_INFO("Connected %u (%d.%d.%d.%d):%u, id %u",
-                           event.peer->address.host,
-                           server->player[playerID].ipStruct.Union.ip[0],
-                           server->player[playerID].ipStruct.Union.ip[1],
-                           server->player[playerID].ipStruct.Union.ip[2],
-                           server->player[playerID].ipStruct.Union.ip[3],
-                           event.peer->address.port,
-                           playerID);
+
+                formatIPToString(server->player[playerID].name, server->player[playerID].ipStruct);
+                LOG_INFO("Player %s (#%hhu) connected", server->player[playerID].name, playerID);
+
                 server->player[playerID].timers.sincePeriodicMessage = getNanos();
                 server->player[playerID].currentPeriodicMessage      = server->periodicMessages;
                 server->player[playerID].periodicDelayIndex          = 0;

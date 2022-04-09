@@ -1,16 +1,17 @@
 // Copyright DarkNeutrino 2021
 #include "../Extern/libmapvxl/libmapvxl.h"
 #include "Commands.h"
+#include "ParseConvert.h"
 #include "Protocol.h"
 #include "Structs.h"
 #include "Util/Compress.h"
 #include "Util/DataStream.h"
 #include "Util/Enums.h"
 #include "Util/Line.h"
+#include "Util/Physics.h"
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Util/Utlist.h"
-#include "Util/Physics.h"
 
 #include <ctype.h>
 #include <enet/enet.h>
@@ -24,7 +25,6 @@
 #else
     #include <bsd/string.h>
 #endif
-
 
 inline static uint8 allowShot(Server*  server,
                               uint8    playerID,
@@ -57,16 +57,16 @@ inline static uint8 allowShot(Server*  server,
          server, shotEyePos.x, shotEyePos.y, shotEyePos.z, shotOrien.x, shotOrien.y, shotOrien.z, distance, x, y, z) ==
          0 ||
          castRay(server,
-                  shotEyePos.x,
-                  shotEyePos.y,
-                  shotEyePos.z - 1,
-                  shotOrien.x,
-                  shotOrien.y,
-                  shotOrien.z,
-                  distance,
-                  x,
-                  y,
-                  z) == 0))
+                 shotEyePos.x,
+                 shotEyePos.y,
+                 shotEyePos.z - 1,
+                 shotOrien.x,
+                 shotOrien.y,
+                 shotOrien.z,
+                 distance,
+                 x,
+                 y,
+                 z) == 0))
     {
         ret = 1;
     }
@@ -512,11 +512,11 @@ void sendInputData(Server* server, uint8 playerID)
 }
 
 void sendKillActionPacket(Server* server,
-                    uint8   killerID,
-                    uint8   playerID,
-                    uint8   killReason,
-                    uint8   respawnTime,
-                    uint8   makeInvisible)
+                          uint8   killerID,
+                          uint8   playerID,
+                          uint8   killReason,
+                          uint8   respawnTime,
+                          uint8   makeInvisible)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -577,14 +577,14 @@ void sendKillActionPacket(Server* server,
 }
 
 void sendSetHP(Server*  server,
-            uint8    playerID,
-            uint8    hitPlayerID,
-            long     HPChange,
-            uint8    typeOfDamage,
-            uint8    killReason,
-            uint8    respawnTime,
-            uint8    isGrenade,
-            Vector3f position)
+               uint8    playerID,
+               uint8    hitPlayerID,
+               long     HPChange,
+               uint8    typeOfDamage,
+               uint8    killReason,
+               uint8    respawnTime,
+               uint8    isGrenade,
+               Vector3f position)
 {
     if (server->protocol.numPlayers == 0) {
         return;
@@ -674,7 +674,7 @@ void sendMapStart(Server* server, uint8 playerID)
     if (server->protocol.numPlayers == 0) {
         return;
     }
-    LOG_INFO("Sending map info");
+    LOG_INFO("Sending map info to %s (#%hhu)", server->player[playerID].name, playerID);
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_MAP_START);
@@ -699,7 +699,7 @@ void sendMapChunks(Server* server, uint8 playerID)
         }
         sendVersionRequest(server, playerID);
         server->player[playerID].state = STATE_JOINING;
-        LOG_INFO("Loading chunks done");
+        LOG_INFO("Finished sending map to %s (#%hhu)", server->player[playerID].name, playerID);
     } else {
         ENetPacket* packet =
         enet_packet_create(NULL, server->player[playerID].queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
@@ -789,11 +789,19 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     }
 
     message[length] = '\0';
-    LOG_INFO("Player %s (#%ld) to team %d said: %s",
-             server->player[player].name,
-             (long) server->player[player].peer->data,
-             meantfor,
-             message);
+    char meantFor[7];
+    switch (meantfor) {
+        case 0:
+            snprintf(meantFor, 7, "Global");
+        break;
+        case 1:
+            snprintf(meantFor, 5, "Team");
+        break;
+        case 2:
+            snprintf(meantFor, 7, "System");
+        break;
+    }
+    LOG_INFO("Player %s (#%hhu) (%s) said: %s", server->player[player].name, player, meantFor, message);
 
     uint8 sent = 0;
     if (message[0] == '/') {
@@ -880,7 +888,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
     if (server->player[playerID].primary_fire && server->player[playerID].item == 1) {
         sendServerNotice(server, playerID, "InstaSuicideNade detected. Grenade ineffective");
         sendMessageToStaff(
-        server, "Player %s (%d) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
+        server, "Player %s (#%hhu) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
         return;
     }
     uint64 timeNow = getNanos();
@@ -1113,10 +1121,8 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
         server->player[playerID].movement.position.z   = z;
         server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
     } else {
-        char message[31];
-        snprintf(message, 31, "Player #%d may be noclipping!", playerID);
-        LOG_WARNING("Player #%d may be noclipping!", playerID);
-        sendMessageToStaff(server, message);
+        LOG_WARNING("Player %s (#%hhu) may be noclipping!", server->player[playerID].name, playerID);
+        sendMessageToStaff(server, "Player %s (#%d) may be noclipping!", server->player[playerID].name, playerID);
         if (validPlayerPos(server,
                            playerID,
                            server->player[playerID].movement.prevLegitPos.x,
@@ -1127,16 +1133,17 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
                 SetPlayerRespawnPoint(server, playerID);
                 sendServerNotice(
                 server, playerID, "Server could not find a free position to get you unstuck. Reseting to spawn");
-                char message[102];
-                snprintf(
-                message,
-                102,
-                "Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!",
-                playerID);
                 LOG_WARNING(
-                "Could not find legit position for player #%d to get them unstuck. Resetting to spawn. Go check them!",
+                "Could not find legit position for player %s (#%d) to get them unstuck. Resetting to spawn. "
+                "Go check them!",
+                server->player[playerID].name,
                 playerID);
-                sendMessageToStaff(server, message);
+                sendMessageToStaff(
+                server,
+                "Could not find legit position for player %s (#%d) to get them unstuck. Resetting to spawn. "
+                "Go check them!",
+                server->player[playerID].name,
+                playerID);
                 server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
             }
         }
@@ -1240,6 +1247,12 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
             break;
     }
     server->player[playerID].state = STATE_SPAWNING;
+    char IP[17];
+    formatIPToString(IP, server->player[playerID].ipStruct);
+    char team[15];
+    teamIDToString(server, team, server->player[playerID].team);
+    LOG_INFO(
+    "Player %s (%s, #%hhu) joined %s", server->player[playerID].name, IP, playerID, team);
     if (server->player[playerID].welcomeSent == 0) {
         stringNode* welcomeMessage;
         DL_FOREACH(server->welcomeMessages, welcomeMessage)
@@ -1247,10 +1260,11 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
             sendServerNotice(server, playerID, welcomeMessage->string);
         }
         if (invName) {
-            char message[122] =
-            "Your name was either empty, had # in front of it or contained something nasty. Your name has been set to ";
-            strlcat(message, server->player[playerID].name, 122);
-            sendServerNotice(server, playerID, message);
+            sendServerNotice(server,
+                             playerID,
+                             "Your name was either empty, had # in front of it or contained something nasty. Your name "
+                             "has been set to %s",
+                             server->player[playerID].name);
         }
         server->player[playerID].welcomeSent = 1; // So we dont send the message to the player on each time they spawn.
     }
@@ -1369,7 +1383,8 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                 moveIntelAndTentDown(server);
             }
         } else {
-            LOG_WARNING("Player: #%d may be using BlockExploit with Item: %d and Action: %d",
+            LOG_WARNING("Player %s (#%hhu) may be using BlockExploit with Item: %d and Action: %d",
+                        server->player[playerID].name,
                         playerID,
                         server->player[playerID].item,
                         actionType);

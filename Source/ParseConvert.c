@@ -42,6 +42,15 @@ void formatIPToString(char* dest, IPStruct src)
     snprintf(dest, 16, "%hhu.%hhu.%hhu.%hhu", src.Union.ip[0], src.Union.ip[1], src.Union.ip[2], src.Union.ip[3]);
 }
 
+void teamIDToString(Server* server, char* dest, int team)
+{
+    if (team == 255) {
+        snprintf(dest, 15, "Spectator Team");
+        return;
+    }
+    snprintf(dest, 11, "%s", server->protocol.nameTeam[team]);
+}
+
 uint8 parsePlayer(char* s, uint8* id, char** end)
 {
     uint8 sLength;

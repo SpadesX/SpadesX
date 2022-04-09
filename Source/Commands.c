@@ -267,7 +267,7 @@ static void intelCommand(void* serverP, CommandArguments arguments)
     uint8   sentAtLeastOnce = 0;
     for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
         if (server->player[playerID].state != STATE_DISCONNECTED && server->player[playerID].hasIntel) {
-            sendServerNotice(server, arguments.player, "Player #%d has intel", playerID);
+            sendServerNotice(server, arguments.player, "Player %s (#%hhu) has intel", server->player[playerID].name, playerID);
             sentAtLeastOnce = 1;
         }
     }
@@ -308,7 +308,7 @@ static void kickCommand(void* serverP, CommandArguments arguments)
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             enet_peer_disconnect(server->player[ID].peer, REASON_KICKED);
-            broadcastServerNotice(server, "Player %s has been kicked", server->player[ID].name);
+            broadcastServerNotice(server, "Player %s (#%hhu) has been kicked", server->player[ID].name, ID);
         } else {
             sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
         }
@@ -600,7 +600,7 @@ static void tpCommand(void* serverP, CommandArguments arguments)
                                server->player[playerToBeTeleported].movement.position.y,
                                server->player[playerToBeTeleported].movement.position.z);
         } else {
-            sendServerNotice(server, arguments.player, "Player %d is at invalid position", playerToTeleportTo);
+            sendServerNotice(server, arguments.player, "Player %hhu is at invalid position", playerToTeleportTo);
         }
     } else {
         sendServerNotice(server, arguments.player, "Incorrect amount of arguments or wrong argument type");
