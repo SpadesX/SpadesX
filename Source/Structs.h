@@ -227,6 +227,7 @@ typedef struct
 {
     Player srvPlayer;
     uint8  player;
+    uint8  console;
     uint32 commandPermissions;
     uint32 argc;
     char*  argv[32]; // 32 roles^W commands should be more than enough for anyone

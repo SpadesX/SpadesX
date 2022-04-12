@@ -19,6 +19,7 @@
 #include "Utlist.h"
 
 #include <Gamemodes.h>
+#include <bits/pthreadtypes.h>
 #include <enet/enet.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
@@ -26,14 +27,17 @@
 #include <json-c/json_util.h>
 #include <math.h>
 #include <pthread.h>
-#include <signal.h>
 #include <stdio.h>
+#include <readline/history.h>
+#include <readline/readline.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
 
 Server    server;
+pthread_mutex_t serverLock;
 pthread_t thread[3];
 
 Server* getServer()
@@ -134,7 +138,7 @@ static void forPlayers()
                 stringNode* message;
                 DL_FOREACH(server.periodicMessages, message)
                 {
-                    sendServerNotice(&server, playerID, message->string);
+                    sendServerNotice(&server, playerID, 0, message->string);
                 }
                 server.player[playerID].periodicDelayIndex = fmin(server.player[playerID].periodicDelayIndex + 1, 4);
             }
@@ -503,6 +507,23 @@ void StopServer(int signal)
     server.running = 0;
 }
 
+static void* serverConsole(void* arg)
+{
+    (void) arg;
+    char* buf;
+    while ((buf = readline("\x1B[0;34mConsole> \x1B[0;37m")) != NULL) {
+        if (strlen(buf) > 0) {
+            add_history(buf);
+        }
+        pthread_mutex_lock(&serverLock);
+        handleCommands(&server, 255, buf, 1);
+        pthread_mutex_unlock(&serverLock);
+        free(buf);
+    }
+    rl_clear_history();
+    pthread_exit(0);
+}
+
 void StartServer(uint16      port,
                  uint32      connections,
                  uint32      channels,
@@ -539,6 +560,11 @@ void StartServer(uint16      port,
         exit(EXIT_FAILURE);
     }
     atexit(enet_deinitialize);
+
+    if (pthread_mutex_init(&serverLock, NULL) != 0) {
+        LOG_ERROR("Server mutex failed to initialize");
+        exit(EXIT_FAILURE);
+    }
 
     ENetAddress address;
     address.host = ENET_HOST_ANY;
@@ -587,12 +613,19 @@ void StartServer(uint16      port,
         ConnectMaster(&server, port);
     }
     server.master.timeSinceLastSend = time(NULL);
+    rl_catch_signals                = 0;
+    pthread_t console;
+    pthread_create(&console, NULL, serverConsole, NULL);
+    pthread_detach(console);
+
     while (server.running) {
+        pthread_mutex_lock(&serverLock);
         calculatePhysics();
         ServerUpdate(&server, 0);
         WorldUpdate();
         keepMasterAlive(&server);
         forPlayers();
+        pthread_mutex_unlock(&serverLock);
         sleep(0);
     }
     while (server.map.compressedMap) {
@@ -606,6 +639,9 @@ void StartServer(uint16      port,
     freeStringNodes(server.map.mapList);
     freeStringNodes(server.periodicMessages);
 
+    pthread_mutex_destroy(&serverLock);
+
+    printf("\n");
     LOG_STATUS("Exiting");
     enet_host_destroy(server.host);
 }

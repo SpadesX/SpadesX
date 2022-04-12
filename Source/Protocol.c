@@ -324,7 +324,7 @@ void sendMessageToStaff(Server* server, const char* format, ...)
 
     for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
         if (isPastJoinScreen(server, ID) && isStaff(server, ID)) {
-            sendServerNotice(server, ID, fMessage);
+            sendServerNotice(server, ID, 0, fMessage);
         }
     }
 }
@@ -1147,13 +1147,18 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
     }
 }
 
-void sendServerNotice(Server* server, uint8 playerID, const char* message, ...)
+void sendServerNotice(Server* server, uint8 playerID, uint8 console, const char* message, ...)
 {
     va_list args;
     va_start(args, message);
     char fMessage[1024];
     vsnprintf(fMessage, 1023, message, args);
     va_end(args);
+
+    if (console) {
+        LOG_INFO("%s", fMessage);
+        return;
+    }
 
     uint32      fMessageSize = strlen(fMessage);
     uint32      packetSize   = 3 + fMessageSize;
@@ -1168,7 +1173,7 @@ void sendServerNotice(Server* server, uint8 playerID, const char* message, ...)
     }
 }
 
-void broadcastServerNotice(Server* server, const char* message, ...)
+void broadcastServerNotice(Server* server, uint8 console, const char* message, ...)
 {
     va_list args;
     va_start(args, message);
@@ -1184,6 +1189,9 @@ void broadcastServerNotice(Server* server, const char* message, ...)
     WriteByte(&stream, 33);
     WriteByte(&stream, 2);
     WriteArray(&stream, fMessage, fMessageSize);
+    if (console) {
+        LOG_INFO("%s", fMessage);
+    }
     uint8 sent = 0;
     for (int player = 0; player < server->protocol.maxPlayers; ++player) {
         if (isPastJoinScreen(server, player)) {

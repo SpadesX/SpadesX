@@ -4,7 +4,7 @@
 
 #include "Structs.h"
 
-void handleCommands(Server* server, uint8 player, char* message);
+void handleCommands(Server* server, uint8 player, char* message, uint8 console);
 void populateCommands(Server* server);
 void freeCommands(Server* server);
 void createCommand(Server* server,

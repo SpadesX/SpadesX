@@ -30,6 +30,7 @@ target_link_libraries(SpadesX
         mapvxl
         m
         json-c
+        readline
         Threads::Threads
 )
 

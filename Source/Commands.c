@@ -1,6 +1,5 @@
 #include "Commands.h"
 
-#include "Util/JSONHelpers.h"
 #include "Master.h"
 #include "Packets.h"
 #include "ParseConvert.h"
@@ -9,6 +8,7 @@
 #include "Types.h"
 #include "Uthash.h"
 #include "Util/Enums.h"
+#include "Util/JSONHelpers.h"
 #include "Utlist.h"
 
 #include <ctype.h>
@@ -20,7 +20,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-
 
 static uint32 commandCompare(Command* first, Command* second)
 {
@@ -57,9 +56,9 @@ static void genBan(Server* server, CommandArguments arguments, float time, IPStr
     json_object_to_file("Bans.json", root);
     json_object_put(root);
     if (time == 0) {
-        sendServerNotice(server, arguments.player, "IP %s has been permanently banned", ipString);
+        sendServerNotice(server, arguments.player, arguments.console, "IP %s has been permanently banned", ipString);
     } else {
-        sendServerNotice(server, arguments.player, "IP %s has been for %f minutes", ipString, time);
+        sendServerNotice(server, arguments.player, arguments.console, "IP %s has been for %f minutes", ipString, time);
     }
 }
 
@@ -68,13 +67,14 @@ static void adminCommand(void* serverP, CommandArguments arguments)
     Server* server = (Server*) serverP;
     if (arguments.argc > 1) {
         if (server->player[arguments.player].adminMuted == 1) {
-            sendServerNotice(server, arguments.player, "You are not allowed to use this command (Admin muted)");
+            sendServerNotice(
+            server, arguments.player, arguments.console, "You are not allowed to use this command (Admin muted)");
             return;
         }
         sendMessageToStaff(server, "Staff from %s: %s", server->player[arguments.player].name, arguments.argv[1]);
-        sendServerNotice(server, arguments.player, "Message sent to all staff members online");
+        sendServerNotice(server, arguments.player, arguments.console, "Message sent to all staff members online");
     } else {
-        sendServerNotice(server, arguments.player, "Invalid message");
+        sendServerNotice(server, arguments.player, arguments.console, "Invalid message");
     }
 }
 
@@ -86,16 +86,19 @@ static void adminMuteCommand(void* serverP, CommandArguments arguments)
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].adminMuted) {
                 server->player[ID].adminMuted = 0;
-                sendServerNotice(server, arguments.player, "%s has been admin unmuted", server->player[ID].name);
+                sendServerNotice(
+                server, arguments.player, arguments.console, "%s has been admin unmuted", server->player[ID].name);
             } else {
                 server->player[ID].adminMuted = 1;
-                sendServerNotice(server, arguments.player, "%s has been admin muted", server->player[ID].name);
+                sendServerNotice(
+                server, arguments.player, arguments.console, "%s has been admin muted", server->player[ID].name);
             }
         } else {
-            sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "ID not in range or player doesnt exist");
         }
     } else {
-        sendServerNotice(server, arguments.player, "You did not enter ID or entered incorrect argument");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "You did not enter ID or entered incorrect argument");
     }
 }
 
@@ -136,7 +139,7 @@ static void banCustomCommand(void* serverP, CommandArguments arguments)
             }
         } else if (parsePlayer(arguments.argv[1], &ID, &reason)) {
             if (server->player[ID].state == STATE_DISCONNECTED || ID > 31) {
-                sendServerNotice(server, arguments.player, "Player with ID %hhu does not exist");
+                sendServerNotice(server, arguments.player, arguments.console, "Player with ID %hhu does not exist");
             }
             if (customBan) {
                 char* temp = reason;
@@ -150,10 +153,11 @@ static void banCustomCommand(void* serverP, CommandArguments arguments)
                 genBan(server, arguments, time, ip, reason);
             }
         } else {
-            sendServerNotice(server, arguments.player, "Invalid IP format");
+            sendServerNotice(server, arguments.player, arguments.console, "Invalid IP format");
         }
     } else {
-        sendServerNotice(server, arguments.player, "You did not enter IP or entered incorrect argument");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "You did not enter IP or entered incorrect argument");
     }
 }
 
@@ -206,13 +210,18 @@ static void banRangeCommand(void* serverP, CommandArguments arguments)
             json_object_array_add(array, ban);
             json_object_to_file("Bans.json", root);
             json_object_put(root);
-            sendServerNotice(
-            server, arguments.player, "IP range %s-%s has been permanently banned", ipStringStart, ipStringEnd);
+            sendServerNotice(server,
+                             arguments.player,
+                             arguments.console,
+                             "IP range %s-%s has been permanently banned",
+                             ipStringStart,
+                             ipStringEnd);
         } else {
-            sendServerNotice(server, arguments.player, "Invalid IP format");
+            sendServerNotice(server, arguments.player, arguments.console, "Invalid IP format");
         }
     } else {
-        sendServerNotice(server, arguments.player, "You did not enter IP or entered incorrect argument");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "You did not enter IP or entered incorrect argument");
     }
 }
 
@@ -232,6 +241,7 @@ static void clinCommand(void* serverP, CommandArguments arguments)
             }
             sendServerNotice(server,
                              arguments.player,
+                             arguments.console,
                              "Player %s is running %s version %d.%d.%d on %s",
                              server->player[ID].name,
                              client,
@@ -240,10 +250,10 @@ static void clinCommand(void* serverP, CommandArguments arguments)
                              server->player[ID].version_revision,
                              server->player[ID].os_info);
         } else {
-            sendServerNotice(server, arguments.player, "Invalid ID. Player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "Invalid ID. Player doesnt exist");
         }
     } else {
-        sendServerNotice(server, arguments.player, "No ID given");
+        sendServerNotice(server, arguments.player, arguments.console, "No ID given");
     }
 }
 
@@ -251,14 +261,22 @@ static void helpCommand(void* serverP, CommandArguments arguments)
 {
     Server*  server = (Server*) serverP;
     Command* command;
+    if (arguments.console)
+        sendServerNotice(server, arguments.player, arguments.console, "Commands available to you:");
+
     LL_FOREACH(server->commandsList, command)
     {
-        if (playerHasPermission(server, arguments.player, command->PermLevel) || command->PermLevel == 0) {
-            sendServerNotice(
-            server, arguments.player, "[Command: %s, Description: %s]", command->id, command->commandDesc);
+        if (arguments.console || playerHasPermission(server, arguments.player, command->PermLevel) || command->PermLevel == 0) {
+            sendServerNotice(server,
+                             arguments.player,
+                             arguments.console,
+                             "[Command: %s, Description: %s]",
+                             command->id,
+                             command->commandDesc);
         }
     }
-    sendServerNotice(server, arguments.player, "Commands available to you:");
+    if (!arguments.console)
+        sendServerNotice(server, arguments.player, arguments.console, "Commands available to you:");
 }
 
 static void intelCommand(void* serverP, CommandArguments arguments)
@@ -267,23 +285,34 @@ static void intelCommand(void* serverP, CommandArguments arguments)
     uint8   sentAtLeastOnce = 0;
     for (uint8 playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
         if (server->player[playerID].state != STATE_DISCONNECTED && server->player[playerID].hasIntel) {
-            sendServerNotice(server, arguments.player, "Player %s (#%hhu) has intel", server->player[playerID].name, playerID);
+            sendServerNotice(server,
+                             arguments.player,
+                             arguments.console,
+                             "Player %s (#%hhu) has intel",
+                             server->player[playerID].name,
+                             playerID);
             sentAtLeastOnce = 1;
         }
     }
     if (sentAtLeastOnce == 0) {
         if (server->protocol.gameMode.intelHeld[0]) {
-            sendServerNotice(server, arguments.player, "Intel is not being held but intel of team 0 thinks it is");
+            sendServerNotice(
+            server, arguments.player, arguments.console, "Intel is not being held but intel of team 0 thinks it is");
         } else if (server->protocol.gameMode.intelHeld[1]) {
-            sendServerNotice(server, arguments.player, "Intel is not being held but intel of team 1 thinks it is");
+            sendServerNotice(
+            server, arguments.player, arguments.console, "Intel is not being held but intel of team 1 thinks it is");
         }
-        sendServerNotice(server, arguments.player, "Intel is not being held");
+        sendServerNotice(server, arguments.player, arguments.console, "Intel is not being held");
     }
 }
 
 static void invCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
+    if (arguments.console) {
+        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        return;
+    }
     if (server->player[arguments.player].isInvisible == 1) {
         server->player[arguments.player].isInvisible  = 0;
         server->player[arguments.player].allowKilling = 1;
@@ -292,12 +321,12 @@ static void invCommand(void* serverP, CommandArguments arguments)
                 sendCreatePlayer(server, i, arguments.player);
             }
         }
-        sendServerNotice(server, arguments.player, "You are no longer invisible");
+        sendServerNotice(server, arguments.player, arguments.console, "You are no longer invisible");
     } else if (server->player[arguments.player].isInvisible == 0) {
         server->player[arguments.player].isInvisible  = 1;
         server->player[arguments.player].allowKilling = 0;
         sendKillActionPacket(server, arguments.player, arguments.player, 0, 0, 1);
-        sendServerNotice(server, arguments.player, "You are now invisible");
+        sendServerNotice(server, arguments.player, arguments.console, "You are now invisible");
     }
 }
 
@@ -308,12 +337,14 @@ static void kickCommand(void* serverP, CommandArguments arguments)
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             enet_peer_disconnect(server->player[ID].peer, REASON_KICKED);
-            broadcastServerNotice(server, "Player %s (#%hhu) has been kicked", server->player[ID].name, ID);
+            broadcastServerNotice(
+            server, arguments.console, "Player %s (#%hhu) has been kicked", server->player[ID].name, ID);
         } else {
-            sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "ID not in range or player doesnt exist");
         }
     } else {
-        sendServerNotice(server, arguments.player, "You did not enter ID or entered incorrect argument");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "You did not enter ID or entered incorrect argument");
     }
 }
 
@@ -323,8 +354,9 @@ static void killCommand(void* serverP, CommandArguments arguments)
     if (arguments.argc == 1) {
         sendKillActionPacket(server, arguments.player, arguments.player, 0, 5, 0);
     } else {
-        if (!playerHasPermission(server, arguments.player, 30)) {
-            sendServerNotice(server, arguments.player, "You have no permission to use this command.");
+        if (!playerHasPermission(server, arguments.player, 30) && arguments.console == 0) {
+            sendServerNotice(
+            server, arguments.player, arguments.console, "You have no permission to use this command.");
             return;
         }
 
@@ -337,18 +369,24 @@ static void killCommand(void* serverP, CommandArguments arguments)
                     count++;
                 }
             }
-            sendServerNotice(server, arguments.player, "Killed %i players.", count);
+            sendServerNotice(server, arguments.player, arguments.console, "Killed %i players.", count);
             return;
         }
 
         uint8 ID = 0;
         for (uint32 i = 1; i < arguments.argc; i++) {
-            if (!parsePlayer(arguments.argv[i], &ID, NULL)) {
-                sendServerNotice(server, arguments.player, "Invalid player \"%s\"!", arguments.argv[i]);
+            if (!parsePlayer(arguments.argv[i], &ID, NULL) || ID > 32) {
+                sendServerNotice(
+                server, arguments.player, arguments.console, "Invalid player \"%s\"!", arguments.argv[i]);
                 return;
             }
-            sendKillActionPacket(server, ID, ID, 0, 5, 0);
-            sendServerNotice(server, arguments.player, "Killing player #%i...", ID);
+            if (isPastJoinScreen(server, ID)) {
+                sendKillActionPacket(server, ID, ID, 0, 5, 0);
+                sendServerNotice(server, arguments.player, arguments.console, "Killing player #%i...", ID);
+            } else {
+                sendServerNotice(
+                server, arguments.player, arguments.console, "Player %hhu does not exist or is already dead", ID);
+            }
         }
     }
 }
@@ -356,6 +394,10 @@ static void killCommand(void* serverP, CommandArguments arguments)
 static void loginCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
+    if (arguments.console) {
+        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        return;
+    }
     if (server->player[arguments.player].permLevel == 0) {
         if (arguments.argc == 3) {
             char* level    = arguments.argv[1];
@@ -375,11 +417,12 @@ static void loginCommand(void* serverP, CommandArguments arguments)
                         1 << server->player[arguments.player].roleList[i].permLevelOffset;
                         sendServerNotice(server,
                                          arguments.player,
+                                         arguments.console,
                                          "You logged in as %s",
                                          server->player[arguments.player].roleList[i].accessLevel);
                         return;
                     } else {
-                        sendServerNotice(server, arguments.player, "Wrong password");
+                        sendServerNotice(server, arguments.player, arguments.console, "Wrong password");
                         return;
                     }
                 } else {
@@ -387,21 +430,25 @@ static void loginCommand(void* serverP, CommandArguments arguments)
                 }
             }
             if (failed >= sizeof(server->player[arguments.player].roleList) / sizeof(PermLevel)) {
-                sendServerNotice(server, arguments.player, "Invalid role");
+                sendServerNotice(server, arguments.player, arguments.console, "Invalid role");
             }
         } else {
-            sendServerNotice(server, arguments.player, "Incorrect number of arguments to login");
+            sendServerNotice(server, arguments.player, arguments.console, "Incorrect number of arguments to login");
         }
     } else {
-        sendServerNotice(server, arguments.player, "You are already logged in");
+        sendServerNotice(server, arguments.player, arguments.console, "You are already logged in");
     }
 }
 
 static void logoutCommand(void* serverP, CommandArguments arguments)
 {
-    Server* server                             = (Server*) serverP;
+    Server* server = (Server*) serverP;
+    if (arguments.console) {
+        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        return;
+    }
     server->player[arguments.player].permLevel = 0;
-    sendServerNotice(server, arguments.player, "You logged out");
+    sendServerNotice(server, arguments.player, arguments.console, "You logged out");
 }
 
 static void masterCommand(void* serverP, CommandArguments arguments)
@@ -410,12 +457,12 @@ static void masterCommand(void* serverP, CommandArguments arguments)
     if (server->master.enableMasterConnection == 1) {
         server->master.enableMasterConnection = 0;
         enet_host_destroy(server->master.client);
-        sendServerNotice(server, arguments.player, "Disabling master connection");
+        sendServerNotice(server, arguments.player, arguments.console, "Disabling master connection");
         return;
     }
     server->master.enableMasterConnection = 1;
     ConnectMaster(server, server->port);
-    sendServerNotice(server, arguments.player, "Enabling master connection");
+    sendServerNotice(server, arguments.player, arguments.console, "Enabling master connection");
 }
 
 static void muteCommand(void* serverP, CommandArguments arguments)
@@ -426,16 +473,17 @@ static void muteCommand(void* serverP, CommandArguments arguments)
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].muted) {
                 server->player[ID].muted = 0;
-                broadcastServerNotice(server, "%s has been unmuted", server->player[ID].name);
+                broadcastServerNotice(server, arguments.console, "%s has been unmuted", server->player[ID].name);
             } else {
                 server->player[ID].muted = 1;
-                broadcastServerNotice(server, "%s has been muted", server->player[ID].name);
+                broadcastServerNotice(server, arguments.console, "%s has been muted", server->player[ID].name);
             }
         } else {
-            sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "ID not in range or player doesnt exist");
         }
     } else {
-        sendServerNotice(server, arguments.player, "You did not enter ID or entered incorrect argument");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "You did not enter ID or entered incorrect argument");
     }
 }
 
@@ -446,13 +494,17 @@ static void pmCommand(void* serverP, CommandArguments arguments)
     uint8   ID = 33;
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, &PM) && strlen(++PM) > 0) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
-            sendServerNotice(server, ID, "PM from %s: %s", server->player[arguments.player].name, PM);
-            sendServerNotice(server, arguments.player, "PM sent to %s", server->player[ID].name);
+            if (arguments.console) {
+                sendServerNotice(server, ID, 0, "PM from Console: %s", PM);
+            } else {
+                sendServerNotice(server, ID, 0, "PM from %s: %s", server->player[arguments.player].name, PM);
+            }
+            sendServerNotice(server, arguments.player, arguments.console, "PM sent to %s", server->player[ID].name);
         } else {
-            sendServerNotice(server, arguments.player, "Invalid ID. Player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "Invalid ID. Player doesnt exist");
         }
     } else {
-        sendServerNotice(server, arguments.player, "No ID or invalid message");
+        sendServerNotice(server, arguments.player, arguments.console, "No ID or invalid message");
     }
 }
 
@@ -464,18 +516,20 @@ static void ratioCommand(void* serverP, CommandArguments arguments)
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             sendServerNotice(server,
                              arguments.player,
+                             arguments.console,
                              "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
                              server->player[ID].name,
                              ((float) server->player[ID].kills / fmaxf(1, (float) server->player[ID].deaths)),
                              server->player[ID].kills,
                              server->player[ID].deaths);
         } else {
-            sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "ID not in range or player doesnt exist");
         }
     } else {
         sendServerNotice(
         server,
         arguments.player,
+        arguments.console,
         "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
         server->player[arguments.player].name,
         ((float) server->player[arguments.player].kills / fmaxf(1, (float) server->player[arguments.player].deaths)),
@@ -490,18 +544,19 @@ static void sayCommand(void* serverP, CommandArguments arguments)
     if (arguments.argc == 2) {
         for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
             if (isPastJoinScreen(server, ID)) {
-                sendServerNotice(server, ID, arguments.argv[1]);
+                sendServerNotice(server, ID, 0, arguments.argv[1]);
             }
         }
     } else {
-        sendServerNotice(server, arguments.player, "Invalid message");
+        sendServerNotice(server, arguments.player, arguments.console, "Invalid message");
     }
 }
 
 static void serverCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    sendServerNotice(server, arguments.player, "You are playing on SpadesX server. Version %s", VERSION);
+    sendServerNotice(
+    server, arguments.player, arguments.console, "You are playing on SpadesX server. Version %s", VERSION);
 }
 
 static void toggleBuildCommand(void* serverP, CommandArguments arguments)
@@ -511,22 +566,24 @@ static void toggleBuildCommand(void* serverP, CommandArguments arguments)
     if (arguments.argc == 1) {
         if (server->globalAB == 1) {
             server->globalAB = 0;
-            broadcastServerNotice(server, "Building has been disabled");
+            broadcastServerNotice(server, arguments.console, "Building has been disabled");
         } else if (server->globalAB == 0) {
             server->globalAB = 1;
-            broadcastServerNotice(server, "Building has been enabled");
+            broadcastServerNotice(server, arguments.console, "Building has been enabled");
         }
     } else if (parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].canBuild == 1) {
                 server->player[ID].canBuild = 0;
-                broadcastServerNotice(server, "Building has been disabled for %s", server->player[ID].name);
+                broadcastServerNotice(
+                server, arguments.console, "Building has been disabled for %s", server->player[ID].name);
             } else if (server->player[ID].canBuild == 0) {
                 server->player[ID].canBuild = 1;
-                broadcastServerNotice(server, "Building has been enabled for %s", server->player[ID].name);
+                broadcastServerNotice(
+                server, arguments.console, "Building has been enabled for %s", server->player[ID].name);
             }
         } else {
-            sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "ID not in range or player doesnt exist");
         }
     }
 }
@@ -538,22 +595,24 @@ static void toggleKillCommand(void* serverP, CommandArguments arguments)
     if (arguments.argc == 1) {
         if (server->globalAK == 1) {
             server->globalAK = 0;
-            broadcastServerNotice(server, "Killing has been disabled");
+            broadcastServerNotice(server, arguments.console, "Killing has been disabled");
         } else if (server->globalAK == 0) {
             server->globalAK = 1;
-            broadcastServerNotice(server, "Killing has been enabled");
+            broadcastServerNotice(server, arguments.console, "Killing has been enabled");
         }
     } else if (parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].allowKilling == 1) {
                 server->player[ID].allowKilling = 0;
-                broadcastServerNotice(server, "Killing has been disabled for %s", server->player[ID].name);
+                broadcastServerNotice(
+                server, arguments.console, "Killing has been disabled for %s", server->player[ID].name);
             } else if (server->player[ID].allowKilling == 0) {
                 server->player[ID].allowKilling = 1;
-                broadcastServerNotice(server, "Killing has been enabled for %s", server->player[ID].name);
+                broadcastServerNotice(
+                server, arguments.console, "Killing has been enabled for %s", server->player[ID].name);
             }
         } else {
-            sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "ID not in range or player doesnt exist");
         }
     }
 }
@@ -566,24 +625,31 @@ static void toggleTeamKillCommand(void* serverP, CommandArguments arguments)
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             if (server->player[ID].allowTeamKilling) {
                 server->player[ID].allowTeamKilling = 0;
-                broadcastServerNotice(server, "Team killing has been disabled for %s", server->player[ID].name);
+                broadcastServerNotice(
+                server, arguments.console, "Team killing has been disabled for %s", server->player[ID].name);
             } else {
                 server->player[ID].allowTeamKilling = 1;
-                broadcastServerNotice(server, "Team killing has been enabled for %s", server->player[ID].name);
+                broadcastServerNotice(
+                server, arguments.console, "Team killing has been enabled for %s", server->player[ID].name);
             }
         } else {
-            sendServerNotice(server, arguments.player, "ID not in range or player doesnt exist");
+            sendServerNotice(server, arguments.player, arguments.console, "ID not in range or player doesnt exist");
         }
     } else {
-        sendServerNotice(server, arguments.player, "You did not enter ID or entered incorrect argument");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "You did not enter ID or entered incorrect argument");
     }
 }
 
 static void tpCommand(void* serverP, CommandArguments arguments)
 {
-    Server* server               = (Server*) serverP;
-    uint8   playerToBeTeleported = 33;
-    uint8   playerToTeleportTo   = 33;
+    Server* server = (Server*) serverP;
+    if (arguments.console) {
+        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        return;
+    }
+    uint8 playerToBeTeleported = 33;
+    uint8 playerToTeleportTo   = 33;
     if (arguments.argc == 3 && parsePlayer(arguments.argv[1], &playerToBeTeleported, NULL) &&
         parsePlayer(arguments.argv[2], &playerToTeleportTo, NULL))
     {
@@ -600,17 +666,23 @@ static void tpCommand(void* serverP, CommandArguments arguments)
                                server->player[playerToBeTeleported].movement.position.y,
                                server->player[playerToBeTeleported].movement.position.z);
         } else {
-            sendServerNotice(server, arguments.player, "Player %hhu is at invalid position", playerToTeleportTo);
+            sendServerNotice(
+            server, arguments.player, arguments.console, "Player %hhu is at invalid position", playerToTeleportTo);
         }
     } else {
-        sendServerNotice(server, arguments.player, "Incorrect amount of arguments or wrong argument type");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "Incorrect amount of arguments or wrong argument type");
     }
 }
 
 static void tpcCommand(void* serverP, CommandArguments arguments)
 {
-    Server*  server = (Server*) serverP;
-    Vector3f pos    = {0, 0, 0};
+    Server* server = (Server*) serverP;
+    if (arguments.console) {
+        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        return;
+    }
+    Vector3f pos = {0, 0, 0};
     if (arguments.argc == 4 && PARSE_VECTOR3F(arguments, 1, &pos)) {
         if (vecfValidPos(pos)) {
             server->player[arguments.player].movement.position.x = pos.x - 0.5f;
@@ -622,10 +694,11 @@ static void tpcCommand(void* serverP, CommandArguments arguments)
                                server->player[arguments.player].movement.position.y,
                                server->player[arguments.player].movement.position.z);
         } else {
-            sendServerNotice(server, arguments.player, "Invalid position");
+            sendServerNotice(server, arguments.player, arguments.console, "Invalid position");
         }
     } else {
-        sendServerNotice(server, arguments.player, "Incorrect amount of arguments or wrong argument type");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "Incorrect amount of arguments or wrong argument type");
     }
 }
 
@@ -652,12 +725,13 @@ static void unbanCommand(void* serverP, CommandArguments arguments)
             }
         }
         if (unbanned) {
-            sendServerNotice(server, arguments.player, "IP %s unbanned", IPString);
+            sendServerNotice(server, arguments.player, arguments.console, "IP %s unbanned", IPString);
         } else {
-            sendServerNotice(server, arguments.player, "IP %s not found in banned IP list", unbanIPString);
+            sendServerNotice(
+            server, arguments.player, arguments.console, "IP %s not found in banned IP list", unbanIPString);
         }
     } else {
-        sendServerNotice(server, arguments.player, "Incorrect amount of arguments or invalid IP");
+        sendServerNotice(server, arguments.player, arguments.console, "Incorrect amount of arguments or invalid IP");
     }
 }
 
@@ -689,13 +763,18 @@ static void unbanRangeCommand(void* serverP, CommandArguments arguments)
             }
         }
         if (unbanned) {
-            sendServerNotice(server, arguments.player, "IP range %s-%s unbanned", startIPString, endIPString);
-        } else {
             sendServerNotice(
-            server, arguments.player, "IP range %s-%s not found in banned IP ranges", unbanStartRangeString, unbanEndRangeString);
+            server, arguments.player, arguments.console, "IP range %s-%s unbanned", startIPString, endIPString);
+        } else {
+            sendServerNotice(server,
+                             arguments.player,
+                             arguments.console,
+                             "IP range %s-%s not found in banned IP ranges",
+                             unbanStartRangeString,
+                             unbanEndRangeString);
         }
     } else {
-        sendServerNotice(server, arguments.player, "Incorrect amount of arguments or invalid IP");
+        sendServerNotice(server, arguments.player, arguments.console, "Incorrect amount of arguments or invalid IP");
     }
 }
 
@@ -717,31 +796,35 @@ static void undobanCommand(void* serverP, CommandArguments arguments)
             READ_STR_FROM_JSON(objectAtIndex, endIP, end_of_range, "end of range", "0.0.0.0", 0);
             json_object_array_del_idx(array, count - 1, 1);
             json_object_to_file("Bans.json", root);
-            sendServerNotice(server, arguments.player, "IP range %s-%s unbanned", startIP, endIP);
+            sendServerNotice(server, arguments.player, arguments.console, "IP range %s-%s unbanned", startIP, endIP);
         } else {
             json_object_array_del_idx(array, count - 1, 1);
             json_object_to_file("Bans.json", root);
-            sendServerNotice(server, arguments.player, "IP %s unbanned", IPString);
+            sendServerNotice(server, arguments.player, arguments.console, "IP %s unbanned", IPString);
         }
     } else {
-        sendServerNotice(server, arguments.player, "Too many arguments given to command");
+        sendServerNotice(server, arguments.player, arguments.console, "Too many arguments given to command");
     }
 }
 
 static void upsCommand(void* serverP, CommandArguments arguments)
 {
+    Server* server = (Server*) serverP;
+    if (arguments.console) {
+        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        return;
+    }
     if (arguments.argc != 2) {
         return;
     }
-
-    Server* server = (Server*) serverP;
-    float   ups    = 0;
+    float ups = 0;
     parseFloat(arguments.argv[1], &ups, NULL);
     if (ups >= 1 && ups <= 300) {
         server->player[arguments.player].ups = ups;
-        sendServerNotice(server, arguments.player, "UPS changed to %.2f successfully", ups);
+        sendServerNotice(server, arguments.player, arguments.console, "UPS changed to %.2f successfully", ups);
     } else {
-        sendServerNotice(server, arguments.player, "Changing UPS failed. Please select value between 1 and 300");
+        sendServerNotice(
+        server, arguments.player, arguments.console, "Changing UPS failed. Please select value between 1 and 300");
     }
 }
 
@@ -862,14 +945,17 @@ uint8 parseArguments(Server* server, CommandArguments* arguments, char* message,
                         break;
                     case '"':
                         if (quotesCount == 0) {
-                            sendServerNotice(
-                            server, arguments->player, "Failed to parse the command: found a stray \" symbol");
+                            sendServerNotice(server,
+                                             arguments->player,
+                                             arguments->console,
+                                             "Failed to parse the command: found a stray \" symbol");
                             return 0;
                         }
                         char next = *(end + 1);
                         if (next != ' ' && next != '\t' && next != '\0') {
                             sendServerNotice(server,
                                              arguments->player,
+                                             arguments->console,
                                              "Failed to parse the command: found more symbols after the \" symbol");
                             return 0;
                         }
@@ -884,7 +970,8 @@ uint8 parseArguments(Server* server, CommandArguments* arguments, char* message,
             end++;
         }
         if (quotesCount == 1) {
-            sendServerNotice(server, arguments->player, "Failed to parse the command: missing a \" symbol");
+            sendServerNotice(
+            server, arguments->player, arguments->console, "Failed to parse the command: missing a \" symbol");
             return 0;
         }
     argparse_loop_exit:
@@ -903,10 +990,13 @@ uint8 parseArguments(Server* server, CommandArguments* arguments, char* message,
     return 1;
 }
 
-void handleCommands(Server* server, uint8 player, char* message)
+void handleCommands(Server* server, uint8 player, char* message, uint8 console)
 {
-    Player srvPlayer = server->player[player];
-    char*  command   = calloc(1000, sizeof(uint8));
+    Player srvPlayer;
+    if (!console) {
+        srvPlayer = server->player[player];
+    }
+    char* command = calloc(1000, sizeof(uint8));
     sscanf(message, "%s", command);
     uint8 commandLength = strlen(command);
     for (uint8 i = 1; i < commandLength; ++i) {
@@ -921,9 +1011,12 @@ void handleCommands(Server* server, uint8 player, char* message)
     }
 
     CommandArguments arguments;
-    arguments.player             = player;
-    arguments.srvPlayer          = srvPlayer;
+    arguments.player = player;
+    if (!console) {
+        arguments.srvPlayer = srvPlayer;
+    }
     arguments.commandPermissions = commandStruct->PermLevel;
+    arguments.console            = console;
 
     arguments.argv[0] = command;
     arguments.argc    = 1;
@@ -940,10 +1033,10 @@ void handleCommands(Server* server, uint8 player, char* message)
         arguments.argv[arguments.argc++] = argument;
     }
 
-    if (playerHasPermission(server, player, commandStruct->PermLevel) > 0 || commandStruct->PermLevel == 0) {
+    if (console || playerHasPermission(server, player, commandStruct->PermLevel) > 0 || commandStruct->PermLevel == 0) {
         commandStruct->command((void*) server, arguments);
     } else {
-        sendServerNotice(server, player, "You do not have permissions to use this command");
+        sendServerNotice(server, player, console, "You do not have permissions to use this command");
     }
 epic_parsing_fail:
     for (uint8 i = 1; i < arguments.argc; i++) { // Starting from 1 since we'll free the command anyway

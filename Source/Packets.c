@@ -768,6 +768,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
             server, "WARNING: Player %s (#%d) is trying to spam. Muting.", server->player[player].name, player);
             sendServerNotice(server,
                              player,
+                             0,
                              "SERVER: You have been muted for excessive spam. If you feel like this is a mistake "
                              "contact staff via /admin command");
             server->player[player].muted       = 1;
@@ -784,7 +785,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         server->player[player].permLevel <= 1)
     {
         sendServerNotice(
-        server, player, "WARNING: You sent last message too fast and thus was not sent out to players");
+        server, player, 0, "WARNING: You sent last message too fast and thus was not sent out to players");
         return;
     }
 
@@ -805,7 +806,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
 
     uint8 sent = 0;
     if (message[0] == '/') {
-        handleCommands(server, player, message);
+        handleCommands(server, player, message, 0);
     } else {
         if (!server->player[player].muted) {
             ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
@@ -886,9 +887,9 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet", playerID, ID);
     }
     if (server->player[playerID].primary_fire && server->player[playerID].item == 1) {
-        sendServerNotice(server, playerID, "InstaSuicideNade detected. Grenade ineffective");
+        sendServerNotice(server, playerID, 0, "InstaSuicideNade detected. Grenade ineffective");
         sendMessageToStaff(
-        server, "Player %s (#%hhu) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
+        server, 0, "Player %s (#%hhu) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
         return;
     }
     uint64 timeNow = getNanos();
@@ -1132,7 +1133,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
             if (getPlayerUnstuck(server, playerID) == 0) {
                 SetPlayerRespawnPoint(server, playerID);
                 sendServerNotice(
-                server, playerID, "Server could not find a free position to get you unstuck. Reseting to spawn");
+                server, playerID, 0, "Server could not find a free position to get you unstuck. Reseting to spawn");
                 LOG_WARNING(
                 "Could not find legit position for player %s (#%d) to get them unstuck. Resetting to spawn. "
                 "Go check them!",
@@ -1257,11 +1258,12 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         stringNode* welcomeMessage;
         DL_FOREACH(server->welcomeMessages, welcomeMessage)
         {
-            sendServerNotice(server, playerID, welcomeMessage->string);
+            sendServerNotice(server, playerID, 0, welcomeMessage->string);
         }
         if (invName) {
             sendServerNotice(server,
                              playerID,
+                             0,
                              "Your name was either empty, had # in front of it or contained something nasty. Your name "
                              "has been set to %s",
                              server->player[playerID].name);
@@ -1534,7 +1536,7 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
                     if (isPastJoinScreen(server, i) && isStaff(server, i)) {
                         char message[200];
                         snprintf(message, 200, "WARNING. Player %d may be using no recoil", playerID);
-                        sendServerNotice(server, i, message);
+                        sendServerNotice(server, i, 0, message);
                     }
                 }
             }
