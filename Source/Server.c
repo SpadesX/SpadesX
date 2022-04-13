@@ -466,7 +466,10 @@ static void ServerUpdate(Server* server, int timeout)
                 server->player[playerID].ipStruct.Union.ip32 = event.peer->address.host;
 
                 formatIPToString(server->player[playerID].name, server->player[playerID].ipStruct);
-                LOG_INFO("Player %s (#%hhu) connected", server->player[playerID].name, playerID);
+                snprintf(server->player[playerID].name, 6, "Limbo");
+                char ipString[17];
+                formatIPToString(ipString, server->player[playerID].ipStruct);
+                LOG_INFO("Player %s (%s, #%hhu) connected", server->player[playerID].name, ipString, playerID);
 
                 server->player[playerID].timers.sincePeriodicMessage = getNanos();
                 server->player[playerID].currentPeriodicMessage      = server->periodicMessages;

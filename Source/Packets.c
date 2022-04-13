@@ -270,7 +270,9 @@ void sendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, 
 
 void sendPlayerLeft(Server* server, uint8 playerID)
 {
-    LOG_INFO("Player %s disconnected", server->player[playerID].name);
+    char ipString[17];
+    formatIPToString(ipString, server->player[playerID].ipStruct);
+    LOG_INFO("Player %s (%s, #%hhu) disconnected", server->player[playerID].name, ipString, playerID);
     if (server->protocol.numPlayers == 0) {
         return;
     }
