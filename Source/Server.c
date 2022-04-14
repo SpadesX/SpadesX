@@ -280,7 +280,7 @@ static void SendJoiningData(Server* server, uint8 playerID)
 {
     LOG_INFO("Sending state to %s (#%hhu)", server->player[playerID].name, playerID);
     for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (i != playerID && isPastStateData(server, i)) {
+        if (i != playerID && isPastJoinScreen(server, i)) {
             sendExistingPlayer(server, playerID, i);
         }
     }
