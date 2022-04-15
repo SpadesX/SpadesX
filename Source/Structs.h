@@ -52,6 +52,7 @@ typedef struct Grenade
 typedef struct
 { // Seriously what the F. Thank voxlap motion for this mess.
     Vector3f position;
+    Vector3f prevPosition;
     Vector3f prevLegitPos;
     Vector3f eyePos;
     Vector3f velocity;
@@ -134,6 +135,7 @@ typedef struct
     uint64 sinceLastMessage;
     uint64 sincePossibleSpadenade;
     uint64 sincePeriodicMessage;
+    uint64 duringNoclipPeriod;
 } Timers;
 
 typedef struct
@@ -192,6 +194,7 @@ typedef struct
     uint64               permLevel;
     uint8                spamCounter;
     uint8                periodicDelayIndex;
+    uint8                invalidPosCount;
     stringNode*          currentPeriodicMessage;
 
     uint8    movForward;

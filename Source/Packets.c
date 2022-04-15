@@ -796,13 +796,13 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     switch (meantfor) {
         case 0:
             snprintf(meantFor, 7, "Global");
-        break;
+            break;
         case 1:
             snprintf(meantFor, 5, "Team");
-        break;
+            break;
         case 2:
             snprintf(meantFor, 7, "System");
-        break;
+            break;
     }
     LOG_INFO("Player %s (#%hhu) (%s) said: %s", server->player[player].name, player, meantFor, message);
 
@@ -1118,12 +1118,40 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
               (int) z + 2,
               server->player[playerID].crouching);
 #endif
+    server->player[playerID].movement.prevPosition = server->player[playerID].movement.position;
+    server->player[playerID].movement.position.x   = x;
+    server->player[playerID].movement.position.y   = y;
+    server->player[playerID].movement.position.z   = z;
+    uint8 resetTime                                = 1;
+    if (!diffIsOlderThenDontUpdate(
+        getNanos(), server->player[playerID].timers.duringNoclipPeriod, (uint64) NANO_IN_SECOND * 10))
+    {
+        resetTime = 0;
+        if (validPlayerPos(server, playerID, x, y, z) == 0) {
+            server->player[playerID].invalidPosCount++;
+            if (server->player[playerID].invalidPosCount == 5) {
+                sendMessageToStaff(server, "Player %s (#%hhu) is most likely trying to avoid noclip detection");
+            }
+        }
+    }
+    if (resetTime) {
+        server->player[playerID].timers.duringNoclipPeriod = getNanos();
+        server->player[playerID].invalidPosCount           = 0;
+    }
+
     if (validPlayerPos(server, playerID, x, y, z)) {
-        server->player[playerID].movement.position.x   = x;
-        server->player[playerID].movement.position.y   = y;
-        server->player[playerID].movement.position.z   = z;
         server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
-    } else {
+    } else if (validPlayerPos(server,
+                              playerID,
+                              server->player[playerID].movement.position.x,
+                              server->player[playerID].movement.position.y,
+                              server->player[playerID].movement.position.z) == 0 &&
+               validPlayerPos(server,
+                              playerID,
+                              server->player[playerID].movement.prevPosition.x,
+                              server->player[playerID].movement.prevPosition.y,
+                              server->player[playerID].movement.prevPosition.z) == 0)
+    {
         LOG_WARNING("Player %s (#%hhu) may be noclipping!", server->player[playerID].name, playerID);
         sendMessageToStaff(server, "Player %s (#%d) may be noclipping!", server->player[playerID].name, playerID);
         if (validPlayerPos(server,
@@ -1254,8 +1282,7 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     formatIPToString(IP, server->player[playerID].ipStruct);
     char team[15];
     teamIDToString(server, team, server->player[playerID].team);
-    LOG_INFO(
-    "Player %s (%s, #%hhu) joined %s", server->player[playerID].name, IP, playerID, team);
+    LOG_INFO("Player %s (%s, #%hhu) joined %s", server->player[playerID].name, IP, playerID, team);
     if (server->player[playerID].welcomeSent == 0) {
         stringNode* welcomeMessage;
         DL_FOREACH(server->welcomeMessages, welcomeMessage)
