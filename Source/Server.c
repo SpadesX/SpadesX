@@ -196,7 +196,9 @@ static void ServerInit(Server*     server,
     LOG_STATUS("Selecting %s as map", server->mapName);
 
     snprintf(vxlMap, 64, "%s.vxl", server->map.currentMap->string);
-    LoadMap(server, vxlMap);
+    if (LoadMap(server, vxlMap) == 0) {
+        return;
+    }
 
     LOG_STATUS("Loading spawn ranges from map file");
     char mapConfig[64];

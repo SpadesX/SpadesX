@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-void LoadMap(Server* server, const char* path)
+uint8 LoadMap(Server* server, const char* path)
 {
     LOG_STATUS("Loading map");
 
@@ -25,6 +25,20 @@ void LoadMap(Server* server, const char* path)
     fseek(file, 0L, SEEK_END);
     server->map.mapSize = ftell(file);
     fseek(file, 0, SEEK_SET);
+
+    size_t maxMapSize = MAP_MAX_X * MAP_MAX_Y * (MAP_MAX_Z / 2) * 8;
+
+    if (server->map.mapSize > maxMapSize) {
+        fclose(file);
+        LOG_ERROR("Map file %s.vxl is larger then maximum VXL size of X: %d, Y: %d, Z: %d. Please set the correct map "
+                  "size in libmapvxl",
+                  server->mapName,
+                  MAP_MAX_X,
+                  MAP_MAX_Y,
+                  MAP_MAX_Z);
+        server->running = 0;
+        return 0;
+    }
 
     uint8* buffer = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
 
@@ -57,4 +71,5 @@ void LoadMap(Server* server, const char* path)
     while (server->map.compressedMap) {
         server->map.compressedMap = Pop(server->map.compressedMap);
     }
+    return 1;
 }

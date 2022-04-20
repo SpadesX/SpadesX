@@ -6,6 +6,6 @@
 #include "Util/Queue.h"
 #include "Util/Types.h"
 
-void LoadMap(Server* server, const char* path);
+uint8 LoadMap(Server* server, const char* path);
 
 #endif
