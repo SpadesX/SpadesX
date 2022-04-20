@@ -684,12 +684,15 @@ void sendMapStart(Server* server, uint8 playerID)
     if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
         server->player[playerID].state = STATE_LOADING_CHUNKS;
 
-        // map
-        uint8* out = (uint8*) malloc(1024 * 1024 * 10); // TODO: Make me dynamic based on changes to map
-        mapvxlWriteMap(&server->map.map, out);
-        server->map.compressedMap       = CompressData(out, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
+        // The biggest possible VXL size given the XYZ size
+        uint8* map = (uint8*) calloc(MAP_MAX_X * MAP_MAX_Y * (MAP_MAX_Z / 2), sizeof(uint8));
+        // Write map to out
+        server->map.mapSize             = mapvxlWriteMap(&server->map.map, map);
+        // Resize the map to the exact VXL memory size for given XYZ coordinate size
+        map = (uint8*) realloc(map, server->map.mapSize);
+        server->map.compressedMap       = CompressData(map, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
         server->player[playerID].queues = server->map.compressedMap;
-        free(out);
+        free(map);
     }
 }
 

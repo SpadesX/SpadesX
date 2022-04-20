@@ -80,12 +80,12 @@ typedef struct
     uint8       mapCount;
     stringNode* currentMap;
     // compressed map
-    Queue*            compressedMap;
-    uint32            compressedSize;
-    Vector3i          resultLine[50];
-    long unsigned int mapSize;
-    MapVxl            map;
-    stringNode*       mapList;
+    Queue*      compressedMap;
+    uint32      compressedSize;
+    Vector3i    resultLine[50];
+    size_t      mapSize;
+    MapVxl      map;
+    stringNode* mapList;
 } Map;
 
 typedef struct

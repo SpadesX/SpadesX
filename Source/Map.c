@@ -26,19 +26,24 @@ void LoadMap(Server* server, const char* path)
     server->map.mapSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    server->map.mapSize = 1024 * 1024 * 10; // Absolute hack to get some maps to even load.
-
     uint8* buffer = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
-    uint8* mapOut = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
+
+    // The biggest possible VXL size given the XYZ size
+    uint8* mapOut = (uint8*) calloc(MAP_MAX_X * MAP_MAX_Y * (MAP_MAX_Z / 2), sizeof(uint8));
+
     if (fread(buffer, server->map.mapSize, 1, file) < server->map.mapSize) {
         LOG_STATUS("Finished loading map");
     }
     fclose(file);
+
     mapvxlLoadVXL(&server->map.map, buffer);
     free(buffer);
     LOG_STATUS("Compressing map data");
 
-    mapvxlWriteMap(&server->map.map, mapOut);
+    // Write map to mapOut
+    server->map.mapSize = mapvxlWriteMap(&server->map.map, mapOut);
+    // Resize the map to the exact VXL memory size for given XYZ coordinate size
+    mapOut = (uint8*) realloc(mapOut, server->map.mapSize);
 
     server->map.compressedMap = CompressData(mapOut, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
     free(mapOut);
