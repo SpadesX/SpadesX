@@ -17,6 +17,7 @@
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Utlist.h"
+#include "libmapvxl.h"
 
 #include <Gamemodes.h>
 #include <bits/pthreadtypes.h>
@@ -196,9 +197,6 @@ static void ServerInit(Server*     server,
     LOG_STATUS("Selecting %s as map", server->mapName);
 
     snprintf(vxlMap, 64, "%s.vxl", server->map.currentMap->string);
-    if (LoadMap(server, vxlMap) == 0) {
-        return;
-    }
 
     LOG_STATUS("Loading spawn ranges from map file");
     char mapConfig[64];
@@ -211,16 +209,22 @@ static void ServerInit(Server*     server,
     int         team2Start[2];
     int         team1End[2];
     int         team2End[2];
+    int         mapSize[3];
     const char* author;
 
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0}), 2, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10}), 2, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]){20, 20}), 2, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]){30, 30}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, mapSize, map_size, "map_size", ((int[]){512, 512, 64}), 3, 1)
     READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
     (void) author;
 
     json_object_put(parsed_map_json);
+
+    if (LoadMap(server, vxlMap, mapSize) == 0) {
+        return;
+    }
 
     Vector3f empty   = {0, 0, 0};
     Vector3f forward = {1, 0, 0};
@@ -643,6 +647,7 @@ void StartServer(uint16      port,
     freeStringNodes(server.welcomeMessages);
     freeStringNodes(server.map.mapList);
     freeStringNodes(server.periodicMessages);
+    mapvxlFree(&server.map.map);
 
     pthread_mutex_destroy(&serverLock);
 

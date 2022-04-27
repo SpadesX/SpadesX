@@ -10,7 +10,8 @@
 #include "Util/Enums.h"
 #include "Util/Physics.h"
 #include "Util/Types.h"
-#include "Utlist.h"
+#include "Util/Uthash.h"
+#include "Util/Utlist.h"
 
 #include <ctype.h>
 #include <enet/enet.h>
@@ -351,26 +352,32 @@ uint8 isPastJoinScreen(Server* server, uint8 playerID)
     }
 }
 
-uint8 vecValidPos(Vector3i pos)
+uint8 vecValidPos(Server* server, Vector3i pos)
 {
-    if (pos.x < MAP_MAX_X && pos.x >= 0 && pos.y < MAP_MAX_Y && pos.y >= 0 && pos.z < MAP_MAX_Z && pos.z >= 0) {
+    if (pos.x < server->map.map.MAP_X_MAX && pos.x >= 0 && pos.y < server->map.map.MAP_Y_MAX && pos.y >= 0 &&
+        pos.z < server->map.map.MAP_Z_MAX && pos.z >= 0)
+    {
         return 1;
     } else {
         return 0;
     }
 }
 
-uint8 vecfValidPos(Vector3f pos)
+uint8 vecfValidPos(Server* server, Vector3f pos)
 {
-    if (pos.x < MAP_MAX_X && pos.x >= 0 && pos.y < MAP_MAX_Y && pos.y >= 0 && pos.z < MAP_MAX_Z && pos.z >= 0) {
+    if (pos.x < server->map.map.MAP_X_MAX && pos.x >= 0 && pos.y < server->map.map.MAP_Y_MAX && pos.y >= 0 &&
+        pos.z < server->map.map.MAP_Z_MAX && pos.z >= 0)
+    {
         return 1;
     } else {
         return 0;
     }
 }
-uint8 validPos(int x, int y, int z)
+uint8 validPos(Server* server, int x, int y, int z)
 {
-    if (x < MAP_MAX_X && x >= 0 && y < MAP_MAX_Y && y >= 0 && z < MAP_MAX_Z && z >= 0) {
+    if (x < server->map.map.MAP_X_MAX && x >= 0 && y < server->map.map.MAP_Y_MAX && y >= 0 &&
+        z < server->map.map.MAP_Z_MAX && z >= 0)
+    {
         return 1;
     } else {
         return 0;
@@ -388,8 +395,8 @@ uint8 validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z)
         z = (int) Z + 2;
     }
 
-    if (x < MAP_MAX_X && x >= 0 && y < MAP_MAX_Y && y >= 0 &&
-        (z < MAP_MAX_Z || (z == 64 && server->player[playerID].crouching)) &&
+    if (x < server->map.map.MAP_X_MAX && x >= 0 && y < server->map.map.MAP_Y_MAX && y >= 0 &&
+        (z < server->map.map.MAP_Z_MAX || (z == 64 && server->player[playerID].crouching)) &&
         (z >= 0 || ((z == -1) || (z == -2 && server->player[playerID].jumping))))
     {
         if ((!mapvxlIsSolid(&server->map.map, x, y, z) ||
@@ -674,13 +681,10 @@ Vector3i* getGrenadeNeighbors(Vector3i pos)
 }
 
 #define NODE_RESERVE_SIZE 250000
-uint8 visitedMap[MAP_MAX_X][MAP_MAX_Y][MAP_MAX_Z];
 Vector3i* nodes = NULL;
 int       nodePos;
 int       nodesSize;
-Vector3i* visitedNodes = NULL;
-int       visitedSize;
-int       visitedPos;
+mapNode*  visitedMap;
 
 static inline void saveNode(int x, int y, int z)
 {
@@ -697,7 +701,9 @@ static inline const Vector3i* returnCurrentNode()
 
 static inline void addNode(Server* server, int x, int y, int z)
 {
-    if ((x >= 0 && x < MAP_MAX_X) && (y >= 0 && y < MAP_MAX_Y) && (z >= 0 && z < MAP_MAX_Z)) {
+    if ((x >= 0 && x < server->map.map.MAP_X_MAX) && (y >= 0 && y < server->map.map.MAP_Y_MAX) &&
+        (z >= 0 && z < server->map.map.MAP_Z_MAX))
+    {
         if (mapvxlIsSolid(&server->map.map, x, y, z)) {
             saveNode(x, y, z);
         }
@@ -713,31 +719,27 @@ uint8 checkNode(Server* server, Vector3i position)
         nodes     = (Vector3i*) malloc(sizeof(Vector3i) * NODE_RESERVE_SIZE);
         nodesSize = NODE_RESERVE_SIZE;
     }
-    nodePos = 0;
-
-    if (visitedNodes == NULL) {
-        visitedNodes = (Vector3i*) malloc(sizeof(Vector3i) * NODE_RESERVE_SIZE);
-        visitedSize  = NODE_RESERVE_SIZE;
-    }
-    visitedPos = 0;
-    memset(visitedMap, 0, MAP_MAX_X * MAP_MAX_Y * MAP_MAX_Z);
+    nodePos    = 0;
+    visitedMap = NULL;
 
     saveNode(position.x, position.y, position.z);
+
 
     while (nodePos > 0) {
         if (nodePos >= nodesSize - 6) {
             nodesSize += NODE_RESERVE_SIZE;
             nodes = (Vector3i*) realloc((void*) nodes, sizeof(Vector3i) * nodesSize);
         }
-        if (visitedPos >= visitedSize - 6) {
-            visitedSize += NODE_RESERVE_SIZE;
-            visitedNodes = (Vector3i*) realloc((void*) visitedNodes, sizeof(Vector3i) * visitedSize);
-        }
         const Vector3i* currentNode = returnCurrentNode();
         position.z                  = currentNode->z;
-        if (position.z >= 62) {
-            free(visitedNodes);
-            visitedNodes = NULL;
+        if (position.z >= server->map.map.MAP_Z_MAX - 2) {
+            mapNode* delNode;
+            mapNode* tmpNode;
+            HASH_ITER(hh, visitedMap, delNode, tmpNode)
+            {
+                HASH_DEL(visitedMap, delNode);
+                free(delNode);
+            }
             free(nodes);
             nodes = NULL;
             return 1;
@@ -746,9 +748,16 @@ uint8 checkNode(Server* server, Vector3i position)
         position.y = currentNode->y;
 
         // already visited?
-        if (visitedMap[position.x][position.y][position.z] == 0) {
-            visitedNodes[visitedPos++] = position;
-            visitedMap[position.x][position.y][position.z] = 1;
+        mapNode* node;
+        int id = position.x * server->map.map.MAP_Y_MAX * server->map.map.MAP_Z_MAX +
+                                position.y * server->map.map.MAP_Z_MAX + position.z;
+        HASH_FIND_INT(visitedMap, &id, node);
+        if (node == NULL) {
+            node          = (mapNode*) malloc(sizeof *node);
+            node->pos     = position;
+            node->visited = 1;
+            node->id = id;
+            HASH_ADD_INT(visitedMap, id, node);
             addNode(server, position.x, position.y, position.z - 1);
             addNode(server, position.x, position.y - 1, position.z);
             addNode(server, position.x, position.y + 1, position.z);
@@ -758,12 +767,14 @@ uint8 checkNode(Server* server, Vector3i position)
         }
     }
 
-    for (int i = 0; i < visitedPos; ++i) {
-        mapvxlSetAir(&server->map.map, visitedNodes[i].x, visitedNodes[i].y, visitedNodes[i].z);
+    mapNode* Node;
+    mapNode* tmpNode;
+    HASH_ITER(hh, visitedMap, Node, tmpNode)
+    {
+        mapvxlSetAir(&server->map.map, Node->pos.x, Node->pos.y, Node->pos.z);
+        HASH_DEL(visitedMap, Node);
+        free(Node);
     }
-
-    free(visitedNodes);
-    visitedNodes = NULL;
     free(nodes);
     nodes = NULL;
     return 0;
@@ -1068,10 +1079,10 @@ void handleGrenade(Server* server, uint8 playerID)
                 float y = grenade->position.y;
                 for (int z = grenade->position.z - 1; z <= grenade->position.z + 1; ++z) {
                     if (z < 62 &&
-                        (x >= 0 && x <= MAP_MAX_X && x - 1 >= 0 && x - 1 <= MAP_MAX_X && x + 1 >= 0 &&
-                         x + 1 <= MAP_MAX_X) &&
-                        (y >= 0 && y <= MAP_MAX_Y && y - 1 >= 0 && y - 1 <= MAP_MAX_Y && y + 1 >= 0 &&
-                         y + 1 <= MAP_MAX_Y))
+                        (x >= 0 && x <= server->map.map.MAP_X_MAX && x - 1 >= 0 && x - 1 <= server->map.map.MAP_X_MAX &&
+                         x + 1 >= 0 && x + 1 <= server->map.map.MAP_X_MAX) &&
+                        (y >= 0 && y <= server->map.map.MAP_Y_MAX && y - 1 >= 0 && y - 1 <= server->map.map.MAP_Y_MAX &&
+                         y + 1 >= 0 && y + 1 <= server->map.map.MAP_Y_MAX))
                     {
                         if (allowToDestroy) {
                             mapvxlSetAir(&server->map.map, x - 1, y - 1, z);
@@ -1091,7 +1102,7 @@ void handleGrenade(Server* server, uint8 playerID)
 
                         Vector3i* neigh = getGrenadeNeighbors(pos);
                         for (int index = 0; index < 54; ++index) {
-                            if (vecValidPos(neigh[index])) {
+                            if (vecValidPos(server, neigh[index])) {
                                 checkNode(server, neigh[index]);
                             }
                         }
@@ -1109,7 +1120,7 @@ void handleGrenade(Server* server, uint8 playerID)
 void updateMovementAndGrenades(Server* server)
 {
     setPhysicsGlobals((server->globalTimers.updateTime - server->globalTimers.timeSinceStart) / 1000000000.f,
-                (server->globalTimers.updateTime - server->globalTimers.lastUpdateTime) / 1000000000.f);
+                      (server->globalTimers.updateTime - server->globalTimers.lastUpdateTime) / 1000000000.f);
     for (int playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
         if (server->player[playerID].state == STATE_READY) {
             long falldamage = 0;

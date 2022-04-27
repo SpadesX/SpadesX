@@ -653,7 +653,7 @@ static void tpCommand(void* serverP, CommandArguments arguments)
     if (arguments.argc == 3 && parsePlayer(arguments.argv[1], &playerToBeTeleported, NULL) &&
         parsePlayer(arguments.argv[2], &playerToTeleportTo, NULL))
     {
-        if (vecfValidPos(server->player[playerToTeleportTo].movement.position)) {
+        if (vecfValidPos(server, server->player[playerToTeleportTo].movement.position)) {
             server->player[playerToBeTeleported].movement.position.x =
             server->player[playerToTeleportTo].movement.position.x - 0.5f;
             server->player[playerToBeTeleported].movement.position.y =
@@ -684,7 +684,7 @@ static void tpcCommand(void* serverP, CommandArguments arguments)
     }
     Vector3f pos = {0, 0, 0};
     if (arguments.argc == 4 && PARSE_VECTOR3F(arguments, 1, &pos)) {
-        if (vecfValidPos(pos)) {
+        if (vecfValidPos(server, pos)) {
             server->player[arguments.player].movement.position.x = pos.x - 0.5f;
             server->player[arguments.player].movement.position.y = pos.y - 0.5f;
             server->player[arguments.player].movement.position.z = pos.z - 2.36f;

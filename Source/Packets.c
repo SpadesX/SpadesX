@@ -203,13 +203,13 @@ void sendIntelDrop(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_INTEL_DROP);
     WriteByte(&stream, playerID);
     if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-        WriteFloat(&stream, (float) MAP_MAX_X / 2);
-        WriteFloat(&stream, (float) MAP_MAX_Y / 2);
-        WriteFloat(&stream, (float) mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2));
+        WriteFloat(&stream, (float) server->map.map.MAP_X_MAX / 2);
+        WriteFloat(&stream, (float) server->map.map.MAP_Y_MAX / 2);
+        WriteFloat(&stream, (float) mapvxlFindTopBlock(&server->map.map, server->map.map.MAP_X_MAX / 2, server->map.map.MAP_Y_MAX / 2));
 
-        server->protocol.gameMode.intel[team].x = (float) MAP_MAX_X / 2;
-        server->protocol.gameMode.intel[team].y = (float) MAP_MAX_Y / 2;
-        server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(&server->map.map, MAP_MAX_X / 2, MAP_MAX_Y / 2);
+        server->protocol.gameMode.intel[team].x = (float) server->map.map.MAP_X_MAX / 2;
+        server->protocol.gameMode.intel[team].y = (float) server->map.map.MAP_Y_MAX / 2;
+        server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(&server->map.map, server->map.map.MAP_X_MAX / 2, server->map.map.MAP_Y_MAX / 2);
         server->protocol.gameMode.intel[server->player[playerID].team] = server->protocol.gameMode.intel[team];
         sendMoveObject(
         server, server->player[playerID].team, server->player[playerID].team, server->protocol.gameMode.intel[team]);
@@ -685,7 +685,7 @@ void sendMapStart(Server* server, uint8 playerID)
         server->player[playerID].state = STATE_LOADING_CHUNKS;
 
         // The biggest possible VXL size given the XYZ size
-        uint8* map = (uint8*) calloc(MAP_MAX_X * MAP_MAX_Y * (MAP_MAX_Z / 2), sizeof(uint8));
+        uint8* map = (uint8*) calloc(server->map.map.MAP_X_MAX * server->map.map.MAP_Y_MAX * (server->map.map.MAP_Z_MAX / 2), sizeof(uint8));
         // Write map to out
         server->map.mapSize             = mapvxlWriteMap(&server->map.map, map);
         // Resize the map to the exact VXL memory size for given XYZ coordinate size
@@ -927,9 +927,9 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         posZ1.z += 1;
         Vector3f posZ2 = grenade->position;
         posZ2.z += 2;
-        if (vecfValidPos(grenade->position) ||
-            (vecfValidPos(posZ1) && server->player[playerID].movement.position.z < 0) ||
-            (vecfValidPos(posZ2) && server->player[playerID].movement.position.z < 0))
+        if (vecfValidPos(server, grenade->position) ||
+            (vecfValidPos(server, posZ1) && server->player[playerID].movement.position.z < 0) ||
+            (vecfValidPos(server, posZ2) && server->player[playerID].movement.position.z < 0))
         {
             sendGrenade(server, playerID, grenade->fuse, grenade->position, grenade->velocity);
             grenade->sent          = 1;
@@ -1332,7 +1332,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
              (server->player[playerID].item == 2 && actionType == 1)))
         {
             if ((DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) &&
-                vecfValidPos(vectorBlock)) {
+                vecfValidPos(server, vectorBlock)) {
                 switch (actionType) {
                     case 0:
                     {
@@ -1453,8 +1453,8 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
         Vector3f startF = {start.x, start.y, start.z};
         Vector3f endF   = {end.x, end.y, end.z};
         if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
-            DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4 && vecfValidPos(startF) &&
-            vecfValidPos(endF))
+            DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4 && vecfValidPos(server, startF) &&
+            vecfValidPos(server, endF))
         {
             int size = blockLine(&start, &end, server->map.resultLine);
             server->player[playerID].blocks -= size;

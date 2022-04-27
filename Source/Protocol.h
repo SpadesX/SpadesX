@@ -26,9 +26,9 @@ uint8     playerHasPermission(Server* server, uint8 playerID, uint32 permission)
 uint8     gamemodeBlockChecks(Server* server, int x, int y, int z);
 uint8     isPastStateData(Server* server, uint8 playerID);
 uint8     isPastJoinScreen(Server* server, uint8 playerID);
-uint8     vecValidPos(Vector3i pos);
-uint8     vecfValidPos(Vector3f pos);
-uint8     validPos(int x, int y, int z);
+uint8     vecValidPos(Server* server, Vector3i pos);
+uint8     vecfValidPos(Server* server, Vector3f pos);
+uint8     validPos(Server* server, int x, int y, int z);
 uint8     validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z);
 Vector3i* getNeighbors(Vector3i pos);
 uint8     checkNode(Server* server, Vector3i position);

@@ -18,30 +18,6 @@
 
 */
 
-#define CHUNK                1023 // zlib buffer size
-#define VSIDSQM              (VSIDSQ - 1)
-#define MAXSCANDIST          128
-#define MAXSCANSQ            (MAXSCANDIST * MAXSCANDIST)
-#define VOXSIZ               (VSIDSQ * MAXZDIM)
-#define SCPITCH              128
-#define SQRT                 0.70710678f
-#define MINERANGE            3
-#define MAXZDIM              MAP_MAX_Z // Maximum .VXL dimensions in z direction (height)
-#define MAXZDIMM             (MAXZDIM - 1)
-#define MAXZDIMMM            (MAXZDIM - 2)
-#define PORT                 32887
-#define GRID_SIZE            64
-#define FALL_SLOW_DOWN       0.24f
-#define FALL_DAMAGE_VELOCITY 0.58f
-#define FALL_DAMAGE_SCALAR   4096
-#define MINERANGE            3
-#define WEAPON_PRIMARY       1
-#define PI                   3.141592653589793f
-#define VSID                 MAP_MAX_X // maximum .VXL dimensions in both x & y direction
-#define VSIDM                (VSID - 1)
-#define VSIDSQ               (VSID * VSID)
-#define CUBE_ARRAY_LENGTH    64
-
 #ifndef PHYSICS_H
 #define PHYSICS_H
 

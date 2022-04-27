@@ -10,6 +10,7 @@ set(UTIL_HEADERS
     DataStream.h
     Types.h
     Physics.h
+    Line.h
 )
 
 set(UTIL_SOURCES
@@ -17,6 +18,7 @@ set(UTIL_SOURCES
     Compress.c
     DataStream.c
     Physics.c
+    Line.c
 )
 
 target_sources(util

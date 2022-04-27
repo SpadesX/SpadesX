@@ -7,29 +7,11 @@
 #include "Types.h"
 #include "Physics.h"
 
-#define CHUNK                1023 // zlib buffer size
-#define VSIDSQM              (VSIDSQ - 1)
-#define MAXSCANDIST          128
-#define MAXSCANSQ            (MAXSCANDIST * MAXSCANDIST)
-#define VOXSIZ               (VSIDSQ * MAXZDIM)
-#define SCPITCH              128
 #define SQRT                 0.70710678f
 #define MINERANGE            3
-#define MAXZDIM              MAP_MAX_Z // Maximum .VXL dimensions in z direction (height)
-#define MAXZDIMM             (MAXZDIM - 1)
-#define MAXZDIMMM            (MAXZDIM - 2)
-#define PORT                 32887
-#define GRID_SIZE            64
 #define FALL_SLOW_DOWN       0.24f
 #define FALL_DAMAGE_VELOCITY 0.58f
 #define FALL_DAMAGE_SCALAR   4096
-#define MINERANGE            3
-#define WEAPON_PRIMARY       1
-#define PI                   3.141592653589793f
-#define VSID                 MAP_MAX_X // maximum .VXL dimensions in both x & y direction
-#define VSIDM                (VSID - 1)
-#define VSIDSQ               (VSID * VSID)
-#define CUBE_ARRAY_LENGTH    64
 
 // globals to make porting easier
 float ftotclk;
@@ -85,14 +67,14 @@ static inline int clipbox(Server* server, float x, float y, float z)
 {
     int sz;
 
-    if (x < 0 || x >= MAP_MAX_X || y < 0 || y >= MAP_MAX_Y)
+    if (x < 0 || x >= server->map.map.MAP_X_MAX || y < 0 || y >= server->map.map.MAP_Y_MAX)
         return 1;
     else if (z < 0)
         return 0;
     sz = (int) z;
-    if (sz == MAP_MAX_Z - 1)
-        sz = MAP_MAX_Z - 2;
-    else if (sz >= MAP_MAX_Z)
+    if (sz == server->map.map.MAP_Z_MAX - 1)
+        sz = server->map.map.MAP_Z_MAX - 2;
+    else if (sz >= server->map.map.MAP_Z_MAX)
         return 1;
     return mapvxlIsSolid(&server->map.map, (int) x, (int) y, sz);
 }
@@ -102,9 +84,9 @@ static inline long isvoxelsolidwrap(Server* server, long x, long y, long z)
 {
     if (z < 0)
         return 0;
-    else if (z >= MAP_MAX_Z)
+    else if (z >= server->map.map.MAP_Z_MAX)
         return 1;
-    return mapvxlIsSolid(&server->map.map, (int) x & VSIDM, (int) y & VSIDM, z);
+    return mapvxlIsSolid(&server->map.map, (int) x & (server->map.map.MAP_Z_MAX-1), (int) y & (server->map.map.MAP_Z_MAX-1), z);
 }
 
 // same as isvoxelsolid but water is empty
@@ -112,14 +94,14 @@ static inline long clipworld(Server* server, long x, long y, long z)
 {
     int sz;
 
-    if (x < 0 || x >= MAP_MAX_X || y < 0 || y >= MAP_MAX_Y)
+    if (x < 0 || x >= server->map.map.MAP_X_MAX || y < 0 || y >= server->map.map.MAP_Y_MAX)
         return 0;
     if (z < 0)
         return 0;
     sz = (int) z;
-    if (sz == MAP_MAX_Z - 1)
-        sz = MAP_MAX_Z - 2;
-    else if (sz >= MAP_MAX_Z - 1)
+    if (sz == server->map.map.MAP_Z_MAX - 1)
+        sz = server->map.map.MAP_Z_MAX - 2;
+    else if (sz >= server->map.map.MAP_Z_MAX - 1)
         return 1;
     else if (sz < 0)
         return 0;

@@ -14,11 +14,6 @@
 #include <time.h>
 
 #define VERSION "Beta 1.0"
-
-#define MAP_MAX_X MAP_X_MAX
-#define MAP_MAX_Y MAP_Y_MAX
-#define MAP_MAX_Z MAP_Z_MAX
-
 //#define DEBUG
 
 typedef struct
@@ -258,6 +253,13 @@ typedef struct
     uint32 PermLevel; // 32 roles should be more then enough for anyone
     char   commandDesc[1024];
 } CommandManager;
+
+typedef struct mapNode {
+    int id;
+    Vector3i pos;
+    uint8 visited;
+    UT_hash_handle hh;
+} mapNode;
 
 typedef struct
 {

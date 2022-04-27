@@ -8,9 +8,13 @@
 
 #include <stdio.h>
 
-uint8 LoadMap(Server* server, const char* path)
+uint8 LoadMap(Server* server, const char* path, int mapSize[3])
 {
     LOG_STATUS("Loading map");
+
+    if (server->map.map.blocks != NULL) {
+        mapvxlFree(&server->map.map);
+    }
 
     while (server->map.compressedMap) {
         server->map.compressedMap = Pop(server->map.compressedMap);
@@ -26,16 +30,20 @@ uint8 LoadMap(Server* server, const char* path)
     server->map.mapSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    size_t maxMapSize = MAP_MAX_X * MAP_MAX_Y * (MAP_MAX_Z / 2) * 8;
+    //Create the array for map with the defined sizes
+    mapvxlCreate(&server->map.map, mapSize[0], mapSize[1], mapSize[2]);
+
+    size_t maxMapSize = server->map.map.MAP_X_MAX * server->map.map.MAP_Y_MAX * (server->map.map.MAP_Z_MAX / 2) * 8;
 
     if (server->map.mapSize > maxMapSize) {
         fclose(file);
         LOG_ERROR("Map file %s.vxl is larger then maximum VXL size of X: %d, Y: %d, Z: %d. Please set the correct map "
                   "size in libmapvxl",
                   server->mapName,
-                  MAP_MAX_X,
-                  MAP_MAX_Y,
-                  MAP_MAX_Z);
+                  server->map.map.MAP_X_MAX,
+                  server->map.map.MAP_Y_MAX,
+                  server->map.map.MAP_Z_MAX);
+        mapvxlFree(&server->map.map);
         server->running = 0;
         return 0;
     }
@@ -43,7 +51,7 @@ uint8 LoadMap(Server* server, const char* path)
     uint8* buffer = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
 
     // The biggest possible VXL size given the XYZ size
-    uint8* mapOut = (uint8*) calloc(MAP_MAX_X * MAP_MAX_Y * (MAP_MAX_Z / 2), sizeof(uint8));
+    uint8* mapOut = (uint8*) calloc(server->map.map.MAP_X_MAX * server->map.map.MAP_Y_MAX * (server->map.map.MAP_Z_MAX / 2), sizeof(uint8));
 
     if (fread(buffer, server->map.mapSize, 1, file) < server->map.mapSize) {
         LOG_STATUS("Finished loading map");
