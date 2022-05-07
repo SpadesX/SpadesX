@@ -86,7 +86,7 @@ static inline long isvoxelsolidwrap(Server* server, long x, long y, long z)
         return 0;
     else if (z >= server->map.map.MAP_Z_MAX)
         return 1;
-    return mapvxlIsSolid(&server->map.map, (int) x & (server->map.map.MAP_Z_MAX-1), (int) y & (server->map.map.MAP_Z_MAX-1), z);
+    return mapvxlIsSolid(&server->map.map, (int) x & (server->map.map.MAP_X_MAX-1), (int) y & (server->map.map.MAP_Y_MAX-1), z);
 }
 
 // same as isvoxelsolid but water is empty
