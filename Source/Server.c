@@ -366,7 +366,7 @@ static void* WorldUpdate()
         OnPlayerUpdate(&server, playerID);
         if (isPastJoinScreen(&server, playerID)) {
             uint64 time = getNanos();
-            if (time - server.player[playerID].timers.timeSinceLastWU >= (NANO_IN_SECOND / server.player[playerID].ups))
+            if (time - server.player[playerID].timers.timeSinceLastWU >= (uint16)(NANO_IN_SECOND / server.player[playerID].ups))
             {
                 SendWorldUpdate(&server, playerID);
                 server.player[playerID].timers.timeSinceLastWU = getNanos();
