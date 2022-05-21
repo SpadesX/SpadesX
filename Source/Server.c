@@ -20,7 +20,6 @@
 #include "libmapvxl.h"
 
 #include <Gamemodes.h>
-#include <bits/pthreadtypes.h>
 #include <enet/enet.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
