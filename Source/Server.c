@@ -530,6 +530,7 @@ static void* serverConsole(void* arg)
     }
     rl_clear_history();
     pthread_exit(0);
+    return 0;
 }
 
 void StartServer(uint16      port,
