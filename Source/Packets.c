@@ -588,9 +588,12 @@ void sendSetHP(Server*  server,
                uint8    isGrenade,
                Vector3f position)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.numPlayers == 0 ||
+        server->player[playerID].team == server->player[hitPlayerID].team || 
+        server->player[hitPlayerID].team == TEAM_SPECTATOR) {
         return;
     }
+    
     if ((server->player[playerID].allowKilling && server->globalAK && server->player[playerID].allowKilling &&
          server->player[playerID].alive) ||
         typeOfDamage == 0)
