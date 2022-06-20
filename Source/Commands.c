@@ -310,7 +310,7 @@ static void invCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.console) {
-        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        LOG_INFO("You cannot use this command from console");
         return;
     }
     if (server->player[arguments.player].isInvisible == 1) {
@@ -395,7 +395,7 @@ static void loginCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.console) {
-        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        LOG_INFO("You cannot use this command from console");
         return;
     }
     if (server->player[arguments.player].permLevel == 0) {
@@ -444,7 +444,7 @@ static void logoutCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.console) {
-        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        LOG_INFO("You cannot use this command from console");
         return;
     }
     server->player[arguments.player].permLevel = 0;
@@ -512,6 +512,10 @@ static void ratioCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
+    if (arguments.console) {
+        LOG_INFO("You cannot use this command from console");
+        return;
+    }
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             sendServerNotice(server,
@@ -645,7 +649,7 @@ static void tpCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.console) {
-        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        LOG_INFO("You cannot use this command from console");
         return;
     }
     uint8 playerToBeTeleported = 33;
@@ -679,7 +683,7 @@ static void tpcCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.console) {
-        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        LOG_INFO("You cannot use this command from console");
         return;
     }
     Vector3f pos = {0, 0, 0};
@@ -811,7 +815,7 @@ static void upsCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.console) {
-        sendServerNotice(server, arguments.player, arguments.console, "You cannot use this command from console");
+        LOG_INFO("You cannot use this command from console");
         return;
     }
     if (arguments.argc != 2) {
