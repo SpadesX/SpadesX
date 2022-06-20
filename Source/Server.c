@@ -2,6 +2,7 @@
 #include "Server.h"
 
 #include "Commands.h"
+#include "Gamemodes.h"
 #include "Map.h"
 #include "Master.h"
 #include "Packets.h"
@@ -19,8 +20,8 @@
 #include "Utlist.h"
 #include "libmapvxl.h"
 
-#include <Gamemodes.h>
 #include <enet/enet.h>
+#include <errno.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
 #include <json-c/json_types.h>
@@ -35,11 +36,10 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <errno.h>
 
-Server    server;
+Server          server;
 pthread_mutex_t serverLock;
-pthread_t thread[3];
+pthread_t       thread[3];
 
 Server* getServer()
 {
@@ -366,8 +366,8 @@ static void* WorldUpdate()
         OnPlayerUpdate(&server, playerID);
         if (isPastJoinScreen(&server, playerID)) {
             uint64 time = getNanos();
-            if (time - server.player[playerID].timers.timeSinceLastWU >= (uint64)(NANO_IN_SECOND / server.player[playerID].ups))
-            {
+            if (time - server.player[playerID].timers.timeSinceLastWU >=
+                (uint64) (NANO_IN_SECOND / server.player[playerID].ups)) {
                 SendWorldUpdate(&server, playerID);
                 server.player[playerID].timers.timeSinceLastWU = getNanos();
             }
