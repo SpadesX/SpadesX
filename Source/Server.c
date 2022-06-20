@@ -35,6 +35,9 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
+
+extern int errno;
 
 Server    server;
 pthread_mutex_t serverLock;
@@ -396,6 +399,10 @@ static void ServerUpdate(Server* server, int timeout)
                 if (root == NULL) {
                     FILE* fp;
                     fp = fopen("Bans.json", "w+");
+                    if (fp == NULL) {
+                        perror("Unable to open/create Bans.json with error: ");
+                        exit(EXIT_FAILURE);
+                    }
                     fclose(fp);
                     root = json_object_new_object();
                     json_object_object_add(root, "Bans", json_object_new_array());

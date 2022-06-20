@@ -7,6 +7,9 @@
 #include "Util/Types.h"
 
 #include <stdio.h>
+#include <errno.h>
+
+extern int errno;
 
 uint8 LoadMap(Server* server, const char* path, int mapSize[3])
 {
@@ -22,7 +25,7 @@ uint8 LoadMap(Server* server, const char* path, int mapSize[3])
 
     FILE* file = fopen(path, "rb");
     if (!file) {
-        perror("MAP NOT FOUND");
+        LOG_ERROR("Unable to open map at path %s with error: %s", path, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
