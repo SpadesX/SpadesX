@@ -205,11 +205,14 @@ void sendIntelDrop(Server* server, uint8 playerID)
     if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
         WriteFloat(&stream, (float) server->map.map.MAP_X_MAX / 2);
         WriteFloat(&stream, (float) server->map.map.MAP_Y_MAX / 2);
-        WriteFloat(&stream, (float) mapvxlFindTopBlock(&server->map.map, server->map.map.MAP_X_MAX / 2, server->map.map.MAP_Y_MAX / 2));
+        WriteFloat(
+        &stream,
+        (float) mapvxlFindTopBlock(&server->map.map, server->map.map.MAP_X_MAX / 2, server->map.map.MAP_Y_MAX / 2));
 
         server->protocol.gameMode.intel[team].x = (float) server->map.map.MAP_X_MAX / 2;
         server->protocol.gameMode.intel[team].y = (float) server->map.map.MAP_Y_MAX / 2;
-        server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(&server->map.map, server->map.map.MAP_X_MAX / 2, server->map.map.MAP_Y_MAX / 2);
+        server->protocol.gameMode.intel[team].z =
+        mapvxlFindTopBlock(&server->map.map, server->map.map.MAP_X_MAX / 2, server->map.map.MAP_Y_MAX / 2);
         server->protocol.gameMode.intel[server->player[playerID].team] = server->protocol.gameMode.intel[team];
         sendMoveObject(
         server, server->player[playerID].team, server->player[playerID].team, server->protocol.gameMode.intel[team]);
@@ -588,12 +591,12 @@ void sendSetHP(Server*  server,
                uint8    isGrenade,
                Vector3f position)
 {
-    if (server->protocol.numPlayers == 0 ||
-        server->player[playerID].team == server->player[hitPlayerID].team || 
-        server->player[hitPlayerID].team == TEAM_SPECTATOR) {
+    if (server->protocol.numPlayers == 0 || server->player[hitPlayerID].team == TEAM_SPECTATOR ||
+        (!server->player[playerID].allowTeamKilling &&
+         server->player[playerID].team == server->player[hitPlayerID].team && playerID != hitPlayerID))
+    {
         return;
     }
-    
     if ((server->player[playerID].allowKilling && server->globalAK && server->player[playerID].allowKilling &&
          server->player[playerID].alive) ||
         typeOfDamage == 0)
@@ -611,6 +614,7 @@ void sendSetHP(Server*  server,
         if (server->player[hitPlayerID].HP == 0) {
             server->player[hitPlayerID].alive = 0;
             sendKillActionPacket(server, playerID, hitPlayerID, killReason, respawnTime, 0);
+            return;
         }
 
         else if (server->player[hitPlayerID].HP > 0 && server->player[hitPlayerID].HP < 100)
@@ -688,11 +692,12 @@ void sendMapStart(Server* server, uint8 playerID)
         server->player[playerID].state = STATE_LOADING_CHUNKS;
 
         // The biggest possible VXL size given the XYZ size
-        uint8* map = (uint8*) calloc(server->map.map.MAP_X_MAX * server->map.map.MAP_Y_MAX * (server->map.map.MAP_Z_MAX / 2), sizeof(uint8));
+        uint8* map = (uint8*) calloc(
+        server->map.map.MAP_X_MAX * server->map.map.MAP_Y_MAX * (server->map.map.MAP_Z_MAX / 2), sizeof(uint8));
         // Write map to out
-        server->map.mapSize             = mapvxlWriteMap(&server->map.map, map);
+        server->map.mapSize = mapvxlWriteMap(&server->map.map, map);
         // Resize the map to the exact VXL memory size for given XYZ coordinate size
-        map = (uint8*) realloc(map, server->map.mapSize);
+        map                             = (uint8*) realloc(map, server->map.mapSize);
         server->map.compressedMap       = CompressData(map, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
         server->player[playerID].queues = server->map.compressedMap;
         free(map);
@@ -1335,7 +1340,8 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
              (server->player[playerID].item == 2 && actionType == 1)))
         {
             if ((DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) &&
-                vecfValidPos(server, vectorBlock)) {
+                vecfValidPos(server, vectorBlock))
+            {
                 switch (actionType) {
                     case 0:
                     {
