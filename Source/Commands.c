@@ -352,6 +352,10 @@ static void killCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.argc == 1) {
+        if (arguments.console) {
+            LOG_INFO("You cannot use this command without arguments from console");
+            return;
+        }
         sendKillActionPacket(server, arguments.player, arguments.player, 0, 5, 0);
     } else {
         if (!playerHasPermission(server, arguments.player, 30) && arguments.console == 0) {
@@ -359,7 +363,6 @@ static void killCommand(void* serverP, CommandArguments arguments)
             server, arguments.player, arguments.console, "You have no permission to use this command.");
             return;
         }
-
         if (strcmp(arguments.argv[1], "all") == 0) { // KILL THEM ALL!!!! >:D
             int count = 0;
             for (int i = 0; i < server->protocol.maxPlayers; ++i) {
