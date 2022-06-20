@@ -823,7 +823,7 @@ static void upsCommand(void* serverP, CommandArguments arguments)
     }
     float ups = 0;
     parseFloat(arguments.argv[1], &ups, NULL);
-    if (ups >= 1 && ups <= 300) {
+    if (ups >= 10 && ups <= 300) {
         server->player[arguments.player].ups = ups;
         sendServerNotice(server, arguments.player, arguments.console, "UPS changed to %.2f successfully", ups);
     } else {
