@@ -9,8 +9,6 @@
 #include <stdio.h>
 #include <errno.h>
 
-extern int errno;
-
 uint8 LoadMap(Server* server, const char* path, int mapSize[3])
 {
     LOG_STATUS("Loading map");

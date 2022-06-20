@@ -37,8 +37,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-extern int errno;
-
 Server    server;
 pthread_mutex_t serverLock;
 pthread_t thread[3];
