@@ -515,10 +515,6 @@ static void ratioCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     uint8   ID     = 33;
-    if (arguments.console) {
-        LOG_INFO("You cannot use this command from console");
-        return;
-    }
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             sendServerNotice(server,
@@ -533,6 +529,11 @@ static void ratioCommand(void* serverP, CommandArguments arguments)
             sendServerNotice(server, arguments.player, arguments.console, "ID not in range or player doesnt exist");
         }
     } else {
+        if (arguments.console) {
+            sendServerNotice(
+            server, arguments.player, arguments.console, "You cannot use this command from console without argument");
+            return;
+        }
         sendServerNotice(
         server,
         arguments.player,
