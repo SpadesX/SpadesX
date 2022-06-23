@@ -143,9 +143,13 @@ static uint8 grenadeGamemodeCheck(Server* server, Vector3f pos)
     return 0;
 }
 
-uint8 playerHasPermission(Server* server, uint8 playerID, uint32 permission)
+uint8 playerHasPermission(Server* server, uint8 playerID, uint8 console, uint32 permission)
 {
-    return (permission & server->player[playerID].permLevel);
+    if (console) {
+        return permission;
+    } else {
+        return (permission & server->player[playerID].permLevel);
+    }
 }
 
 uint8 getPlayerUnstuck(Server* server, uint8 playerID)
@@ -309,7 +313,7 @@ void initPlayer(Server*  server,
 
 uint8 isStaff(Server* server, uint8 playerID)
 {
-    if (playerHasPermission(server, playerID, 4294967294)) {
+    if (playerHasPermission(server, playerID, 0, 4294967294)) {
         return 1;
     }
     return 0;

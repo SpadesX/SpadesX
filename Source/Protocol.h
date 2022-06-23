@@ -22,7 +22,7 @@ void      initPlayer(Server*  server,
                      Vector3f height);
 uint8     octetsInRange(IPStruct start, IPStruct end, IPStruct host);
 uint8     IPInRange(IPStruct host, IPStruct banned, IPStruct startOfRange, IPStruct endOfRange);
-uint8     playerHasPermission(Server* server, uint8 playerID, uint32 permission);
+uint8     playerHasPermission(Server* server, uint8 playerID, uint8 console, uint32 permission);
 uint8     gamemodeBlockChecks(Server* server, int x, int y, int z);
 uint8     isPastStateData(Server* server, uint8 playerID);
 uint8     isPastJoinScreen(Server* server, uint8 playerID);

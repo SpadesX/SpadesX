@@ -66,12 +66,16 @@ static void adminCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
     if (arguments.argc > 1) {
-        if (server->player[arguments.player].adminMuted == 1) {
+        if (arguments.console == 0 && server->player[arguments.player].adminMuted == 1) {
             sendServerNotice(
             server, arguments.player, arguments.console, "You are not allowed to use this command (Admin muted)");
             return;
         }
-        sendMessageToStaff(server, "Staff from %s: %s", server->player[arguments.player].name, arguments.argv[1]);
+        if (arguments.console) {
+            sendMessageToStaff(server, "Staff from %s: %s", "Console", arguments.argv[1]);
+        } else {
+            sendMessageToStaff(server, "Staff from %s: %s", server->player[arguments.player].name, arguments.argv[1]);
+        }
         sendServerNotice(server, arguments.player, arguments.console, "Message sent to all staff members online");
     } else {
         sendServerNotice(server, arguments.player, arguments.console, "Invalid message");
@@ -266,7 +270,8 @@ static void helpCommand(void* serverP, CommandArguments arguments)
 
     LL_FOREACH(server->commandsList, command)
     {
-        if (arguments.console || playerHasPermission(server, arguments.player, command->PermLevel) || command->PermLevel == 0) {
+        if (playerHasPermission(server, arguments.player, arguments.console, command->PermLevel) ||
+            command->PermLevel == 0) {
             sendServerNotice(server,
                              arguments.player,
                              arguments.console,
@@ -358,7 +363,7 @@ static void killCommand(void* serverP, CommandArguments arguments)
         }
         sendKillActionPacket(server, arguments.player, arguments.player, 0, 5, 0);
     } else {
-        if (!playerHasPermission(server, arguments.player, 30) && arguments.console == 0) {
+        if (!playerHasPermission(server, arguments.player, arguments.console, 30)) {
             sendServerNotice(
             server, arguments.player, arguments.console, "You have no permission to use this command.");
             return;
@@ -383,7 +388,7 @@ static void killCommand(void* serverP, CommandArguments arguments)
                 server, arguments.player, arguments.console, "Invalid player \"%s\"!", arguments.argv[i]);
                 return;
             }
-            if (isPastJoinScreen(server, ID)) {
+            if (isPastJoinScreen(server, ID) && server->player[i].team != TEAM_SPECTATOR) {
                 sendKillActionPacket(server, ID, ID, 0, 5, 0);
                 sendServerNotice(server, arguments.player, arguments.console, "Killing player #%i...", ID);
             } else {
@@ -1041,7 +1046,7 @@ void handleCommands(Server* server, uint8 player, char* message, uint8 console)
         arguments.argv[arguments.argc++] = argument;
     }
 
-    if (console || playerHasPermission(server, player, commandStruct->PermLevel) > 0 || commandStruct->PermLevel == 0) {
+    if (playerHasPermission(server, player, console, commandStruct->PermLevel) > 0 || commandStruct->PermLevel == 0) {
         commandStruct->command((void*) server, arguments);
     } else {
         sendServerNotice(server, player, console, "You do not have permissions to use this command");
