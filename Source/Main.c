@@ -3,7 +3,7 @@
 #include "Structs.h"
 #include "Util/JSONHelpers.h"
 #include "Util/Types.h"
-#include "Utlist.h"
+#include "Util/Utlist.h"
 
 #include <json-c/json.h>
 #include <json-c/json_object.h>
@@ -136,7 +136,9 @@ int main(void)
                 team2Color,
                 gamemode);
 
-    json_object_put(parsed_json);
+    while (json_object_put(parsed_json) != 1) {
+        // Free the memory from the JSON object
+    }
 
     return 0;
 }
