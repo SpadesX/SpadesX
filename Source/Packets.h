@@ -5,9 +5,9 @@
 #include "Structs.h"
 
 #include "Util/DataStream.h"
-#include <Line.h>
-#include <Queue.h>
-#include <Types.h>
+#include "Util/Line.h"
+#include "Util/Queue.h"
+#include "Util/Types.h"
 
 void sendRestock(Server* server, uint8 playerID);
 void sendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos);
