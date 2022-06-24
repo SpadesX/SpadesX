@@ -522,9 +522,10 @@ void ReadlineNewLine(int signal)
 
     ctrlc++;
     if (ctrlc == 1) {
+        printf("\n");
         LOG_INFO("Are you sure you want to exit? (y/N)");
-        LOG_WARNING("Press CTRL+C two more times to forcefully exit the program.");
-    } else if (ctrlc > 2) {
+        LOG_WARNING("Press CTRL+C one more time to forcefully exit the program.");
+    } else if (ctrlc > 1) {
         exit(EX_SOFTWARE);
     }
 
