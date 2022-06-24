@@ -34,7 +34,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sysexits.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -526,7 +525,7 @@ void ReadlineNewLine(int signal)
         LOG_INFO("Are you sure you want to exit? (y/N)");
         LOG_WARNING("Press CTRL+C one more time to forcefully exit the program.");
     } else if (ctrlc > 1) {
-        exit(EX_SOFTWARE);
+        exit(-1);
     }
 
     if (write(STDIN_FILENO, "\n", sizeof("\n")) != sizeof("\n")) {
