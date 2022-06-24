@@ -519,14 +519,9 @@ void ReadlineNewLine(int signal)
 {
     (void) signal; // To prevent a warning about unused variable
 
-    ctrlc++;
-    if (ctrlc == 1) {
-        printf("\n");
-        LOG_INFO("Are you sure you want to exit? (y/N)");
-        LOG_WARNING("Press CTRL+C one more time to forcefully exit the program.");
-    } else if (ctrlc > 1) {
-        exit(-1);
-    }
+    ctrlc = 1;
+    printf("\n");
+    LOG_INFO("Are you sure you want to exit? (Y/n)");
 
     if (write(STDIN_FILENO, "\n", sizeof("\n")) != sizeof("\n")) {
         LOG_DEBUG("epic write fail");
@@ -547,23 +542,28 @@ static void* serverConsole(void* arg)
     char* buf;
 
     while ((buf = readline("\x1B[0;34mConsole> \x1B[0;37m")) != NULL) {
-        if (ctrlc == 1) { // "Are you sure?" prompt
-            if (strcmp("y", buf) == 0) {
+        if (ctrlc) { // "Are you sure?" prompt
+            if (strcmp("n", buf) != 0) {
                 break;
             }
-        }
-        if (ctrlc < 1 && strlen(buf) > 0) {
+            ctrlc = 0;
+        } else if (strlen(buf) > 0) {
             add_history(buf);
             pthread_mutex_lock(&serverLock);
             handleCommands(&server, 255, buf, 1);
             pthread_mutex_unlock(&serverLock);
         }
         free(buf);
-        ctrlc = 0;
     }
     rl_clear_history();
     StopServer();
-    pthread_exit(0);
+
+    sleep(5); // wait 5 seconds for the server to stop
+
+    // if this thread is not dead at this point, then we need to stop the server by force >:)
+    LOG_ERROR("Server did not respond for 5 seconds. Killing it with fire...");
+    exit(-1);
+
     return 0;
 }
 
