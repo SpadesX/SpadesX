@@ -236,9 +236,9 @@ static void clinCommand(void* serverP, CommandArguments arguments)
     if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
         if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
             char client[15];
-            if (server->player[arguments.player].client == 'o') {
+            if (server->player[ID].client == 'o') {
                 snprintf(client, 12, "OpenSpades");
-            } else if (server->player[arguments.player].client == 'B') {
+            } else if (server->player[ID].client == 'B') {
                 snprintf(client, 13, "BetterSpades");
             } else {
                 snprintf(client, 7, "Voxlap");
@@ -929,7 +929,7 @@ void deleteCommand(Server* server, Command* command)
 uint8 parseArguments(Server* server, CommandArguments* arguments, char* message, uint8 commandLength)
 {
     char* p =
-    message + commandLength + 1; // message beginning + command length + one space symbol (pointer math ooOOooOOOOoOO)
+    message + commandLength; // message beginning + command length
     while (*p != '\0' && arguments->argc < 32) {
         uint8 escaped = 0, quotesCount = 0, argumentLength;
         while (*p == ' ' || *p == '\t')
