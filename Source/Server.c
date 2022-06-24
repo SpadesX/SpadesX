@@ -34,12 +34,14 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 #include <time.h>
 #include <unistd.h>
 
 Server          server;
 pthread_mutex_t serverLock;
-pthread_t       thread[3];
+
+volatile int ctrlc = 0;
 
 Server* getServer()
 {
@@ -514,9 +516,28 @@ static void ServerUpdate(Server* server, int timeout)
     }
 }
 
-void StopServer(int signal)
+void ReadlineNewLine(int signal)
 {
     (void) signal; // To prevent a warning about unused variable
+
+    ctrlc++;
+    if (ctrlc == 1) {
+        LOG_INFO("Are you sure you want to exit? (y/N)");
+        LOG_WARNING("Press CTRL+C two more times to forcefully exit the program.");
+    } else if (ctrlc > 2) {
+        exit(EX_SOFTWARE);
+    }
+
+    if (write(STDIN_FILENO, "\n", sizeof("\n")) != sizeof("\n")) {
+        LOG_DEBUG("epic write fail");
+    }
+    rl_replace_line("", 0);
+    rl_on_new_line();
+    rl_redisplay();
+}
+
+void StopServer()
+{
     server.running = 0;
 }
 
@@ -524,16 +545,24 @@ static void* serverConsole(void* arg)
 {
     (void) arg;
     char* buf;
+
     while ((buf = readline("\x1B[0;34mConsole> \x1B[0;37m")) != NULL) {
-        if (strlen(buf) > 0) {
-            add_history(buf);
+        if (ctrlc == 1) { // "Are you sure?" prompt
+            if (strcmp("y", buf) == 0) {
+                break;
+            }
         }
-        pthread_mutex_lock(&serverLock);
-        handleCommands(&server, 255, buf, 1);
-        pthread_mutex_unlock(&serverLock);
+        if (ctrlc < 1 && strlen(buf) > 0) {
+            add_history(buf);
+            pthread_mutex_lock(&serverLock);
+            handleCommands(&server, 255, buf, 1);
+            pthread_mutex_unlock(&serverLock);
+        }
         free(buf);
+        ctrlc = 0;
     }
     rl_clear_history();
+    StopServer();
     pthread_exit(0);
     return 0;
 }
@@ -563,8 +592,6 @@ void StartServer(uint16      port,
                  uint8*      team2Color,
                  uint8       gamemode)
 {
-    signal(SIGINT, StopServer);
-
     server.globalTimers.timeSinceStart = getNanos();
     LOG_STATUS("Welcome to SpadesX server");
     LOG_STATUS("Initializing ENet");
@@ -631,6 +658,8 @@ void StartServer(uint16      port,
     pthread_t console;
     pthread_create(&console, NULL, serverConsole, NULL);
     pthread_detach(console);
+
+    signal(SIGINT, ReadlineNewLine);
 
     while (server.running) {
         pthread_mutex_lock(&serverLock);
