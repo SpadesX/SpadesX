@@ -17,8 +17,8 @@
 #include "Util/Line.h"
 #include "Util/Queue.h"
 #include "Util/Types.h"
-#include "Utlist.h"
-#include "libmapvxl.h"
+#include "Util/Utlist.h"
+#include "../Extern/libmapvxl/libmapvxl.h"
 
 #include <enet/enet.h>
 #include <errno.h>
@@ -654,6 +654,11 @@ void StartServer(uint16      port,
         ConnectMaster(&server, port);
     }
     server.master.timeSinceLastSend = time(NULL);
+
+    pthread_t masterThread;
+    pthread_create(&masterThread, NULL, keepMasterAlive, (void*)&server);
+    pthread_detach(masterThread);
+
     rl_catch_signals                = 0;
     pthread_t console;
     pthread_create(&console, NULL, serverConsole, NULL);
@@ -666,7 +671,6 @@ void StartServer(uint16      port,
         calculatePhysics();
         ServerUpdate(&server, 0);
         WorldUpdate();
-        keepMasterAlive(&server);
         forPlayers();
         pthread_mutex_unlock(&serverLock);
         sleep(0);

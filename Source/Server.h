@@ -15,6 +15,8 @@
     #define DEFAULT_SERVER_PORT 32887
 #endif
 
+extern pthread_mutex_t serverLock;
+
 Server* getServer();
 
 void StartServer(uint16      port,
