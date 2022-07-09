@@ -11,3 +11,9 @@
 .cache
 .vscode
 workspace.code-workspace
+.vs
+[Ee]xtern
+*.wsp
+
+# Visual Studio IDE
+CMakeSettings.json
