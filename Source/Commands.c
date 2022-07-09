@@ -905,7 +905,14 @@ void populateCommands(Server* server)
                       CommandArray[i].commandDesc,
                       CommandArray[i].PermLevel);
     }
+
+#ifdef WIN32
+    #pragma warning(disable : 4133)
     LL_SORT(server->commandsList, commandCompare);
+    #pragma warning(default : 4133)
+#else
+    LL_SORT(server->commandsList, commandCompare);
+#endif
 }
 
 void freeCommands(Server* server)

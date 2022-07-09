@@ -67,7 +67,7 @@ int ConnectMaster(Server* server, uint16 port)
     return 0;
 }
 
-void* keepMasterAlive(void* serverVoid)
+void keepMasterAlive(void* serverVoid)
 {
     Server* server = serverVoid;
     while (server->running) {

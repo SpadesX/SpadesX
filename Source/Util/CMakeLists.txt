@@ -33,14 +33,22 @@ target_include_directories(util
 )
 
 if(WIN32)
-    find_package(unofficial-enet CONFIG REQUIRED)
-    find_package(ZLIB REQUIRED)
+    if (NOT "${VCPKG_INSTALLED_DIR}" STREQUAL "")
+        if("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+            find_package(unofficial-enet CONFIG REQUIRED)
+            find_package(ZLIB REQUIRED)
 
-    target_link_libraries(util
-        PRIVATE
-            ZLIB::ZLIB
-            unofficial::enet::enet
-    )
+            target_link_libraries(util
+                PRIVATE
+                    ZLIB::ZLIB
+                    unofficial::enet::enet
+            )
+        else()
+            message(FATAL_ERROR "Sorry, but compiling without MSVC on Windows is not yet supported.")
+        endif()
+    else()
+        message(FATAL_ERROR "Sorry, but compiling using CMake on Windows without VCPKG is not yet supported.")
+    endif()
 else()
     target_link_libraries(util
         PRIVATE

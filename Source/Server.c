@@ -669,10 +669,10 @@ void StartServer(uint16      port,
     server.master.timeSinceLastSend = time(NULL);
 
     pthread_t masterThread;
-    pthread_create(&masterThread, NULL, keepMasterAlive, (void*)&server);
+    pthread_create(&masterThread, NULL, (void*)keepMasterAlive, (void*)&server);
     pthread_detach(masterThread);
 
-    rl_catch_signals                = 0;
+    rl_catch_signals = 0;
     pthread_t console;
     pthread_create(&console, NULL, serverConsole, NULL);
     pthread_detach(console);

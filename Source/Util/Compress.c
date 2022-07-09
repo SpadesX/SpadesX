@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <zlib.h>
 
-
 static z_stream* GlobalCompressor = NULL;
 
 int InitCompressor(int level)

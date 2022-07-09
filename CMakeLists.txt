@@ -3,18 +3,21 @@ cmake_minimum_required(VERSION 3.16)
 # SpadesX
 project(SpadesX)
 
+# Add third party libraries
+add_subdirectory(Extern)
+add_executable(SpadesX "")
+
 if(WIN32)
     if (NOT "${VCPKG_INSTALLED_DIR}" STREQUAL "")
-        if("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" OR "CLANG")
+        if("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
             find_package(unofficial-enet CONFIG REQUIRED)
             find_package(json-c CONFIG REQUIRED)
             find_package(PThreads4W REQUIRED)
             find_package(unofficial-readline-win32 CONFIG REQUIRED)
 
-            add_subdirectory(Extern)
-
-            add_compile_options(/W4 /std:c11) #/WX
-            add_executable(SpadesX "")
+            # MSVC emits several warnings when put the /Wall argument, it might not be worth correcting the warnings
+            # (even because I believe they are not being issued in GCC/Clang (I believe)), i believe /W1 is more than enough for this case
+            add_compile_options(/W1 /WX /std:c11)
 
             set_target_properties(unofficial::enet::enet PROPERTIES
                 INTERFACE_LINK_LIBRARIES "ws2_32;winmm"
@@ -29,13 +32,11 @@ if(WIN32)
                     util
                     mapvxl
             )
-
-            add_subdirectory(Source)
         else()
-            message(FATAL_ERROR "Sorry, but compiling without MSVC or Clang on Windows is not yet supported.")
+            message(FATAL_ERROR "Sorry, but compiling without MSVC on Windows is not yet supported.")
         endif()
     else()
-        message(FATAL_ERROR "Sorry, but compiling using CMake on Windows without Visual Studio and VCPKG is not yet supported.")
+        message(FATAL_ERROR "Sorry, but compiling using CMake on Windows without VCPKG is not yet supported.")
     endif()
 else()
     # Find pthread
@@ -63,12 +64,7 @@ else()
         enet_INCLUDE_DIR
     )
 
-    # Add third party libraries
-    add_subdirectory(Extern)
-
-    # Add main target
     add_compile_options(-Wall -Wextra -Werror -Wpedantic -Wno-error=unused-but-set-parameter -Wno-error=pedantic -std=gnu11)
-    add_executable(SpadesX "")
 
     if (enet_FOUND)
       add_library(enet::enet STATIC IMPORTED)
@@ -87,11 +83,8 @@ else()
             json-c
             readline
             Threads::Threads
+            bsd
     )
-
-    if (UNIX)
-        target_link_libraries(SpadesX PRIVATE bsd)
-    endif()
-
-    add_subdirectory(Source)
 endif()
+
+add_subdirectory(Source)
