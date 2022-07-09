@@ -545,7 +545,7 @@ void StopServer()
     server.running = 0;
 }
 
-static void* serverConsole(void* arg)
+static void serverConsole(void* arg)
 {
     (void) arg;
     char* buf;
@@ -571,13 +571,14 @@ static void* serverConsole(void* arg)
     rl_clear_history();
 #endif
 
-    server_sleep(5); // seconds
+    StopServer();
+
+    server_sleep(5); // wait 5 seconds for the server to stop
 
     // if this thread is not dead at this point, then we need to stop the server by force >:)
     LOG_ERROR("Server did not respond for 5 seconds. Killing it with fire...");
+    
     exit(-1);
-
-    return 0;
 }
 
 void StartServer(uint16      port,
@@ -674,7 +675,7 @@ void StartServer(uint16      port,
 
     rl_catch_signals = 0;
     pthread_t console;
-    pthread_create(&console, NULL, serverConsole, NULL);
+    pthread_create(&console, NULL, (void*)serverConsole, NULL);
     pthread_detach(console);
 
     signal(SIGINT, ReadlineNewLine);
