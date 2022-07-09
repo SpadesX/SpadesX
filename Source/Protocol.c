@@ -22,10 +22,37 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef WIN32
+    #include <Windows.h>
+
+    #define POW10_7 10000000
+    #define DELTA_EPOCH_IN_100NS INT64_C(116444736000000000)
+#endif
+
 uint64 getNanos(void)
 {
     struct timespec ts;
+
+#ifdef WIN32
+    // https://github.com/Alexpux/mingw-w64/blob/master/mingw-w64-libraries/winpthreads/src/clock.c#L121
+
+    unsigned __int64 t;
+
+    union
+    {
+        unsigned __int64 u64;
+        FILETIME         ft;
+    } ct;
+
+    GetSystemTimeAsFileTime(&ct.ft);
+
+    t          = ct.u64 - DELTA_EPOCH_IN_100NS;
+    ts.tv_sec  = t / POW10_7;
+    ts.tv_nsec = ((int) (t % POW10_7)) * 100;
+#else
     clock_gettime(CLOCK_REALTIME, &ts);
+#endif
+
     return (uint64) ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 

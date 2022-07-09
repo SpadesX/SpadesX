@@ -76,7 +76,7 @@ void* keepMasterAlive(void* serverVoid)
                 if (enet_host_service(server->master.client, &server->master.event, 0) < 0) {
                     pthread_mutex_lock(&serverLock);
                     LOG_WARNING("Connection to master server lost. Waiting 30 seconds to reconnect...");
-                    sleep(30);
+                    server_sleep(30);
                     ConnectMaster(server, server->port);
                     pthread_mutex_unlock(&serverLock);
                 }

@@ -11,7 +11,7 @@ set(UTIL_HEADERS
     Types.h
     Physics.h
     Line.h
-)
+    Functions.h)
 
 set(UTIL_SOURCES
     Queue.c
@@ -19,20 +19,31 @@ set(UTIL_SOURCES
     DataStream.c
     Physics.c
     Line.c
-)
+    Functions.c)
 
 target_sources(util
     PRIVATE
         ${UTIL_SOURCES}
         ${UTIL_HEADERS}
-)
+ )
 
 target_include_directories(util
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(util
-    PRIVATE
-        z # zlib
-)
+if(WIN32)
+    find_package(unofficial-enet CONFIG REQUIRED)
+    find_package(ZLIB REQUIRED)
+
+    target_link_libraries(util
+        PRIVATE
+            ZLIB::ZLIB
+            unofficial::enet::enet
+    )
+else()
+    target_link_libraries(util
+        PRIVATE
+            z # zlib
+    )
+endif()

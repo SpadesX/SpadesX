@@ -15,6 +15,10 @@
     #define DEFAULT_SERVER_PORT 32887
 #endif
 
+#ifdef WIN32
+    #include <pthread.h>
+#endif
+
 extern pthread_mutex_t serverLock;
 
 Server* getServer();

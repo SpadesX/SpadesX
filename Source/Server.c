@@ -18,6 +18,7 @@
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Util/Utlist.h"
+#include "Util/Functions.h"
 #include "../Extern/libmapvxl/libmapvxl.h"
 
 #include <enet/enet.h>
@@ -35,7 +36,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#ifdef WIN32
+#include <io.h>
+#include <Windows.h>
+#else
 #include <unistd.h>
+#endif
 
 Server          server;
 pthread_mutex_t serverLock;
@@ -522,10 +529,12 @@ void ReadlineNewLine(int signal)
     ctrlc = 1;
     printf("\n");
     LOG_INFO("Are you sure you want to exit? (Y/n)");
-
-    if (write(STDIN_FILENO, "\n", sizeof("\n")) != sizeof("\n")) {
+    
+    // 0 = STDIN_FILENO
+    if (write(0, "\n", sizeof("\n")) != sizeof("\n")) {
         LOG_DEBUG("epic write fail");
     }
+
     rl_replace_line("", 0);
     rl_on_new_line();
     rl_redisplay();
@@ -555,10 +564,14 @@ static void* serverConsole(void* arg)
         }
         free(buf);
     }
-    rl_clear_history();
-    StopServer();
 
-    sleep(5); // wait 5 seconds for the server to stop
+#ifdef WIN32
+    clear_history();
+#else
+    rl_clear_history();
+#endif
+
+    server_sleep(5); // seconds
 
     // if this thread is not dead at this point, then we need to stop the server by force >:)
     LOG_ERROR("Server did not respond for 5 seconds. Killing it with fire...");
@@ -673,7 +686,7 @@ void StartServer(uint16      port,
         WorldUpdate();
         forPlayers();
         pthread_mutex_unlock(&serverLock);
-        sleep(0);
+        server_sleep(0);
     }
     while (server.map.compressedMap) {
         server.map.compressedMap = Pop(server.map.compressedMap);
