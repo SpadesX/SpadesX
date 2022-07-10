@@ -50,6 +50,9 @@ While we would love to fix issues all day (OK maybe not that actually sounds hor
 Just like you we have jobs or other things we have to take care of. Please remember this before you start yelling at us why we cant fix your bug fast enough.
 THIS IS WHY.
 
+## Statistics
+![Alt](https://repobeats.axiom.co/api/embed/e5cb9ca93a389a430b40229b39f01cfbab8b57ab.svg "Repobeats analytics image")
+
 ## Credits
 Main Developer: Haxk20
 
