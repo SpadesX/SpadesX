@@ -1152,7 +1152,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
 
     if (validPlayerPos(server, playerID, x, y, z)) {
         server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
-    } else if (validPlayerPos(server,
+    } /*else if (validPlayerPos(server,
                               playerID,
                               server->player[playerID].movement.position.x,
                               server->player[playerID].movement.position.y,
@@ -1194,7 +1194,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
                            server->player[playerID].movement.prevLegitPos.x,
                            server->player[playerID].movement.prevLegitPos.y,
                            server->player[playerID].movement.prevLegitPos.z);
-    }
+    }*/
 }
 
 static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
