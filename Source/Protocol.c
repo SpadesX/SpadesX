@@ -324,7 +324,7 @@ void sendMessageToStaff(Server* server, const char* format, ...)
     va_list args;
     va_start(args, format);
     char fMessage[1024];
-    vsnprintf(fMessage, 1023, format, args);
+    vsnprintf(fMessage, 1024, format, args);
     va_end(args);
 
     for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
@@ -1167,7 +1167,7 @@ void sendServerNotice(Server* server, uint8 playerID, uint8 console, const char*
     va_list args;
     va_start(args, message);
     char fMessage[1024];
-    vsnprintf(fMessage, 1023, message, args);
+    vsnprintf(fMessage, 1024, message, args);
     va_end(args);
 
     if (console) {
@@ -1193,7 +1193,7 @@ void broadcastServerNotice(Server* server, uint8 console, const char* message, .
     va_list args;
     va_start(args, message);
     char fMessage[1024];
-    vsnprintf(fMessage, 1023, message, args);
+    vsnprintf(fMessage, 1024, message, args);
     va_end(args);
 
     uint32      fMessageSize = strlen(fMessage);
