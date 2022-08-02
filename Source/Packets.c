@@ -921,17 +921,23 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         if (server->player[playerID].sprinting) {
             return;
         }
-        float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
-        if (length > 2)
-            return;
-        if (length == 0) {
-            length = 1; // In case we get 000 velocity without this normalization would produce -nan
+        if (velX > 1.f || velY > 1.f || velZ > 1.f) {
+            float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
+            if (length > 2)
+                return;
+            if (length == 0) {
+                length = 1; // In case we get 000 velocity without this normalization would produce -nan
+            }
+            float normLength    = 1 / length;
+            grenade->velocity.x = velX * normLength;
+            grenade->velocity.y = velY * normLength;
+            grenade->velocity.z = velZ * normLength;
+        } else {
+            grenade->velocity.x = velX;
+            grenade->velocity.y = velY;
+            grenade->velocity.z = velZ;
         }
-        float normLength    = 1 / length;
-        grenade->velocity.x = velX * normLength;
-        grenade->velocity.y = velY * normLength;
-        grenade->velocity.z = velZ * normLength;
-        Vector3f posZ1      = grenade->position;
+        Vector3f posZ1 = grenade->position;
         posZ1.z += 1;
         Vector3f posZ2 = grenade->position;
         posZ2.z += 2;

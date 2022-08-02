@@ -728,7 +728,6 @@ uint8 checkNode(Server* server, Vector3i position)
 
     saveNode(position.x, position.y, position.z);
 
-
     while (nodePos > 0) {
         if (nodePos >= nodesSize - 6) {
             nodesSize += NODE_RESERVE_SIZE;
@@ -753,14 +752,14 @@ uint8 checkNode(Server* server, Vector3i position)
 
         // already visited?
         mapNode* node;
-        int id = position.x * server->map.map.MAP_Y_MAX * server->map.map.MAP_Z_MAX +
-                                position.y * server->map.map.MAP_Z_MAX + position.z;
+        int      id = position.x * server->map.map.MAP_Y_MAX * server->map.map.MAP_Z_MAX +
+                 position.y * server->map.map.MAP_Z_MAX + position.z;
         HASH_FIND_INT(visitedMap, &id, node);
         if (node == NULL) {
             node          = (mapNode*) malloc(sizeof *node);
             node->pos     = position;
             node->visited = 1;
-            node->id = id;
+            node->id      = id;
             HASH_ADD_INT(visitedMap, id, node);
             addNode(server, position.x, position.y, position.z - 1);
             addNode(server, position.x, position.y - 1, position.z);

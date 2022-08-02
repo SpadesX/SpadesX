@@ -93,7 +93,6 @@ static inline long isvoxelsolidwrap(Server* server, long x, long y, long z)
 static inline long clipworld(Server* server, long x, long y, long z)
 {
     int sz;
-
     if (x < 0 || x >= server->map.map.MAP_X_MAX || y < 0 || y >= server->map.map.MAP_Y_MAX)
         return 0;
     if (z < 0)
@@ -555,8 +554,8 @@ int moveGrenade(Server* server, Grenade* grenade)
         static const float BOUNCE_SOUND_THRESHOLD = 1.1f;
 
         int ret = 1;
-        if (fabs(grenade->velocity.x) > BOUNCE_SOUND_THRESHOLD || fabs(grenade->velocity.y) > BOUNCE_SOUND_THRESHOLD ||
-            fabs(grenade->velocity.z) > BOUNCE_SOUND_THRESHOLD)
+        if (fabsf(grenade->velocity.x) > BOUNCE_SOUND_THRESHOLD || fabsf(grenade->velocity.y) > BOUNCE_SOUND_THRESHOLD ||
+            fabsf(grenade->velocity.z) > BOUNCE_SOUND_THRESHOLD)
             ret = 2; // play sound
 
         Vector3l lp2;
