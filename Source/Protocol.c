@@ -868,7 +868,10 @@ uint8 checkUnderIntel(Server* server, uint8 team)
 
 uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team)
 {
-    uint8    ret       = 0;
+    uint8 ret = 0;
+    if (server->player[playerID].alive == 0) {
+        return ret;
+    }
     Vector3f playerPos = server->player[playerID].movement.position;
     Vector3f intelPos  = server->protocol.gameMode.intel[team];
     if ((int) playerPos.y == (int) intelPos.y &&
@@ -883,7 +886,10 @@ uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team)
 
 uint8 checkPlayerInTent(Server* server, uint8 playerID)
 {
-    uint8    ret       = 0;
+    uint8 ret = 0;
+    if (server->player[playerID].alive == 0) {
+        return ret;
+    }
     Vector3f playerPos = server->player[playerID].movement.position;
     Vector3f tentPos   = server->protocol.gameMode.base[server->player[playerID].team];
     if (((int) playerPos.z + 3 == (int) tentPos.z ||
