@@ -323,13 +323,24 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
             SendJoiningData(server, playerID);
             break;
         case STATE_SPAWNING:
-            server->player[playerID].HP        = 100;
-            server->player[playerID].grenades  = 3;
-            server->player[playerID].blocks    = 50;
-            server->player[playerID].item      = 2;
-            server->player[playerID].alive     = 1;
-            server->player[playerID].reloading = 0;
-            server->player[playerID].toRefill  = 0;
+            server->player[playerID].HP             = 100;
+            server->player[playerID].grenades       = 3;
+            server->player[playerID].blocks         = 50;
+            server->player[playerID].item           = 2;
+            server->player[playerID].input          = 0;
+            server->player[playerID].movForward     = 0;
+            server->player[playerID].movBackwards   = 0;
+            server->player[playerID].movLeft        = 0;
+            server->player[playerID].movRight       = 0;
+            server->player[playerID].jumping        = 0;
+            server->player[playerID].crouching      = 0;
+            server->player[playerID].sneaking       = 0;
+            server->player[playerID].sprinting      = 0;
+            server->player[playerID].primary_fire   = 0;
+            server->player[playerID].secondary_fire = 0;
+            server->player[playerID].alive          = 1;
+            server->player[playerID].reloading      = 0;
+            server->player[playerID].toRefill       = 0;
             SetPlayerRespawnPoint(server, playerID);
             SendRespawn(server, playerID);
             LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
