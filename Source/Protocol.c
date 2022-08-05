@@ -330,6 +330,7 @@ void sendMessageToStaff(Server* server, const char* format, ...)
     for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
         if (isPastJoinScreen(server, ID) && isStaff(server, ID)) {
             sendServerNotice(server, ID, 0, fMessage);
+            sendServerNotice(server, ID, 1, fMessage);
         }
     }
 }
