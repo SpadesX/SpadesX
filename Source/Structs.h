@@ -119,6 +119,7 @@ typedef struct
     uint64 sinceLastBaseEnterRestock;
     uint64 startOfRespawnWait;
     uint64 sinceLastShot;
+    uint64 sinceLastBlockDestWithGun;
     uint64 sinceLastBlockDest;
     uint64 sinceLastBlockPlac;
     uint64 sinceLast3BlockDest;

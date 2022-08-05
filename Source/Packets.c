@@ -1373,13 +1373,57 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                     {
                         if (Z < 62 && gamemodeBlockChecks(server, X, Y, Z)) {
                             uint64 timeNow = getNanos();
-                            if (diffIsOlderThen(
-                                timeNow, &server->player[playerID].timers.sinceLastBlockDest, SPADE_DELAY) &&
-                                diffIsOlderThenDontUpdate(
-                                timeNow, server->player[playerID].timers.sinceLast3BlockDest, SPADE_DELAY) &&
-                                diffIsOlderThenDontUpdate(
-                                timeNow, server->player[playerID].timers.sinceLastBlockPlac, SPADE_DELAY))
+                            if ((diffIsOlderThen(
+                                 timeNow, &server->player[playerID].timers.sinceLastBlockDest, SPADE_DELAY) &&
+                                 diffIsOlderThenDontUpdate(
+                                 timeNow, server->player[playerID].timers.sinceLast3BlockDest, SPADE_DELAY) &&
+                                 diffIsOlderThenDontUpdate(
+                                 timeNow, server->player[playerID].timers.sinceLastBlockPlac, SPADE_DELAY)) ||
+                                server->player[playerID].item == 2)
                             {
+                                if (server->player[playerID].item == 2) {
+                                    if (server->player[playerID].weaponClip <= 0) {
+                                        sendMessageToStaff(server,
+                                                           "Player %s (#%hhu) probably has hack to have more ammo",
+                                                           server->player[playerID].name,
+                                                           playerID);
+                                        return;
+                                    } else if (server->player[playerID].weapon == 0 &&
+                                               diffIsOlderThen(
+                                               timeNow,
+                                               &server->player[playerID].timers.sinceLastBlockDestWithGun,
+                                               ((RIFLE_DELAY * 2) - (NANO_IN_MILLI * 10))) == 0)
+                                    {
+                                        sendMessageToStaff(server,
+                                                           "Player %s (#%hhu) probably has rapid shooting hack",
+                                                           server->player[playerID].name,
+                                                           playerID);
+                                        return;
+                                    } else if (server->player[playerID].weapon == 1 &&
+                                               diffIsOlderThen(
+                                               timeNow,
+                                               &server->player[playerID].timers.sinceLastBlockDestWithGun,
+                                               ((SMG_DELAY * 3) - (NANO_IN_MILLI * 10))) == 0)
+                                    {
+                                        sendMessageToStaff(server,
+                                                           "Player %s (#%hhu) probably has rapid shooting hack",
+                                                           server->player[playerID].name,
+                                                           playerID);
+                                        return;
+                                    } else if (server->player[playerID].weapon == 2 &&
+                                               diffIsOlderThen(
+                                               timeNow,
+                                               &server->player[playerID].timers.sinceLastBlockDestWithGun,
+                                               (SHOTGUN_DELAY - (NANO_IN_MILLI * 10))) == 0)
+                                    {
+                                        sendMessageToStaff(server,
+                                                           "Player %s (#%hhu) probably has rapid shooting hack",
+                                                           server->player[playerID].name,
+                                                           playerID);
+                                        return;
+                                    }
+                                }
+
                                 Vector3i  position = {X, Y, Z};
                                 Vector3i* neigh    = getNeighbors(position);
                                 mapvxlSetAir(&server->map.map, position.x, position.y, position.z);

@@ -136,4 +136,10 @@ typedef enum {
     THREEBLOCK_DELAY = NANO_IN_MILLI * 1000,
 } ToolDelays;
 
+typedef enum {
+    RIFLE_DELAY      = NANO_IN_MILLI * 500,
+    SMG_DELAY        = NANO_IN_MILLI * 100,
+    SHOTGUN_DELAY    = NANO_IN_MILLI * 1000,
+} GunDelays;
+
 #endif /* ENUMS_H */
