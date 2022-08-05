@@ -967,7 +967,7 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
     float    distance    = DistanceIn2D(shotPos, hitPos);
     long     x = 0, y = 0, z = 0;
 
-    if (server->player[playerID].sprinting) {
+    if (server->player[playerID].sprinting || (server->player[playerID].item == 2 && server->player[playerID].weaponClip <= 0)) {
         return; // Sprinting and hitting somebody is impossible
     }
 
