@@ -1,6 +1,7 @@
 // Copyright DarkNeutrino 2021
 #include "Server.h"
 
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include "Commands.h"
 #include "Gamemodes.h"
 #include "Map.h"
@@ -18,7 +19,6 @@
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Util/Utlist.h"
-#include "../Extern/libmapvxl/libmapvxl.h"
 
 #include <enet/enet.h>
 #include <errno.h>
@@ -28,10 +28,10 @@
 #include <json-c/json_util.h>
 #include <math.h>
 #include <pthread.h>
-#include <stdio.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -326,6 +326,7 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
             server->player[playerID].HP        = 100;
             server->player[playerID].grenades  = 3;
             server->player[playerID].blocks    = 50;
+            server->player[playerID].item      = 2;
             server->player[playerID].alive     = 1;
             server->player[playerID].reloading = 0;
             server->player[playerID].toRefill  = 0;
@@ -656,10 +657,10 @@ void StartServer(uint16      port,
     server.master.timeSinceLastSend = time(NULL);
 
     pthread_t masterThread;
-    pthread_create(&masterThread, NULL, keepMasterAlive, (void*)&server);
+    pthread_create(&masterThread, NULL, keepMasterAlive, (void*) &server);
     pthread_detach(masterThread);
 
-    rl_catch_signals                = 0;
+    rl_catch_signals = 0;
     pthread_t console;
     pthread_create(&console, NULL, serverConsole, NULL);
     pthread_detach(console);
