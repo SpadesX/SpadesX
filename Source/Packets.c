@@ -1542,6 +1542,7 @@ static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
     }
 
     server->player[playerID].item = tool;
+    server->player[playerID].reloading = 0;
     sendSetTool(server, playerID, tool);
 }
 
