@@ -1,3 +1,5 @@
+<img src="docs/SpadesX-Logo.png">
+
 # SpadesX
 
 ## What is SpadesX and why ?
