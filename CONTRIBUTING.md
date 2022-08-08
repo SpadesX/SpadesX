@@ -1,5 +1,4 @@
 # Contributors Guide
-
 If you are interested in making this project better, there are many ways you can contribute. For example, you can:
 
 - Submit a bug report.
@@ -14,12 +13,11 @@ If you are interested in making this project better, there are many ways you can
 - Package and distribute the software in a downstream community (such as your preferred Linux distribution).
 
 ## Bugs and Feature Requests
-
 If you believe that you have found a bug or wish to propose a new feature, please first search the existing [issues] to see if it has already been reported.
 If you are unable to find an existing issue, consider using one of the provided templates to create a new issue and provide as many details as you can to assist in reproducing the bug or explaining your proposed feature.
+If you believe that you have found a security bug it would be preferred to open a ticket in the "spadesx-bugs" channel in the [official discord][discord].
 
 ## Patch Submission tips
-
 Patches should be submitted in the form of Pull Requests to the [repository] on GitHub.
  But first, consider the following tips to ensure a smooth process when submitting a patch:
 
@@ -57,7 +55,6 @@ Patches should be submitted in the form of Pull Requests to the [repository] on 
   change.
 
 ## Review
-
 - We welcome code reviews from anyone. A committer is required to formally
   accept and merge the changes.
 - Reviewers will be looking for things like threading issues, performance
@@ -71,7 +68,6 @@ Patches should be submitted in the form of Pull Requests to the [repository] on 
     - COULD means that the change is optional
 
 ## Timeline and Managing Expectations
-
 As we continue to engage contributors and learn best practices for running a successful open source project, our processes and guidance will likely evolve.
 We will try to communicate expectations as we are able and to always be responsive. We hope that the community will share their suggestions for improving this engagement.
 Based on the level of initial interest we receive and the availability of resources to evaluate contributions, we anticipate the following:
@@ -92,3 +88,4 @@ Based on the level of initial interest we receive and the availability of resour
 
 [issues]: https://github.com/SpadesX/SpadesX/issues
 [repository]: https://github.com/SpadesX/SpadesX/
+[discord]: https://discord.gg/dsRjTzJpZC
