@@ -41,6 +41,7 @@ If you would like to contribute bug fixes, improvements, and new features please
 ## Credits
 Main Developer: Haxk20
 
-Contributors: Check CONTRIBUTORS.md
+Special thanks to amisometimes for the SpadesX logo.
 
-Big thanks goes to amisometimes for the SpadesX logo.
+Check the [Contributor List](CONTRIBUTORS.md) for a list of the people that helped make this project.
+
