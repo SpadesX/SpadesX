@@ -30,13 +30,10 @@ Ubuntu 20.04 doesnt have the latest version of json-c and since SpadesX uses som
 > make -jX (Replace X with number of threads you have on your system)
 
 ##### Windows
-Users can use mingw. But you still have to install the libraries.
+You can use mingw, but you'll still have to install the libraries first.
 
-## Contributing
-For a bug you must open an issue in this repository. Fully explaining your bug.
-Beware tho that it may take days or even weeks before we fix the issue.
-While we would love to fix issues all day (OK maybe not that actually sounds horrible) we are people too with our lives too.
-Just like you we have jobs or other things we have to take care of. Please remember this before you start yelling at us why we cant fix your bug fast enough.
+## Contribute
+If you would like to contribute bug fixes, improvements, and new features please take a look at our [Contributor Guide](CONTRIBUTING.md) to see how you can participate in this open source project.
 
 ## Statistics
 ![Alt](https://repobeats.axiom.co/api/embed/e5cb9ca93a389a430b40229b39f01cfbab8b57ab.svg "Repobeats analytics image")
