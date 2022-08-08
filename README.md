@@ -1,4 +1,4 @@
-<img style="float: right;" src="docs/SpadesX-Logo.png">
+<img align="right" src="docs/SpadesX-Logo.png">
 
 # An Ace of Spades server
 SpadesX is a C implementation for an Ace of Spades server that supports the protocol 0.75. C was chosen because of its speed and the need for low latency in FPS games when modding the server as well as when scaling up.
@@ -42,7 +42,7 @@ You can also contact us via the official [discord server][discord].
 ## Credits
 Main Developer: Haxk20
 
-Special thanks to amisometimes(https://amisometimes.com/) for the SpadesX logo.
+Special thanks to [amisometimes](https://amisometimes.com/) for the SpadesX logo.
 
 Check the [Contributor List](CONTRIBUTORS.md) for a list of the people that helped make this project.
 
