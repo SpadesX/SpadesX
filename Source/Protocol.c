@@ -87,6 +87,10 @@ uint8 IPInRange(IPStruct host, IPStruct banned, IPStruct startOfRange, IPStruct 
     uint32   max = UINT32_MAX;
     IPStruct startRange;
     IPStruct endRange;
+    startRange.CIDR = 24;
+    endRange.CIDR = 24;
+    startRange.Union.ip32 = 0;
+    endRange.Union.ip32 = 0;
     startRange.Union.ip32 = startOfRange.Union.ip32;
     endRange.Union.ip32   = endOfRange.Union.ip32;
     if (banned.CIDR > 0 && banned.CIDR < 32) {
