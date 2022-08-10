@@ -265,12 +265,15 @@ static void clinCommand(void* serverP, CommandArguments arguments)
 static void helpCommand(void* serverP, CommandArguments arguments)
 {
     Server*  server = (Server*) serverP;
-    Command* command;
+    Command* command = NULL;
     if (arguments.console)
         sendServerNotice(server, arguments.player, arguments.console, "Commands available to you:");
 
     LL_FOREACH(server->commandsList, command)
     {
+        if (command == NULL) {
+            return; //Just for safety
+        }
         if (playerHasPermission(server, arguments.player, arguments.console, command->PermLevel) ||
             command->PermLevel == 0) {
             sendServerNotice(server,
