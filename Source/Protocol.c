@@ -731,9 +731,15 @@ uint8 checkNode(Server* server, Vector3i position)
     saveNode(position.x, position.y, position.z);
 
     while (nodePos > 0) {
+        Vector3i* old_nodes;
         if (nodePos >= nodesSize - 6) {
             nodesSize += NODE_RESERVE_SIZE;
-            nodes = (Vector3i*) realloc((void*) nodes, sizeof(Vector3i) * nodesSize);
+            old_nodes = (Vector3i*) realloc((void*) nodes, sizeof(Vector3i) * nodesSize);
+            if (!old_nodes) {
+                free(nodes);
+                return 0;
+            }
+            nodes = old_nodes;
         }
         const Vector3i* currentNode = returnCurrentNode();
         position.z                  = currentNode->z;
