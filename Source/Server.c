@@ -28,6 +28,7 @@
 #include <json-c/json_util.h>
 #include <math.h>
 #include <pthread.h>
+#include <bits/pthreadtypes.h>
 #include <stdio.h>
 #include <readline/history.h>
 #include <readline/readline.h>
