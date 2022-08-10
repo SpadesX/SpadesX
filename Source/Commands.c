@@ -4,6 +4,7 @@
 #include "Packets.h"
 #include "ParseConvert.h"
 #include "Protocol.h"
+#include "Server.h"
 #include "Structs.h"
 #include "Types.h"
 #include "Uthash.h"
@@ -551,6 +552,18 @@ static void ratioCommand(void* serverP, CommandArguments arguments)
     }
 }
 
+static void resetCommand(void* serverP, CommandArguments arguments)
+{
+    Server* server = (Server*) serverP;
+    (void) arguments;
+    for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
+        if (server->player[i].state != STATE_DISCONNECTED) {
+            server->player[i].state = STATE_STARTING_MAP;
+        }
+    }
+    ServerReset(server);
+}
+
 static void sayCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
@@ -885,6 +898,7 @@ void populateCommands(Server* server)
     {"/pban", 0, &banCustomCommand, 30, "Permanently bans a specified player"},
     {"/pm", 0, &pmCommand, 0, "Private message to specified player"},
     {"/ratio", 1, &ratioCommand, 0, "Shows yours or requested player ratio"},
+    {"/reset", 0, &resetCommand, 24, "Resets server and loads next map"},
     {"/say", 0, &sayCommand, 30, "Send message to everyone as the server"},
     {"/server", 0, &serverCommand, 0, "Shows info about the server"},
     {"/tb", 1, &toggleBuildCommand, 30, "Toggles ability to build for everyone or specified player"},
@@ -928,8 +942,7 @@ void deleteCommand(Server* server, Command* command)
 
 uint8 parseArguments(Server* server, CommandArguments* arguments, char* message, uint8 commandLength)
 {
-    char* p =
-    message + commandLength; // message beginning + command length
+    char* p = message + commandLength; // message beginning + command length
     while (*p != '\0' && arguments->argc < 32) {
         uint8 escaped = 0, quotesCount = 0, argumentLength;
         while (*p == ' ' || *p == '\t')
