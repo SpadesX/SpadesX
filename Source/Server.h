@@ -9,6 +9,8 @@
 #include "Util/Types.h"
 
 #include <enet/enet.h>
+#include <pthread.h>
+#include <bits/pthreadtypes.h>
 #include "../Extern/libmapvxl/libmapvxl.h"
 
 #ifndef DEFAULT_SERVER_PORT
