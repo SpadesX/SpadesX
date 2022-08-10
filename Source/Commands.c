@@ -6,11 +6,11 @@
 #include "Protocol.h"
 #include "Server.h"
 #include "Structs.h"
-#include "Types.h"
-#include "Uthash.h"
+#include "Util/Types.h"
+#include "Util/Uthash.h"
 #include "Util/Enums.h"
 #include "Util/JSONHelpers.h"
-#include "Utlist.h"
+#include "Util/Utlist.h"
 
 #include <ctype.h>
 #include <enet/enet.h>
