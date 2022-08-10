@@ -919,6 +919,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         grenade->position.z = ReadFloat(data);
         float velX = ReadFloat(data), velY = ReadFloat(data), velZ = ReadFloat(data);
         if (server->player[playerID].sprinting) {
+            free(grenade);
             return;
         }
         if (velX > 1.f || velY > 1.f || velZ > 1.f) {
