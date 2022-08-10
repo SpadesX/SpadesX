@@ -20,7 +20,6 @@
 #include "Util/Types.h"
 #include "Util/Utlist.h"
 
-#include <bits/pthreadtypes.h>
 #include <enet/enet.h>
 #include <errno.h>
 #include <json-c/json.h>
@@ -29,6 +28,7 @@
 #include <json-c/json_util.h>
 #include <math.h>
 #include <pthread.h>
+#include <bits/pthreadtypes.h>
 #include <stdio.h>
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -253,15 +253,13 @@ static void ServerInit(Server*     server,
     server->protocol.colorFog.colorArray[1] = 0xE8;
     server->protocol.colorFog.colorArray[2] = 0xFF;
 
-    if (reset == 0) {
-        server->protocol.colorTeam[0].colorArray[B_CHANNEL] = team1Color[B_CHANNEL];
-        server->protocol.colorTeam[0].colorArray[G_CHANNEL] = team1Color[G_CHANNEL];
-        server->protocol.colorTeam[0].colorArray[R_CHANNEL] = team1Color[R_CHANNEL];
+    server->protocol.colorTeam[0].colorArray[B_CHANNEL] = team1Color[B_CHANNEL];
+    server->protocol.colorTeam[0].colorArray[G_CHANNEL] = team1Color[G_CHANNEL];
+    server->protocol.colorTeam[0].colorArray[R_CHANNEL] = team1Color[R_CHANNEL];
 
-        server->protocol.colorTeam[1].colorArray[B_CHANNEL] = team2Color[B_CHANNEL];
-        server->protocol.colorTeam[1].colorArray[G_CHANNEL] = team2Color[G_CHANNEL];
-        server->protocol.colorTeam[1].colorArray[R_CHANNEL] = team2Color[R_CHANNEL];
-    }
+    server->protocol.colorTeam[1].colorArray[B_CHANNEL] = team2Color[B_CHANNEL];
+    server->protocol.colorTeam[1].colorArray[G_CHANNEL] = team2Color[G_CHANNEL];
+    server->protocol.colorTeam[1].colorArray[R_CHANNEL] = team2Color[R_CHANNEL];
 
     memcpy(server->protocol.nameTeam[0], team1Name, strlen(team1Name));
     memcpy(server->protocol.nameTeam[1], team2Name, strlen(team2Name));
