@@ -1150,7 +1150,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     server->player[playerID].movement.position.x   = x;
     server->player[playerID].movement.position.y   = y;
     server->player[playerID].movement.position.z   = z;
-    uint8 resetTime                                = 1;
+    /*uint8 resetTime                                = 1;
     if (!diffIsOlderThenDontUpdate(
         getNanos(), server->player[playerID].timers.duringNoclipPeriod, (uint64) NANO_IN_SECOND * 10))
     {
@@ -1165,7 +1165,7 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     if (resetTime) {
         server->player[playerID].timers.duringNoclipPeriod = getNanos();
         server->player[playerID].invalidPosCount           = 0;
-    }
+    }*/
 
     if (validPlayerPos(server, playerID, x, y, z)) {
         server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
