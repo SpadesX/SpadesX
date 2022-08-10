@@ -421,6 +421,7 @@ static void ServerUpdate(Server* server, int timeout)
                     json_object_to_file("Bans.json", root);
                 }
                 IPStruct hostIP;
+                hostIP.CIDR = 24;
                 hostIP.Union.ip32 = event.peer->address.host;
                 struct json_object* array;
                 json_object_object_get_ex(root, "Bans", &array);
