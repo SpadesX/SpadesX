@@ -697,7 +697,13 @@ void sendMapStart(Server* server, uint8 playerID)
         // Write map to out
         server->map.mapSize = mapvxlWriteMap(&server->map.map, map);
         // Resize the map to the exact VXL memory size for given XYZ coordinate size
-        map                             = (uint8*) realloc(map, server->map.mapSize);
+        uint8* old_map;
+        old_map = (uint8*) realloc(map, server->map.mapSize);
+        if (!old_map) {
+            free(map);
+            return;
+        }
+        map                             = old_map;
         server->map.compressedMap       = CompressData(map, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
         server->player[playerID].queues = server->map.compressedMap;
         free(map);
@@ -970,7 +976,9 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
     float    distance    = DistanceIn2D(shotPos, hitPos);
     long     x = 0, y = 0, z = 0;
 
-    if (server->player[playerID].sprinting || (server->player[playerID].item == 2 && server->player[playerID].weaponClip <= 0)) {
+    if (server->player[playerID].sprinting ||
+        (server->player[playerID].item == 2 && server->player[playerID].weaponClip <= 0))
+    {
         return; // Sprinting and hitting somebody is impossible
     }
 
@@ -1544,7 +1552,7 @@ static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set tool packet", playerID, ID);
     }
 
-    server->player[playerID].item = tool;
+    server->player[playerID].item      = tool;
     server->player[playerID].reloading = 0;
     sendSetTool(server, playerID, tool);
 }
