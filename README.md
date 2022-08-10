@@ -1,6 +1,6 @@
 <img align="right" width="300" height="300" src="docs/SpadesX-Logo.png">
 
-# An Ace of Spades server
+# SpadesX
 SpadesX is a C implementation for an Ace of Spades server that supports the protocol 0.75. C was chosen because of its speed and the need for low latency in FPS games when modding the server as well as when scaling up.
 
 ## Why "SpadesX"?
