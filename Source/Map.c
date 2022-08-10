@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
 
 uint8 LoadMap(Server* server, const char* path, int mapSize[3])
 {
@@ -66,7 +67,13 @@ uint8 LoadMap(Server* server, const char* path, int mapSize[3])
     // Write map to mapOut
     server->map.mapSize = mapvxlWriteMap(&server->map.map, mapOut);
     // Resize the map to the exact VXL memory size for given XYZ coordinate size
-    mapOut = (uint8*) realloc(mapOut, server->map.mapSize);
+    uint8* oldMapOut;
+    oldMapOut = (uint8*) realloc(mapOut, server->map.mapSize);
+    if (!oldMapOut) {
+        free(mapOut);
+        return 0;
+    }
+    mapOut = oldMapOut;
 
     server->map.compressedMap = CompressData(mapOut, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
     free(mapOut);
