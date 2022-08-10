@@ -278,8 +278,8 @@ void ServerReset(Server* server)
                server->serverName,
                server->protocol.nameTeam[0],
                server->protocol.nameTeam[1],
-               &server->protocol.colorTeam->colorArray[0],
-               &server->protocol.colorTeam->colorArray[1],
+               server->protocol.colorTeam[0].colorArray,
+               server->protocol.colorTeam[1].colorArray,
                server->protocol.currentGameMode,
                1);
 }
