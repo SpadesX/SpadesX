@@ -13,6 +13,8 @@ Be sure to install the development versions of those:
 * [zlib](https://github.com/madler/zlib)
 * [json-c](https://github.com/json-c/json-c)
 * [enet](https://github.com/lsalzman/enet)
+* [libreadline](https://tracker.debian.org/pkg/readline)
+* [libbsd](https://tracker.debian.org/pkg/libbsd) (Only on some systems)
 
 ##### Unix based systems
 Ubuntu 20.04 doesnt have the latest version of json-c and since SpadesX uses some functions that are in later releases you either have to build it on your own or update to 21.04+
@@ -34,7 +36,7 @@ You can use mingw, but you'll still have to install the libraries first.
 
 ## Contribute
 If you would like to contribute bug fixes, improvements, and new features please take a look at our [Contributor Guide](CONTRIBUTING.md) to see how you can participate in this open source project.
-You can also contact us via the official [discord server][discord].
+You can also contact us via the official [Discord server][discord].
 
 ## Statistics
 ![Alt](https://repobeats.axiom.co/api/embed/e5cb9ca93a389a430b40229b39f01cfbab8b57ab.svg "Repobeats analytics image")
