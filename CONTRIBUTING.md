@@ -15,7 +15,7 @@ If you are interested in making this project better, there are many ways you can
 ## Bugs and Feature Requests
 If you believe that you have found a bug or wish to propose a new feature, please first search the existing [issues] to see if it has already been reported.
 If you are unable to find an existing issue, consider using one of the provided templates to create a new issue and provide as many details as you can to assist in reproducing the bug or explaining your proposed feature.
-If you believe that you have found a security bug it would be preferred to open a ticket in the "spadesx-bugs" channel in the [official discord][discord].
+If you believe that you have found a security bug it would be preferred to open a ticket in the "spadesx-bugs" channel in the [official Discord][discord].
 
 ## Patch Submission tips
 Patches should be submitted in the form of Pull Requests to the [repository] on GitHub.
