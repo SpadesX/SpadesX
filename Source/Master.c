@@ -83,6 +83,7 @@ void* keepMasterAlive(void* serverVoid)
                 server->master.timeSinceLastSend = time(NULL);
             }
         }
+        sleep(0);
     }
     enet_host_destroy(server->master.client);
     pthread_exit(0);
