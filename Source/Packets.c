@@ -1083,12 +1083,13 @@ static void receiveOrientationData(Server* server, uint8 playerID, DataStream* d
     x            = ReadFloat(data);
     y            = ReadFloat(data);
     z            = ReadFloat(data);
-    float length = 1 / sqrt((x * x) + (y * y) + (z * z));
+    float length = sqrt((x * x) + (y * y) + (z * z));
+    float normLength = 1 / length;
     // Normalize the vectors if their length > 1
     if (length > 1.f) {
-        server->player[playerID].movement.forwardOrientation.x = x * length;
-        server->player[playerID].movement.forwardOrientation.y = y * length;
-        server->player[playerID].movement.forwardOrientation.z = z * length;
+        server->player[playerID].movement.forwardOrientation.x = x * normLength;
+        server->player[playerID].movement.forwardOrientation.y = y * normLength;
+        server->player[playerID].movement.forwardOrientation.z = z * normLength;
     } else {
         server->player[playerID].movement.forwardOrientation.x = x;
         server->player[playerID].movement.forwardOrientation.y = y;
