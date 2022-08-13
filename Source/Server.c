@@ -183,7 +183,7 @@ static void ServerInit(Server*     server,
     char  vxlMap[64];
     uint8 index;
     if (reset == 0) {
-        srand(time(0));
+        srand(time(NULL));
     }
     index                  = rand() % server->map.mapCount;
     server->map.currentMap = server->map.mapList;
