@@ -928,15 +928,11 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
             free(grenade);
             return;
         }
-        if (velX > 1.f || velY > 1.f || velZ > 1.f) {
-            float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
-            if (length > 2) {
-                free(grenade);
-                return;
-            }
-            if (length == 0) {
-                length = 1; // In case we get 000 velocity without this normalization would produce -nan
-            }
+        float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
+        if (length == 0) {
+            length = 1; // In case we get 000 velocity without this normalization would produce -nan
+        }
+        if (length > 1.f) { // Normalize if we get velocity vector that has length > 1
             float normLength    = 1 / length;
             grenade->velocity.x = velX * normLength;
             grenade->velocity.y = velY * normLength;
