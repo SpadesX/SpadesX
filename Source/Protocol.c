@@ -788,7 +788,10 @@ uint8 checkNode(Server* server, Vector3i position)
     mapNode* tmpNode;
     HASH_ITER(hh, visitedMap, Node, tmpNode)
     {
-        mapvxlSetAir(&server->map.map, Node->pos.x, Node->pos.y, Node->pos.z);
+        Vector3i block = {Node->pos.x, Node->pos.y, Node->pos.z};
+        if (vecValidPos(server, block)) {
+            mapvxlSetAir(&server->map.map, Node->pos.x, Node->pos.y, Node->pos.z);
+        }
         HASH_DEL(visitedMap, Node);
         free(Node);
     }
