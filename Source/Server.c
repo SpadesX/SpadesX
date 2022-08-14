@@ -96,18 +96,16 @@ static void forPlayers()
                     {
                         if (diffIsOlderThen(
                             timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 2500)) {
-                            if (server.player[playerID].weaponReserve < server.player[playerID].toRefill) {
-                                server.player[playerID].weaponClip += server.player[playerID].weaponReserve;
-                                server.player[playerID].toRefill -= server.player[playerID].weaponReserve;
-                                server.player[playerID].weaponReserve = 0;
-                                server.player[playerID].reloading     = 0;
-                                sendWeaponReload(&server, playerID, 0, 0, 0);
-                                break;
+                            uint8 defaultAmmo = RIFLE_DEFAULT_CLIP;
+                            if (server.player[playerID].weapon == WEAPON_SMG) {
+                                defaultAmmo = SMG_DEFAULT_CLIP;
                             }
-                            server.player[playerID].weaponClip += server.player[playerID].toRefill;
-                            server.player[playerID].weaponReserve -= server.player[playerID].toRefill;
-                            server.player[playerID].reloading = 0;
-                            server.player[playerID].toRefill  = 0;
+                            double newReserve = fmax(0,
+                                                     server.player[playerID].weaponReserve -
+                                                     (defaultAmmo - server.player[playerID].weaponClip));
+                            server.player[playerID].weaponClip += server.player[playerID].weaponReserve - newReserve;
+                            server.player[playerID].weaponReserve = newReserve;
+                            server.player[playerID].reloading     = 0;
                             sendWeaponReload(&server, playerID, 0, 0, 0);
                         }
                         break;
@@ -420,7 +418,7 @@ static void ServerUpdate(Server* server, int timeout)
                     json_object_to_file("Bans.json", root);
                 }
                 IPStruct hostIP;
-                hostIP.CIDR = 24;
+                hostIP.CIDR       = 24;
                 hostIP.Union.ip32 = event.peer->address.host;
                 struct json_object* array;
                 json_object_object_get_ex(root, "Bans", &array);
