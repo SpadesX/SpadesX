@@ -87,10 +87,10 @@ uint8 IPInRange(IPStruct host, IPStruct banned, IPStruct startOfRange, IPStruct 
     uint32   max = UINT32_MAX;
     IPStruct startRange;
     IPStruct endRange;
-    startRange.CIDR = 24;
-    endRange.CIDR = 24;
+    startRange.CIDR       = 24;
+    endRange.CIDR         = 24;
     startRange.Union.ip32 = 0;
-    endRange.Union.ip32 = 0;
+    endRange.Union.ip32   = 0;
     startRange.Union.ip32 = startOfRange.Union.ip32;
     endRange.Union.ip32   = endOfRange.Union.ip32;
     if (banned.CIDR > 0 && banned.CIDR < 32) {
@@ -722,7 +722,7 @@ static inline void addNode(Server* server, int x, int y, int z)
 
 uint8 checkNode(Server* server, Vector3i position)
 {
-    if (mapvxlIsSolid(&server->map.map, position.x, position.y, position.z) == 0) {
+    if (vecValidPos(server, position) && mapvxlIsSolid(&server->map.map, position.x, position.y, position.z) == 0) {
         return 1;
     }
     if (nodes == NULL) {
@@ -750,10 +750,12 @@ uint8 checkNode(Server* server, Vector3i position)
         if (position.z >= server->map.map.MAP_Z_MAX - 2) {
             mapNode* delNode;
             mapNode* tmpNode;
-            HASH_ITER(hh, visitedMap, delNode, tmpNode)
-            {
-                HASH_DEL(visitedMap, delNode);
-                free(delNode);
+            if (visitedMap != NULL) {
+                HASH_ITER(hh, visitedMap, delNode, tmpNode)
+                {
+                    HASH_DEL(visitedMap, delNode);
+                    free(delNode);
+                }
             }
             free(nodes);
             nodes = NULL;
