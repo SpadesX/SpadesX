@@ -1080,10 +1080,10 @@ static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
 static void receiveOrientationData(Server* server, uint8 playerID, DataStream* data)
 {
     float x, y, z;
-    x            = ReadFloat(data);
-    y            = ReadFloat(data);
-    z            = ReadFloat(data);
-    float length = sqrt((x * x) + (y * y) + (z * z));
+    x                = ReadFloat(data);
+    y                = ReadFloat(data);
+    z                = ReadFloat(data);
+    float length     = sqrt((x * x) + (y * y) + (z * z));
     float normLength = 1 / length;
     // Normalize the vectors if their length > 1
     if (length > 1.f) {
@@ -1346,21 +1346,22 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet", playerID, ID);
     }
     if (server->player[playerID].canBuild && server->globalAB) {
-        uint8 actionType = ReadByte(data);
-        int   X          = ReadInt(data);
-        int   Y          = ReadInt(data);
-        int   Z          = ReadInt(data);
+        uint8  actionType = ReadByte(data);
+        uint32 X          = ReadInt(data);
+        uint32 Y          = ReadInt(data);
+        uint32 Z          = ReadInt(data);
         if (server->player[playerID].sprinting) {
             return;
         }
-        Vector3f vectorBlock  = {X, Y, Z};
+        Vector3i vectorBlock  = {X, Y, Z};
+        Vector3f vectorfBlock = {(float) X, (float) Y, (float) Z};
         Vector3f playerVector = server->player[playerID].movement.position;
         if (((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) ||
              (server->player[playerID].item == 1 && actionType == 0) ||
              (server->player[playerID].item == 2 && actionType == 1)))
         {
-            if ((DistanceIn3D(vectorBlock, playerVector) <= 4 || server->player[playerID].item == 2) &&
-                vecfValidPos(server, vectorBlock))
+            if ((DistanceIn3D(vectorfBlock, playerVector) <= 4 || server->player[playerID].item == 2) &&
+                vecValidPos(server, vectorBlock))
             {
                 switch (actionType) {
                     case 0:
@@ -1469,7 +1470,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                 diffIsOlderThenDontUpdate(
                                 timeNow, server->player[playerID].timers.sinceLastBlockPlac, THREEBLOCK_DELAY))
                             {
-                                for (int z = Z - 1; z <= Z + 1; z++) {
+                                for (uint32 z = Z - 1; z <= Z + 1; z++) {
                                     if (z < 62) {
                                         mapvxlSetAir(&server->map.map, X, Y, z);
                                         Vector3i  position = {X, Y, z};
