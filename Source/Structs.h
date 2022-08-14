@@ -185,7 +185,6 @@ typedef struct
     uint8                hasIntel;
     uint8                isInvisible;
     uint8                welcomeSent;
-    uint8                toRefill;
     uint8                reloading;
     uint64               permLevel;
     uint8                spamCounter;

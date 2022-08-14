@@ -1628,7 +1628,6 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
             diffIsOlderThen(getNanos(), &server->player[playerID].timers.sinceLastWeaponInput, timeDiff))
         {
             server->player[playerID].timers.sinceLastWeaponInput = getNanos();
-            server->player[playerID].toRefill++;
             server->player[playerID].weaponClip--;
             server->player[playerID].reloading = 0;
             if ((server->player[playerID].movement.previousOrientation.x ==

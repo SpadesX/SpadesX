@@ -85,7 +85,6 @@ static void forPlayers()
                     }
                     if (diffIsOlderThen(
                         timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * milliseconds)) {
-                        server.player[playerID].toRefill++;
                         server.player[playerID].weaponClip--;
                     }
                 }
@@ -114,14 +113,13 @@ static void forPlayers()
                     {
                         if (diffIsOlderThen(
                             timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 500)) {
-                            if (server.player[playerID].weaponReserve == 0 || server.player[playerID].toRefill == 0) {
+                            if (server.player[playerID].weaponReserve == 0 || server.player[playerID].weaponClip == SHOTGUN_DEFAULT_CLIP) {
                                 server.player[playerID].reloading = 0;
                                 break;
                             }
                             server.player[playerID].weaponClip++;
                             server.player[playerID].weaponReserve--;
-                            server.player[playerID].toRefill--;
-                            if (server.player[playerID].toRefill == 0) {
+                            if (server.player[playerID].weaponClip == SHOTGUN_DEFAULT_CLIP) {
                                 server.player[playerID].reloading = 0;
                             }
                             sendWeaponReload(&server, playerID, 0, 0, 0);
@@ -338,7 +336,6 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
             server->player[playerID].secondary_fire = 0;
             server->player[playerID].alive          = 1;
             server->player[playerID].reloading      = 0;
-            server->player[playerID].toRefill       = 0;
             SetPlayerRespawnPoint(server, playerID);
             SendRespawn(server, playerID);
             LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",

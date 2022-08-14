@@ -289,7 +289,6 @@ void initPlayer(Server*  server,
     server->player[playerID].grenades                         = 3;
     server->player[playerID].hasIntel                         = 0;
     server->player[playerID].reloading                        = 0;
-    server->player[playerID].toRefill                         = 0;
     server->player[playerID].client                           = ' ';
     server->player[playerID].version_minor                    = 0;
     server->player[playerID].version_major                    = 0;
