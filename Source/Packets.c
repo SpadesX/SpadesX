@@ -1614,7 +1614,7 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
             }
             case WEAPON_SMG:
             {
-                timeDiff = NANO_IN_MILLI * 110;
+                timeDiff = NANO_IN_MILLI * 100;
                 break;
             }
             case WEAPON_SHOTGUN:
