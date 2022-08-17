@@ -5,6 +5,7 @@
 #include "Util/DataStream.h"
 #include "Util/Queue.h"
 #include "Util/Types.h"
+#include "Util/Log.h"
 
 #include <stdio.h>
 #include <errno.h>

@@ -19,6 +19,7 @@
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Util/Utlist.h"
+#include "Util/Log.h"
 
 #include <enet/enet.h>
 #include <errno.h>
@@ -529,7 +530,7 @@ void ReadlineNewLine(int signal)
 
     ctrlc = 1;
     printf("\n");
-    LOG_INFO("Are you sure you want to exit? (Y/n)");
+    LOG_INFO_WITHOUT_TIME("Are you sure you want to exit? (Y/n)");
 
     if (write(STDIN_FILENO, "\n", sizeof("\n")) != sizeof("\n")) {
         LOG_DEBUG("epic write fail");

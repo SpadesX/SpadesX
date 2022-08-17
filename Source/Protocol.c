@@ -12,6 +12,7 @@
 #include "Util/Types.h"
 #include "Util/Uthash.h"
 #include "Util/Utlist.h"
+#include "Util/Log.h"
 
 #include <ctype.h>
 #include <enet/enet.h>

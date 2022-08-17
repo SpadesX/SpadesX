@@ -4,6 +4,8 @@
 #include "Structs.h"
 #include "Util/DataStream.h"
 #include "Util/Types.h"
+#include "Util/Log.h"
+#include "Server.h"
 
 #include <enet/enet.h>
 #include <pthread.h>

@@ -3,6 +3,7 @@
 #include "Structs.h"
 #include "Util/Types.h"
 #include "Util/Enums.h"
+#include "Util/Log.h"
 
 #include <math.h>
 #include <stdio.h>

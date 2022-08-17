@@ -1,6 +1,8 @@
 #ifndef JSONHELPERS_H
 #define JSONHELPERS_H
 
+#include "Log.h"
+
 #define READ_VAR_FROM_JSON(type, fmt, pj, var, jsonvar, description, fallback, optional)                 \
     {                                                                                                    \
         struct json_object* _##var;                                                                      \

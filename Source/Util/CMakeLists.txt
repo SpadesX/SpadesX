@@ -11,6 +11,7 @@ set(UTIL_HEADERS
     Types.h
     Physics.h
     Line.h
+    Log.h
 )
 
 set(UTIL_SOURCES
@@ -19,6 +20,7 @@ set(UTIL_SOURCES
     DataStream.c
     Physics.c
     Line.c
+    Log.c
 )
 
 target_sources(util
