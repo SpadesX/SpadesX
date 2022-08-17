@@ -1,15 +1,16 @@
 // Copyright DarkNeutrino 2021
 #include "Protocol.h"
+#include "Server.h"
 #include "Structs.h"
 #include "Util/DataStream.h"
 #include "Util/Types.h"
-#include "Server.h"
 
 #include <enet/enet.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 void updateMaster(Server* server)
 {
@@ -87,4 +88,6 @@ void* keepMasterAlive(void* serverVoid)
     }
     enet_host_destroy(server->master.client);
     pthread_exit(0);
+
+    return NULL;
 }
