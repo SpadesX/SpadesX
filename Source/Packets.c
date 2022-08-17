@@ -527,6 +527,9 @@ void sendKillActionPacket(Server* server,
     if (server->protocol.numPlayers == 0) {
         return;
     }
+    if (server->player[playerID].alive == 0) {
+        return; //Cant kill player if they are dead
+    }
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
     WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
