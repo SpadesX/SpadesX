@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <time.h>
 
-#define VERSION "Beta 1.0" " Compiled on " __DATE__  __TIME__
+#define VERSION "Beta 1.0" " Compiled on " __DATE__ " " __TIME__
 //#define DEBUG
 
 typedef struct
