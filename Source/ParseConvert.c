@@ -1,3 +1,4 @@
+#include "ParseConvert.h"
 #include "Structs.h"
 
 #include <inttypes.h>
@@ -54,21 +55,12 @@ void teamIDToString(Server* server, char* dest, int team)
 uint8 parsePlayer(char* s, uint8* id, char** end)
 {
     uint8 sLength;
-    char* _end;
     if (s[0] != '#' || (sLength = strlen(s)) < 2)
     { // TODO: look up a player by their nickname if the argument doesn't start with #
         return 0;
     }
 
-    *id = strtoimax(s + 1, &_end, 10);
-    if (!_end || _end == s) {
-        return 0;
-    }
-
-    if (end) {
-        *end = _end;
-    }
-    return 1;
+    return parseByte(s + 1, id, end);
 }
 
 uint8 parseByte(char* s, uint8* byte, char** end)
