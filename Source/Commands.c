@@ -234,32 +234,40 @@ static void banRangeCommand(void* serverP, CommandArguments arguments)
 static void clinCommand(void* serverP, CommandArguments arguments)
 {
     Server* server = (Server*) serverP;
-    uint8   ID     = 33;
-    if (arguments.argc == 2 && parsePlayer(arguments.argv[1], &ID, NULL)) {
-        if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
-            char client[15];
-            if (server->player[ID].client == 'o') {
-                snprintf(client, 12, "OpenSpades");
-            } else if (server->player[ID].client == 'B') {
-                snprintf(client, 13, "BetterSpades");
-            } else {
-                snprintf(client, 7, "Voxlap");
-            }
-            sendServerNotice(server,
-                             arguments.player,
-                             arguments.console,
-                             "Player %s is running %s version %d.%d.%d on %s",
-                             server->player[ID].name,
-                             client,
-                             server->player[ID].version_major,
-                             server->player[ID].version_minor,
-                             server->player[ID].version_revision,
-                             server->player[ID].os_info);
-        } else {
-            sendServerNotice(server, arguments.player, arguments.console, "Invalid ID. Player doesnt exist");
-        }
-    } else {
+    uint8   ID     = arguments.player;
+
+    if (arguments.argc > 2) {
+        sendServerNotice(server, arguments.player, arguments.console, "Too many arguments");
+        return;
+    } else if (arguments.argc != 2 && arguments.console) {
         sendServerNotice(server, arguments.player, arguments.console, "No ID given");
+        return;
+    } else if (arguments.argc == 2 && !parsePlayer(arguments.argv[1], &ID, NULL)) {
+        sendServerNotice(server, arguments.player, arguments.console, "Invalid ID. Wrong format");
+        return;
+    }
+
+    if (ID < server->protocol.maxPlayers && isPastJoinScreen(server, ID)) {
+        char client[15];
+        if (server->player[ID].client == 'o') {
+            snprintf(client, 12, "OpenSpades");
+        } else if (server->player[ID].client == 'B') {
+            snprintf(client, 13, "BetterSpades");
+        } else {
+            snprintf(client, 7, "Voxlap");
+        }
+        sendServerNotice(server,
+                         arguments.player,
+                         arguments.console,
+                         "Player %s is running %s version %d.%d.%d on %s",
+                         server->player[ID].name,
+                         client,
+                         server->player[ID].version_major,
+                         server->player[ID].version_minor,
+                         server->player[ID].version_revision,
+                         server->player[ID].os_info);
+    } else {
+        sendServerNotice(server, arguments.player, arguments.console, "Invalid ID. Player doesnt exist");
     }
 }
 
