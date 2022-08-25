@@ -20,16 +20,8 @@ Be sure to install the development versions of those:
 Ubuntu 20.04 doesnt have the latest version of json-c and since SpadesX uses some functions that are in later releases you either have to build it on your own or update to 21.04+
 
 > git clone https://github.com/SpadesX/SpadesX
-
-> cd SpadesX
-
-> git submodule init && git submodule update
-
-> mkdir build && cd build
- 
-> cmake ..
- 
-> make -jX (Replace X with number of threads you have on your system)
+>
+> ./SpadesX/install.sh
 
 ##### Windows
 You can use mingw, but you'll still have to install the libraries first.
