@@ -8,11 +8,11 @@
 #include "Util/DataStream.h"
 #include "Util/Enums.h"
 #include "Util/Line.h"
+#include "Util/Log.h"
 #include "Util/Physics.h"
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Util/Utlist.h"
-#include "Util/Log.h"
 
 #include <ctype.h>
 #include <enet/enet.h>
@@ -528,7 +528,7 @@ void sendKillActionPacket(Server* server,
         return;
     }
     if (server->player[playerID].alive == 0) {
-        return; //Cant kill player if they are dead
+        return; // Cant kill player if they are dead
     }
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     DataStream  stream = {packet->data, packet->dataLength, 0};
@@ -1230,6 +1230,13 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     server->player[playerID].item   = ReadByte(data);
     server->player[playerID].kills  = ReadInt(data);
 
+    if (server->player[playerID].team != 0 && server->player[playerID].team != 1 &&
+        server->player[playerID].team != 255) {
+        LOG_WARNING(
+        "Player %s (#%hhu) sent invalid team. Switching them to Spectator", server->player[playerID].name, playerID);
+        server->player[playerID].team = 255;
+    }
+
     server->protocol.teamUserCount[server->player[playerID].team]++;
 
     ReadColor3i(data, server->player[playerID].color);
@@ -1681,7 +1688,14 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
 {
     uint8 ID = ReadByte(data);
     server->protocol.teamUserCount[server->player[playerID].team]--;
-    uint8 team                    = ReadByte(data);
+    uint8 team = ReadByte(data);
+
+    if (team != 0 && team != 1 && team != 255) {
+        LOG_WARNING(
+        "Player %s (#%hhu) sent invalid team. Switching them to Spectator", server->player[playerID].name, playerID);
+        team = 255;
+    }
+
     server->player[playerID].team = team;
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change team packet", playerID, ID);

@@ -169,7 +169,7 @@ typedef struct
     uint8                grenades;
     uint8                blocks;
     uint8                weaponReserve;
-    short                weaponClip;
+    uint8                weaponClip;
     Vector3i             resultLine[50];
     IPStruct             ipStruct;
     uint8                alive;
