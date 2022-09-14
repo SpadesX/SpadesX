@@ -916,7 +916,7 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
     }
     uint64 timeNow = getNanos();
     if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500) ||
-        !diffIsOlderThen(timeNow, &server->player[playerID].timers.sincePossibleSpadenade, (long) NANO_IN_MILLI * 1000))
+        !diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sincePossibleSpadenade, (long) NANO_IN_MILLI * 1000))
     {
         return;
     }
