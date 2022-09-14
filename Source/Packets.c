@@ -616,7 +616,6 @@ void sendSetHP(Server*  server,
             server->player[hitPlayerID].HP = 100;
 
         if (server->player[hitPlayerID].HP == 0) {
-            server->player[hitPlayerID].alive = 0;
             sendKillActionPacket(server, playerID, hitPlayerID, killReason, respawnTime, 0);
             return;
         }
