@@ -704,7 +704,7 @@ static inline void saveNode(int x, int y, int z)
     nodePos++;
 }
 
-static inline const Vector3i* returnCurrentNode()
+static inline const Vector3i* returnCurrentNode(void)
 {
     return &nodes[--nodePos];
 }

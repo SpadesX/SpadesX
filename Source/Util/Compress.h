@@ -22,7 +22,7 @@ int InitCompressor(int level);
  *
  * @return 0 on success
  */
-int CloseCompressor();
+int CloseCompressor(void);
 
 /**
  * @brief Compress data (using global compressor)

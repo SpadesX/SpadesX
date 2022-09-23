@@ -43,7 +43,7 @@ pthread_mutex_t serverLock;
 
 volatile int ctrlc = 0;
 
-Server* getServer()
+Server* getServer(void)
 {
     return &server; // Needed when we cant pass Server as argument into function
 }
@@ -59,7 +59,7 @@ static void freeStringNodes(stringNode* root)
     }
 }
 
-static void forPlayers()
+static void forPlayers(void)
 {
     for (int playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         if (isPastJoinScreen(&server, playerID)) {
@@ -146,7 +146,7 @@ static void forPlayers()
     }
 }
 
-static void* calculatePhysics()
+static void* calculatePhysics(void)
 {
     server.globalTimers.updateTime = getNanos();
     if (server.globalTimers.updateTime - server.globalTimers.lastUpdateTime >= (1000000000 / 60)) {
@@ -369,7 +369,7 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
     }
 }
 
-static void* WorldUpdate()
+static void* WorldUpdate(void)
 {
     for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
         OnPlayerUpdate(&server, playerID);
@@ -540,7 +540,7 @@ void ReadlineNewLine(int signal)
     rl_redisplay();
 }
 
-void StopServer()
+void StopServer(void)
 {
     server.running = 0;
 }

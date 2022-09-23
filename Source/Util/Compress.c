@@ -31,7 +31,7 @@ int InitCompressor(int level)
     return 0;
 }
 
-int CloseCompressor()
+int CloseCompressor(void)
 {
     if (GlobalCompressor == NULL) {
         LOG_ERROR("Compressor is not initialized");

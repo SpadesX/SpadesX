@@ -18,7 +18,7 @@
 
 extern pthread_mutex_t serverLock;
 
-Server* getServer();
+Server* getServer(void);
 
 void StartServer(uint16      port,
                  uint32      connections,
