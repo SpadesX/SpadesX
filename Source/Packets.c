@@ -916,7 +916,8 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
     }
     uint64 timeNow = getNanos();
     if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500) ||
-        !diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sincePossibleSpadenade, (long) NANO_IN_MILLI * 1000))
+        !diffIsOlderThenDontUpdate(
+        timeNow, server->player[playerID].timers.sincePossibleSpadenade, (long) NANO_IN_MILLI * 1000))
     {
         return;
     }
@@ -931,21 +932,21 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
             free(grenade);
             return;
         }
-        float length = sqrt((velX * velX) + (velY * velY) + (velZ * velZ));
-        if (length == 0) {
-            length = 1; // In case we get 000 velocity without this normalization would produce -nan
+        grenade->velocity.x = velX;
+        grenade->velocity.y = velY;
+        grenade->velocity.z = velZ;
+        Vector3f velocity = {grenade->velocity.x - server->player[playerID].movement.velocity.x,
+                             grenade->velocity.y - server->player[playerID].movement.velocity.y,
+                             grenade->velocity.z - server->player[playerID].movement.velocity.z};
+        float length = sqrt((velocity.x * velocity.x) + (velocity.y * velocity.y) + (velocity.z * velocity.z));
+        if (length > 2) {
+            float lenghtNorm = 1 / length;
+            velocity.x = ((velocity.x * lenghtNorm) * 2) + server->player[playerID].movement.velocity.x;
+            velocity.y = ((velocity.y * lenghtNorm) * 2) + server->player[playerID].movement.velocity.y;
+            velocity.z = ((velocity.z * lenghtNorm) * 2) + server->player[playerID].movement.velocity.z;
+
         }
-        if (length > 1.f) { // Normalize if we get velocity vector that has length > 1
-            float normLength    = 1 / length;
-            grenade->velocity.x = velX * normLength;
-            grenade->velocity.y = velY * normLength;
-            grenade->velocity.z = velZ * normLength;
-        } else {
-            grenade->velocity.x = velX;
-            grenade->velocity.y = velY;
-            grenade->velocity.z = velZ;
-        }
-        Vector3f posZ1 = grenade->position;
+        Vector3f posZ1    = grenade->position;
         posZ1.z += 1;
         Vector3f posZ2 = grenade->position;
         posZ2.z += 2;
