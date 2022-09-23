@@ -61,7 +61,10 @@ uint8 LoadMap(Server* server, const char* path, int mapSize[3])
     }
     fclose(file);
 
+    LOG_STATUS("Transforming map from VXL");
     mapvxlLoadVXL(&server->map.map, buffer);
+    LOG_STATUS("Finished transforming map");
+
     free(buffer);
     LOG_STATUS("Compressing map data");
 
