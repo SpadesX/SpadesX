@@ -778,10 +778,9 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         length = 2048; // Lets limit messages to 2048 characters
     }
     char* message =
-    calloc(length + 2, sizeof(char)); // Allocated 1 more byte in the case that client sent us non null ending string
+    calloc(length + 1, sizeof(char)); // Allocated 1 more byte in the case that client sent us non null ending string
     ReadArray(data, message, length);
     if (message[length - 1] != '\0') {
-        LOG_STATUS("Adding null");
         message[length] = '\0';
         length++;
         packetSize = length + 3;
