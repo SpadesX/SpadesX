@@ -774,6 +774,9 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     uint8  ID         = ReadByte(data);
     int    meantfor   = ReadByte(data);
     uint32 length     = DataLeft(data);
+    if (length > 2048) {
+        length = 2048; // Lets limit messages to 2048 characters
+    }
     char*  message    = calloc(length + 1, sizeof(char));
     ReadArray(data, message, length);
     if (player != ID) {
