@@ -777,8 +777,12 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     if (length > 2048) {
         length = 2048; // Lets limit messages to 2048 characters
     }
-    char*  message    = calloc(length + 1, sizeof(char));
+    char* message =
+    calloc(length + 2, sizeof(char)); // Allocated 1 more byte in the case that client sent us non null ending string
     ReadArray(data, message, length);
+    if (message[length] != '\0') {
+        message[length + 1] = '\0';
+    }
     if (player != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player, ID);
     }
@@ -814,7 +818,6 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
         return;
     }
 
-    message[length] = '\0';
     char meantFor[7];
     switch (meantfor) {
         case 0:
@@ -938,18 +941,17 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         grenade->velocity.x = velX;
         grenade->velocity.y = velY;
         grenade->velocity.z = velZ;
-        Vector3f velocity = {grenade->velocity.x - server->player[playerID].movement.velocity.x,
-                             grenade->velocity.y - server->player[playerID].movement.velocity.y,
-                             grenade->velocity.z - server->player[playerID].movement.velocity.z};
-        float length = sqrt((velocity.x * velocity.x) + (velocity.y * velocity.y) + (velocity.z * velocity.z));
+        Vector3f velocity   = {grenade->velocity.x - server->player[playerID].movement.velocity.x,
+                               grenade->velocity.y - server->player[playerID].movement.velocity.y,
+                               grenade->velocity.z - server->player[playerID].movement.velocity.z};
+        float    length     = sqrt((velocity.x * velocity.x) + (velocity.y * velocity.y) + (velocity.z * velocity.z));
         if (length > 2) {
             float lenghtNorm = 1 / length;
-            velocity.x = ((velocity.x * lenghtNorm) * 2) + server->player[playerID].movement.velocity.x;
-            velocity.y = ((velocity.y * lenghtNorm) * 2) + server->player[playerID].movement.velocity.y;
-            velocity.z = ((velocity.z * lenghtNorm) * 2) + server->player[playerID].movement.velocity.z;
-
+            velocity.x       = ((velocity.x * lenghtNorm) * 2) + server->player[playerID].movement.velocity.x;
+            velocity.y       = ((velocity.y * lenghtNorm) * 2) + server->player[playerID].movement.velocity.y;
+            velocity.z       = ((velocity.z * lenghtNorm) * 2) + server->player[playerID].movement.velocity.z;
         }
-        Vector3f posZ1    = grenade->position;
+        Vector3f posZ1 = grenade->position;
         posZ1.z += 1;
         Vector3f posZ2 = grenade->position;
         posZ2.z += 2;
@@ -1234,7 +1236,8 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
     server->player[playerID].kills  = ReadInt(data);
 
     if (server->player[playerID].team != 0 && server->player[playerID].team != 1 &&
-        server->player[playerID].team != 255) {
+        server->player[playerID].team != 255)
+    {
         LOG_WARNING(
         "Player %s (#%hhu) sent invalid team. Switching them to Spectator", server->player[playerID].name, playerID);
         server->player[playerID].team = 255;
