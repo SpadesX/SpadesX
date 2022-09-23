@@ -770,7 +770,7 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     if (server->protocol.numPlayers == 0) {
         return;
     }
-    uint32 packetSize = event.packet->dataLength + 1;
+    uint32 packetSize = event.packet->dataLength;
     uint8  ID         = ReadByte(data);
     int    meantfor   = ReadByte(data);
     uint32 length     = DataLeft(data);
@@ -780,8 +780,11 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     char* message =
     calloc(length + 2, sizeof(char)); // Allocated 1 more byte in the case that client sent us non null ending string
     ReadArray(data, message, length);
-    if (message[length] != '\0') {
-        message[length + 1] = '\0';
+    if (message[length - 1] != '\0') {
+        LOG_STATUS("Adding null");
+        message[length] = '\0';
+        length++;
+        packetSize = length + 3;
     }
     if (player != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player, ID);
