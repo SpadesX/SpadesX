@@ -367,6 +367,23 @@ void sendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
     }
 }
 
+void sendSetColorToPlayer(Server* server, uint8 playerID, uint8 sendToID, uint8 R, uint8 G, uint8 B)
+{
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
+    ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_SET_COLOR);
+    WriteByte(&stream, playerID);
+    WriteByte(&stream, B);
+    WriteByte(&stream, G);
+    WriteByte(&stream, R);
+    if (enet_peer_send(server->player[sendToID].peer, 0, packet) != 0) {
+        enet_packet_destroy(packet);
+    }
+}
+
 void sendSetTool(Server* server, uint8 playerID, uint8 tool)
 {
     if (server->protocol.numPlayers == 0) {
@@ -403,7 +420,45 @@ void sendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
+        } else if (server->player[player].state == STATE_STARTING_MAP ||
+                   server->player[player].state == STATE_LOADING_CHUNKS)
+        {
+            blockNode* node     = (blockNode*) malloc(sizeof(*node));
+            node->position.x    = start.x;
+            node->position.y    = start.y;
+            node->position.z    = start.z;
+            node->positionEnd.x = end.x;
+            node->positionEnd.y = end.y;
+            node->positionEnd.z = end.z;
+            node->color         = server->player[playerID].color;
+            node->type          = 10;
+            node->senderID      = playerID;
+            LL_APPEND(server->player[player].blockBuffer, node);
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
+    }
+}
+
+void sendBlockLineToPlayer(Server* server, uint8 playerID, uint8 sendToID, Vector3i start, Vector3i end)
+{
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
+    ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_BLOCK_LINE);
+    WriteByte(&stream, playerID);
+    WriteInt(&stream, start.x);
+    WriteInt(&stream, start.y);
+    WriteInt(&stream, start.z);
+    WriteInt(&stream, end.x);
+    WriteInt(&stream, end.y);
+    WriteInt(&stream, end.z);
+    uint8 sent = 0;
+    if (enet_peer_send(server->player[sendToID].peer, 0, packet) == 0) {
+        sent = 1;
     }
     if (sent == 0) {
         enet_packet_destroy(packet);
@@ -429,7 +484,39 @@ void sendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, in
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
+        } else if (server->player[player].state == STATE_STARTING_MAP ||
+                   server->player[player].state == STATE_LOADING_CHUNKS)
+        {
+            blockNode* node  = (blockNode*) malloc(sizeof(*node));
+            node->position.x = X;
+            node->position.y = Y;
+            node->position.z = Z;
+            node->color      = server->player[playerID].color;
+            node->type       = actionType;
+            node->senderID   = playerID;
+            LL_APPEND(server->player[player].blockBuffer, node);
         }
+    }
+    if (sent == 0) {
+        enet_packet_destroy(packet);
+    }
+}
+void sendBlockActionToPlayer(Server* server, uint8 playerID, uint8 sendToID, uint8 actionType, int X, int Y, int Z)
+{
+    if (server->protocol.numPlayers == 0) {
+        return;
+    }
+    ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+    DataStream  stream = {packet->data, packet->dataLength, 0};
+    WriteByte(&stream, PACKET_TYPE_BLOCK_ACTION);
+    WriteByte(&stream, playerID);
+    WriteByte(&stream, actionType);
+    WriteInt(&stream, X);
+    WriteInt(&stream, Y);
+    WriteInt(&stream, Z);
+    uint8 sent = 0;
+    if (enet_peer_send(server->player[sendToID].peer, 0, packet) == 0) {
+        sent = 1;
     }
     if (sent == 0) {
         enet_packet_destroy(packet);

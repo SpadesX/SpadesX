@@ -16,10 +16,10 @@
 #include "Util/Enums.h"
 #include "Util/JSONHelpers.h"
 #include "Util/Line.h"
+#include "Util/Log.h"
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Util/Utlist.h"
-#include "Util/Log.h"
 
 #include <enet/enet.h>
 #include <errno.h>
@@ -85,7 +85,8 @@ static void forPlayers(void)
                         }
                     }
                     if (diffIsOlderThen(
-                        timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * milliseconds)) {
+                        timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * milliseconds))
+                    {
                         server.player[playerID].weaponClip--;
                     }
                 }
@@ -95,7 +96,8 @@ static void forPlayers(void)
                     case WEAPON_SMG:
                     {
                         if (diffIsOlderThen(
-                            timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 2500)) {
+                            timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 2500))
+                        {
                             uint8 defaultAmmo = RIFLE_DEFAULT_CLIP;
                             if (server.player[playerID].weapon == WEAPON_SMG) {
                                 defaultAmmo = SMG_DEFAULT_CLIP;
@@ -113,8 +115,11 @@ static void forPlayers(void)
                     case WEAPON_SHOTGUN:
                     {
                         if (diffIsOlderThen(
-                            timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 500)) {
-                            if (server.player[playerID].weaponReserve == 0 || server.player[playerID].weaponClip == SHOTGUN_DEFAULT_CLIP) {
+                            timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 500))
+                        {
+                            if (server.player[playerID].weaponReserve == 0 ||
+                                server.player[playerID].weaponClip == SHOTGUN_DEFAULT_CLIP)
+                            {
                                 server.player[playerID].reloading = 0;
                                 break;
                             }
@@ -140,6 +145,48 @@ static void forPlayers(void)
                     sendServerNotice(&server, playerID, 0, message->string);
                 }
                 server.player[playerID].periodicDelayIndex = fmin(server.player[playerID].periodicDelayIndex + 1, 4);
+            }
+        } else if (server.player[playerID].state == STATE_PICK_SCREEN) {
+            blockNode *node, *tmp;
+            LL_FOREACH_SAFE(server.player[playerID].blockBuffer, node, tmp)
+            {
+                if (node->type == 10) {
+                    sendSetColorToPlayer(&server,
+                                         node->senderID,
+                                         playerID,
+                                         node->color.colorArray[0],
+                                         node->color.colorArray[1],
+                                         node->color.colorArray[2]);
+                    sendBlockLineToPlayer(&server, node->senderID, playerID, node->position, node->positionEnd);
+                    sendSetColorToPlayer(&server,
+                                         node->senderID,
+                                         playerID,
+                                         server.player[node->senderID].color.colorArray[0],
+                                         server.player[node->senderID].color.colorArray[1],
+                                         server.player[node->senderID].color.colorArray[2]);
+                } else {
+                    sendSetColorToPlayer(&server,
+                                         node->senderID,
+                                         playerID,
+                                         node->color.colorArray[0],
+                                         node->color.colorArray[1],
+                                         node->color.colorArray[2]);
+                    sendBlockActionToPlayer(&server,
+                                            node->senderID,
+                                            playerID,
+                                            node->type,
+                                            node->position.x,
+                                            node->position.y,
+                                            node->position.z);
+                    sendSetColorToPlayer(&server,
+                                         node->senderID,
+                                         playerID,
+                                         server.player[node->senderID].color.colorArray[0],
+                                         server.player[node->senderID].color.colorArray[1],
+                                         server.player[node->senderID].color.colorArray[2]);
+                }
+                LL_DELETE(server.player[playerID].blockBuffer, node);
+                free(node);
             }
         } else if (isPastStateData(&server, playerID)) {
         }
@@ -311,6 +358,7 @@ static void OnPlayerUpdate(Server* server, uint8 playerID)
 {
     switch (server->player[playerID].state) {
         case STATE_STARTING_MAP:
+            server->player[playerID].blockBuffer = NULL;
             sendMapStart(server, playerID);
             break;
         case STATE_LOADING_CHUNKS:
@@ -376,7 +424,8 @@ static void* WorldUpdate(void)
         if (isPastJoinScreen(&server, playerID)) {
             uint64 time = getNanos();
             if (time - server.player[playerID].timers.timeSinceLastWU >=
-                (uint64) (NANO_IN_SECOND / server.player[playerID].ups)) {
+                (uint64) (NANO_IN_SECOND / server.player[playerID].ups))
+            {
                 SendWorldUpdate(&server, playerID);
                 server.player[playerID].timers.timeSinceLastWU = getNanos();
             }

@@ -7,14 +7,17 @@
 #include "Util/Queue.h"
 #include "Util/Types.h"
 #include "Util/Uthash.h"
+#include "Util/Utlist.h"
 
 #include <enet/enet.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <time.h>
 
-#define VERSION "Beta 1.0" " Compiled on " __DATE__ " " __TIME__
-//#define DEBUG
+#define VERSION \
+    "Beta 1.0"  \
+    " Compiled on " __DATE__ " " __TIME__
+// #define DEBUG
 
 typedef struct
 {
@@ -142,6 +145,16 @@ typedef struct
     float              timeSinceStartSimulated;
 } GlobalTimers;
 
+typedef struct blockNode
+{
+    struct blockNode* next;
+    Vector3i          position;
+    Vector3i          positionEnd;
+    Color3i           color;
+    uint8             type;
+    uint8             senderID;
+} blockNode;
+
 typedef struct
 {
     Queue*               queues;
@@ -191,6 +204,7 @@ typedef struct
     uint8                periodicDelayIndex;
     uint8                invalidPosCount;
     stringNode*          currentPeriodicMessage;
+    blockNode*           blockBuffer;
 
     uint8    movForward;
     uint8    movBackwards;
@@ -254,10 +268,11 @@ typedef struct
     char   commandDesc[1024];
 } CommandManager;
 
-typedef struct mapNode {
-    int id;
-    Vector3i pos;
-    uint8 visited;
+typedef struct mapNode
+{
+    int            id;
+    Vector3i       pos;
+    uint8          visited;
     UT_hash_handle hh;
 } mapNode;
 

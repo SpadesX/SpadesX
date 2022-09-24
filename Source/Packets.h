@@ -19,9 +19,12 @@ void sendPlayerLeft(Server* server, uint8 playerID);
 void sendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint8 clip, uint8 reserve);
 void sendWeaponInput(Server* server, uint8 playerID, uint8 wInput);
 void sendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B);
+void sendSetColorToPlayer(Server* server, uint8 playerID, uint8 sendToID, uint8 R, uint8 G, uint8 B);
 void sendSetTool(Server* server, uint8 playerID, uint8 tool);
 void sendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end);
+void sendBlockLineToPlayer(Server* server, uint8 playerID, uint8 sendToID, Vector3i start, Vector3i end);
 void sendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, int Y, int Z);
+void sendBlockActionToPlayer(Server* server, uint8 playerID, uint8 sendToID, uint8 actionType, int X, int Y, int Z);
 void sendStateData(Server* server, uint8 playerID);
 void sendInputData(Server* server, uint8 playerID);
 void sendKillActionPacket(Server* server,
