@@ -55,22 +55,22 @@ static void initBabel(Server* server)
 
     for (int x = 206; x <= 306; ++x) {
         for (int y = 240; y <= 272; ++y) {
-            mapvxlSetColor(&server->map.map, x, y, 1, platformColor.color);
+            mapvxl_set_color(&server->map.map, x, y, 1, platformColor.color);
         }
     }
     // intel
     server->protocol.gameMode.intel[0].z =
-    mapvxlFindTopBlock(&server->map.map, 255, 255); // We still need highest point of map. While this is 0 for normal
+    mapvxl_find_top_block(&server->map.map, 255, 255); // We still need highest point of map. While this is 0 for normal
                                                     // map. The platform may not be there in all sizes
-    server->protocol.gameMode.intel[0].x   = round((float)server->map.map.MAP_X_MAX / 2);
-    server->protocol.gameMode.intel[0].y   = round((float)server->map.map.MAP_Y_MAX / 2);
+    server->protocol.gameMode.intel[0].x   = round((float)server->map.map.size_x / 2);
+    server->protocol.gameMode.intel[0].y   = round((float)server->map.map.size_y / 2);
     server->protocol.gameMode.intelHeld[0] = 0;
 
     server->protocol.gameMode.intel[1].z =
-    mapvxlFindTopBlock(&server->map.map, 255, 255); // We still need highest point of map. While this is 0 for normal
+    mapvxl_find_top_block(&server->map.map, 255, 255); // We still need highest point of map. While this is 0 for normal
                                                     // map. The platform may not be there in all sizes
-    server->protocol.gameMode.intel[1].x   = round((float)server->map.map.MAP_X_MAX / 2);
-    server->protocol.gameMode.intel[1].y   = round((float)server->map.map.MAP_Y_MAX / 2);
+    server->protocol.gameMode.intel[1].x   = round((float)server->map.map.size_x / 2);
+    server->protocol.gameMode.intel[1].y   = round((float)server->map.map.size_y / 2);
     server->protocol.gameMode.intelHeld[1] = 0;
     // bases
     server->protocol.gameMode.base[0] = SetIntelTentSpawnPoint(server, 0);

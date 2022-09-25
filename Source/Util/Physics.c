@@ -67,16 +67,16 @@ static inline int clipbox(Server* server, float x, float y, float z)
 {
     int sz;
 
-    if (x < 0 || x >= server->map.map.MAP_X_MAX || y < 0 || y >= server->map.map.MAP_Y_MAX)
+    if (x < 0 || x >= server->map.map.size_x || y < 0 || y >= server->map.map.size_y)
         return 1;
     else if (z < 0)
         return 0;
     sz = (int) z;
-    if (sz == server->map.map.MAP_Z_MAX - 1)
-        sz = server->map.map.MAP_Z_MAX - 2;
-    else if (sz >= server->map.map.MAP_Z_MAX)
+    if (sz == server->map.map.size_z - 1)
+        sz = server->map.map.size_z - 2;
+    else if (sz >= server->map.map.size_z)
         return 1;
-    return mapvxlIsSolid(&server->map.map, (int) x, (int) y, sz);
+    return mapvxl_is_solid(&server->map.map, (int) x, (int) y, sz);
 }
 
 // same as isvoxelsolid() but with wrapping
@@ -84,27 +84,27 @@ static inline long isvoxelsolidwrap(Server* server, long x, long y, long z)
 {
     if (z < 0)
         return 0;
-    else if (z >= server->map.map.MAP_Z_MAX)
+    else if (z >= server->map.map.size_z)
         return 1;
-    return mapvxlIsSolid(&server->map.map, (int) x & (server->map.map.MAP_X_MAX-1), (int) y & (server->map.map.MAP_Y_MAX-1), z);
+    return mapvxl_is_solid(&server->map.map, (int) x & (server->map.map.size_x-1), (int) y & (server->map.map.size_y-1), z);
 }
 
 // same as isvoxelsolid but water is empty
 static inline long clipworld(Server* server, long x, long y, long z)
 {
     int sz;
-    if (x < 0 || x >= server->map.map.MAP_X_MAX || y < 0 || y >= server->map.map.MAP_Y_MAX)
+    if (x < 0 || x >= server->map.map.size_x || y < 0 || y >= server->map.map.size_y)
         return 0;
     if (z < 0)
         return 0;
     sz = (int) z;
-    if (sz == server->map.map.MAP_Z_MAX - 1)
-        sz = server->map.map.MAP_Z_MAX - 2;
-    else if (sz >= server->map.map.MAP_Z_MAX - 1)
+    if (sz == server->map.map.size_z - 1)
+        sz = server->map.map.size_z - 2;
+    else if (sz >= server->map.map.size_z - 1)
         return 1;
     else if (sz < 0)
         return 0;
-    return mapvxlIsSolid(&server->map.map, (int) x, (int) y, sz);
+    return mapvxl_is_solid(&server->map.map, (int) x, (int) y, sz);
 }
 
 long canSee(Server* server, float x0, float y0, float z0, float x1, float y1, float z1)

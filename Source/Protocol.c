@@ -364,8 +364,8 @@ uint8 isPastJoinScreen(Server* server, uint8 playerID)
 
 uint8 vecValidPos(Server* server, Vector3i pos)
 {
-    if (pos.x < server->map.map.MAP_X_MAX && pos.x >= 0 && pos.y < server->map.map.MAP_Y_MAX && pos.y >= 0 &&
-        pos.z < server->map.map.MAP_Z_MAX && pos.z >= 0)
+    if (pos.x < server->map.map.size_x && pos.x >= 0 && pos.y < server->map.map.size_y && pos.y >= 0 &&
+        pos.z < server->map.map.size_z && pos.z >= 0)
     {
         return 1;
     } else {
@@ -375,8 +375,8 @@ uint8 vecValidPos(Server* server, Vector3i pos)
 
 uint8 vecfValidPos(Server* server, Vector3f pos)
 {
-    if (pos.x < server->map.map.MAP_X_MAX && pos.x >= 0 && pos.y < server->map.map.MAP_Y_MAX && pos.y >= 0 &&
-        pos.z < server->map.map.MAP_Z_MAX && pos.z >= 0)
+    if (pos.x < server->map.map.size_x && pos.x >= 0 && pos.y < server->map.map.size_y && pos.y >= 0 &&
+        pos.z < server->map.map.size_z && pos.z >= 0)
     {
         return 1;
     } else {
@@ -385,8 +385,8 @@ uint8 vecfValidPos(Server* server, Vector3f pos)
 }
 uint8 validPos(Server* server, int x, int y, int z)
 {
-    if (x < server->map.map.MAP_X_MAX && x >= 0 && y < server->map.map.MAP_Y_MAX && y >= 0 &&
-        z < server->map.map.MAP_Z_MAX && z >= 0)
+    if (x < server->map.map.size_x && x >= 0 && y < server->map.map.size_y && y >= 0 &&
+        z < server->map.map.size_z && z >= 0)
     {
         return 1;
     } else {
@@ -405,18 +405,18 @@ uint8 validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z)
         z = (int) Z + 2;
     }
 
-    if (x < server->map.map.MAP_X_MAX && x >= 0 && y < server->map.map.MAP_Y_MAX && y >= 0 &&
-        (z < server->map.map.MAP_Z_MAX || (z == 64 && server->player[playerID].crouching)) &&
+    if (x < server->map.map.size_x && x >= 0 && y < server->map.map.size_y && y >= 0 &&
+        (z < server->map.map.size_z || (z == 64 && server->player[playerID].crouching)) &&
         (z >= 0 || ((z == -1) || (z == -2 && server->player[playerID].jumping))))
     {
-        if ((!mapvxlIsSolid(&server->map.map, x, y, z) ||
+        if ((!mapvxl_is_solid(&server->map.map, x, y, z) ||
              (z == 63 || z == -1 || (z == -2 && server->player[playerID].jumping) ||
               (z == 64 && server->player[playerID].crouching) || server->player[playerID].jumping) ||
-             (mapvxlIsSolid(&server->map.map, x, y, z) && server->player[playerID].crouching)) &&
-            (!mapvxlIsSolid(&server->map.map, x, y, z - 1) ||
+             (mapvxl_is_solid(&server->map.map, x, y, z) && server->player[playerID].crouching)) &&
+            (!mapvxl_is_solid(&server->map.map, x, y, z - 1) ||
              ((z <= 1 && z > -2) || (z == -2 && server->player[playerID].jumping)) ||
              (z - 1 == 63 && server->player[playerID].crouching)) &&
-            (!mapvxlIsSolid(&server->map.map, x, y, z - 2) ||
+            (!mapvxl_is_solid(&server->map.map, x, y, z - 2) ||
              ((z <= 2 && z > -2) || (z == -2 && server->player[playerID].jumping))))
         /* Dont even think about this
         This is what happens when map doesnt account for full height of
@@ -711,10 +711,10 @@ static inline const Vector3i* returnCurrentNode(void)
 
 static inline void addNode(Server* server, int x, int y, int z)
 {
-    if ((x >= 0 && x < server->map.map.MAP_X_MAX) && (y >= 0 && y < server->map.map.MAP_Y_MAX) &&
-        (z >= 0 && z < server->map.map.MAP_Z_MAX))
+    if ((x >= 0 && x < server->map.map.size_x) && (y >= 0 && y < server->map.map.size_y) &&
+        (z >= 0 && z < server->map.map.size_z))
     {
-        if (mapvxlIsSolid(&server->map.map, x, y, z)) {
+        if (mapvxl_is_solid(&server->map.map, x, y, z)) {
             saveNode(x, y, z);
         }
     }
@@ -722,7 +722,7 @@ static inline void addNode(Server* server, int x, int y, int z)
 
 uint8 checkNode(Server* server, Vector3i position)
 {
-    if (vecValidPos(server, position) && mapvxlIsSolid(&server->map.map, position.x, position.y, position.z) == 0) {
+    if (vecValidPos(server, position) && mapvxl_is_solid(&server->map.map, position.x, position.y, position.z) == 0) {
         return 1;
     }
     if (nodes == NULL) {
@@ -747,7 +747,7 @@ uint8 checkNode(Server* server, Vector3i position)
         }
         const Vector3i* currentNode = returnCurrentNode();
         position.z                  = currentNode->z;
-        if (position.z >= server->map.map.MAP_Z_MAX - 2) {
+        if (position.z >= server->map.map.size_z - 2) {
             mapNode* delNode;
             mapNode* tmpNode;
             if (visitedMap != NULL) {
@@ -766,8 +766,8 @@ uint8 checkNode(Server* server, Vector3i position)
 
         // already visited?
         mapNode* node;
-        int      id = position.x * server->map.map.MAP_Y_MAX * server->map.map.MAP_Z_MAX +
-                 position.y * server->map.map.MAP_Z_MAX + position.z;
+        int      id = position.x * server->map.map.size_y * server->map.map.size_z +
+                 position.y * server->map.map.size_z + position.z;
         HASH_FIND_INT(visitedMap, &id, node);
         if (node == NULL) {
             node          = (mapNode*) malloc(sizeof *node);
@@ -790,7 +790,7 @@ uint8 checkNode(Server* server, Vector3i position)
     {
         Vector3i block = {Node->pos.x, Node->pos.y, Node->pos.z};
         if (vecValidPos(server, block)) {
-            mapvxlSetAir(&server->map.map, Node->pos.x, Node->pos.y, Node->pos.z);
+            mapvxl_set_air(&server->map.map, Node->pos.x, Node->pos.y, Node->pos.z);
         }
         HASH_DEL(visitedMap, Node);
         free(Node);
@@ -862,7 +862,7 @@ uint8 checkUnderTent(Server* server, uint8 team)
     uint8 count = 0;
     for (int x = server->protocol.gameMode.base[team].x - 1; x <= server->protocol.gameMode.base[team].x; x++) {
         for (int y = server->protocol.gameMode.base[team].y - 1; y <= server->protocol.gameMode.base[team].y; y++) {
-            if (mapvxlIsSolid(&server->map.map, x, y, server->protocol.gameMode.base[team].z) == 0) {
+            if (mapvxl_is_solid(&server->map.map, x, y, server->protocol.gameMode.base[team].z) == 0) {
                 count++;
             }
         }
@@ -873,7 +873,7 @@ uint8 checkUnderTent(Server* server, uint8 team)
 uint8 checkUnderIntel(Server* server, uint8 team)
 {
     uint8 ret = 0;
-    if (mapvxlIsSolid(&server->map.map,
+    if (mapvxl_is_solid(&server->map.map,
                       server->protocol.gameMode.intel[team].x,
                       server->protocol.gameMode.intel[team].y,
                       server->protocol.gameMode.intel[team].z) == 0)
@@ -948,14 +948,14 @@ uint8 checkInTent(Server* server, uint8 team)
     uint8    ret      = 0;
     Vector3f checkPos = server->protocol.gameMode.base[team];
     checkPos.z--;
-    if (mapvxlIsSolid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z))
+    if (mapvxl_is_solid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z))
     { // Implement check for solid blocks in XYZ range in libmapvxl
         ret = 1;
-    } else if (mapvxlIsSolid(&server->map.map, (int) checkPos.x - 1, (int) checkPos.y, (int) checkPos.z)) {
+    } else if (mapvxl_is_solid(&server->map.map, (int) checkPos.x - 1, (int) checkPos.y, (int) checkPos.z)) {
         ret = 1;
-    } else if (mapvxlIsSolid(&server->map.map, (int) checkPos.x, (int) checkPos.y - 1, (int) checkPos.z)) {
+    } else if (mapvxl_is_solid(&server->map.map, (int) checkPos.x, (int) checkPos.y - 1, (int) checkPos.z)) {
         ret = 1;
-    } else if (mapvxlIsSolid(&server->map.map, (int) checkPos.x - 1, (int) checkPos.y - 1, (int) checkPos.z)) {
+    } else if (mapvxl_is_solid(&server->map.map, (int) checkPos.x - 1, (int) checkPos.y - 1, (int) checkPos.z)) {
         ret = 1;
     }
 
@@ -967,7 +967,7 @@ uint8 checkInIntel(Server* server, uint8 team)
     uint8    ret      = 0;
     Vector3f checkPos = server->protocol.gameMode.intel[team];
     checkPos.z--;
-    if (mapvxlIsSolid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z)) {
+    if (mapvxl_is_solid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z)) {
         ret = 1;
     }
     return ret;
@@ -982,7 +982,7 @@ Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
     Vector3f position;
     position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
     position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-    position.z = mapvxlFindTopBlock(&server->map.map, position.x, position.y);
+    position.z = mapvxl_find_top_block(&server->map.map, position.x, position.y);
     return position;
 }
 
@@ -1052,7 +1052,7 @@ void handleTentAndIntel(Server* server, uint8 playerID)
                 sendRestock(server, playerID);
                 server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
                 if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-                    Vector3f babelIntelPos             = {255, 255, mapvxlFindTopBlock(&server->map.map, 255, 255)};
+                    Vector3f babelIntelPos             = {255, 255, mapvxl_find_top_block(&server->map.map, 255, 255)};
                     server->protocol.gameMode.intel[0] = babelIntelPos;
                     server->protocol.gameMode.intel[1] = babelIntelPos;
                     sendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
@@ -1105,21 +1105,21 @@ void handleGrenade(Server* server, uint8 playerID)
                 float y = grenade->position.y;
                 for (int z = grenade->position.z - 1; z <= grenade->position.z + 1; ++z) {
                     if (z < 62 &&
-                        (x >= 0 && x <= server->map.map.MAP_X_MAX && x - 1 >= 0 && x - 1 <= server->map.map.MAP_X_MAX &&
-                         x + 1 >= 0 && x + 1 <= server->map.map.MAP_X_MAX) &&
-                        (y >= 0 && y <= server->map.map.MAP_Y_MAX && y - 1 >= 0 && y - 1 <= server->map.map.MAP_Y_MAX &&
-                         y + 1 >= 0 && y + 1 <= server->map.map.MAP_Y_MAX))
+                        (x >= 0 && x <= server->map.map.size_x && x - 1 >= 0 && x - 1 <= server->map.map.size_x &&
+                         x + 1 >= 0 && x + 1 <= server->map.map.size_x) &&
+                        (y >= 0 && y <= server->map.map.size_y && y - 1 >= 0 && y - 1 <= server->map.map.size_y &&
+                         y + 1 >= 0 && y + 1 <= server->map.map.size_y))
                     {
                         if (allowToDestroy) {
-                            mapvxlSetAir(&server->map.map, x - 1, y - 1, z);
-                            mapvxlSetAir(&server->map.map, x, y - 1, z);
-                            mapvxlSetAir(&server->map.map, x + 1, y - 1, z);
-                            mapvxlSetAir(&server->map.map, x - 1, y, z);
-                            mapvxlSetAir(&server->map.map, x, y, z);
-                            mapvxlSetAir(&server->map.map, x + 1, y, z);
-                            mapvxlSetAir(&server->map.map, x - 1, y + 1, z);
-                            mapvxlSetAir(&server->map.map, x, y + 1, z);
-                            mapvxlSetAir(&server->map.map, x + 1, y + 1, z);
+                            mapvxl_set_air(&server->map.map, x - 1, y - 1, z);
+                            mapvxl_set_air(&server->map.map, x, y - 1, z);
+                            mapvxl_set_air(&server->map.map, x + 1, y - 1, z);
+                            mapvxl_set_air(&server->map.map, x - 1, y, z);
+                            mapvxl_set_air(&server->map.map, x, y, z);
+                            mapvxl_set_air(&server->map.map, x + 1, y, z);
+                            mapvxl_set_air(&server->map.map, x - 1, y + 1, z);
+                            mapvxl_set_air(&server->map.map, x, y + 1, z);
+                            mapvxl_set_air(&server->map.map, x + 1, y + 1, z);
                         }
                         Vector3i pos;
                         pos.x = grenade->position.x;
@@ -1174,7 +1174,7 @@ void SetPlayerRespawnPoint(Server* server, uint8 playerID)
         server->player[playerID].movement.position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
         server->player[playerID].movement.position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
         server->player[playerID].movement.position.z =
-        mapvxlFindTopBlock(
+        mapvxl_find_top_block(
         &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y) -
         2.36f;
 

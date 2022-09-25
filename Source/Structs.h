@@ -82,7 +82,7 @@ typedef struct
     uint32      compressedSize;
     Vector3i    resultLine[50];
     size_t      mapSize;
-    MapVxl      map;
+    mapvxl_t      map;
     stringNode* mapList;
 } Map;
 

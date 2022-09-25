@@ -62,19 +62,19 @@ int blockLine(const Vector3i* v1, const Vector3i* v2, Vector3i* result)
 
         if (tmax.z <= tmax.x && tmax.z <= tmax.y) {
             pos.z += step.z;
-            if (pos.z >= server->map.map.MAP_Z_MAX) {
+            if (pos.z >= server->map.map.size_z) {
                 break;
             }
             tmax.z += delta.z;
         } else if (tmax.x < tmax.y) {
             pos.x += step.x;
-            if (pos.x >= server->map.map.MAP_X_MAX) {
+            if (pos.x >= server->map.map.size_x) {
                 break;
             }
             tmax.x += delta.x;
         } else {
             pos.y += step.y;
-            if (pos.y >= server->map.map.MAP_Y_MAX) {
+            if (pos.y >= server->map.map.size_y) {
                 break;
             }
             tmax.y += delta.y;

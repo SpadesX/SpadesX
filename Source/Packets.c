@@ -204,16 +204,16 @@ void sendIntelDrop(Server* server, uint8 playerID)
     WriteByte(&stream, PACKET_TYPE_INTEL_DROP);
     WriteByte(&stream, playerID);
     if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-        WriteFloat(&stream, (float) server->map.map.MAP_X_MAX / 2);
-        WriteFloat(&stream, (float) server->map.map.MAP_Y_MAX / 2);
+        WriteFloat(&stream, (float) server->map.map.size_x / 2);
+        WriteFloat(&stream, (float) server->map.map.size_y / 2);
         WriteFloat(
         &stream,
-        (float) mapvxlFindTopBlock(&server->map.map, server->map.map.MAP_X_MAX / 2, server->map.map.MAP_Y_MAX / 2));
+        (float) mapvxl_find_top_block(&server->map.map, server->map.map.size_x / 2, server->map.map.size_y / 2));
 
-        server->protocol.gameMode.intel[team].x = (float) server->map.map.MAP_X_MAX / 2;
-        server->protocol.gameMode.intel[team].y = (float) server->map.map.MAP_Y_MAX / 2;
+        server->protocol.gameMode.intel[team].x = (float) server->map.map.size_x / 2;
+        server->protocol.gameMode.intel[team].y = (float) server->map.map.size_y / 2;
         server->protocol.gameMode.intel[team].z =
-        mapvxlFindTopBlock(&server->map.map, server->map.map.MAP_X_MAX / 2, server->map.map.MAP_Y_MAX / 2);
+        mapvxl_find_top_block(&server->map.map, server->map.map.size_x / 2, server->map.map.size_y / 2);
         server->protocol.gameMode.intel[server->player[playerID].team] = server->protocol.gameMode.intel[team];
         sendMoveObject(
         server, server->player[playerID].team, server->player[playerID].team, server->protocol.gameMode.intel[team]);
@@ -221,13 +221,13 @@ void sendIntelDrop(Server* server, uint8 playerID)
         WriteFloat(&stream, server->player[playerID].movement.position.x);
         WriteFloat(&stream, server->player[playerID].movement.position.y);
         WriteFloat(&stream,
-                   (float) mapvxlFindTopBlock(&server->map.map,
+                   (float) mapvxl_find_top_block(&server->map.map,
                                               server->player[playerID].movement.position.x,
                                               server->player[playerID].movement.position.y));
 
         server->protocol.gameMode.intel[team].x = (int) server->player[playerID].movement.position.x;
         server->protocol.gameMode.intel[team].y = (int) server->player[playerID].movement.position.y;
-        server->protocol.gameMode.intel[team].z = mapvxlFindTopBlock(
+        server->protocol.gameMode.intel[team].z = mapvxl_find_top_block(
         &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y);
     }
     server->player[playerID].hasIntel                                        = 0;
@@ -783,9 +783,9 @@ void sendMapStart(Server* server, uint8 playerID)
 
         // The biggest possible VXL size given the XYZ size
         uint8* map = (uint8*) calloc(
-        server->map.map.MAP_X_MAX * server->map.map.MAP_Y_MAX * (server->map.map.MAP_Z_MAX / 2), sizeof(uint8));
+        server->map.map.size_x * server->map.map.size_y * (server->map.map.size_z / 2), sizeof(uint8));
         // Write map to out
-        server->map.mapSize = mapvxlWriteMap(&server->map.map, map);
+        server->map.mapSize = mapvxl_write(&server->map.map, map);
         // Resize the map to the exact VXL memory size for given XYZ coordinate size
         uint8* old_map;
         old_map = (uint8*) realloc(map, server->map.mapSize);
@@ -1482,7 +1482,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                                 diffIsOlderThenDontUpdate(
                                 timeNow, server->player[playerID].timers.sinceLast3BlockDest, BLOCK_DELAY))
                             {
-                                mapvxlSetColor(&server->map.map, X, Y, Z, server->player[playerID].toolColor.color);
+                                mapvxl_set_color(&server->map.map, X, Y, Z, server->player[playerID].toolColor.color);
                                 server->player[playerID].blocks--;
                                 moveIntelAndTentUp(server);
                                 sendBlockAction(server, playerID, actionType, X, Y, Z);
@@ -1547,7 +1547,7 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
 
                                 Vector3i  position = {X, Y, Z};
                                 Vector3i* neigh    = getNeighbors(position);
-                                mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
+                                mapvxl_set_air(&server->map.map, position.x, position.y, position.z);
                                 for (int i = 0; i < 6; ++i) {
                                     if (neigh[i].z < 62) {
                                         checkNode(server, neigh[i]);
@@ -1578,10 +1578,10 @@ static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
                             {
                                 for (uint32 z = Z - 1; z <= Z + 1; z++) {
                                     if (z < 62) {
-                                        mapvxlSetAir(&server->map.map, X, Y, z);
+                                        mapvxl_set_air(&server->map.map, X, Y, z);
                                         Vector3i  position = {X, Y, z};
                                         Vector3i* neigh    = getNeighbors(position);
-                                        mapvxlSetAir(&server->map.map, position.x, position.y, position.z);
+                                        mapvxl_set_air(&server->map.map, position.x, position.y, position.z);
                                         for (int i = 0; i < 6; ++i) {
                                             if (neigh[i].z < 62) {
                                                 checkNode(server, neigh[i]);
@@ -1639,7 +1639,7 @@ static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
             int size = blockLine(&start, &end, server->map.resultLine);
             server->player[playerID].blocks -= size;
             for (int i = 0; i < size; i++) {
-                mapvxlSetColor(&server->map.map,
+                mapvxl_set_color(&server->map.map,
                                server->map.resultLine[i].x,
                                server->map.resultLine[i].y,
                                server->map.resultLine[i].z,

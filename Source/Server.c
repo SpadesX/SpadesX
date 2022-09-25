@@ -743,7 +743,7 @@ void StartServer(uint16      port,
     freeStringNodes(server.welcomeMessages);
     freeStringNodes(server.map.mapList);
     freeStringNodes(server.periodicMessages);
-    mapvxlFree(&server.map.map);
+    mapvxl_free(&server.map.map);
 
     pthread_mutex_destroy(&serverLock);
 
