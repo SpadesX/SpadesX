@@ -38,8 +38,8 @@ uint16_t datastream_read_u16(datastream_t* stream)
 {
     ACCESS_CHECK(stream, 2);
     uint16_t value = 0;
-    value |= ((uint16_t)stream->data[stream->pos++]);
-    value |= ((uint16_t)stream->data[stream->pos++]) << 8;
+    value |= ((uint16_t) stream->data[stream->pos++]);
+    value |= ((uint16_t) stream->data[stream->pos++]) << 8;
     return value;
 }
 
@@ -47,16 +47,17 @@ uint32_t datastream_read_u32(datastream_t* stream)
 {
     ACCESS_CHECK(stream, 4);
     uint32_t value = 0;
-    value |= ((uint32_t)stream->data[stream->pos++]);
-    value |= ((uint32_t)stream->data[stream->pos++]) << 8;
-    value |= ((uint32_t)stream->data[stream->pos++]) << 16;
-    value |= ((uint32_t)stream->data[stream->pos++]) << 24;
+    value |= ((uint32_t) stream->data[stream->pos++]);
+    value |= ((uint32_t) stream->data[stream->pos++]) << 8;
+    value |= ((uint32_t) stream->data[stream->pos++]) << 16;
+    value |= ((uint32_t) stream->data[stream->pos++]) << 24;
     return value;
 }
 
 float datastream_read_f(datastream_t* stream)
 {
-    union {
+    union
+    {
         float    f;
         uint32_t v;
     } u;
@@ -115,22 +116,23 @@ void datastream_write_u8(datastream_t* stream, uint8_t value)
 void datastream_write_u16(datastream_t* stream, uint16_t value)
 {
     ACCESS_CHECK_N(stream, 2);
-    stream->data[stream->pos++] = (uint8_t)value;
-    stream->data[stream->pos++] = (uint8_t)(value >> 8);
+    stream->data[stream->pos++] = (uint8_t) value;
+    stream->data[stream->pos++] = (uint8_t) (value >> 8);
 }
 
 void datastream_write_u32(datastream_t* stream, uint32_t value)
 {
     ACCESS_CHECK_N(stream, 4);
-    stream->data[stream->pos++] = (uint8_t)value;
-    stream->data[stream->pos++] = (uint8_t)(value >> 8);
-    stream->data[stream->pos++] = (uint8_t)(value >> 16);
-    stream->data[stream->pos++] = (uint8_t)(value >> 24);
+    stream->data[stream->pos++] = (uint8_t) value;
+    stream->data[stream->pos++] = (uint8_t) (value >> 8);
+    stream->data[stream->pos++] = (uint8_t) (value >> 16);
+    stream->data[stream->pos++] = (uint8_t) (value >> 24);
 }
 
 void datastream_write_f(datastream_t* stream, float value)
 {
-    union {
+    union
+    {
         float    f;
         uint32_t v;
     } u;

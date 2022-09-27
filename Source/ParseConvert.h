@@ -7,8 +7,9 @@
 #include <enet/enet.h>
 #include <string.h>
 
-#define PARSE_VECTOR3F(argument, offset, dst) \
-    (parse_float(argument.argv[offset], dst.x, NULL) && parse_float(argument.argv[offset + 1], dst.y, NULL) && parse_float(argument.argv[offset + 2], dst.z, NULL))
+#define PARSE_VECTOR3F(argument, offset, dst)                                                                  \
+    (parse_float(argument.argv[offset], dst.x, NULL) && parse_float(argument.argv[offset + 1], dst.y, NULL) && \
+     parse_float(argument.argv[offset + 2], dst.z, NULL))
 
 uint8_t format_str_to_ip(char* src, ip_t* dst);
 void    format_ip_to_str(char* dst, ip_t src);

@@ -8,11 +8,11 @@
 
 int raw_udp_intercept_callback(ENetHost* host, ENetEvent* event)
 {
-    (void)event;
-    if (!strncmp((char*)host->receivedData, "HELLO", host->receivedDataLength)) {
-        enet_socket_send(host->socket, &host->receivedAddress, &(ENetBuffer) { .data = "HI", .dataLength = 2 }, 1);
+    (void) event;
+    if (!strncmp((char*) host->receivedData, "HELLO", host->receivedDataLength)) {
+        enet_socket_send(host->socket, &host->receivedAddress, &(ENetBuffer){.data = "HI", .dataLength = 2}, 1);
         return 1;
-    } else if (!strncmp((char*)host->receivedData, "HELLOLAN", host->receivedDataLength)) {
+    } else if (!strncmp((char*) host->receivedData, "HELLOLAN", host->receivedDataLength)) {
         server_t* server = get_server();
         if (strlen(server->map_name) == 0) {
             return 1;
@@ -35,10 +35,7 @@ int raw_udp_intercept_callback(ENetHost* host, ENetEvent* event)
         const char* json = json_object_to_json_string(jobj);
 
         enet_socket_send(
-            host->socket,
-            &host->receivedAddress,
-            &(ENetBuffer) { .data = (char*)json, .dataLength = strlen(json) },
-            1);
+        host->socket, &host->receivedAddress, &(ENetBuffer){.data = (char*) json, .dataLength = strlen(json)}, 1);
 
         while (json_object_put(jobj) != 1) {
             // Free the memory from the JSON object

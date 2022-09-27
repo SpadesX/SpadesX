@@ -25,26 +25,22 @@
 #include "../Structs.h"
 #include "Types.h"
 
-enum damage_index { BODY_TORSO,
-    BODY_HEAD,
-    BODY_ARMS,
-    BODY_LEGS,
-    BODY_MELEE };
+enum damage_index { BODY_TORSO, BODY_HEAD, BODY_ARMS, BODY_LEGS, BODY_MELEE };
 
 float physics_distance_3d(float x1, float y1, float z1, float x2, float y2, float z2);
 int   physics_validate_hit(vector3f_t shooter, vector3f_t orientation, vector3f_t otherPos, float tolerance);
 long  physics_can_see(server_t* server, float x0, float y0, float z0, float x1, float y1, float z1);
 long  physics_cast_ray(server_t* server,
-     float                       x0,
-     float                       y0,
-     float                       z0,
-     float                       x1,
-     float                       y1,
-     float                       z1,
-     float                       length,
-     long*                       x,
-     long*                       y,
-     long*                       z);
+                       float     x0,
+                       float     y0,
+                       float     z0,
+                       float     x1,
+                       float     y1,
+                       float     z1,
+                       float     length,
+                       long*     x,
+                       long*     y,
+                       long*     z);
 
 void physics_reorient_player(server_t* server, uint8_t playerID, vector3f_t* orientation);
 int  physics_try_uncrouch(server_t* server, uint8_t playerID);

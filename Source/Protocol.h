@@ -12,14 +12,14 @@
 #include <stdarg.h>
 
 uint64_t get_nanos(void);
-void     init_player(server_t* server,
-        uint8_t                player_id,
-        uint8_t                reset,
-        uint8_t                disconnect,
-        vector3f_t             empty,
-        vector3f_t             forward,
-        vector3f_t             strafe,
-        vector3f_t             height);
+void     init_player(server_t*  server,
+                     uint8_t    player_id,
+                     uint8_t    reset,
+                     uint8_t    disconnect,
+                     vector3f_t empty,
+                     vector3f_t forward,
+                     vector3f_t strafe,
+                     vector3f_t height);
 
 uint8_t     octets_in_range(ip_t start, ip_t end, ip_t host);
 uint8_t     ip_in_range(ip_t host, ip_t banned, ip_t startOfRange, ip_t endOfRange);

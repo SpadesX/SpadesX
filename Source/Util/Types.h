@@ -4,7 +4,8 @@
 
 #include <stdint.h>
 
-typedef union color {
+typedef union color
+{
     struct
     {
         uint8_t b;
@@ -18,30 +19,35 @@ typedef union color {
 
 _Static_assert(sizeof(color_t) == 4, "invalid size");
 
-typedef struct vector2f {
+typedef struct vector2f
+{
     float x;
     float y;
 } vector2f_t;
 
-typedef struct vector3f {
+typedef struct vector3f
+{
     float x;
     float y;
     float z;
 } vector3f_t;
 
-typedef struct vector3l {
+typedef struct vector3l
+{
     long x;
     long y;
     long z;
 } vector3l_t;
 
-typedef struct vector3i {
+typedef struct vector3i
+{
     int x;
     int y;
     int z;
 } vector3i_t;
 
-typedef struct quad3d {
+typedef struct quad3d
+{
     vector3f_t from;
     vector3f_t to;
 } quad3d_t;

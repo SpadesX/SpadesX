@@ -57,16 +57,18 @@ static void _init_babel(server_t* server)
         }
     }
     // intel
-    server->protocol.gamemode.intel[0].z = mapvxl_find_top_block(&server->s_map.map, 255, 255); // We still need highest point of map. While this is 0 for normal
-                                                                                                // map. The platform may not be there in all sizes
-    server->protocol.gamemode.intel[0].x    = round((float)server->s_map.map.size_x / 2);
-    server->protocol.gamemode.intel[0].y    = round((float)server->s_map.map.size_y / 2);
+    server->protocol.gamemode.intel[0].z =
+    mapvxl_find_top_block(&server->s_map.map, 255, 255); // We still need highest point of map. While this is 0 for
+                                                         // normal map. The platform may not be there in all sizes
+    server->protocol.gamemode.intel[0].x    = round((float) server->s_map.map.size_x / 2);
+    server->protocol.gamemode.intel[0].y    = round((float) server->s_map.map.size_y / 2);
     server->protocol.gamemode.intel_held[0] = 0;
 
-    server->protocol.gamemode.intel[1].z = mapvxl_find_top_block(&server->s_map.map, 255, 255); // We still need highest point of map. While this is 0 for normal
-                                                                                                // map. The platform may not be there in all sizes
-    server->protocol.gamemode.intel[1].x    = round((float)server->s_map.map.size_x / 2);
-    server->protocol.gamemode.intel[1].y    = round((float)server->s_map.map.size_y / 2);
+    server->protocol.gamemode.intel[1].z =
+    mapvxl_find_top_block(&server->s_map.map, 255, 255); // We still need highest point of map. While this is 0 for
+                                                         // normal map. The platform may not be there in all sizes
+    server->protocol.gamemode.intel[1].x    = round((float) server->s_map.map.size_x / 2);
+    server->protocol.gamemode.intel[1].y    = round((float) server->s_map.map.size_y / 2);
     server->protocol.gamemode.intel_held[1] = 0;
     // bases
     server->protocol.gamemode.base[0] = SetIntelTentSpawnPoint(server, 0);

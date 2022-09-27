@@ -42,19 +42,20 @@ uint8_t map_load(server_t* server, const char* path, int map_size[3])
         fclose(file);
         LOG_ERROR("Map file %s.vxl is larger then maximum VXL size of X: %d, Y: %d, Z: %d. Please set the correct map "
                   "size in libmapvxl",
-            server->map_name,
-            server->s_map.map.size_x,
-            server->s_map.map.size_y,
-            server->s_map.map.size_z);
+                  server->map_name,
+                  server->s_map.map.size_x,
+                  server->s_map.map.size_y,
+                  server->s_map.map.size_z);
         mapvxl_free(&server->s_map.map);
         server->running = 0;
         return 0;
     }
 
-    uint8_t* buffer = (uint8_t*)calloc(server->s_map.map_size, sizeof(uint8_t));
+    uint8_t* buffer = (uint8_t*) calloc(server->s_map.map_size, sizeof(uint8_t));
 
     // The biggest possible VXL size given the XYZ size
-    uint8_t* mapOut = (uint8_t*)calloc(server->s_map.map.size_x * server->s_map.map.size_y * (server->s_map.map.size_z / 2), sizeof(uint8_t));
+    uint8_t* mapOut = (uint8_t*) calloc(
+    server->s_map.map.size_x * server->s_map.map.size_y * (server->s_map.map.size_z / 2), sizeof(uint8_t));
 
     if (fread(buffer, server->s_map.map_size, 1, file) < server->s_map.map_size) {
         LOG_STATUS("Finished loading map");
@@ -72,7 +73,7 @@ uint8_t map_load(server_t* server, const char* path, int map_size[3])
     server->s_map.map_size = mapvxl_write(&server->s_map.map, mapOut);
     // Resize the map to the exact VXL memory size for given XYZ coordinate size
     uint8_t* oldMapOut;
-    oldMapOut = (uint8_t*)realloc(mapOut, server->s_map.map_size);
+    oldMapOut = (uint8_t*) realloc(mapOut, server->s_map.map_size);
     if (!oldMapOut) {
         free(mapOut);
         return 0;

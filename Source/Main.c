@@ -58,16 +58,10 @@ int main(void)
     READ_STR_FROM_JSON(parsed_json, team1_name, team1_name, "team1 name", "Blue", 0);
     READ_STR_FROM_JSON(parsed_json, team2_name, team2_name, "team2 name", "Red", 0);
     // array requires additional pair of parentheses because of how macros work in C
-    READ_INT_ARR_FROM_JSON(parsed_json, team1_color, team1_color, "team1 color", ((uint8_t[]) { 0, 0, 255 }), 3, 0);
-    READ_INT_ARR_FROM_JSON(parsed_json, team2_color, team2_color, "team2 color", ((uint8_t[]) { 255, 0, 0 }), 3, 0);
+    READ_INT_ARR_FROM_JSON(parsed_json, team1_color, team1_color, "team1 color", ((uint8_t[]){0, 0, 255}), 3, 0);
+    READ_INT_ARR_FROM_JSON(parsed_json, team2_color, team2_color, "team2 color", ((uint8_t[]){255, 0, 0}), 3, 0);
     READ_INT_ARR_FROM_JSON(
-        parsed_json,
-        periodicDelays,
-        periodic_delays,
-        "periodic delays",
-        ((uint8_t[]) { 1, 5, 10, 30, 60 }),
-        5,
-        1);
+    parsed_json, periodicDelays, periodic_delays, "periodic delays", ((uint8_t[]){1, 5, 10, 30, 60}), 5, 1);
 
     uint8_t        map_list_len = json_object_array_length(map_in_config);
     string_node_t* map_list     = NULL;
@@ -90,8 +84,7 @@ int main(void)
         uint8_t      stringLen = json_object_get_string_len(temp);
         if (stringLen > 128) {
             LOG_WARNING(
-                "Welcome message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING",
-                i);
+            "Welcome message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
             continue;
         }
         string_node_t* welcome_message        = malloc(sizeof(string_node_t));
@@ -109,8 +102,7 @@ int main(void)
         uint8_t      string_len = json_object_get_string_len(temp);
         if (string_len > 128) {
             LOG_WARNING(
-                "Welcome message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING",
-                i);
+            "Welcome message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
             continue;
         }
         string_node_t* periodic_message        = malloc(sizeof(string_node_t));
@@ -121,29 +113,29 @@ int main(void)
     }
 
     server_start(port,
-        64,
-        2,
-        0,
-        0,
-        master,
-        map_list,
-        map_list_len,
-        welcome_message_list,
-        welcome_message_list_len,
-        periodic_message_list,
-        periodic_message_list_len,
-        periodicDelays,
-        manager_passwd,
-        admin_passwd,
-        mod_passwd,
-        guard_passwd,
-        trusted_passwd,
-        server_name,
-        team1_name,
-        team2_name,
-        team1_color,
-        team2_color,
-        gamemode);
+                 64,
+                 2,
+                 0,
+                 0,
+                 master,
+                 map_list,
+                 map_list_len,
+                 welcome_message_list,
+                 welcome_message_list_len,
+                 periodic_message_list,
+                 periodic_message_list_len,
+                 periodicDelays,
+                 manager_passwd,
+                 admin_passwd,
+                 mod_passwd,
+                 guard_passwd,
+                 trusted_passwd,
+                 server_name,
+                 team1_name,
+                 team2_name,
+                 team1_color,
+                 team2_color,
+                 gamemode);
 
     while (json_object_put(parsed_json) != 1) {
         // Free the memory from the JSON object

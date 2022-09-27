@@ -22,7 +22,7 @@ int line_get_blocks(const vector3i_t* v1, const vector3i_t* v2, vector3i_t* resu
     server_t* server = get_server();
 
     vector3i_t pos  = *v1;
-    vector3i_t dist = { v2->x - v1->x, v2->y - v1->y, v2->z - v1->z };
+    vector3i_t dist = {v2->x - v1->x, v2->y - v1->y, v2->z - v1->z};
     vector3i_t step;
     vector3i_t a;
     vector3i_t tmax;

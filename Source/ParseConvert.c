@@ -7,22 +7,9 @@
 
 uint8_t format_str_to_ip(char* src, ip_t* dst)
 {
-    if (sscanf(src,
-            "%hhu.%hhu.%hhu.%hhu/%hhu",
-            &dst->ip[0],
-            &dst->ip[1],
-            &dst->ip[2],
-            &dst->ip[3],
-            &dst->cidr)
-        == 5) {
+    if (sscanf(src, "%hhu.%hhu.%hhu.%hhu/%hhu", &dst->ip[0], &dst->ip[1], &dst->ip[2], &dst->ip[3], &dst->cidr) == 5) {
         return 1;
-    } else if (sscanf(src,
-                   "%hhu.%hhu.%hhu.%hhu",
-                   &dst->ip[0],
-                   &dst->ip[1],
-                   &dst->ip[2],
-                   &dst->ip[3])
-        == 4) {
+    } else if (sscanf(src, "%hhu.%hhu.%hhu.%hhu", &dst->ip[0], &dst->ip[1], &dst->ip[2], &dst->ip[3]) == 4) {
         return 1;
     }
     return 0;
@@ -31,14 +18,7 @@ uint8_t format_str_to_ip(char* src, ip_t* dst)
 void format_ip_to_str(char* dst, ip_t src)
 {
     if (src.cidr != 0) {
-        snprintf(dst,
-            19,
-            "%hhu.%hhu.%hhu.%hhu/%hhu",
-            src.ip[0],
-            src.ip[1],
-            src.ip[2],
-            src.ip[3],
-            src.cidr);
+        snprintf(dst, 19, "%hhu.%hhu.%hhu.%hhu/%hhu", src.ip[0], src.ip[1], src.ip[2], src.ip[3], src.cidr);
         return;
     }
     snprintf(dst, 16, "%hhu.%hhu.%hhu.%hhu", src.ip[0], src.ip[1], src.ip[2], src.ip[3]);
@@ -56,7 +36,8 @@ void team_id_to_str(server_t* server, char* dst, int team)
 uint8_t parse_player(char* s, uint8_t* id, char** end)
 {
     uint8_t sLength;
-    if (s[0] != '#' || (sLength = strlen(s)) < 2) { // TODO: look up a player by their nickname if the argument doesn't start with #
+    if (s[0] != '#' || (sLength = strlen(s)) < 2)
+    { // TODO: look up a player by their nickname if the argument doesn't start with #
         return 0;
     }
 
@@ -86,7 +67,7 @@ uint8_t parse_float(char* s, float* value, char** end)
         return 0;
     }
 
-    *value = (float)parsed;
+    *value = (float) parsed;
     if (end) {
         *end = _end;
     }

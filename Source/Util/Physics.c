@@ -59,7 +59,7 @@ int physics_validate_hit(vector3f_t shooter, vector3f_t orientation, vector3f_t 
 // silly VOXLAP function
 static inline void ftol(float f, long* a)
 {
-    *a = (long)f;
+    *a = (long) f;
 }
 
 // same as isvoxelsolid but water is empty && out of bounds returns true
@@ -71,12 +71,12 @@ static inline int clipbox(server_t* server, float x, float y, float z)
         return 1;
     else if (z < 0)
         return 0;
-    sz = (int)z;
+    sz = (int) z;
     if (sz == server->s_map.map.size_z - 1)
         sz = server->s_map.map.size_z - 2;
     else if (sz >= server->s_map.map.size_z)
         return 1;
-    return mapvxl_is_solid(&server->s_map.map, (int)x, (int)y, sz);
+    return mapvxl_is_solid(&server->s_map.map, (int) x, (int) y, sz);
 }
 
 // same as isvoxelsolid() but with wrapping
@@ -87,10 +87,7 @@ static inline long isvoxelsolidwrap(server_t* server, long x, long y, long z)
     else if (z >= server->s_map.map.size_z)
         return 1;
     return mapvxl_is_solid(
-        &server->s_map.map,
-        (int)x & (server->s_map.map.size_x - 1),
-        (int)y & (server->s_map.map.size_y - 1),
-        z);
+    &server->s_map.map, (int) x & (server->s_map.map.size_x - 1), (int) y & (server->s_map.map.size_y - 1), z);
 }
 
 // same as isvoxelsolid but water is empty
@@ -101,14 +98,14 @@ static inline long clipworld(server_t* server, long x, long y, long z)
         return 0;
     if (z < 0)
         return 0;
-    sz = (int)z;
+    sz = (int) z;
     if (sz == server->s_map.map.size_z - 1)
         sz = server->s_map.map.size_z - 2;
     else if (sz >= server->s_map.map.size_z - 1)
         return 1;
     else if (sz < 0)
         return 0;
-    return mapvxl_is_solid(&server->s_map.map, (int)x, (int)y, sz);
+    return mapvxl_is_solid(&server->s_map.map, (int) x, (int) y, sz);
 }
 
 long physics_can_see(server_t* server, float x0, float y0, float z0, float x1, float y1, float z1)
@@ -196,16 +193,16 @@ long physics_can_see(server_t* server, float x0, float y0, float z0, float x1, f
 }
 
 long physics_cast_ray(server_t* server,
-    float                       x0,
-    float                       y0,
-    float                       z0,
-    float                       x1,
-    float                       y1,
-    float                       z1,
-    float                       length,
-    long*                       x,
-    long*                       y,
-    long*                       z)
+                      float     x0,
+                      float     y0,
+                      float     z0,
+                      float     x1,
+                      float     y1,
+                      float     z1,
+                      float     length,
+                      long*     x,
+                      long*     y,
+                      long*     z)
 {
     x1 = x0 + x1 * length;
     y1 = y0 + y1 * length;
@@ -269,7 +266,7 @@ long physics_cast_ray(server_t* server,
     ftol(g.z, &i.z);
 
     if (cnt > length)
-        cnt = (long)length;
+        cnt = (long) length;
     while (cnt) {
         if (((p.x | p.y) >= 0) && (a.z != c.z)) {
             a.z += d.z;
@@ -303,7 +300,7 @@ static inline void repositionPlayer(server_t* server, uint8_t playerID, vector3f
     float f; /* FIXME meaningful name */
 
     server->player[playerID].movement.eye_pos = server->player[playerID].movement.position = *position;
-    f                                                                                      = server->player[playerID].lastclimb - ftotclk; /* FIXME meaningful name */
+    f = server->player[playerID].lastclimb - ftotclk; /* FIXME meaningful name */
     if (f > -0.25f)
         server->player[playerID].movement.eye_pos.z += (f + 0.25f) / 0.25f;
 }
@@ -322,8 +319,8 @@ void physics_reorient_player(server_t* server, uint8_t playerID, vector3f_t* ori
 {
     server->player[playerID].movement.forward_orientation = *orientation;
     setOrientationVectors(orientation,
-        &server->player[playerID].movement.strafe_orientation,
-        &server->player[playerID].movement.height_orientation);
+                          &server->player[playerID].movement.strafe_orientation,
+                          &server->player[playerID].movement.height_orientation);
 }
 
 int physics_try_uncrouch(server_t* server, uint8_t playerID)
@@ -336,10 +333,13 @@ int physics_try_uncrouch(server_t* server, uint8_t playerID)
     float z2 = server->player[playerID].movement.position.z - 1.35f;
 
     // first check if player can lower feet (in midair)
-    if (server->player[playerID].airborne && !(clipbox(server, x1, y1, z1) || clipbox(server, x1, y2, z1) || clipbox(server, x2, y1, z1) || clipbox(server, x2, y2, z1)))
+    if (server->player[playerID].airborne && !(clipbox(server, x1, y1, z1) || clipbox(server, x1, y2, z1) ||
+                                               clipbox(server, x2, y1, z1) || clipbox(server, x2, y2, z1)))
         return (1);
     // then check if they can raise their head
-    else if (!(clipbox(server, x1, y1, z2) || clipbox(server, x1, y2, z2) || clipbox(server, x2, y1, z2) || clipbox(server, x2, y2, z2))) {
+    else if (!(clipbox(server, x1, y1, z2) || clipbox(server, x1, y2, z2) || clipbox(server, x2, y1, z2) ||
+               clipbox(server, x2, y2, z2)))
+    {
         server->player[playerID].movement.position.z -= 0.9f;
         server->player[playerID].movement.eye_pos.z -= 0.9f;
         return (1);
@@ -372,13 +372,17 @@ void physics_box_clip_move(server_t* server, uint8_t playerID)
     else
         f = 0.45f;
     z = m;
-    while (z >= -1.36f && !clipbox(server, nx + f, server->player[playerID].movement.position.y - 0.45f, nz + z) && !clipbox(server, nx + f, server->player[playerID].movement.position.y + 0.45f, nz + z))
+    while (z >= -1.36f && !clipbox(server, nx + f, server->player[playerID].movement.position.y - 0.45f, nz + z) &&
+           !clipbox(server, nx + f, server->player[playerID].movement.position.y + 0.45f, nz + z))
         z -= 0.9f;
     if (z < -1.36f)
         server->player[playerID].movement.position.x = nx;
-    else if (!server->player[playerID].crouching && server->player[playerID].movement.forward_orientation.z < 0.5f && !server->player[playerID].sprinting) {
+    else if (!server->player[playerID].crouching && server->player[playerID].movement.forward_orientation.z < 0.5f &&
+             !server->player[playerID].sprinting)
+    {
         z = 0.35f;
-        while (z >= -2.36f && !clipbox(server, nx + f, server->player[playerID].movement.position.y - 0.45f, nz + z) && !clipbox(server, nx + f, server->player[playerID].movement.position.y + 0.45f, nz + z))
+        while (z >= -2.36f && !clipbox(server, nx + f, server->player[playerID].movement.position.y - 0.45f, nz + z) &&
+               !clipbox(server, nx + f, server->player[playerID].movement.position.y + 0.45f, nz + z))
             z -= 0.9f;
         if (z < -2.36f) {
             server->player[playerID].movement.position.x = nx;
@@ -393,13 +397,17 @@ void physics_box_clip_move(server_t* server, uint8_t playerID)
     else
         f = 0.45f;
     z = m;
-    while (z >= -1.36f && !clipbox(server, server->player[playerID].movement.position.x - 0.45f, ny + f, nz + z) && !clipbox(server, server->player[playerID].movement.position.x + 0.45f, ny + f, nz + z))
+    while (z >= -1.36f && !clipbox(server, server->player[playerID].movement.position.x - 0.45f, ny + f, nz + z) &&
+           !clipbox(server, server->player[playerID].movement.position.x + 0.45f, ny + f, nz + z))
         z -= 0.9f;
     if (z < -1.36f)
         server->player[playerID].movement.position.y = ny;
-    else if (!server->player[playerID].crouching && server->player[playerID].movement.forward_orientation.z < 0.5f && !server->player[playerID].sprinting && !climb) {
+    else if (!server->player[playerID].crouching && server->player[playerID].movement.forward_orientation.z < 0.5f &&
+             !server->player[playerID].sprinting && !climb)
+    {
         z = 0.35f;
-        while (z >= -2.36f && !clipbox(server, server->player[playerID].movement.position.x - 0.45f, ny + f, nz + z) && !clipbox(server, server->player[playerID].movement.position.x + 0.45f, ny + f, nz + z))
+        while (z >= -2.36f && !clipbox(server, server->player[playerID].movement.position.x - 0.45f, ny + f, nz + z) &&
+               !clipbox(server, server->player[playerID].movement.position.x + 0.45f, ny + f, nz + z))
             z -= 0.9f;
         if (z < -2.36f) {
             server->player[playerID].movement.position.y = ny;
@@ -424,21 +432,22 @@ void physics_box_clip_move(server_t* server, uint8_t playerID)
     server->player[playerID].airborne = 1;
 
     if (clipbox(server,
-            server->player[playerID].movement.position.x - 0.45f,
-            server->player[playerID].movement.position.y - 0.45f,
-            nz + m)
-        || clipbox(server,
-            server->player[playerID].movement.position.x - 0.45f,
-            server->player[playerID].movement.position.y + 0.45f,
-            nz + m)
-        || clipbox(server,
-            server->player[playerID].movement.position.x + 0.45f,
-            server->player[playerID].movement.position.y - 0.45f,
-            nz + m)
-        || clipbox(server,
-            server->player[playerID].movement.position.x + 0.45f,
-            server->player[playerID].movement.position.y + 0.45f,
-            nz + m)) {
+                server->player[playerID].movement.position.x - 0.45f,
+                server->player[playerID].movement.position.y - 0.45f,
+                nz + m) ||
+        clipbox(server,
+                server->player[playerID].movement.position.x - 0.45f,
+                server->player[playerID].movement.position.y + 0.45f,
+                nz + m) ||
+        clipbox(server,
+                server->player[playerID].movement.position.x + 0.45f,
+                server->player[playerID].movement.position.y - 0.45f,
+                nz + m) ||
+        clipbox(server,
+                server->player[playerID].movement.position.x + 0.45f,
+                server->player[playerID].movement.position.y + 0.45f,
+                nz + m))
+    {
         if (server->player[playerID].movement.velocity.z >= 0) {
             server->player[playerID].wade     = server->player[playerID].movement.position.z > 61;
             server->player[playerID].airborne = 0;
@@ -465,12 +474,14 @@ long physics_move_player(server_t* server, uint8_t playerID)
         f *= 0.1f;
     else if (server->player[playerID].crouching)
         f *= 0.3f;
-    else if ((server->player[playerID].secondary_fire && server->player[playerID].item == 2) || server->player[playerID].sneaking) // Replace me later with ITEM_GUN
+    else if ((server->player[playerID].secondary_fire && server->player[playerID].item == 2) ||
+             server->player[playerID].sneaking) // Replace me later with ITEM_GUN
         f *= 0.5f;
     else if (server->player[playerID].sprinting)
         f *= 1.3f;
 
-    if ((server->player[playerID].move_forward || server->player[playerID].move_backwards) && (server->player[playerID].move_left || server->player[playerID].move_right))
+    if ((server->player[playerID].move_forward || server->player[playerID].move_backwards) &&
+        (server->player[playerID].move_left || server->player[playerID].move_right))
         f *= SQRT; // if strafe + forward/backwards then limit diagonal velocity
 
     if (server->player[playerID].move_forward) {
@@ -508,7 +519,7 @@ long physics_move_player(server_t* server, uint8_t playerID)
         // return fall damage
         if (f2 > FALL_DAMAGE_VELOCITY) {
             f2 -= FALL_DAMAGE_VELOCITY;
-            return ((long)(f2 * f2 * FALL_DAMAGE_SCALAR));
+            return ((long) (f2 * f2 * FALL_DAMAGE_SCALAR));
         }
 
         return (-1); // no fall damage but play fall sound
@@ -534,23 +545,24 @@ int physics_move_grenade(server_t* server, grenade_t* grenade)
     //  }
     // make it bounce (accurate)
     vector3l_t lp;
-    lp.x = (long)floor(grenade->position.x);
-    lp.y = (long)floor(grenade->position.y);
-    lp.z = (long)floor(grenade->position.z);
+    lp.x = (long) floor(grenade->position.x);
+    lp.y = (long) floor(grenade->position.y);
+    lp.z = (long) floor(grenade->position.z);
 
     if (!clipworld(server, lp.x, lp.y, lp.z)) {
         return 0; // we didn't hit anything, no collision
-    } else { // hit a wall
+    } else {      // hit a wall
         static const float BOUNCE_SOUND_THRESHOLD = 1.1f;
 
         int ret = 1;
-        if (fabsf(grenade->velocity.x) > BOUNCE_SOUND_THRESHOLD || fabsf(grenade->velocity.y) > BOUNCE_SOUND_THRESHOLD || fabsf(grenade->velocity.z) > BOUNCE_SOUND_THRESHOLD)
+        if (fabsf(grenade->velocity.x) > BOUNCE_SOUND_THRESHOLD ||
+            fabsf(grenade->velocity.y) > BOUNCE_SOUND_THRESHOLD || fabsf(grenade->velocity.z) > BOUNCE_SOUND_THRESHOLD)
             ret = 2; // play sound
 
         vector3l_t lp2;
-        lp2.x = (long)floor(fpos.x);
-        lp2.y = (long)floor(fpos.y);
-        lp2.z = (long)floor(fpos.z);
+        lp2.x = (long) floor(fpos.x);
+        lp2.y = (long) floor(fpos.y);
+        lp2.z = (long) floor(fpos.z);
         if (lp.z != lp2.z && ((lp.x == lp2.x && lp.y == lp2.y) || !clipworld(server, lp.x, lp.y, lp2.z)))
             grenade->velocity.z = -grenade->velocity.z;
         else if (lp.x != lp2.x && ((lp.y == lp2.y && lp.z == lp2.z) || !clipworld(server, lp2.x, lp.y, lp.z)))

@@ -25,30 +25,30 @@ void block_line_to_player(server_t* server, uint8_t playerID, uint8_t sendToID, 
 void send_block_action(server_t* server, uint8_t playerID, uint8_t actionType, int X, int Y, int Z);
 
 void send_block_action_to_player(server_t* server,
-    uint8_t                                playerID,
-    uint8_t                                sendToID,
-    uint8_t                                actionType,
-    int                                    X,
-    int                                    Y,
-    int                                    Z);
+                                 uint8_t   playerID,
+                                 uint8_t   sendToID,
+                                 uint8_t   actionType,
+                                 int       X,
+                                 int       Y,
+                                 int       Z);
 
 void send_state_data(server_t* server, uint8_t playerID);
 void send_input_data(server_t* server, uint8_t playerID);
 void send_kill_action_packet(server_t* server,
-    uint8_t                            killerID,
-    uint8_t                            playerID,
-    uint8_t                            killReason,
-    uint8_t                            respawnTime,
-    uint8_t                            makeInvisible);
-void send_set_hp(server_t* server,
-    uint8_t                playerID,
-    uint8_t                hitPlayerID,
-    long                   HPChange,
-    uint8_t                typeOfDamage,
-    uint8_t                killReason,
-    uint8_t                respawnTime,
-    uint8_t                isGrenade,
-    vector3f_t             position);
+                             uint8_t   killerID,
+                             uint8_t   playerID,
+                             uint8_t   killReason,
+                             uint8_t   respawnTime,
+                             uint8_t   makeInvisible);
+void send_set_hp(server_t*  server,
+                 uint8_t    playerID,
+                 uint8_t    hitPlayerID,
+                 long       HPChange,
+                 uint8_t    typeOfDamage,
+                 uint8_t    killReason,
+                 uint8_t    respawnTime,
+                 uint8_t    isGrenade,
+                 vector3f_t position);
 void send_existing_player(server_t* server, uint8_t playerID, uint8_t otherID);
 void send_map_start(server_t* server, uint8_t playerID);
 void send_map_chunks(server_t* server, uint8_t playerID);

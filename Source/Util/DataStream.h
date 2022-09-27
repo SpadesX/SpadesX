@@ -15,7 +15,8 @@
         return;                                \
     }
 
-typedef struct datastream {
+typedef struct datastream
+{
     uint8_t* data;
     uint32_t length;
     uint32_t pos;

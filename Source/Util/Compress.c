@@ -22,7 +22,7 @@ static int _compress_init(int level)
         LOG_ERROR("Compressor is already initialized");
         return 1;
     } else {
-        g_compressor = (z_stream*)malloc(sizeof(z_stream));
+        g_compressor = (z_stream*) malloc(sizeof(z_stream));
     }
 
     g_compressor->zalloc = Z_NULL;
@@ -69,7 +69,7 @@ queue_t* compress_queue(uint8_t* data, uint32_t length, uint32_t chunkSize)
     queue_t* first = NULL;
     queue_t* node  = NULL;
 
-    g_compressor->next_in  = (uint8_t*)data;
+    g_compressor->next_in  = (uint8_t*) data;
     g_compressor->avail_in = length;
 
     do {
