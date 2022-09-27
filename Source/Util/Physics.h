@@ -25,43 +25,32 @@
 #include "../Structs.h"
 #include "Types.h"
 
-enum damage_index { BODY_TORSO, BODY_HEAD, BODY_ARMS, BODY_LEGS, BODY_MELEE };
+enum damage_index { BODY_TORSO,
+    BODY_HEAD,
+    BODY_ARMS,
+    BODY_LEGS,
+    BODY_MELEE };
 
-typedef struct
-{
-    float x;
-    float y;
-    float z;
-} Vector;
+float physics_distance_3d(float x1, float y1, float z1, float x2, float y2, float z2);
+int   physics_validate_hit(vector3f_t shooter, vector3f_t orientation, vector3f_t otherPos, float tolerance);
+long  physics_can_see(server_t* server, float x0, float y0, float z0, float x1, float y1, float z1);
+long  physics_cast_ray(server_t* server,
+     float                       x0,
+     float                       y0,
+     float                       z0,
+     float                       x1,
+     float                       y1,
+     float                       z1,
+     float                       length,
+     long*                       x,
+     long*                       y,
+     long*                       z);
 
-float distance3d(float x1, float y1, float z1, float x2, float y2, float z2);
-
-int validateHit(Vector3f shooter, Vector3f orientation, Vector3f otherPos, float tolerance);
-
-long canSee(Server* server, float x0, float y0, float z0, float x1, float y1, float z1);
-
-long castRay(Server* server,
-             float   x0,
-             float   y0,
-             float   z0,
-             float   x1,
-             float   y1,
-             float   z1,
-             float   length,
-             long*   x,
-             long*   y,
-             long*   z);
-
-void reorientPlayer(Server* server, uint8 playerID, Vector3f* orientation);
-
-int tryUncrouch(Server* server, uint8 playerID);
-
-void boxclipmove(Server* server, uint8 playerID);
-
-long movePlayer(Server* server, uint8 playerID);
-
-int moveGrenade(Server* server, Grenade* grenade);
-
-void setPhysicsGlobals(float time, float dt);
+void physics_reorient_player(server_t* server, uint8_t playerID, vector3f_t* orientation);
+int  physics_try_uncrouch(server_t* server, uint8_t playerID);
+void physics_box_clip_move(server_t* server, uint8_t playerID);
+long physics_move_player(server_t* server, uint8_t playerID);
+int  physics_move_grenade(server_t* server, grenade_t* grenade);
+void physics_set_globals(float time, float dt);
 
 #endif

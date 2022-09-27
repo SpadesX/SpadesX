@@ -3,24 +3,24 @@
 #include "Structs.h"
 #include "Util/Compress.h"
 #include "Util/DataStream.h"
+#include "Util/Log.h"
 #include "Util/Queue.h"
 #include "Util/Types.h"
-#include "Util/Log.h"
 
-#include <stdio.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 
-uint8 LoadMap(Server* server, const char* path, int mapSize[3])
+uint8_t map_load(server_t* server, const char* path, int map_size[3])
 {
     LOG_STATUS("Loading map");
 
-    if (server->map.map.blocks != NULL) {
-        mapvxl_free(&server->map.map);
+    if (server->s_map.map.blocks != NULL) {
+        mapvxl_free(&server->s_map.map);
     }
 
-    while (server->map.compressedMap) {
-        server->map.compressedMap = Pop(server->map.compressedMap);
+    while (server->s_map.compressed_map) {
+        server->s_map.compressed_map = queue_pop(server->s_map.compressed_map);
     }
 
     FILE* file = fopen(path, "rb");
@@ -30,66 +30,66 @@ uint8 LoadMap(Server* server, const char* path, int mapSize[3])
     }
 
     fseek(file, 0L, SEEK_END);
-    server->map.mapSize = ftell(file);
+    server->s_map.map_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    //Create the array for map with the defined sizes
-    mapvxl_create(&server->map.map, mapSize[0], mapSize[1], mapSize[2]);
+    // Create the array for map with the defined sizes
+    mapvxl_create(&server->s_map.map, map_size[0], map_size[1], map_size[2]);
 
-    size_t maxMapSize = server->map.map.size_x * server->map.map.size_y * (server->map.map.size_z / 2) * 8;
+    size_t maxMapSize = server->s_map.map.size_x * server->s_map.map.size_y * (server->s_map.map.size_z / 2) * 8;
 
-    if (server->map.mapSize > maxMapSize) {
+    if (server->s_map.map_size > maxMapSize) {
         fclose(file);
         LOG_ERROR("Map file %s.vxl is larger then maximum VXL size of X: %d, Y: %d, Z: %d. Please set the correct map "
                   "size in libmapvxl",
-                  server->mapName,
-                  server->map.map.size_x,
-                  server->map.map.size_y,
-                  server->map.map.size_z);
-        mapvxl_free(&server->map.map);
+            server->map_name,
+            server->s_map.map.size_x,
+            server->s_map.map.size_y,
+            server->s_map.map.size_z);
+        mapvxl_free(&server->s_map.map);
         server->running = 0;
         return 0;
     }
 
-    uint8* buffer = (uint8*) calloc(server->map.mapSize, sizeof(uint8));
+    uint8_t* buffer = (uint8_t*)calloc(server->s_map.map_size, sizeof(uint8_t));
 
     // The biggest possible VXL size given the XYZ size
-    uint8* mapOut = (uint8*) calloc(server->map.map.size_x * server->map.map.size_y * (server->map.map.size_z / 2), sizeof(uint8));
+    uint8_t* mapOut = (uint8_t*)calloc(server->s_map.map.size_x * server->s_map.map.size_y * (server->s_map.map.size_z / 2), sizeof(uint8_t));
 
-    if (fread(buffer, server->map.mapSize, 1, file) < server->map.mapSize) {
+    if (fread(buffer, server->s_map.map_size, 1, file) < server->s_map.map_size) {
         LOG_STATUS("Finished loading map");
     }
     fclose(file);
 
     LOG_STATUS("Transforming map from VXL");
-    mapvxl_read(&server->map.map, buffer);
+    mapvxl_read(&server->s_map.map, buffer);
     LOG_STATUS("Finished transforming map");
 
     free(buffer);
     LOG_STATUS("Compressing map data");
 
     // Write map to mapOut
-    server->map.mapSize = mapvxl_write(&server->map.map, mapOut);
+    server->s_map.map_size = mapvxl_write(&server->s_map.map, mapOut);
     // Resize the map to the exact VXL memory size for given XYZ coordinate size
-    uint8* oldMapOut;
-    oldMapOut = (uint8*) realloc(mapOut, server->map.mapSize);
+    uint8_t* oldMapOut;
+    oldMapOut = (uint8_t*)realloc(mapOut, server->s_map.map_size);
     if (!oldMapOut) {
         free(mapOut);
         return 0;
     }
     mapOut = oldMapOut;
 
-    server->map.compressedMap = CompressData(mapOut, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
+    server->s_map.compressed_map = compress_queue(mapOut, server->s_map.map_size, DEFAULT_COMPRESS_CHUNK_SIZE);
     free(mapOut);
 
-    Queue* node                = server->map.compressedMap;
-    server->map.compressedSize = 0;
+    queue_t* node                 = server->s_map.compressed_map;
+    server->s_map.compressed_size = 0;
     while (node) {
-        server->map.compressedSize += node->length;
+        server->s_map.compressed_size += node->length;
         node = node->next;
     }
-    while (server->map.compressedMap) {
-        server->map.compressedMap = Pop(server->map.compressedMap);
+    while (server->s_map.compressed_map) {
+        server->s_map.compressed_map = queue_pop(server->s_map.compressed_map);
     }
     return 1;
 }

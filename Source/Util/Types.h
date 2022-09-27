@@ -2,54 +2,48 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-typedef unsigned char          uint8;
-typedef unsigned short         uint16;
-typedef unsigned int           uint32;
-typedef unsigned long long int uint64;
+#include <stdint.h>
 
-typedef union
-{
-    uint8 colorArray[4];
-    uint32 color;
-} Color4i;
+typedef union color {
+    struct
+    {
+        uint8_t b;
+        uint8_t g;
+        uint8_t r;
+        uint8_t a;
+    };
+    uint8_t  arr[4];
+    uint32_t raw;
+} color_t;
 
-typedef union
-{
-    uint8 colorArray[3];
-    uint32 color; //Bitshift required before usage
-} Color3i;
+_Static_assert(sizeof(color_t) == 4, "invalid size");
 
-typedef struct
-{
+typedef struct vector2f {
     float x;
     float y;
-} Vector2f;
+} vector2f_t;
 
-typedef struct
-{
+typedef struct vector3f {
     float x;
     float y;
     float z;
-} Vector3f;
+} vector3f_t;
 
-typedef struct
-{
+typedef struct vector3l {
     long x;
     long y;
     long z;
-} Vector3l;
+} vector3l_t;
 
-typedef struct
-{
+typedef struct vector3i {
     int x;
     int y;
     int z;
-} Vector3i;
+} vector3i_t;
 
-typedef struct
-{
-    Vector3f from;
-    Vector3f to;
-} Quad3D;
+typedef struct quad3d {
+    vector3f_t from;
+    vector3f_t to;
+} quad3d_t;
 
 #endif /* TYPES_H */

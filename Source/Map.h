@@ -6,6 +6,6 @@
 #include "Util/Queue.h"
 #include "Util/Types.h"
 
-uint8 LoadMap(Server* server, const char* path, int mapSize[3]);
+uint8_t map_load(server_t* server, const char* path, int map_size[3]);
 
 #endif

@@ -1,69 +1,69 @@
 #include "ParseConvert.h"
+
 #include "Structs.h"
 
 #include <inttypes.h>
 #include <stdio.h>
 
-uint8 formatStringToIP(char* src, IPStruct* dest)
+uint8_t format_str_to_ip(char* src, ip_t* dst)
 {
     if (sscanf(src,
-               "%hhu.%hhu.%hhu.%hhu/%hhu",
-               &dest->Union.ip[0],
-               &dest->Union.ip[1],
-               &dest->Union.ip[2],
-               &dest->Union.ip[3],
-               &dest->CIDR) == 5)
-    {
+            "%hhu.%hhu.%hhu.%hhu/%hhu",
+            &dst->ip[0],
+            &dst->ip[1],
+            &dst->ip[2],
+            &dst->ip[3],
+            &dst->cidr)
+        == 5) {
         return 1;
     } else if (sscanf(src,
-                      "%hhu.%hhu.%hhu.%hhu",
-                      &dest->Union.ip[0],
-                      &dest->Union.ip[1],
-                      &dest->Union.ip[2],
-                      &dest->Union.ip[3]) == 4)
-    {
+                   "%hhu.%hhu.%hhu.%hhu",
+                   &dst->ip[0],
+                   &dst->ip[1],
+                   &dst->ip[2],
+                   &dst->ip[3])
+        == 4) {
         return 1;
     }
     return 0;
 }
 
-void formatIPToString(char* dest, IPStruct src)
+void format_ip_to_str(char* dst, ip_t src)
 {
-    if (src.CIDR != 0) {
-        snprintf(dest,
-                 19,
-                 "%hhu.%hhu.%hhu.%hhu/%hhu",
-                 src.Union.ip[0],
-                 src.Union.ip[1],
-                 src.Union.ip[2],
-                 src.Union.ip[3],
-                 src.CIDR);
+    if (src.cidr != 0) {
+        snprintf(dst,
+            19,
+            "%hhu.%hhu.%hhu.%hhu/%hhu",
+            src.ip[0],
+            src.ip[1],
+            src.ip[2],
+            src.ip[3],
+            src.cidr);
         return;
     }
-    snprintf(dest, 16, "%hhu.%hhu.%hhu.%hhu", src.Union.ip[0], src.Union.ip[1], src.Union.ip[2], src.Union.ip[3]);
+    snprintf(dst, 16, "%hhu.%hhu.%hhu.%hhu", src.ip[0], src.ip[1], src.ip[2], src.ip[3]);
 }
 
-void teamIDToString(Server* server, char* dest, int team)
+void team_id_to_str(server_t* server, char* dst, int team)
 {
     if (team == 255) {
-        snprintf(dest, 15, "Spectator Team");
+        snprintf(dst, 15, "Spectator Team");
         return;
     }
-    snprintf(dest, 11, "%s", server->protocol.nameTeam[team]);
+    snprintf(dst, 11, "%s", server->protocol.name_team[team]);
 }
 
-uint8 parsePlayer(char* s, uint8* id, char** end)
+uint8_t parse_player(char* s, uint8_t* id, char** end)
 {
-    uint8 sLength;
-    if (s[0] != '#' || (sLength = strlen(s)) < 2)
-    { // TODO: look up a player by their nickname if the argument doesn't start with #
+    uint8_t sLength;
+    if (s[0] != '#' || (sLength = strlen(s)) < 2) { // TODO: look up a player by their nickname if the argument doesn't start with #
         return 0;
     }
 
-    return parseByte(s + 1, id, end);
+    return parse_byte(s + 1, id, end);
 }
 
-uint8 parseByte(char* s, uint8* byte, char** end)
+uint8_t parse_byte(char* s, uint8_t* byte, char** end)
 {
     char* _end;
     int   parsed = strtoimax(s, &_end, 10);
@@ -78,7 +78,7 @@ uint8 parseByte(char* s, uint8* byte, char** end)
     return 1;
 }
 
-uint8 parseFloat(char* s, float* value, char** end)
+uint8_t parse_float(char* s, float* value, char** end)
 {
     char*  _end;
     double parsed = strtod(s, &_end);
@@ -86,31 +86,31 @@ uint8 parseFloat(char* s, float* value, char** end)
         return 0;
     }
 
-    *value = (float) parsed;
+    *value = (float)parsed;
     if (end) {
         *end = _end;
     }
     return 1;
 }
 
-uint8 parseIP(char* s, IPStruct* ip, char** end)
+uint8_t parse_ip(char* s, ip_t* ip, char** end)
 {
-    if (!parseByte(s, &ip->Union.ip[0], &s)) {
+    if (!parse_byte(s, &ip->ip[0], &s)) {
         return 0;
     }
 
     for (int i = 1; i < 4; i++) {
-        if (*s++ != '.' || !parseByte(s, &ip->Union.ip[i], &s)) {
+        if (*s++ != '.' || !parse_byte(s, &ip->ip[i], &s)) {
             return 0;
         }
     }
 
-    if (*s == '/') { // We have a slash after the last number. That means we are dealing with CIDR.
-        if (!parseByte(++s, &ip->CIDR, &s) || ip->CIDR > 32) {
+    if (*s == '/') { // We have a slash after the last number. That means we are dealing with cidr.
+        if (!parse_byte(++s, &ip->cidr, &s) || ip->cidr > 32) {
             return 0;
         }
     } else {
-        ip->CIDR = 0;
+        ip->cidr = 0;
     }
 
     if (end)

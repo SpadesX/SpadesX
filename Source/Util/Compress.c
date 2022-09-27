@@ -1,83 +1,93 @@
 // Copyright CircumScriptor and DarkNeutrino 2021
 #include "Compress.h"
 
-#include "Queue.h"
 #include "Log.h"
+#include "Queue.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
 
+static z_stream* g_compressor = NULL;
 
-static z_stream* GlobalCompressor = NULL;
-
-int InitCompressor(int level)
+/**
+ * @brief Initialize compressor library (global compressor)
+ *
+ * @param level Level of compression
+ * @return 0 on success
+ */
+static int _compress_init(int level)
 {
-    if (GlobalCompressor != NULL) {
+    if (g_compressor != NULL) {
         LOG_ERROR("Compressor is already initialized");
         return 1;
     } else {
-        GlobalCompressor = (z_stream*) malloc(sizeof(z_stream));
+        g_compressor = (z_stream*)malloc(sizeof(z_stream));
     }
 
-    GlobalCompressor->zalloc = Z_NULL;
-    GlobalCompressor->zfree  = Z_NULL;
-    GlobalCompressor->opaque = Z_NULL;
+    g_compressor->zalloc = Z_NULL;
+    g_compressor->zfree  = Z_NULL;
+    g_compressor->opaque = Z_NULL;
 
-    if (deflateInit(GlobalCompressor, level) < 0) {
+    if (deflateInit(g_compressor, level) < 0) {
         LOG_ERROR("Failed to initialize compressor");
         return 1;
     }
     return 0;
 }
 
-int CloseCompressor(void)
+/**
+ * @brief Close compressor library (global compressor)
+ *
+ * @return 0 on success
+ */
+static int _compress_close(void)
 {
-    if (GlobalCompressor == NULL) {
+    if (g_compressor == NULL) {
         LOG_ERROR("Compressor is not initialized");
         return 1;
     }
 
-    if (deflateEnd(GlobalCompressor) != 0) {
+    if (deflateEnd(g_compressor) != 0) {
         LOG_ERROR("Failed to close compressor");
         return 1;
     }
 
-    free(GlobalCompressor);
-    GlobalCompressor = NULL;
+    free(g_compressor);
+    g_compressor = NULL;
     return 0;
 }
 
-Queue* CompressData(uint8* data, uint32 length, uint32 chunkSize)
+queue_t* compress_queue(uint8_t* data, uint32_t length, uint32_t chunkSize)
 {
-    InitCompressor(5);
-    if (GlobalCompressor == NULL) {
+    _compress_init(5);
+    if (g_compressor == NULL) {
         LOG_ERROR("Compressor is not initialized");
         return NULL;
     }
 
-    Queue* first = NULL;
-    Queue* node  = NULL;
+    queue_t* first = NULL;
+    queue_t* node  = NULL;
 
-    GlobalCompressor->next_in  = (uint8*) data;
-    GlobalCompressor->avail_in = length;
+    g_compressor->next_in  = (uint8_t*)data;
+    g_compressor->avail_in = length;
 
     do {
         if (first == NULL) {
-            first = Push(NULL, chunkSize);
+            first = queue_push(NULL, chunkSize);
             node  = first;
         } else {
-            node = Push(node, chunkSize);
+            node = queue_push(node, chunkSize);
         }
 
-        GlobalCompressor->avail_out = chunkSize;
-        GlobalCompressor->next_out  = node->block;
-        if (deflate(GlobalCompressor, Z_FINISH) < 0) {
+        g_compressor->avail_out = chunkSize;
+        g_compressor->next_out  = node->block;
+        if (deflate(g_compressor, Z_FINISH) < 0) {
             LOG_ERROR("Failed to compress data");
             return NULL;
         }
-        node->length = chunkSize - GlobalCompressor->avail_out;
-    } while (GlobalCompressor->avail_out == 0);
-    CloseCompressor();
+        node->length = chunkSize - g_compressor->avail_out;
+    } while (g_compressor->avail_out == 0);
+    _compress_close();
     return first;
 }

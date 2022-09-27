@@ -8,11 +8,11 @@
 #include "Structs.h"
 #include "Util/DataStream.h"
 #include "Util/Enums.h"
+#include "Util/Log.h"
 #include "Util/Physics.h"
 #include "Util/Types.h"
 #include "Util/Uthash.h"
 #include "Util/Utlist.h"
-#include "Util/Log.h"
 
 #include <ctype.h>
 #include <enet/enet.h>
@@ -23,14 +23,14 @@
 #include <string.h>
 #include <time.h>
 
-uint64 getNanos(void)
+uint64_t get_nanos(void)
 {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    return (uint64) ts.tv_sec * 1000000000L + ts.tv_nsec;
+    return (uint64_t)ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
-/*uint8 castRaysWithTolerance(Server *server, Vector3f pos, Vector3f posOrien, Vector3f othPlayerPos) {
+/*uint8_t castRaysWithTolerance(Server *server, Vector3f pos, Vector3f posOrien, Vector3f othPlayerPos) {
     //TODO Actually do the function.
      Needs:
         Cross Product,
@@ -40,38 +40,38 @@ uint64 getNanos(void)
 
 }*/
 
-static void copyBits(uint32* dest, uint32 src, uint32 endPos, uint32 startPos)
+static void copyBits(uint32_t* dst, uint32_t src, uint32_t endPos, uint32_t startPos)
 {
-    uint32 numBitsToCopy = endPos - startPos + 1;
-    uint32 numBitsInInt  = sizeof(uint32) * 8;
-    uint32 zeroMask;
-    uint32 onesMask = ~((uint32) 0);
+    uint32_t numBitsToCopy = endPos - startPos + 1;
+    uint32_t numBitsInInt  = sizeof(uint32_t) * 8;
+    uint32_t zeroMask;
+    uint32_t onesMask = ~((uint32_t)0);
 
     onesMask = onesMask >> (numBitsInInt - numBitsToCopy);
     onesMask = onesMask << startPos;
     zeroMask = ~onesMask;
-    *dest    = *dest & zeroMask;
+    *dst     = *dst & zeroMask;
     src      = src & onesMask;
-    *dest    = *dest | src;
+    *dst     = *dst | src;
 }
 
-static void swapIPStruct(IPStruct* ip)
+static void swapIPStruct(ip_t* ip)
 {
-    uint8 tmp;
-    tmp             = ip->Union.ip[0];
-    ip->Union.ip[0] = ip->Union.ip[3];
-    ip->Union.ip[3] = tmp;
-    tmp             = ip->Union.ip[1];
-    ip->Union.ip[1] = ip->Union.ip[2];
-    ip->Union.ip[2] = tmp;
+    uint8_t tmp;
+    tmp       = ip->ip[0];
+    ip->ip[0] = ip->ip[3];
+    ip->ip[3] = tmp;
+    tmp       = ip->ip[1];
+    ip->ip[1] = ip->ip[2];
+    ip->ip[2] = tmp;
 }
 
-uint8 octetsInRange(IPStruct start, IPStruct end, IPStruct host)
+uint8_t octets_in_range(ip_t start, ip_t end, ip_t host)
 {
     swapIPStruct(&start);
     swapIPStruct(&end);
     swapIPStruct(&host);
-    if (host.Union.ip32 >= start.Union.ip32 && host.Union.ip32 <= end.Union.ip32) {
+    if (host.ip32 >= start.ip32 && host.ip32 <= end.ip32) {
         return 1;
         swapIPStruct(&start);
         swapIPStruct(&end);
@@ -83,109 +83,93 @@ uint8 octetsInRange(IPStruct start, IPStruct end, IPStruct host)
     return 0;
 }
 
-uint8 IPInRange(IPStruct host, IPStruct banned, IPStruct startOfRange, IPStruct endOfRange)
+uint8_t ip_in_range(ip_t host, ip_t banned, ip_t startOfRange, ip_t endOfRange)
 {
-    uint32   max = UINT32_MAX;
-    IPStruct startRange;
-    IPStruct endRange;
-    startRange.CIDR       = 24;
-    endRange.CIDR         = 24;
-    startRange.Union.ip32 = 0;
-    endRange.Union.ip32   = 0;
-    startRange.Union.ip32 = startOfRange.Union.ip32;
-    endRange.Union.ip32   = endOfRange.Union.ip32;
-    if (banned.CIDR > 0 && banned.CIDR < 32) {
-        uint32 subMax = 0;
-        copyBits(&subMax, max, 31 - banned.CIDR, 0);
+    uint32_t max = UINT32_MAX;
+    ip_t     startRange;
+    ip_t     endRange;
+    startRange.cidr = 24;
+    endRange.cidr   = 24;
+    startRange.ip32 = 0;
+    endRange.ip32   = 0;
+    startRange.ip32 = startOfRange.ip32;
+    endRange.ip32   = endOfRange.ip32;
+    if (banned.cidr > 0 && banned.cidr < 32) {
+        uint32_t subMax = 0;
+        copyBits(&subMax, max, 31 - banned.cidr, 0);
         swapIPStruct(&banned);
-        uint32 ourRange = 0;
-        copyBits(&ourRange, banned.Union.ip32, 32 - banned.CIDR, 0);
+        uint32_t ourRange = 0;
+        copyBits(&ourRange, banned.ip32, 32 - banned.cidr, 0);
         swapIPStruct(&banned);
-        uint32   times = ourRange / (subMax + 1);
-        uint32   start = times * (subMax + 1);
-        IPStruct startIP;
-        IPStruct endIP;
-        startIP.Union.ip32 = banned.Union.ip32;
-        endIP.Union.ip32   = banned.Union.ip32;
-        startIP.CIDR       = 0;
-        endIP.CIDR         = 0;
+        uint32_t times = ourRange / (subMax + 1);
+        uint32_t start = times * (subMax + 1);
+        ip_t     startIP;
+        ip_t     endIP;
+        startIP.ip32 = banned.ip32;
+        endIP.ip32   = banned.ip32;
+        startIP.cidr = 0;
+        endIP.cidr   = 0;
         swapIPStruct(&startIP);
         swapIPStruct(&endIP);
-        uint32 end = ((times + 1) * subMax);
+        uint32_t end = ((times + 1) * subMax);
         end |= 1;
-        copyBits(&startIP.Union.ip32, start, 32 - banned.CIDR, 0);
-        copyBits(&endIP.Union.ip32, end, 32 - banned.CIDR, 0);
+        copyBits(&startIP.ip32, start, 32 - banned.cidr, 0);
+        copyBits(&endIP.ip32, end, 32 - banned.cidr, 0);
         swapIPStruct(&startIP);
         swapIPStruct(&endIP);
-        if (octetsInRange(startIP, endIP, host)) {
+        if (octets_in_range(startIP, endIP, host)) {
             return 1;
         }
-    } else if (octetsInRange(startRange, endRange, host)) {
+    } else if (octets_in_range(startRange, endRange, host)) {
         return 1;
-    } else if (host.Union.ip32 == banned.Union.ip32) {
+    } else if (host.ip32 == banned.ip32) {
         return 1;
     }
     return 0;
 }
 
-static uint8 grenadeGamemodeCheck(Server* server, Vector3f pos)
+static uint8_t grenadeGamemodeCheck(server_t* server, vector3f_t pos)
 {
-    if (gamemodeBlockChecks(server, pos.x + 1, pos.y + 1, pos.z + 1) &&
-        gamemodeBlockChecks(server, pos.x + 1, pos.y + 1, pos.z - 1) &&
-        gamemodeBlockChecks(server, pos.x + 1, pos.y + 1, pos.z) &&
-        gamemodeBlockChecks(server, pos.x + 1, pos.y - 1, pos.z + 1) &&
-        gamemodeBlockChecks(server, pos.x + 1, pos.y - 1, pos.z - 1) &&
-        gamemodeBlockChecks(server, pos.x + 1, pos.y - 1, pos.z) &&
-        gamemodeBlockChecks(server, pos.x - 1, pos.y + 1, pos.z + 1) &&
-        gamemodeBlockChecks(server, pos.x - 1, pos.y + 1, pos.z - 1) &&
-        gamemodeBlockChecks(server, pos.x - 1, pos.y + 1, pos.z) &&
-        gamemodeBlockChecks(server, pos.x - 1, pos.y - 1, pos.z + 1) &&
-        gamemodeBlockChecks(server, pos.x - 1, pos.y - 1, pos.z - 1) &&
-        gamemodeBlockChecks(server, pos.x - 1, pos.y - 1, pos.z))
-    {
+    if (gamemode_block_checks(server, pos.x + 1, pos.y + 1, pos.z + 1) && gamemode_block_checks(server, pos.x + 1, pos.y + 1, pos.z - 1) && gamemode_block_checks(server, pos.x + 1, pos.y + 1, pos.z) && gamemode_block_checks(server, pos.x + 1, pos.y - 1, pos.z + 1) && gamemode_block_checks(server, pos.x + 1, pos.y - 1, pos.z - 1) && gamemode_block_checks(server, pos.x + 1, pos.y - 1, pos.z) && gamemode_block_checks(server, pos.x - 1, pos.y + 1, pos.z + 1) && gamemode_block_checks(server, pos.x - 1, pos.y + 1, pos.z - 1) && gamemode_block_checks(server, pos.x - 1, pos.y + 1, pos.z) && gamemode_block_checks(server, pos.x - 1, pos.y - 1, pos.z + 1) && gamemode_block_checks(server, pos.x - 1, pos.y - 1, pos.z - 1) && gamemode_block_checks(server, pos.x - 1, pos.y - 1, pos.z)) {
         return 1;
     }
     return 0;
 }
 
-uint8 playerHasPermission(Server* server, uint8 playerID, uint8 console, uint32 permission)
+uint8_t player_has_permission(server_t* server, uint8_t playerID, uint8_t console, uint32_t permission)
 {
     if (console) {
         return permission;
     } else {
-        return (permission & server->player[playerID].permLevel);
+        return (permission & server->player[playerID].permissions);
     }
 }
 
-uint8 getPlayerUnstuck(Server* server, uint8 playerID)
+uint8_t getPlayerUnstuck(server_t* server, uint8_t playerID)
 {
-    for (float z = server->player[playerID].movement.prevLegitPos.z - 1;
-         z <= server->player[playerID].movement.prevLegitPos.z + 1;
-         z++)
-    {
-        if (validPlayerPos(server,
-                           playerID,
-                           server->player[playerID].movement.prevLegitPos.x,
-                           server->player[playerID].movement.prevLegitPos.y,
-                           z))
-        {
-            server->player[playerID].movement.prevLegitPos.z = z;
-            server->player[playerID].movement.position       = server->player[playerID].movement.prevLegitPos;
+    for (float z = server->player[playerID].movement.prev_legit_pos.z - 1;
+         z <= server->player[playerID].movement.prev_legit_pos.z + 1;
+         z++) {
+        if (valid_pos_3f(server,
+                playerID,
+                server->player[playerID].movement.prev_legit_pos.x,
+                server->player[playerID].movement.prev_legit_pos.y,
+                z)) {
+            server->player[playerID].movement.prev_legit_pos.z = z;
+            server->player[playerID].movement.position         = server->player[playerID].movement.prev_legit_pos;
             return 1;
         }
-        for (float x = server->player[playerID].movement.prevLegitPos.x - 1;
-             x <= server->player[playerID].movement.prevLegitPos.x + 1;
-             x++)
-        {
-            for (float y = server->player[playerID].movement.prevLegitPos.y - 1;
-                 y <= server->player[playerID].movement.prevLegitPos.y + 1;
-                 y++)
-            {
-                if (validPlayerPos(server, playerID, x, y, z)) {
-                    server->player[playerID].movement.prevLegitPos.x = x;
-                    server->player[playerID].movement.prevLegitPos.y = y;
-                    server->player[playerID].movement.prevLegitPos.z = z;
-                    server->player[playerID].movement.position       = server->player[playerID].movement.prevLegitPos;
+        for (float x = server->player[playerID].movement.prev_legit_pos.x - 1;
+             x <= server->player[playerID].movement.prev_legit_pos.x + 1;
+             x++) {
+            for (float y = server->player[playerID].movement.prev_legit_pos.y - 1;
+                 y <= server->player[playerID].movement.prev_legit_pos.y + 1;
+                 y++) {
+                if (valid_pos_3f(server, playerID, x, y, z)) {
+                    server->player[playerID].movement.prev_legit_pos.x = x;
+                    server->player[playerID].movement.prev_legit_pos.y = y;
+                    server->player[playerID].movement.prev_legit_pos.z = z;
+                    server->player[playerID].movement.position         = server->player[playerID].movement.prev_legit_pos;
                     return 1;
                 }
             }
@@ -194,136 +178,132 @@ uint8 getPlayerUnstuck(Server* server, uint8 playerID)
     return 0;
 }
 
-uint8 getGrenadeDamage(Server* server, uint8 damageID, Grenade* grenade)
+uint8_t getGrenadeDamage(server_t* server, uint8_t damageID, grenade_t* grenade)
 {
-    double   diffX      = fabs(server->player[damageID].movement.position.x - grenade->position.x);
-    double   diffY      = fabs(server->player[damageID].movement.position.y - grenade->position.y);
-    double   diffZ      = fabs(server->player[damageID].movement.position.z - grenade->position.z);
-    Vector3f playerPos  = server->player[damageID].movement.position;
-    Vector3f grenadePos = grenade->position;
-    if (diffX < 16 && diffY < 16 && diffZ < 16 &&
-        canSee(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
-        grenade->position.z < 62)
-    {
+    double     diffX      = fabs(server->player[damageID].movement.position.x - grenade->position.x);
+    double     diffY      = fabs(server->player[damageID].movement.position.y - grenade->position.y);
+    double     diffZ      = fabs(server->player[damageID].movement.position.z - grenade->position.z);
+    vector3f_t playerPos  = server->player[damageID].movement.position;
+    vector3f_t grenadePos = grenade->position;
+    if (diffX < 16 && diffY < 16 && diffZ < 16 && physics_can_see(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) && grenade->position.z < 62) {
         double diff = ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ));
         if (diff == 0) {
             return 100;
         }
-        return (int) fmin((4096.f / diff), 100);
+        return (int)fmin((4096.f / diff), 100);
     }
     return 0;
 }
 
-uint8 gamemodeBlockChecks(Server* server, int x, int y, int z)
+uint8_t gamemode_block_checks(server_t* server, int x, int y, int z)
 {
-    if (((((x >= 206 && x <= 306) && (y >= 240 && y <= 272) && (z == 2 || z == 0)) ||
-          ((x >= 205 && x <= 307) && (y >= 239 && y <= 273) && (z == 1))) &&
-         server->protocol.currentGameMode == GAME_MODE_BABEL))
-    {
+    if (((((x >= 206 && x <= 306) && (y >= 240 && y <= 272) && (z == 2 || z == 0)) || ((x >= 205 && x <= 307) && (y >= 239 && y <= 273) && (z == 1))) && server->protocol.current_gamemode == GAME_MODE_BABEL)) {
         return 0;
     }
     return 1;
 }
 
-void initPlayer(Server*  server,
-                uint8    playerID,
-                uint8    reset,
-                uint8    disconnect,
-                Vector3f empty,
-                Vector3f forward,
-                Vector3f strafe,
-                Vector3f height)
+void init_player(server_t* server,
+    uint8_t                playerID,
+    uint8_t                reset,
+    uint8_t                disconnect,
+    vector3f_t             empty,
+    vector3f_t             forward,
+    vector3f_t             strafe,
+    vector3f_t             height)
 {
     if (reset == 0) {
         server->player[playerID].state  = STATE_DISCONNECTED;
         server->player[playerID].queues = NULL;
     }
-    server->player[playerID].ups                         = 60;
-    server->player[playerID].timers.timeSinceLastWU      = getNanos();
-    server->player[playerID].input                       = 0;
-    server->player[playerID].movement.eyePos             = empty;
-    server->player[playerID].movement.forwardOrientation = forward;
-    server->player[playerID].movement.strafeOrientation  = strafe;
-    server->player[playerID].movement.heightOrientation  = height;
-    server->player[playerID].movement.position           = empty;
-    server->player[playerID].movement.velocity           = empty;
+    server->player[playerID].ups                          = 60;
+    server->player[playerID].timers.time_since_last_wu    = get_nanos();
+    server->player[playerID].input                        = 0;
+    server->player[playerID].movement.eye_pos             = empty;
+    server->player[playerID].movement.forward_orientation = forward;
+    server->player[playerID].movement.strafe_orientation  = strafe;
+    server->player[playerID].movement.height_orientation  = height;
+    server->player[playerID].movement.position            = empty;
+    server->player[playerID].movement.velocity            = empty;
     if (reset == 0 && disconnect == 0) {
-        PermLevel roleList[5] = {{"manager", &server->managerPasswd, 4},
-                                 {"admin", &server->adminPasswd, 3},
-                                 {"mod", &server->modPasswd, 2},
-                                 {"guard", &server->guardPasswd, 1},
-                                 {"trusted", &server->trustedPasswd, 0}};
-        for (unsigned long x = 0; x < sizeof(roleList) / sizeof(PermLevel); ++x) {
-            server->player[playerID].roleList[x] = roleList[x];
+        permissions_t roleList[5] = {
+            {"manager", &server->manager_passwd, 4},
+            {  "admin",   &server->admin_passwd, 3},
+            {    "mod",     &server->mod_passwd, 2},
+            {  "guard",   &server->guard_passwd, 1},
+            {"trusted", &server->trusted_passwd, 0}
+        };
+        for (unsigned long x = 0; x < sizeof(roleList) / sizeof(permissions_t); ++x) {
+            server->player[playerID].role_list[x] = roleList[x];
         }
         server->player[playerID].grenade = NULL;
     }
-    server->player[playerID].airborne                         = 0;
-    server->player[playerID].wade                             = 0;
-    server->player[playerID].lastclimb                        = 0;
-    server->player[playerID].movBackwards                     = 0;
-    server->player[playerID].movForward                       = 0;
-    server->player[playerID].movLeft                          = 0;
-    server->player[playerID].movRight                         = 0;
-    server->player[playerID].jumping                          = 0;
-    server->player[playerID].crouching                        = 0;
-    server->player[playerID].sneaking                         = 0;
-    server->player[playerID].sprinting                        = 0;
-    server->player[playerID].primary_fire                     = 0;
-    server->player[playerID].secondary_fire                   = 0;
-    server->player[playerID].canBuild                         = 1;
-    server->player[playerID].allowKilling                     = 1;
-    server->player[playerID].allowTeamKilling                 = 0;
-    server->player[playerID].muted                            = 0;
-    server->player[playerID].toldToMaster                     = 0;
-    server->player[playerID].timers.sinceLastBaseEnter        = 0;
-    server->player[playerID].timers.sinceLastBaseEnterRestock = 0;
-    server->player[playerID].timers.sinceLast3BlockDest       = 0;
-    server->player[playerID].timers.sinceLastBlockDest        = 0;
-    server->player[playerID].timers.sinceLastBlockPlac        = 0;
-    server->player[playerID].timers.sinceLastGrenadeThrown    = 0;
-    server->player[playerID].timers.sinceLastShot             = 0;
-    server->player[playerID].timers.timeSinceLastWU           = 0;
-    server->player[playerID].timers.sinceLastWeaponInput      = 0;
-    server->player[playerID].HP                               = 100;
-    server->player[playerID].blocks                           = 50;
-    server->player[playerID].grenades                         = 3;
-    server->player[playerID].hasIntel                         = 0;
-    server->player[playerID].reloading                        = 0;
-    server->player[playerID].client                           = ' ';
-    server->player[playerID].version_minor                    = 0;
-    server->player[playerID].version_major                    = 0;
-    server->player[playerID].version_revision                 = 0;
-    server->player[playerID].periodicDelayIndex               = 0;
-    server->player[playerID].currentPeriodicMessage           = server->periodicMessages;
-    server->player[playerID].welcomeSent                      = 0;
+    server->player[playerID].airborne                             = 0;
+    server->player[playerID].wade                                 = 0;
+    server->player[playerID].lastclimb                            = 0;
+    server->player[playerID].move_backwards                       = 0;
+    server->player[playerID].move_forward                         = 0;
+    server->player[playerID].move_left                            = 0;
+    server->player[playerID].move_right                           = 0;
+    server->player[playerID].jumping                              = 0;
+    server->player[playerID].crouching                            = 0;
+    server->player[playerID].sneaking                             = 0;
+    server->player[playerID].sprinting                            = 0;
+    server->player[playerID].primary_fire                         = 0;
+    server->player[playerID].secondary_fire                       = 0;
+    server->player[playerID].can_build                            = 1;
+    server->player[playerID].allow_killing                        = 1;
+    server->player[playerID].allow_team_killing                   = 0;
+    server->player[playerID].muted                                = 0;
+    server->player[playerID].told_to_master                       = 0;
+    server->player[playerID].timers.since_last_base_enter         = 0;
+    server->player[playerID].timers.since_last_base_enter_restock = 0;
+    server->player[playerID].timers.since_last_3block_dest        = 0;
+    server->player[playerID].timers.since_last_block_dest         = 0;
+    server->player[playerID].timers.since_last_block_plac         = 0;
+    server->player[playerID].timers.since_last_grenade_thrown     = 0;
+    server->player[playerID].timers.since_last_shot               = 0;
+    server->player[playerID].timers.time_since_last_wu            = 0;
+    server->player[playerID].timers.since_last_weapon_input       = 0;
+    server->player[playerID].hp                                   = 100;
+    server->player[playerID].blocks                               = 50;
+    server->player[playerID].grenades                             = 3;
+    server->player[playerID].has_intel                            = 0;
+    server->player[playerID].reloading                            = 0;
+    server->player[playerID].client                               = ' ';
+    server->player[playerID].version_minor                        = 0;
+    server->player[playerID].version_major                        = 0;
+    server->player[playerID].version_revision                     = 0;
+    server->player[playerID].periodic_delay_index                 = 0;
+    server->player[playerID].current_periodic_message             = server->periodic_messages;
+    server->player[playerID].welcome_sent                         = 0;
     if (reset == 0) {
-        server->player[playerID].permLevel = 0;
+        server->player[playerID].permissions = 0;
     } else if (reset == 1) {
-        Grenade* grenade;
-        Grenade* tmp;
+        grenade_t* grenade;
+        grenade_t* tmp;
         DL_FOREACH_SAFE(server->player[playerID].grenade, grenade, tmp)
         {
             DL_DELETE(server->player[playerID].grenade, grenade);
             free(grenade);
         }
     }
-    server->player[playerID].isInvisible = 0;
-    server->player[playerID].kills       = 0;
-    server->player[playerID].deaths      = 0;
+    server->player[playerID].is_invisible = 0;
+    server->player[playerID].kills        = 0;
+    server->player[playerID].deaths       = 0;
     memset(server->player[playerID].name, 0, 17);
     memset(server->player[playerID].os_info, 0, 255);
 }
 
-uint8 isStaff(Server* server, uint8 playerID)
+uint8_t isStaff(server_t* server, uint8_t playerID)
 {
-    if (playerHasPermission(server, playerID, 0, 4294967294)) {
+    if (player_has_permission(server, playerID, 0, 4294967294)) {
         return 1;
     }
     return 0;
 }
 
-void sendMessageToStaff(Server* server, const char* format, ...)
+void sendMessageToStaff(server_t* server, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -331,30 +311,28 @@ void sendMessageToStaff(Server* server, const char* format, ...)
     vsnprintf(fMessage, 1024, format, args);
     va_end(args);
 
-    sendServerNotice(server, 32, 1, fMessage);
+    send_server_notice(server, 32, 1, fMessage);
 
-    for (uint8 ID = 0; ID < server->protocol.maxPlayers; ++ID) {
-        if (isPastJoinScreen(server, ID) && isStaff(server, ID)) {
-            sendServerNotice(server, ID, 0, fMessage);
+    for (uint8_t ID = 0; ID < server->protocol.max_players; ++ID) {
+        if (is_past_join_screen(server, ID) && isStaff(server, ID)) {
+            send_server_notice(server, ID, 0, fMessage);
         }
     }
 }
 
-uint8 isPastStateData(Server* server, uint8 playerID)
+uint8_t is_past_state_data(server_t* server, uint8_t playerID)
 {
-    Player player = server->player[playerID];
-    if (player.state == STATE_PICK_SCREEN || player.state == STATE_SPAWNING ||
-        player.state == STATE_WAITING_FOR_RESPAWN || player.state == STATE_READY)
-    {
+    player_t player = server->player[playerID];
+    if (player.state == STATE_PICK_SCREEN || player.state == STATE_SPAWNING || player.state == STATE_WAITING_FOR_RESPAWN || player.state == STATE_READY) {
         return 1;
     } else {
         return 0;
     }
 }
 
-uint8 isPastJoinScreen(Server* server, uint8 playerID)
+uint8_t is_past_join_screen(server_t* server, uint8_t playerID)
 {
-    Player player = server->player[playerID];
+    player_t player = server->player[playerID];
     if (player.state == STATE_SPAWNING || player.state == STATE_WAITING_FOR_RESPAWN || player.state == STATE_READY) {
         return 1;
     } else {
@@ -362,62 +340,45 @@ uint8 isPastJoinScreen(Server* server, uint8 playerID)
     }
 }
 
-uint8 vecValidPos(Server* server, Vector3i pos)
+uint8_t valid_pos_v3i(server_t* server, vector3i_t pos)
 {
-    if (pos.x < server->map.map.size_x && pos.x >= 0 && pos.y < server->map.map.size_y && pos.y >= 0 &&
-        pos.z < server->map.map.size_z && pos.z >= 0)
-    {
+    if (pos.x < server->s_map.map.size_x && pos.x >= 0 && pos.y < server->s_map.map.size_y && pos.y >= 0 && pos.z < server->s_map.map.size_z && pos.z >= 0) {
         return 1;
     } else {
         return 0;
     }
 }
 
-uint8 vecfValidPos(Server* server, Vector3f pos)
+uint8_t valid_pos_v3f(server_t* server, vector3f_t pos)
 {
-    if (pos.x < server->map.map.size_x && pos.x >= 0 && pos.y < server->map.map.size_y && pos.y >= 0 &&
-        pos.z < server->map.map.size_z && pos.z >= 0)
-    {
+    if (pos.x < server->s_map.map.size_x && pos.x >= 0 && pos.y < server->s_map.map.size_y && pos.y >= 0 && pos.z < server->s_map.map.size_z && pos.z >= 0) {
         return 1;
     } else {
         return 0;
     }
 }
-uint8 validPos(Server* server, int x, int y, int z)
+uint8_t valid_pos_3i(server_t* server, int x, int y, int z)
 {
-    if (x < server->map.map.size_x && x >= 0 && y < server->map.map.size_y && y >= 0 &&
-        z < server->map.map.size_z && z >= 0)
-    {
+    if (x < server->s_map.map.size_x && x >= 0 && y < server->s_map.map.size_y && y >= 0 && z < server->s_map.map.size_z && z >= 0) {
         return 1;
     } else {
         return 0;
     }
 }
 
-uint8 validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z)
+uint8_t valid_pos_3f(server_t* server, uint8_t playerID, float X, float Y, float Z)
 {
-    int x = (int) X;
-    int y = (int) Y;
+    int x = (int)X;
+    int y = (int)Y;
     int z = 0;
     if (Z < 0.f) {
-        z = (int) Z + 1;
+        z = (int)Z + 1;
     } else {
-        z = (int) Z + 2;
+        z = (int)Z + 2;
     }
 
-    if (x < server->map.map.size_x && x >= 0 && y < server->map.map.size_y && y >= 0 &&
-        (z < server->map.map.size_z || (z == 64 && server->player[playerID].crouching)) &&
-        (z >= 0 || ((z == -1) || (z == -2 && server->player[playerID].jumping))))
-    {
-        if ((!mapvxl_is_solid(&server->map.map, x, y, z) ||
-             (z == 63 || z == -1 || (z == -2 && server->player[playerID].jumping) ||
-              (z == 64 && server->player[playerID].crouching) || server->player[playerID].jumping) ||
-             (mapvxl_is_solid(&server->map.map, x, y, z) && server->player[playerID].crouching)) &&
-            (!mapvxl_is_solid(&server->map.map, x, y, z - 1) ||
-             ((z <= 1 && z > -2) || (z == -2 && server->player[playerID].jumping)) ||
-             (z - 1 == 63 && server->player[playerID].crouching)) &&
-            (!mapvxl_is_solid(&server->map.map, x, y, z - 2) ||
-             ((z <= 2 && z > -2) || (z == -2 && server->player[playerID].jumping))))
+    if (x < server->s_map.map.size_x && x >= 0 && y < server->s_map.map.size_y && y >= 0 && (z < server->s_map.map.size_z || (z == 64 && server->player[playerID].crouching)) && (z >= 0 || ((z == -1) || (z == -2 && server->player[playerID].jumping)))) {
+        if ((!mapvxl_is_solid(&server->s_map.map, x, y, z) || (z == 63 || z == -1 || (z == -2 && server->player[playerID].jumping) || (z == 64 && server->player[playerID].crouching) || server->player[playerID].jumping) || (mapvxl_is_solid(&server->s_map.map, x, y, z) && server->player[playerID].crouching)) && (!mapvxl_is_solid(&server->s_map.map, x, y, z - 1) || ((z <= 1 && z > -2) || (z == -2 && server->player[playerID].jumping)) || (z - 1 == 63 && server->player[playerID].crouching)) && (!mapvxl_is_solid(&server->s_map.map, x, y, z - 2) || ((z <= 2 && z > -2) || (z == -2 && server->player[playerID].jumping))))
         /* Dont even think about this
         This is what happens when map doesnt account for full height of
         freaking player and I have to check for out of bounds checks on map...
@@ -429,9 +390,9 @@ uint8 validPlayerPos(Server* server, uint8 playerID, float X, float Y, float Z)
     return 0;
 }
 
-Vector3i* getNeighbors(Vector3i pos)
+vector3i_t* get_neighbours(vector3i_t pos)
 {
-    static Vector3i neighArray[6];
+    static vector3i_t neighArray[6];
     neighArray[0].x = pos.x;
     neighArray[0].y = pos.y;
     neighArray[0].z = pos.z - 1;
@@ -459,11 +420,11 @@ Vector3i* getNeighbors(Vector3i pos)
     return neighArray;
 }
 
-Vector3i* getGrenadeNeighbors(Vector3i pos)
+vector3i_t* getGrenadeNeighbors(vector3i_t pos)
 {
-    static Vector3i neighArray[54];
+    static vector3i_t neighArray[54];
     // This is nasty but fast.
-    uint8 index = 0;
+    uint8_t index = 0;
     //-z size
     neighArray[index].x = pos.x;
     neighArray[index].y = pos.y;
@@ -691,10 +652,10 @@ Vector3i* getGrenadeNeighbors(Vector3i pos)
 }
 
 #define NODE_RESERVE_SIZE 250000
-Vector3i* nodes = NULL;
-int       nodePos;
-int       nodesSize;
-mapNode*  visitedMap;
+vector3i_t* nodes = NULL;
+int         nodePos;
+int         nodesSize;
+map_node_t* visitedMap;
 
 static inline void saveNode(int x, int y, int z)
 {
@@ -704,29 +665,27 @@ static inline void saveNode(int x, int y, int z)
     nodePos++;
 }
 
-static inline const Vector3i* returnCurrentNode(void)
+static inline const vector3i_t* returnCurrentNode(void)
 {
     return &nodes[--nodePos];
 }
 
-static inline void addNode(Server* server, int x, int y, int z)
+static inline void addNode(server_t* server, int x, int y, int z)
 {
-    if ((x >= 0 && x < server->map.map.size_x) && (y >= 0 && y < server->map.map.size_y) &&
-        (z >= 0 && z < server->map.map.size_z))
-    {
-        if (mapvxl_is_solid(&server->map.map, x, y, z)) {
+    if ((x >= 0 && x < server->s_map.map.size_x) && (y >= 0 && y < server->s_map.map.size_y) && (z >= 0 && z < server->s_map.map.size_z)) {
+        if (mapvxl_is_solid(&server->s_map.map, x, y, z)) {
             saveNode(x, y, z);
         }
     }
 }
 
-uint8 checkNode(Server* server, Vector3i position)
+uint8_t check_node(server_t* server, vector3i_t position)
 {
-    if (vecValidPos(server, position) && mapvxl_is_solid(&server->map.map, position.x, position.y, position.z) == 0) {
+    if (valid_pos_v3i(server, position) && mapvxl_is_solid(&server->s_map.map, position.x, position.y, position.z) == 0) {
         return 1;
     }
     if (nodes == NULL) {
-        nodes     = (Vector3i*) malloc(sizeof(Vector3i) * NODE_RESERVE_SIZE);
+        nodes     = (vector3i_t*)malloc(sizeof(vector3i_t) * NODE_RESERVE_SIZE);
         nodesSize = NODE_RESERVE_SIZE;
     }
     nodePos    = 0;
@@ -735,21 +694,21 @@ uint8 checkNode(Server* server, Vector3i position)
     saveNode(position.x, position.y, position.z);
 
     while (nodePos > 0) {
-        Vector3i* old_nodes;
+        vector3i_t* old_nodes;
         if (nodePos >= nodesSize - 6) {
             nodesSize += NODE_RESERVE_SIZE;
-            old_nodes = (Vector3i*) realloc((void*) nodes, sizeof(Vector3i) * nodesSize);
+            old_nodes = (vector3i_t*)realloc((void*)nodes, sizeof(vector3i_t) * nodesSize);
             if (!old_nodes) {
                 free(nodes);
                 return 0;
             }
             nodes = old_nodes;
         }
-        const Vector3i* currentNode = returnCurrentNode();
-        position.z                  = currentNode->z;
-        if (position.z >= server->map.map.size_z - 2) {
-            mapNode* delNode;
-            mapNode* tmpNode;
+        const vector3i_t* currentNode = returnCurrentNode();
+        position.z                    = currentNode->z;
+        if (position.z >= server->s_map.map.size_z - 2) {
+            map_node_t* delNode;
+            map_node_t* tmpNode;
             if (visitedMap != NULL) {
                 HASH_ITER(hh, visitedMap, delNode, tmpNode)
                 {
@@ -765,12 +724,11 @@ uint8 checkNode(Server* server, Vector3i position)
         position.y = currentNode->y;
 
         // already visited?
-        mapNode* node;
-        int      id = position.x * server->map.map.size_y * server->map.map.size_z +
-                 position.y * server->map.map.size_z + position.z;
+        map_node_t* node;
+        int         id = position.x * server->s_map.map.size_y * server->s_map.map.size_z + position.y * server->s_map.map.size_z + position.z;
         HASH_FIND_INT(visitedMap, &id, node);
         if (node == NULL) {
-            node          = (mapNode*) malloc(sizeof *node);
+            node          = (map_node_t*)malloc(sizeof *node);
             node->pos     = position;
             node->visited = 1;
             node->id      = id;
@@ -784,13 +742,13 @@ uint8 checkNode(Server* server, Vector3i position)
         }
     }
 
-    mapNode* Node;
-    mapNode* tmpNode;
+    map_node_t* Node;
+    map_node_t* tmpNode;
     HASH_ITER(hh, visitedMap, Node, tmpNode)
     {
-        Vector3i block = {Node->pos.x, Node->pos.y, Node->pos.z};
-        if (vecValidPos(server, block)) {
-            mapvxl_set_air(&server->map.map, Node->pos.x, Node->pos.y, Node->pos.z);
+        vector3i_t block = { Node->pos.x, Node->pos.y, Node->pos.z };
+        if (valid_pos_v3i(server, block)) {
+            mapvxl_set_air(&server->s_map.map, Node->pos.x, Node->pos.y, Node->pos.z);
         }
         HASH_DEL(visitedMap, Node);
         free(Node);
@@ -800,69 +758,69 @@ uint8 checkNode(Server* server, Vector3i position)
     return 0;
 }
 
-void moveIntelAndTentDown(Server* server)
+void moveIntelAndTentDown(server_t* server)
 {
     while (checkUnderIntel(server, 0)) {
-        Vector3f newPos = {server->protocol.gameMode.intel[0].x,
-                           server->protocol.gameMode.intel[0].y,
-                           server->protocol.gameMode.intel[0].z + 1};
-        sendMoveObject(server, 0, 0, newPos);
-        server->protocol.gameMode.intel[0] = newPos;
+        vector3f_t newPos = { server->protocol.gamemode.intel[0].x,
+            server->protocol.gamemode.intel[0].y,
+            server->protocol.gamemode.intel[0].z + 1 };
+        send_move_object(server, 0, 0, newPos);
+        server->protocol.gamemode.intel[0] = newPos;
     }
     while (checkUnderIntel(server, 1)) {
-        Vector3f newPos = {server->protocol.gameMode.intel[1].x,
-                           server->protocol.gameMode.intel[1].y,
-                           server->protocol.gameMode.intel[1].z + 1};
-        sendMoveObject(server, 1, 1, newPos);
-        server->protocol.gameMode.intel[1] = newPos;
+        vector3f_t newPos = { server->protocol.gamemode.intel[1].x,
+            server->protocol.gamemode.intel[1].y,
+            server->protocol.gamemode.intel[1].z + 1 };
+        send_move_object(server, 1, 1, newPos);
+        server->protocol.gamemode.intel[1] = newPos;
     }
     while (checkUnderTent(server, 0) == 4) {
-        Vector3f newPos = {server->protocol.gameMode.base[0].x,
-                           server->protocol.gameMode.base[0].y,
-                           server->protocol.gameMode.base[0].z + 1};
-        sendMoveObject(server, 2, 0, newPos);
-        server->protocol.gameMode.base[0] = newPos;
+        vector3f_t newPos = { server->protocol.gamemode.base[0].x,
+            server->protocol.gamemode.base[0].y,
+            server->protocol.gamemode.base[0].z + 1 };
+        send_move_object(server, 2, 0, newPos);
+        server->protocol.gamemode.base[0] = newPos;
     }
     while (checkUnderTent(server, 1) == 4) {
-        Vector3f newPos = {server->protocol.gameMode.base[1].x,
-                           server->protocol.gameMode.base[1].y,
-                           server->protocol.gameMode.base[1].z + 1};
-        sendMoveObject(server, 3, 1, newPos);
-        server->protocol.gameMode.base[1] = newPos;
+        vector3f_t newPos = { server->protocol.gamemode.base[1].x,
+            server->protocol.gamemode.base[1].y,
+            server->protocol.gamemode.base[1].z + 1 };
+        send_move_object(server, 3, 1, newPos);
+        server->protocol.gamemode.base[1] = newPos;
     }
 }
 
-void moveIntelAndTentUp(Server* server)
+void moveIntelAndTentUp(server_t* server)
 {
     if (checkInTent(server, 0)) {
-        Vector3f newTentPos = server->protocol.gameMode.base[0];
+        vector3f_t newTentPos = server->protocol.gamemode.base[0];
         newTentPos.z -= 1;
-        sendMoveObject(server, 0 + 2, 0, newTentPos);
-        server->protocol.gameMode.base[0] = newTentPos;
+        send_move_object(server, 0 + 2, 0, newTentPos);
+        server->protocol.gamemode.base[0] = newTentPos;
     } else if (checkInTent(server, 1)) {
-        Vector3f newTentPos = server->protocol.gameMode.base[1];
+        vector3f_t newTentPos = server->protocol.gamemode.base[1];
         newTentPos.z -= 1;
-        sendMoveObject(server, 1 + 2, 1, newTentPos);
-        server->protocol.gameMode.base[1] = newTentPos;
+        send_move_object(server, 1 + 2, 1, newTentPos);
+        server->protocol.gamemode.base[1] = newTentPos;
     } else if (checkInIntel(server, 1)) {
-        Vector3f newIntelPos = server->protocol.gameMode.intel[1];
+        vector3f_t newIntelPos = server->protocol.gamemode.intel[1];
         newIntelPos.z -= 1;
-        sendMoveObject(server, 1, 1, newIntelPos);
-        server->protocol.gameMode.intel[1] = newIntelPos;
+        send_move_object(server, 1, 1, newIntelPos);
+        server->protocol.gamemode.intel[1] = newIntelPos;
     } else if (checkInIntel(server, 0)) {
-        Vector3f newIntelPos = server->protocol.gameMode.intel[0];
+        vector3f_t newIntelPos = server->protocol.gamemode.intel[0];
         newIntelPos.z -= 1;
-        sendMoveObject(server, 0, 0, newIntelPos);
-        server->protocol.gameMode.intel[0] = newIntelPos;
+        send_move_object(server, 0, 0, newIntelPos);
+        server->protocol.gamemode.intel[0] = newIntelPos;
     }
 }
 
-uint8 checkUnderTent(Server* server, uint8 team)
+uint8_t checkUnderTent(server_t* server, uint8_t team)
 {
-    uint8 count = 0;
-    for (int x = server->protocol.gameMode.base[team].x - 1; x <= server->protocol.gameMode.base[team].x; x++) {
-        for (int y = server->protocol.gameMode.base[team].y - 1; y <= server->protocol.gameMode.base[team].y; y++) {
-            if (mapvxl_is_solid(&server->map.map, x, y, server->protocol.gameMode.base[team].z) == 0) {
+    uint8_t count = 0;
+    for (int x = server->protocol.gamemode.base[team].x - 1; x <= server->protocol.gamemode.base[team].x; x++) {
+        for (int y = server->protocol.gamemode.base[team].y - 1; y <= server->protocol.gamemode.base[team].y; y++) {
+            if (mapvxl_is_solid(&server->s_map.map, x, y, server->protocol.gamemode.base[team].z) == 0) {
                 count++;
             }
         }
@@ -870,266 +828,244 @@ uint8 checkUnderTent(Server* server, uint8 team)
     return count;
 }
 
-uint8 checkUnderIntel(Server* server, uint8 team)
+uint8_t checkUnderIntel(server_t* server, uint8_t team)
 {
-    uint8 ret = 0;
-    if (mapvxl_is_solid(&server->map.map,
-                      server->protocol.gameMode.intel[team].x,
-                      server->protocol.gameMode.intel[team].y,
-                      server->protocol.gameMode.intel[team].z) == 0)
-    {
+    uint8_t ret = 0;
+    if (mapvxl_is_solid(&server->s_map.map,
+            server->protocol.gamemode.intel[team].x,
+            server->protocol.gamemode.intel[team].y,
+            server->protocol.gamemode.intel[team].z)
+        == 0) {
         ret = 1;
     }
     return ret;
 }
 
-uint8 checkPlayerOnIntel(Server* server, uint8 playerID, uint8 team)
+uint8_t checkPlayerOnIntel(server_t* server, uint8_t playerID, uint8_t team)
 {
-    uint8 ret = 0;
+    uint8_t ret = 0;
     if (server->player[playerID].alive == 0) {
         return ret;
     }
-    Vector3f playerPos = server->player[playerID].movement.position;
-    Vector3f intelPos  = server->protocol.gameMode.intel[team];
-    if ((int) playerPos.y == (int) intelPos.y &&
-        ((int) playerPos.z + 3 == (int) intelPos.z ||
-         ((server->player[playerID].crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) intelPos.z)) &&
-        (int) playerPos.x == (int) intelPos.x)
-    {
+    vector3f_t playerPos = server->player[playerID].movement.position;
+    vector3f_t intelPos  = server->protocol.gamemode.intel[team];
+    if ((int)playerPos.y == (int)intelPos.y && ((int)playerPos.z + 3 == (int)intelPos.z || ((server->player[playerID].crouching || playerPos.z < 0) && (int)playerPos.z + 2 == (int)intelPos.z)) && (int)playerPos.x == (int)intelPos.x) {
         ret = 1;
     }
     return ret;
 }
 
-uint8 checkPlayerInTent(Server* server, uint8 playerID)
+uint8_t checkPlayerInTent(server_t* server, uint8_t playerID)
 {
-    uint8 ret = 0;
+    uint8_t ret = 0;
     if (server->player[playerID].alive == 0) {
         return ret;
     }
-    Vector3f playerPos = server->player[playerID].movement.position;
-    Vector3f tentPos   = server->protocol.gameMode.base[server->player[playerID].team];
-    if (((int) playerPos.z + 3 == (int) tentPos.z ||
-         ((server->player[playerID].crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) tentPos.z)) &&
-        ((int) playerPos.x >= (int) tentPos.x - 1 && (int) playerPos.x <= (int) tentPos.x) &&
-        ((int) playerPos.y >= (int) tentPos.y - 1 && (int) playerPos.y <= (int) tentPos.y))
-    {
+    vector3f_t playerPos = server->player[playerID].movement.position;
+    vector3f_t tentPos   = server->protocol.gamemode.base[server->player[playerID].team];
+    if (((int)playerPos.z + 3 == (int)tentPos.z || ((server->player[playerID].crouching || playerPos.z < 0) && (int)playerPos.z + 2 == (int)tentPos.z)) && ((int)playerPos.x >= (int)tentPos.x - 1 && (int)playerPos.x <= (int)tentPos.x) && ((int)playerPos.y >= (int)tentPos.y - 1 && (int)playerPos.y <= (int)tentPos.y)) {
         ret = 1;
     }
     return ret;
 }
 
-uint8 checkItemOnIntel(Server* server, uint8 team, Vector3f itemPos)
+uint8_t checkItemOnIntel(server_t* server, uint8_t team, vector3f_t itemPos)
 {
-    uint8    ret      = 0;
-    Vector3f intelPos = server->protocol.gameMode.intel[team];
-    if ((int) itemPos.y == (int) intelPos.y && ((int) itemPos.z == (int) intelPos.z) &&
-        (int) itemPos.x == (int) intelPos.x) {
+    uint8_t    ret      = 0;
+    vector3f_t intelPos = server->protocol.gamemode.intel[team];
+    if ((int)itemPos.y == (int)intelPos.y && ((int)itemPos.z == (int)intelPos.z) && (int)itemPos.x == (int)intelPos.x) {
         ret = 1;
     }
     return ret;
 }
 
-uint8 checkItemInTent(Server* server, uint8 team, Vector3f itemPos)
+uint8_t checkItemInTent(server_t* server, uint8_t team, vector3f_t itemPos)
 {
-    uint8    ret     = 0;
-    Vector3f tentPos = server->protocol.gameMode.base[team];
-    if (((int) itemPos.z == (int) tentPos.z) &&
-        ((int) itemPos.x >= (int) tentPos.x - 1 && (int) itemPos.x <= (int) tentPos.x) &&
-        ((int) itemPos.y >= (int) tentPos.y - 1 && (int) itemPos.y <= (int) tentPos.y))
-    {
+    uint8_t    ret     = 0;
+    vector3f_t tentPos = server->protocol.gamemode.base[team];
+    if (((int)itemPos.z == (int)tentPos.z) && ((int)itemPos.x >= (int)tentPos.x - 1 && (int)itemPos.x <= (int)tentPos.x) && ((int)itemPos.y >= (int)tentPos.y - 1 && (int)itemPos.y <= (int)tentPos.y)) {
         ret = 1;
     }
     return ret;
 }
 
-uint8 checkInTent(Server* server, uint8 team)
+uint8_t checkInTent(server_t* server, uint8_t team)
 {
-    uint8    ret      = 0;
-    Vector3f checkPos = server->protocol.gameMode.base[team];
+    uint8_t    ret      = 0;
+    vector3f_t checkPos = server->protocol.gamemode.base[team];
     checkPos.z--;
-    if (mapvxl_is_solid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z))
-    { // Implement check for solid blocks in XYZ range in libmapvxl
+    if (mapvxl_is_solid(&server->s_map.map, (int)checkPos.x, (int)checkPos.y, (int)checkPos.z)) { // Implement check for solid blocks in XYZ range in libmapvxl
         ret = 1;
-    } else if (mapvxl_is_solid(&server->map.map, (int) checkPos.x - 1, (int) checkPos.y, (int) checkPos.z)) {
+    } else if (mapvxl_is_solid(&server->s_map.map, (int)checkPos.x - 1, (int)checkPos.y, (int)checkPos.z)) {
         ret = 1;
-    } else if (mapvxl_is_solid(&server->map.map, (int) checkPos.x, (int) checkPos.y - 1, (int) checkPos.z)) {
+    } else if (mapvxl_is_solid(&server->s_map.map, (int)checkPos.x, (int)checkPos.y - 1, (int)checkPos.z)) {
         ret = 1;
-    } else if (mapvxl_is_solid(&server->map.map, (int) checkPos.x - 1, (int) checkPos.y - 1, (int) checkPos.z)) {
+    } else if (mapvxl_is_solid(&server->s_map.map, (int)checkPos.x - 1, (int)checkPos.y - 1, (int)checkPos.z)) {
         ret = 1;
     }
 
     return ret;
 }
 
-uint8 checkInIntel(Server* server, uint8 team)
+uint8_t checkInIntel(server_t* server, uint8_t team)
 {
-    uint8    ret      = 0;
-    Vector3f checkPos = server->protocol.gameMode.intel[team];
+    uint8_t    ret      = 0;
+    vector3f_t checkPos = server->protocol.gamemode.intel[team];
     checkPos.z--;
-    if (mapvxl_is_solid(&server->map.map, (int) checkPos.x, (int) checkPos.y, (int) checkPos.z)) {
+    if (mapvxl_is_solid(&server->s_map.map, (int)checkPos.x, (int)checkPos.y, (int)checkPos.z)) {
         ret = 1;
     }
     return ret;
 }
 
-Vector3f SetIntelTentSpawnPoint(Server* server, uint8 team)
+vector3f_t SetIntelTentSpawnPoint(server_t* server, uint8_t team)
 {
-    Quad3D* spawn = server->protocol.spawns + team;
+    quad3d_t* spawn = server->protocol.spawns + team;
 
-    float    dx = spawn->to.x - spawn->from.x;
-    float    dy = spawn->to.y - spawn->from.y;
-    Vector3f position;
-    position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
-    position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-    position.z = mapvxl_find_top_block(&server->map.map, position.x, position.y);
+    float      dx = spawn->to.x - spawn->from.x;
+    float      dy = spawn->to.y - spawn->from.y;
+    vector3f_t position;
+    position.x = spawn->from.x + dx * ((float)rand() / (float)RAND_MAX);
+    position.y = spawn->from.y + dy * ((float)rand() / (float)RAND_MAX);
+    position.z = mapvxl_find_top_block(&server->s_map.map, position.x, position.y);
     return position;
 }
 
-void handleTentAndIntel(Server* server, uint8 playerID)
+void handleTentAndIntel(server_t* server, uint8_t playerID)
 {
-    uint8 team;
+    uint8_t team;
     if (server->player[playerID].team == 0) {
         team = 1;
     } else {
         team = 0;
     }
     if (server->player[playerID].team != TEAM_SPECTATOR) {
-        uint64 timeNow = time(NULL);
-        if (server->player[playerID].hasIntel == 0) {
+        uint64_t timeNow = time(NULL);
+        if (server->player[playerID].has_intel == 0) {
 
-            if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.gameMode.intelHeld[team])) {
-                sendIntelPickup(server, playerID);
-                if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-                    Vector3f pos = {0, 0, 64};
-                    sendMoveObject(server, server->player[playerID].team, server->player[playerID].team, pos);
-                    server->protocol.gameMode.intel[server->player[playerID].team] = pos;
+            if (checkPlayerOnIntel(server, playerID, team) && (!server->protocol.gamemode.intel_held[team])) {
+                send_intel_pickup(server, playerID);
+                if (server->protocol.current_gamemode == GAME_MODE_BABEL) {
+                    vector3f_t pos = { 0, 0, 64 };
+                    send_move_object(server, server->player[playerID].team, server->player[playerID].team, pos);
+                    server->protocol.gamemode.intel[server->player[playerID].team] = pos;
                 }
-            } else if (checkPlayerInTent(server, playerID) &&
-                       timeNow - server->player[playerID].timers.sinceLastBaseEnterRestock >= 15)
-            {
-                sendRestock(server, playerID);
-                server->player[playerID].HP       = 100;
+            } else if (checkPlayerInTent(server, playerID) && timeNow - server->player[playerID].timers.since_last_base_enter_restock >= 15) {
+                send_restock(server, playerID);
+                server->player[playerID].hp       = 100;
                 server->player[playerID].grenades = 3;
                 server->player[playerID].blocks   = 50;
                 switch (server->player[playerID].weapon) {
-                    case 0:
-                        server->player[playerID].weaponReserve = 50;
-                        break;
-                    case 1:
-                        server->player[playerID].weaponReserve = 120;
-                        break;
-                    case 2:
-                        server->player[playerID].weaponReserve = 48;
-                        break;
+                case 0:
+                    server->player[playerID].weapon_reserve = 50;
+                    break;
+                case 1:
+                    server->player[playerID].weapon_reserve = 120;
+                    break;
+                case 2:
+                    server->player[playerID].weapon_reserve = 48;
+                    break;
                 }
-                server->player[playerID].timers.sinceLastBaseEnterRestock = time(NULL);
+                server->player[playerID].timers.since_last_base_enter_restock = time(NULL);
             }
-        } else if (server->player[playerID].hasIntel) {
-            if (checkPlayerInTent(server, playerID) &&
-                timeNow - server->player[playerID].timers.sinceLastBaseEnter >= 5) {
-                server->protocol.gameMode.score[server->player[playerID].team]++;
-                uint8 winning = 0;
-                if (server->protocol.gameMode.score[server->player[playerID].team] >=
-                    server->protocol.gameMode.scoreLimit) {
+        } else if (server->player[playerID].has_intel) {
+            if (checkPlayerInTent(server, playerID) && timeNow - server->player[playerID].timers.since_last_base_enter >= 5) {
+                server->protocol.gamemode.score[server->player[playerID].team]++;
+                uint8_t winning = 0;
+                if (server->protocol.gamemode.score[server->player[playerID].team] >= server->protocol.gamemode.score_limit) {
                     winning = 1;
                 }
-                sendIntelCapture(server, playerID, winning);
-                server->player[playerID].HP       = 100;
+                send_intel_capture(server, playerID, winning);
+                server->player[playerID].hp       = 100;
                 server->player[playerID].grenades = 3;
                 server->player[playerID].blocks   = 50;
                 switch (server->player[playerID].weapon) {
-                    case 0:
-                        server->player[playerID].weaponReserve = 50;
-                        break;
-                    case 1:
-                        server->player[playerID].weaponReserve = 120;
-                        break;
-                    case 2:
-                        server->player[playerID].weaponReserve = 48;
-                        break;
+                case 0:
+                    server->player[playerID].weapon_reserve = 50;
+                    break;
+                case 1:
+                    server->player[playerID].weapon_reserve = 120;
+                    break;
+                case 2:
+                    server->player[playerID].weapon_reserve = 48;
+                    break;
                 }
-                sendRestock(server, playerID);
-                server->player[playerID].timers.sinceLastBaseEnter = time(NULL);
-                if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-                    Vector3f babelIntelPos             = {255, 255, mapvxl_find_top_block(&server->map.map, 255, 255)};
-                    server->protocol.gameMode.intel[0] = babelIntelPos;
-                    server->protocol.gameMode.intel[1] = babelIntelPos;
-                    sendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
-                    sendMoveObject(server, 1, 1, server->protocol.gameMode.intel[1]);
+                send_restock(server, playerID);
+                server->player[playerID].timers.since_last_base_enter = time(NULL);
+                if (server->protocol.current_gamemode == GAME_MODE_BABEL) {
+                    vector3f_t babelIntelPos           = { 255, 255, mapvxl_find_top_block(&server->s_map.map, 255, 255) };
+                    server->protocol.gamemode.intel[0] = babelIntelPos;
+                    server->protocol.gamemode.intel[1] = babelIntelPos;
+                    send_move_object(server, 0, 0, server->protocol.gamemode.intel[0]);
+                    send_move_object(server, 1, 1, server->protocol.gamemode.intel[1]);
                 } else {
-                    server->protocol.gameMode.intel[team] = SetIntelTentSpawnPoint(server, team);
-                    sendMoveObject(server, team, team, server->protocol.gameMode.intel[team]);
+                    server->protocol.gamemode.intel[team] = SetIntelTentSpawnPoint(server, team);
+                    send_move_object(server, team, team, server->protocol.gamemode.intel[team]);
                 }
                 if (winning) {
-                    for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
+                    for (uint32_t i = 0; i < server->protocol.max_players; ++i) {
                         if (server->player[i].state != STATE_DISCONNECTED) {
                             server->player[i].state = STATE_STARTING_MAP;
                         }
                     }
-                    ServerReset(server);
+                    server_reset(server);
                 }
             }
         }
     }
 }
 
-void handleGrenade(Server* server, uint8 playerID)
+void handleGrenade(server_t* server, uint8_t playerID)
 {
-    Grenade* grenade;
-    Grenade* tmp;
+    grenade_t* grenade;
+    grenade_t* tmp;
     DL_FOREACH_SAFE(server->player[playerID].grenade, grenade, tmp)
     {
         if (grenade->sent) {
-            moveGrenade(server, grenade);
-            if ((getNanos() - grenade->timeSinceSent) / 1000000000.f >= grenade->fuse) {
-                uint8 allowToDestroy = 0;
+            physics_move_grenade(server, grenade);
+            if ((get_nanos() - grenade->time_since_sent) / 1000000000.f >= grenade->fuse) {
+                uint8_t allowToDestroy = 0;
                 if (grenadeGamemodeCheck(server, grenade->position)) {
-                    sendBlockAction(server,
-                                    playerID,
-                                    3,
-                                    floor(grenade->position.x),
-                                    floor(grenade->position.y),
-                                    floor(grenade->position.z));
+                    send_block_action(server,
+                        playerID,
+                        3,
+                        floor(grenade->position.x),
+                        floor(grenade->position.y),
+                        floor(grenade->position.z));
                     allowToDestroy = 1;
                 }
-                for (int y = 0; y < server->protocol.maxPlayers; ++y) {
+                for (int y = 0; y < server->protocol.max_players; ++y) {
                     if (server->player[y].state == STATE_READY) {
-                        uint8 value = getGrenadeDamage(server, y, grenade);
+                        uint8_t value = getGrenadeDamage(server, y, grenade);
                         if (value > 0) {
-                            sendSetHP(server, playerID, y, value, 1, 3, 5, 1, grenade->position);
+                            send_set_hp(server, playerID, y, value, 1, 3, 5, 1, grenade->position);
                         }
                     }
                 }
                 float x = grenade->position.x;
                 float y = grenade->position.y;
                 for (int z = grenade->position.z - 1; z <= grenade->position.z + 1; ++z) {
-                    if (z < 62 &&
-                        (x >= 0 && x <= server->map.map.size_x && x - 1 >= 0 && x - 1 <= server->map.map.size_x &&
-                         x + 1 >= 0 && x + 1 <= server->map.map.size_x) &&
-                        (y >= 0 && y <= server->map.map.size_y && y - 1 >= 0 && y - 1 <= server->map.map.size_y &&
-                         y + 1 >= 0 && y + 1 <= server->map.map.size_y))
-                    {
+                    if (z < 62 && (x >= 0 && x <= server->s_map.map.size_x && x - 1 >= 0 && x - 1 <= server->s_map.map.size_x && x + 1 >= 0 && x + 1 <= server->s_map.map.size_x) && (y >= 0 && y <= server->s_map.map.size_y && y - 1 >= 0 && y - 1 <= server->s_map.map.size_y && y + 1 >= 0 && y + 1 <= server->s_map.map.size_y)) {
                         if (allowToDestroy) {
-                            mapvxl_set_air(&server->map.map, x - 1, y - 1, z);
-                            mapvxl_set_air(&server->map.map, x, y - 1, z);
-                            mapvxl_set_air(&server->map.map, x + 1, y - 1, z);
-                            mapvxl_set_air(&server->map.map, x - 1, y, z);
-                            mapvxl_set_air(&server->map.map, x, y, z);
-                            mapvxl_set_air(&server->map.map, x + 1, y, z);
-                            mapvxl_set_air(&server->map.map, x - 1, y + 1, z);
-                            mapvxl_set_air(&server->map.map, x, y + 1, z);
-                            mapvxl_set_air(&server->map.map, x + 1, y + 1, z);
+                            mapvxl_set_air(&server->s_map.map, x - 1, y - 1, z);
+                            mapvxl_set_air(&server->s_map.map, x, y - 1, z);
+                            mapvxl_set_air(&server->s_map.map, x + 1, y - 1, z);
+                            mapvxl_set_air(&server->s_map.map, x - 1, y, z);
+                            mapvxl_set_air(&server->s_map.map, x, y, z);
+                            mapvxl_set_air(&server->s_map.map, x + 1, y, z);
+                            mapvxl_set_air(&server->s_map.map, x - 1, y + 1, z);
+                            mapvxl_set_air(&server->s_map.map, x, y + 1, z);
+                            mapvxl_set_air(&server->s_map.map, x + 1, y + 1, z);
                         }
-                        Vector3i pos;
+                        vector3i_t pos;
                         pos.x = grenade->position.x;
                         pos.y = grenade->position.y;
                         pos.z = grenade->position.z;
 
-                        Vector3i* neigh = getGrenadeNeighbors(pos);
+                        vector3i_t* neigh = getGrenadeNeighbors(pos);
                         for (int index = 0; index < 54; ++index) {
-                            if (vecValidPos(server, neigh[index])) {
-                                checkNode(server, neigh[index]);
+                            if (valid_pos_v3i(server, neigh[index])) {
+                                check_node(server, neigh[index]);
                             }
                         }
                     }
@@ -1143,19 +1079,19 @@ void handleGrenade(Server* server, uint8 playerID)
     }
 }
 
-void updateMovementAndGrenades(Server* server)
+void updateMovementAndGrenades(server_t* server)
 {
-    setPhysicsGlobals((server->globalTimers.updateTime - server->globalTimers.timeSinceStart) / 1000000000.f,
-                      (server->globalTimers.updateTime - server->globalTimers.lastUpdateTime) / 1000000000.f);
-    for (int playerID = 0; playerID < server->protocol.maxPlayers; playerID++) {
+    physics_set_globals((server->global_timers.update_time - server->global_timers.time_since_start) / 1000000000.f,
+        (server->global_timers.update_time - server->global_timers.last_update_time) / 1000000000.f);
+    for (int playerID = 0; playerID < server->protocol.max_players; playerID++) {
         if (server->player[playerID].state == STATE_READY) {
             long falldamage = 0;
-            falldamage      = movePlayer(server, playerID);
+            falldamage      = physics_move_player(server, playerID);
             if (falldamage > 0) {
-                Vector3f zero = {0, 0, 0};
-                sendSetHP(server, playerID, playerID, falldamage, 0, 4, 5, 0, zero);
+                vector3f_t zero = { 0, 0, 0 };
+                send_set_hp(server, playerID, playerID, falldamage, 0, 4, 5, 0, zero);
             }
-            if (server->protocol.currentGameMode != GAME_MODE_ARENA) {
+            if (server->protocol.current_gamemode != GAME_MODE_ARENA) {
                 handleTentAndIntel(server, playerID);
             }
         }
@@ -1163,28 +1099,29 @@ void updateMovementAndGrenades(Server* server)
     }
 }
 
-void SetPlayerRespawnPoint(Server* server, uint8 playerID)
+void SetPlayerRespawnPoint(server_t* server, uint8_t playerID)
 {
     if (server->player[playerID].team != TEAM_SPECTATOR) {
-        Quad3D* spawn = server->protocol.spawns + server->player[playerID].team;
+        quad3d_t* spawn = server->protocol.spawns + server->player[playerID].team;
 
         float dx = spawn->to.x - spawn->from.x;
         float dy = spawn->to.y - spawn->from.y;
 
-        server->player[playerID].movement.position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
-        server->player[playerID].movement.position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
-        server->player[playerID].movement.position.z =
-        mapvxl_find_top_block(
-        &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y) -
-        2.36f;
+        server->player[playerID].movement.position.x = spawn->from.x + dx * ((float)rand() / (float)RAND_MAX);
+        server->player[playerID].movement.position.y = spawn->from.y + dy * ((float)rand() / (float)RAND_MAX);
+        server->player[playerID].movement.position.z = mapvxl_find_top_block(
+                                                           &server->s_map.map,
+                                                           server->player[playerID].movement.position.x,
+                                                           server->player[playerID].movement.position.y)
+            - 2.36f;
 
-        server->player[playerID].movement.forwardOrientation.x = 0.f;
-        server->player[playerID].movement.forwardOrientation.y = 0.f;
-        server->player[playerID].movement.forwardOrientation.z = 0.f;
+        server->player[playerID].movement.forward_orientation.x = 0.f;
+        server->player[playerID].movement.forward_orientation.y = 0.f;
+        server->player[playerID].movement.forward_orientation.z = 0.f;
     }
 }
 
-void sendServerNotice(Server* server, uint8 playerID, uint8 console, const char* message, ...)
+void send_server_notice(server_t* server, uint8_t playerID, uint8_t console, const char* message, ...)
 {
     va_list args;
     va_start(args, message);
@@ -1197,20 +1134,20 @@ void sendServerNotice(Server* server, uint8 playerID, uint8 console, const char*
         return;
     }
 
-    uint32      fMessageSize = strlen(fMessage);
-    uint32      packetSize   = 3 + fMessageSize;
-    ENetPacket* packet       = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream       = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
-    WriteByte(&stream, playerID);
-    WriteByte(&stream, 2);
-    WriteArray(&stream, fMessage, fMessageSize);
+    uint32_t     fMessageSize = strlen(fMessage);
+    uint32_t     packetSize   = 3 + fMessageSize;
+    ENetPacket*  packet       = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream       = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_CHAT_MESSAGE);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u8(&stream, 2);
+    datastream_write_array(&stream, fMessage, fMessageSize);
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void broadcastServerNotice(Server* server, uint8 console, const char* message, ...)
+void broadcast_server_notice(server_t* server, uint8_t console, const char* message, ...)
 {
     va_list args;
     va_start(args, message);
@@ -1218,20 +1155,20 @@ void broadcastServerNotice(Server* server, uint8 console, const char* message, .
     vsnprintf(fMessage, 1024, message, args);
     va_end(args);
 
-    uint32      fMessageSize = strlen(fMessage);
-    uint32      packetSize   = 3 + fMessageSize;
-    ENetPacket* packet       = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream       = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
-    WriteByte(&stream, 33);
-    WriteByte(&stream, 2);
-    WriteArray(&stream, fMessage, fMessageSize);
+    uint32_t     fMessageSize = strlen(fMessage);
+    uint32_t     packetSize   = 3 + fMessageSize;
+    ENetPacket*  packet       = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream       = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_CHAT_MESSAGE);
+    datastream_write_u8(&stream, 33);
+    datastream_write_u8(&stream, 2);
+    datastream_write_array(&stream, fMessage, fMessageSize);
     if (console) {
         LOG_INFO("%s", fMessage);
     }
-    uint8 sent = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastJoinScreen(server, player)) {
+    uint8_t sent = 0;
+    for (int player = 0; player < server->protocol.max_players; ++player) {
+        if (is_past_join_screen(server, player)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
@@ -1242,12 +1179,10 @@ void broadcastServerNotice(Server* server, uint8 console, const char* message, .
     }
 }
 
-uint8 playerToPlayerVisible(Server* server, uint8 playerID, uint8 playerID2)
+uint8_t playerToPlayerVisible(server_t* server, uint8_t playerID, uint8_t playerID2)
 {
     float distance = 0;
-    distance =
-    sqrt(fabs(pow((server->player[playerID].movement.position.x - server->player[playerID2].movement.position.x), 2)) +
-         fabs(pow((server->player[playerID].movement.position.y - server->player[playerID2].movement.position.y), 2)));
+    distance       = sqrt(fabs(pow((server->player[playerID].movement.position.x - server->player[playerID2].movement.position.x), 2)) + fabs(pow((server->player[playerID].movement.position.y - server->player[playerID2].movement.position.y), 2)));
     if (server->player[playerID].team == TEAM_SPECTATOR) {
         return 1;
     } else if (distance >= 132) {
@@ -1257,37 +1192,34 @@ uint8 playerToPlayerVisible(Server* server, uint8 playerID, uint8 playerID2)
     }
 }
 
-uint32 DistanceIn3D(Vector3f vector1, Vector3f vector2)
+uint32_t DistanceIn3D(vector3f_t vector1, vector3f_t vector2)
 {
-    uint32 distance = 0;
-    distance        = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)) +
-                    fabs(pow(vector1.z - vector2.z, 2)));
+    uint32_t distance = 0;
+    distance          = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)) + fabs(pow(vector1.z - vector2.z, 2)));
     return distance;
 }
 
-uint32 DistanceIn2D(Vector3f vector1, Vector3f vector2)
+uint32_t DistanceIn2D(vector3f_t vector1, vector3f_t vector2)
 {
-    uint32 distance = 0;
-    distance        = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)));
+    uint32_t distance = 0;
+    distance          = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)));
     return distance;
 }
 
-uint8 Collision3D(Vector3f vector1, Vector3f vector2, uint8 distance)
+uint8_t Collision3D(vector3f_t vector1, vector3f_t vector2, uint8_t distance)
 {
-    if (fabs(vector1.x - vector2.x) < distance && fabs(vector1.y - vector2.y) < distance &&
-        fabs(vector1.x - vector2.x) < distance)
-    {
+    if (fabs(vector1.x - vector2.x) < distance && fabs(vector1.y - vector2.y) < distance && fabs(vector1.x - vector2.x) < distance) {
         return 0;
     } else {
         return 1;
     }
 }
 
-uint8 SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID)
+uint8_t SendPacketExceptSender(server_t* server, ENetPacket* packet, uint8_t playerID)
 {
-    uint8 sent = 0;
-    for (uint8 i = 0; i < 32; ++i) {
-        if (playerID != i && isPastStateData(server, i)) {
+    uint8_t sent = 0;
+    for (uint8_t i = 0; i < 32; ++i) {
+        if (playerID != i && is_past_state_data(server, i)) {
             if (enet_peer_send(server->player[i].peer, 0, packet) == 0) {
                 sent = 1;
             }
@@ -1296,11 +1228,11 @@ uint8 SendPacketExceptSender(Server* server, ENetPacket* packet, uint8 playerID)
     return sent;
 }
 
-uint8 SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 playerID)
+uint8_t SendPacketExceptSenderDistCheck(server_t* server, ENetPacket* packet, uint8_t playerID)
 {
-    uint8 sent = 0;
-    for (uint8 i = 0; i < 32; ++i) {
-        if (playerID != i && isPastStateData(server, i)) {
+    uint8_t sent = 0;
+    for (uint8_t i = 0; i < 32; ++i) {
+        if (playerID != i && is_past_state_data(server, i)) {
             if (playerToPlayerVisible(server, playerID, i) || server->player[i].team == TEAM_SPECTATOR) {
                 if (enet_peer_send(server->player[i].peer, 0, packet) == 0) {
                     sent = 1;
@@ -1311,11 +1243,11 @@ uint8 SendPacketExceptSenderDistCheck(Server* server, ENetPacket* packet, uint8 
     return sent;
 }
 
-uint8 SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID)
+uint8_t SendPacketDistCheck(server_t* server, ENetPacket* packet, uint8_t playerID)
 {
-    uint8 sent = 0;
-    for (uint8 i = 0; i < 32; ++i) {
-        if (isPastStateData(server, i)) {
+    uint8_t sent = 0;
+    for (uint8_t i = 0; i < 32; ++i) {
+        if (is_past_state_data(server, i)) {
             if (playerToPlayerVisible(server, playerID, i) || server->player[i].team == TEAM_SPECTATOR) {
                 if (enet_peer_send(server->player[i].peer, 0, packet) == 0) {
                     sent = 1;
@@ -1326,7 +1258,7 @@ uint8 SendPacketDistCheck(Server* server, ENetPacket* packet, uint8 playerID)
     return sent;
 }
 
-uint8 diffIsOlderThen(uint64 timeNow, uint64* timeBefore, uint64 timeDiff)
+uint8_t diffIsOlderThen(uint64_t timeNow, uint64_t* timeBefore, uint64_t timeDiff)
 {
     if (timeNow - *timeBefore >= timeDiff) {
         *timeBefore = timeNow;
@@ -1336,7 +1268,7 @@ uint8 diffIsOlderThen(uint64 timeNow, uint64* timeBefore, uint64 timeDiff)
     }
 }
 
-uint8 diffIsOlderThenDontUpdate(uint64 timeNow, uint64 timeBefore, uint64 timeDiff)
+uint8_t diffIsOlderThenDontUpdate(uint64_t timeNow, uint64_t timeBefore, uint64_t timeDiff)
 {
     if (timeNow - timeBefore >= timeDiff) {
         return 1;

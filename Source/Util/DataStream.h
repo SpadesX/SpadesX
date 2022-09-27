@@ -15,33 +15,32 @@
         return;                                \
     }
 
-typedef struct
-{
-    uint8* data;
-    uint32 length;
-    uint32 pos;
-} DataStream;
+typedef struct datastream {
+    uint8_t* data;
+    uint32_t length;
+    uint32_t pos;
+} datastream_t;
 
-void   CreateDataStream(DataStream* stream, uint32 length);
-void   DestroyDataStream(DataStream* stream);
-uint32 DataLeft(DataStream* stream);
-void   StreamSkip(DataStream* stream, uint32 skip);
-uint8  ReadByte(DataStream* stream);
-uint16 ReadShort(DataStream* stream);
-uint32 ReadInt(DataStream* stream);
-float  ReadFloat(DataStream* stream);
-void   ReadColor3i(DataStream* stream, Color3i color);
-void   ReadColor4i(DataStream* stream, Color4i color);
-void   ReadArray(DataStream* stream, void* output, uint32 length);
-void   WriteByte(DataStream* stream, uint8 value);
-void   WriteShort(DataStream* stream, uint16 value);
-void   WriteInt(DataStream* stream, uint32 value);
-void   WriteFloat(DataStream* stream, float value);
-void   WriteVector3f(DataStream* stream, Vector3f vector);
-void   WriteColor3i(DataStream* stream, Color3i color);
-void   WriteColor4i(DataStream* stream, Color4i color);
-void   WriteColor3iv(DataStream* stream, uint8 r, uint8 g, uint8 b);
-void   WriteColor4iv(DataStream* stream, uint8 a, uint8 r, uint8 g, uint8 b);
-void   WriteArray(DataStream* stream, const void* array, uint32 length);
+void     datastream_create(datastream_t* stream, uint32_t length);
+void     datastream_free(datastream_t* stream);
+uint32_t datastream_left(datastream_t* stream);
+void     datastream_skip(datastream_t* stream, uint32_t skip);
+uint8_t  datastream_read_u8(datastream_t* stream);
+uint16_t datastream_read_u16(datastream_t* stream);
+uint32_t datastream_read_u32(datastream_t* stream);
+float    datastream_read_f(datastream_t* stream);
+color_t  datastream_read_color_rgb(datastream_t* stream);
+color_t  datastream_read_color_argb(datastream_t* stream);
+void     datastream_read_array(datastream_t* stream, void* output, uint32_t length);
+void     datastream_write_u8(datastream_t* stream, uint8_t value);
+void     datastream_write_u16(datastream_t* stream, uint16_t value);
+void     datastream_write_u32(datastream_t* stream, uint32_t value);
+void     datastream_write_f(datastream_t* stream, float value);
+void     datastream_write_vector3f(datastream_t* stream, vector3f_t vector);
+void     datastream_write_color_rgb(datastream_t* stream, color_t color);
+void     datastream_write_color_argb(datastream_t* stream, color_t color);
+void     datastream_write_color_3u8(datastream_t* stream, uint8_t r, uint8_t g, uint8_t b);
+void     datastream_write_color_4u8(datastream_t* stream, uint8_t a, uint8_t r, uint8_t g, uint8_t b);
+void     datastream_write_array(datastream_t* stream, const void* array, uint32_t length);
 
 #endif /* DATASTREAM_H */
