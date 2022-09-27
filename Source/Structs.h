@@ -158,71 +158,68 @@ typedef struct block_node
 typedef struct player
 {
     queue_t*                 queues;
+    ENetPeer*                peer;
+    grenade_t*               grenade;
+    uint64_t                 permissions;
+    string_node_t*           current_periodic_message;
+    block_node_t*            blockBuffer;
+    timers_t                 timers;
+    permissions_t            role_list[5]; // Change me based on the number of access levels you require
     state_t                  state;
     weapon_t                 weapon;
     team_t                   team;
     tool_t                   item;
-    permissions_t            role_list[5]; // Change me based on the number of access levels you require
-    timers_t                 timers;
     weapon_default_clip_t    default_clip;
     weapon_default_reserve_t default_reserve;
     uint32_t                 kills;
     uint32_t                 deaths;
     color_t                  color;
-    char                     name[17];
-    char                     client;
     int                      version_minor;
     int                      version_major;
     int                      version_revision;
-    char                     os_info[255];
-    ENetPeer*                peer;
-    uint8_t                  respawn_time;
     color_t                  tool_color;
     int                      hp;
+    float                    lastclimb;
+    ip_t                     ip;
+    vector3f_t               locAtClick;
+    movement_t               movement;
+    vector3i_t               result_line[50];
+    uint16_t                 ups;
+    char                     client;
+    uint8_t                  respawn_time;
     uint8_t                  grenades;
     uint8_t                  blocks;
     uint8_t                  weapon_reserve;
     uint8_t                  weapon_clip;
-    vector3i_t               result_line[50];
-    ip_t                     ip;
     uint8_t                  alive;
     uint8_t                  input;
     uint8_t                  allow_killing;
     uint8_t                  allow_team_killing;
-    uint16_t                 ups;
     uint8_t                  muted;
     uint8_t                  admin_muted;
     uint8_t                  can_build;
-    grenade_t*               grenade;
     uint8_t                  told_to_master;
     uint8_t                  has_intel;
     uint8_t                  is_invisible;
     uint8_t                  welcome_sent;
     uint8_t                  reloading;
-    uint64_t                 permissions;
     uint8_t                  spamCounter;
     uint8_t                  periodic_delay_index;
     uint8_t                  invalidPosCount;
-    string_node_t*           current_periodic_message;
-    block_node_t*            blockBuffer;
-
-    uint8_t    move_forward;
-    uint8_t    move_backwards;
-    uint8_t    move_left;
-    uint8_t    move_right;
-    uint8_t    jumping;
-    uint8_t    crouching;
-    uint8_t    sneaking;
-    uint8_t    sprinting;
-    uint8_t    primary_fire;
-    uint8_t    secondary_fire;
-    vector3f_t locAtClick;
-
-    // Bellow this point is stuff used for calculating movement.
-    movement_t movement;
-    uint8_t    airborne;
-    uint8_t    wade;
-    float      lastclimb;
+    uint8_t                  move_forward;
+    uint8_t                  move_backwards;
+    uint8_t                  move_left;
+    uint8_t                  move_right;
+    uint8_t                  jumping;
+    uint8_t                  crouching;
+    uint8_t                  sneaking;
+    uint8_t                  sprinting;
+    uint8_t                  primary_fire;
+    uint8_t                  secondary_fire;
+    uint8_t                  airborne;
+    uint8_t                  wade;
+    char                     name[17];
+    char                     os_info[255];
 } player_t;
 
 typedef struct master
