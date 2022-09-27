@@ -888,8 +888,8 @@ void handle_and_send_message(ENetEvent event, datastream_t* data, server_t* serv
         get_nanos(), server->player[player].timers.since_last_message_from_spam, (uint64_t) NANO_IN_MILLI * 2000) &&
         !server->player[player].muted && server->player[player].permissions <= 1)
     {
-        server->player[player].spamCounter++;
-        if (server->player[player].spamCounter >= 5) {
+        server->player[player].spam_counter++;
+        if (server->player[player].spam_counter >= 5) {
             sendMessageToStaff(
             server, "WARNING: Player %s (#%d) is trying to spam. Muting.", server->player[player].name, player);
             send_server_notice(server,
@@ -898,13 +898,13 @@ void handle_and_send_message(ENetEvent event, datastream_t* data, server_t* serv
                                "SERVER: You have been muted for excessive spam. If you feel like this is a mistake "
                                "contact staff via /admin command");
             server->player[player].muted       = 1;
-            server->player[player].spamCounter = 0;
+            server->player[player].spam_counter = 0;
         }
         resetTime = 0;
     }
     if (resetTime) {
         server->player[player].timers.since_last_message_from_spam = get_nanos();
-        server->player[player].spamCounter                         = 0;
+        server->player[player].spam_counter                         = 0;
     }
 
     if (!diffIsOlderThen(

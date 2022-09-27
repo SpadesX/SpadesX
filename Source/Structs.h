@@ -203,9 +203,9 @@ typedef struct player
     uint8_t                  is_invisible;
     uint8_t                  welcome_sent;
     uint8_t                  reloading;
-    uint8_t                  spamCounter;
+    uint8_t                  spam_counter;
     uint8_t                  periodic_delay_index;
-    uint8_t                  invalidPosCount;
+    uint8_t                  invalid_pos_count;
     uint8_t                  move_forward;
     uint8_t                  move_backwards;
     uint8_t                  move_left;
