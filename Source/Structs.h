@@ -238,7 +238,7 @@ typedef struct command_args
     uint8_t  console;
     uint32_t permissions;
     uint32_t argc;
-    char*    argv[32]; // 32 roles^W commands should be more than enough for anyone
+    char*    argv[32]; // 32 roles commands should be more than enough for anyone
 } command_args_t;
 
 typedef struct command
