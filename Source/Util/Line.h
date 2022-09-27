@@ -18,6 +18,6 @@
  * @param result Array of blocks positions
  * @return Number of block positions
  */
-int blockLine(const Vector3i* v1, const Vector3i* v2, Vector3i* result);
+int line_get_blocks(const vector3i_t* v1, const vector3i_t* v2, vector3i_t* result);
 
 #endif /* UTIL_LINE_H */

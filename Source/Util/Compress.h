@@ -5,24 +5,9 @@
 #include "Queue.h"
 #include "Types.h"
 
-#ifndef DEFAULT_COMPRESSOR_CHUNK_SIZE
-    #define DEFAULT_COMPRESSOR_CHUNK_SIZE 8192
-#endif /* DEFAULT_COMPRESSOR_CHUNK_SIZE */
-
-/**
- * @brief Initialize compressor library (global compressor)
- *
- * @param level Level of compression
- * @return 0 on success
- */
-int InitCompressor(int level);
-
-/**
- * @brief Close compressor library (global compressor)
- *
- * @return 0 on success
- */
-int CloseCompressor(void);
+#ifndef DEFAULT_COMPRESS_CHUNK_SIZE
+    #define DEFAULT_COMPRESS_CHUNK_SIZE 8192
+#endif /* DEFAULT_COMPRESS_CHUNK_SIZE */
 
 /**
  * @brief Compress data (using global compressor)
@@ -32,6 +17,6 @@ int CloseCompressor(void);
  * @param chunkSize Size of one block of compressed data
  * @return Blocks of compressed data (queue) or null
  */
-Queue* CompressData(uint8* data, uint32 length, uint32 chunkSize);
+queue_t* compress_queue(uint8_t* data, uint32_t length, uint32_t chunkSize);
 
 #endif // COMPRESS_H

@@ -7,16 +7,15 @@
 #include <enet/enet.h>
 #include <string.h>
 
-#define PARSE_VECTOR3F(argument, offset, dest)                                                                 \
-    (parseFloat(argument.argv[offset], dest.x, NULL) && parseFloat(argument.argv[offset + 1], dest.y, NULL) && \
-     parseFloat(argument.argv[offset + 2], dest.z, NULL))
+#define PARSE_VECTOR3F(argument, offset, dst) \
+    (parse_float(argument.argv[offset], dst.x, NULL) && parse_float(argument.argv[offset + 1], dst.y, NULL) && parse_float(argument.argv[offset + 2], dst.z, NULL))
 
-uint8 formatStringToIP(char* src, IPStruct* dest);
-void  formatIPToString(char* dest, IPStruct src);
-void  teamIDToString(Server* server, char* dest, int team);
-uint8 parsePlayer(char* s, uint8* id, char** end);
-uint8 parseByte(char* s, uint8* byte, char** end);
-uint8 parseFloat(char* s, float* value, char** end);
-uint8 parseIP(char* s, IPStruct* ip, char** end);
+uint8_t format_str_to_ip(char* src, ip_t* dst);
+void    format_ip_to_str(char* dst, ip_t src);
+void    team_id_to_str(server_t* server, char* dst, int team);
+uint8_t parse_player(char* s, uint8_t* id, char** end);
+uint8_t parse_byte(char* s, uint8_t* byte, char** end);
+uint8_t parse_float(char* s, float* value, char** end);
+uint8_t parse_ip(char* s, ip_t* ip, char** end);
 
 #endif

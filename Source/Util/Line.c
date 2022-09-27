@@ -1,7 +1,8 @@
-#include <stdlib.h>
-#include "../Structs.h"
 #include "../Server.h"
+#include "../Structs.h"
 #include "Types.h"
+
+#include <stdlib.h>
 
 #define TMAX_ALT_VALUE  (0x3FFFFFFF / 1024)
 #define MAX_LINE_LENGTH 50
@@ -14,18 +15,18 @@
  * @param result Array of blocks positions
  * @return Number of block positions
  */
-int blockLine(const Vector3i* v1, const Vector3i* v2, Vector3i* result)
+int line_get_blocks(const vector3i_t* v1, const vector3i_t* v2, vector3i_t* result)
 {
     int count = 0;
 
-    Server* server = getServer();
+    server_t* server = get_server();
 
-    Vector3i pos  = *v1;
-    Vector3i dist = {v2->x - v1->x, v2->y - v1->y, v2->z - v1->z};
-    Vector3i step;
-    Vector3i a;
-    Vector3i tmax;
-    Vector3i delta;
+    vector3i_t pos  = *v1;
+    vector3i_t dist = { v2->x - v1->x, v2->y - v1->y, v2->z - v1->z };
+    vector3i_t step;
+    vector3i_t a;
+    vector3i_t tmax;
+    vector3i_t delta;
 
     step.x = dist.x < 0 ? -1 : 1;
     step.y = dist.y < 0 ? -1 : 1;
@@ -62,19 +63,19 @@ int blockLine(const Vector3i* v1, const Vector3i* v2, Vector3i* result)
 
         if (tmax.z <= tmax.x && tmax.z <= tmax.y) {
             pos.z += step.z;
-            if (pos.z >= server->map.map.size_z) {
+            if (pos.z >= server->s_map.map.size_z) {
                 break;
             }
             tmax.z += delta.z;
         } else if (tmax.x < tmax.y) {
             pos.x += step.x;
-            if (pos.x >= server->map.map.size_x) {
+            if (pos.x >= server->s_map.map.size_x) {
                 break;
             }
             tmax.x += delta.x;
         } else {
             pos.y += step.y;
-            if (pos.y >= server->map.map.size_y) {
+            if (pos.y >= server->s_map.map.size_y) {
                 break;
             }
             tmax.y += delta.y;

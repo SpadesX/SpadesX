@@ -22,89 +22,62 @@
 #include <time.h>
 
 #ifdef _WIN32
-    #define strlcat(dst, src, siz) strcat_s(dst, siz, src)
+#define strlcat(dst, src, siz) strcat_s(dst, siz, src)
 #else
-    #include <bsd/string.h>
+#include <bsd/string.h>
 #endif
 
-inline static uint8 allowShot(Server*  server,
-                              uint8    playerID,
-                              uint8    hitPlayerID,
-                              uint64   timeNow,
-                              float    distance,
-                              long*    x,
-                              long*    y,
-                              long*    z,
-                              Vector3f shotPos,
-                              Vector3f shotOrien,
-                              Vector3f hitPos,
-                              Vector3f shotEyePos)
+inline static uint8_t allowShot(server_t* server,
+    uint8_t                               playerID,
+    uint8_t                               hitPlayerID,
+    uint64_t                              timeNow,
+    float                                 distance,
+    long*                                 x,
+    long*                                 y,
+    long*                                 z,
+    vector3f_t                            shotPos,
+    vector3f_t                            shotOrien,
+    vector3f_t                            hitPos,
+    vector3f_t                            shotEyePos)
 {
-    uint8 ret = 0;
-    if (server->player[playerID].primary_fire &&
-        ((server->player[playerID].item == 0 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 100)) ||
-         (server->player[playerID].item == 2 && server->player[playerID].weapon == 0 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 500)) ||
-         (server->player[playerID].item == 2 && server->player[playerID].weapon == 1 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 110)) ||
-         (server->player[playerID].item == 2 && server->player[playerID].weapon == 2 &&
-          diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastShot, NANO_IN_MILLI * 1000))) &&
-        server->player[playerID].alive && server->player[hitPlayerID].alive &&
-        (server->player[playerID].team != server->player[hitPlayerID].team ||
-         server->player[playerID].allowTeamKilling) &&
-        (server->player[playerID].allowKilling && server->globalAK) && validateHit(shotPos, shotOrien, hitPos, 5) &&
-        (castRay(
-         server, shotEyePos.x, shotEyePos.y, shotEyePos.z, shotOrien.x, shotOrien.y, shotOrien.z, distance, x, y, z) ==
-         0 ||
-         castRay(server,
-                 shotEyePos.x,
-                 shotEyePos.y,
-                 shotEyePos.z - 1,
-                 shotOrien.x,
-                 shotOrien.y,
-                 shotOrien.z,
-                 distance,
-                 x,
-                 y,
-                 z) == 0))
-    {
+    uint8_t ret = 0;
+    if (server->player[playerID].primary_fire && ((server->player[playerID].item == 0 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_shot, NANO_IN_MILLI * 100)) || (server->player[playerID].item == 2 && server->player[playerID].weapon == 0 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_shot, NANO_IN_MILLI * 500)) || (server->player[playerID].item == 2 && server->player[playerID].weapon == 1 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_shot, NANO_IN_MILLI * 110)) || (server->player[playerID].item == 2 && server->player[playerID].weapon == 2 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_shot, NANO_IN_MILLI * 1000))) && server->player[playerID].alive && server->player[hitPlayerID].alive && (server->player[playerID].team != server->player[hitPlayerID].team || server->player[playerID].allow_team_killing) && (server->player[playerID].allow_killing && server->global_ak) && physics_validate_hit(shotPos, shotOrien, hitPos, 5) && (physics_cast_ray(server, shotEyePos.x, shotEyePos.y, shotEyePos.z, shotOrien.x, shotOrien.y, shotOrien.z, distance, x, y, z) == 0 || physics_cast_ray(server, shotEyePos.x, shotEyePos.y, shotEyePos.z - 1, shotOrien.x, shotOrien.y, shotOrien.z, distance, x, y, z) == 0)) {
         ret = 1;
     }
     return ret;
 }
 
-void sendRestock(Server* server, uint8 playerID)
+void send_restock(server_t* server, uint8_t playerID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_RESTOCK);
-    WriteByte(&stream, playerID);
+    ENetPacket*  packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_RESTOCK);
+    datastream_write_u8(&stream, playerID);
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void sendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
+void send_move_object(server_t* server, uint8_t object, uint8_t team, vector3f_t pos)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_MOVE_OBJECT);
-    WriteByte(&stream, object);
-    WriteByte(&stream, team);
-    WriteFloat(&stream, pos.x);
-    WriteFloat(&stream, pos.y);
-    WriteFloat(&stream, pos.z);
+    ENetPacket*  packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_MOVE_OBJECT);
+    datastream_write_u8(&stream, object);
+    datastream_write_u8(&stream, team);
+    datastream_write_f(&stream, pos.x);
+    datastream_write_f(&stream, pos.y);
+    datastream_write_f(&stream, pos.z);
 
-    uint8 sent = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player)) {
+    uint8_t sent = 0;
+    for (int player = 0; player < server->protocol.max_players; ++player) {
+        if (is_past_state_data(server, player)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
@@ -115,31 +88,31 @@ void sendMoveObject(Server* server, uint8 object, uint8 team, Vector3f pos)
     }
 }
 
-void sendIntelCapture(Server* server, uint8 playerID, uint8 winning)
+void send_intel_capture(server_t* server, uint8_t playerID, uint8_t winning)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    uint8 team;
+    uint8_t team;
     if (server->player[playerID].team == 0) {
         team = 1;
     } else {
         team = 0;
     }
-    if (server->player[playerID].hasIntel == 0 || server->protocol.gameMode.intelHeld[team] == 0) {
+    if (server->player[playerID].has_intel == 0 || server->protocol.gamemode.intel_held[team] == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_INTEL_CAPTURE);
-    WriteByte(&stream, playerID);
-    WriteByte(&stream, winning);
-    server->player[playerID].hasIntel         = 0;
-    server->protocol.gameMode.intelHeld[team] = 0;
+    ENetPacket*  packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_INTEL_CAPTURE);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u8(&stream, winning);
+    server->player[playerID].has_intel         = 0;
+    server->protocol.gamemode.intel_held[team] = 0;
 
-    uint8 sent = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player)) {
+    uint8_t sent = 0;
+    for (int player = 0; player < server->protocol.max_players; ++player) {
+        if (is_past_state_data(server, player)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
@@ -150,31 +123,31 @@ void sendIntelCapture(Server* server, uint8 playerID, uint8 winning)
     }
 }
 
-void sendIntelPickup(Server* server, uint8 playerID)
+void send_intel_pickup(server_t* server, uint8_t playerID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    uint8 team;
+    uint8_t team;
     if (server->player[playerID].team == 0) {
         team = 1;
     } else {
         team = 0;
     }
-    if (server->player[playerID].hasIntel == 1 || server->protocol.gameMode.intelHeld[team] == 1) {
+    if (server->player[playerID].has_intel == 1 || server->protocol.gamemode.intel_held[team] == 1) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_INTEL_PICKUP);
-    WriteByte(&stream, playerID);
-    server->player[playerID].hasIntel                                        = 1;
-    server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = playerID;
-    server->protocol.gameMode.intelHeld[team]                                = 1;
+    ENetPacket*  packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_INTEL_PICKUP);
+    datastream_write_u8(&stream, playerID);
+    server->player[playerID].has_intel                                         = 1;
+    server->protocol.gamemode.player_intel_team[server->player[playerID].team] = playerID;
+    server->protocol.gamemode.intel_held[team]                                 = 1;
 
-    uint8 sent = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player)) {
+    uint8_t sent = 0;
+    for (int player = 0; player < server->protocol.max_players; ++player) {
+        if (is_past_state_data(server, player)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
@@ -185,62 +158,66 @@ void sendIntelPickup(Server* server, uint8 playerID)
     }
 }
 
-void sendIntelDrop(Server* server, uint8 playerID)
+void send_intel_drop(server_t* server, uint8_t playerID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    uint8 team;
+    uint8_t team;
     if (server->player[playerID].team == 0) {
         team = 1;
     } else {
         team = 0;
     }
-    if (server->player[playerID].hasIntel == 0 || server->protocol.gameMode.intelHeld[team] == 0) {
+    if (server->player[playerID].has_intel == 0 || server->protocol.gamemode.intel_held[team] == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 14, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_INTEL_DROP);
-    WriteByte(&stream, playerID);
-    if (server->protocol.currentGameMode == GAME_MODE_BABEL) {
-        WriteFloat(&stream, (float) server->map.map.size_x / 2);
-        WriteFloat(&stream, (float) server->map.map.size_y / 2);
-        WriteFloat(
-        &stream,
-        (float) mapvxl_find_top_block(&server->map.map, server->map.map.size_x / 2, server->map.map.size_y / 2));
+    ENetPacket*  packet = enet_packet_create(NULL, 14, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_INTEL_DROP);
+    datastream_write_u8(&stream, playerID);
+    if (server->protocol.current_gamemode == GAME_MODE_BABEL) {
+        datastream_write_f(&stream, (float)server->s_map.map.size_x / 2);
+        datastream_write_f(&stream, (float)server->s_map.map.size_y / 2);
+        datastream_write_f(
+            &stream,
+            (float)mapvxl_find_top_block(&server->s_map.map, server->s_map.map.size_x / 2, server->s_map.map.size_y / 2));
 
-        server->protocol.gameMode.intel[team].x = (float) server->map.map.size_x / 2;
-        server->protocol.gameMode.intel[team].y = (float) server->map.map.size_y / 2;
-        server->protocol.gameMode.intel[team].z =
-        mapvxl_find_top_block(&server->map.map, server->map.map.size_x / 2, server->map.map.size_y / 2);
-        server->protocol.gameMode.intel[server->player[playerID].team] = server->protocol.gameMode.intel[team];
-        sendMoveObject(
-        server, server->player[playerID].team, server->player[playerID].team, server->protocol.gameMode.intel[team]);
+        server->protocol.gamemode.intel[team].x                        = (float)server->s_map.map.size_x / 2;
+        server->protocol.gamemode.intel[team].y                        = (float)server->s_map.map.size_y / 2;
+        server->protocol.gamemode.intel[team].z                        = mapvxl_find_top_block(&server->s_map.map, server->s_map.map.size_x / 2, server->s_map.map.size_y / 2);
+        server->protocol.gamemode.intel[server->player[playerID].team] = server->protocol.gamemode.intel[team];
+        send_move_object(
+            server,
+            server->player[playerID].team,
+            server->player[playerID].team,
+            server->protocol.gamemode.intel[team]);
     } else {
-        WriteFloat(&stream, server->player[playerID].movement.position.x);
-        WriteFloat(&stream, server->player[playerID].movement.position.y);
-        WriteFloat(&stream,
-                   (float) mapvxl_find_top_block(&server->map.map,
-                                              server->player[playerID].movement.position.x,
-                                              server->player[playerID].movement.position.y));
+        datastream_write_f(&stream, server->player[playerID].movement.position.x);
+        datastream_write_f(&stream, server->player[playerID].movement.position.y);
+        datastream_write_f(&stream,
+            (float)mapvxl_find_top_block(&server->s_map.map,
+                server->player[playerID].movement.position.x,
+                server->player[playerID].movement.position.y));
 
-        server->protocol.gameMode.intel[team].x = (int) server->player[playerID].movement.position.x;
-        server->protocol.gameMode.intel[team].y = (int) server->player[playerID].movement.position.y;
-        server->protocol.gameMode.intel[team].z = mapvxl_find_top_block(
-        &server->map.map, server->player[playerID].movement.position.x, server->player[playerID].movement.position.y);
+        server->protocol.gamemode.intel[team].x = (int)server->player[playerID].movement.position.x;
+        server->protocol.gamemode.intel[team].y = (int)server->player[playerID].movement.position.y;
+        server->protocol.gamemode.intel[team].z = mapvxl_find_top_block(
+            &server->s_map.map,
+            server->player[playerID].movement.position.x,
+            server->player[playerID].movement.position.y);
     }
-    server->player[playerID].hasIntel                                        = 0;
-    server->protocol.gameMode.playerIntelTeam[server->player[playerID].team] = 32;
-    server->protocol.gameMode.intelHeld[team]                                = 0;
+    server->player[playerID].has_intel                                         = 0;
+    server->protocol.gamemode.player_intel_team[server->player[playerID].team] = 32;
+    server->protocol.gamemode.intel_held[team]                                 = 0;
 
     LOG_INFO("Dropping intel at X: %d, Y: %d, Z: %d",
-             (int) server->protocol.gameMode.intel[team].x,
-             (int) server->protocol.gameMode.intel[team].y,
-             (int) server->protocol.gameMode.intel[team].z);
-    uint8 sent = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player)) {
+        (int)server->protocol.gamemode.intel[team].x,
+        (int)server->protocol.gamemode.intel[team].y,
+        (int)server->protocol.gamemode.intel[team].z);
+    uint8_t sent = 0;
+    for (int player = 0; player < server->protocol.max_players; ++player) {
+        if (is_past_state_data(server, player)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
@@ -251,41 +228,41 @@ void sendIntelDrop(Server* server, uint8 playerID)
     }
 }
 
-void sendGrenade(Server* server, uint8 playerID, float fuse, Vector3f position, Vector3f velocity)
+void send_grenade(server_t* server, uint8_t playerID, float fuse, vector3f_t position, vector3f_t velocity)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 30, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_GRENADE_PACKET);
-    WriteByte(&stream, playerID);
-    WriteFloat(&stream, fuse);
-    WriteFloat(&stream, position.x);
-    WriteFloat(&stream, position.y);
-    WriteFloat(&stream, position.z);
-    WriteFloat(&stream, velocity.x);
-    WriteFloat(&stream, velocity.y);
-    WriteFloat(&stream, velocity.z);
+    ENetPacket*  packet = enet_packet_create(NULL, 30, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_GRENADE_PACKET);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_f(&stream, fuse);
+    datastream_write_f(&stream, position.x);
+    datastream_write_f(&stream, position.y);
+    datastream_write_f(&stream, position.z);
+    datastream_write_f(&stream, velocity.x);
+    datastream_write_f(&stream, velocity.y);
+    datastream_write_f(&stream, velocity.z);
     if (SendPacketExceptSender(server, packet, playerID) == 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void sendPlayerLeft(Server* server, uint8 playerID)
+void send_player_left(server_t* server, uint8_t playerID)
 {
     char ipString[17];
-    formatIPToString(ipString, server->player[playerID].ipStruct);
+    format_ip_to_str(ipString, server->player[playerID].ip);
     LOG_INFO("Player %s (%s, #%hhu) disconnected", server->player[playerID].name, ipString, playerID);
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (i != playerID && isPastStateData(server, i)) {
-            ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
-            DataStream  stream = {packet->data, packet->dataLength, 0};
-            WriteByte(&stream, PACKET_TYPE_PLAYER_LEFT);
-            WriteByte(&stream, playerID);
+    for (uint8_t i = 0; i < server->protocol.max_players; ++i) {
+        if (i != playerID && is_past_state_data(server, i)) {
+            ENetPacket*  packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
+            datastream_t stream = { packet->data, packet->dataLength, 0 };
+            datastream_write_u8(&stream, PACKET_TYPE_PLAYER_LEFT);
+            datastream_write_u8(&stream, playerID);
 
             if (enet_peer_send(server->player[i].peer, 0, packet) != 0) {
                 LOG_WARNING("Failed to send player left event");
@@ -295,26 +272,26 @@ void sendPlayerLeft(Server* server, uint8 playerID)
     }
 }
 
-void sendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint8 clip, uint8 reserve)
+void send_weapon_reload(server_t* server, uint8_t playerID, uint8_t startAnimation, uint8_t clip, uint8_t reserve)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 4, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_WEAPON_RELOAD);
-    WriteByte(&stream, playerID);
+    ENetPacket*  packet = enet_packet_create(NULL, 4, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_WEAPON_RELOAD);
+    datastream_write_u8(&stream, playerID);
     if (startAnimation) {
-        WriteByte(&stream, clip);
-        WriteByte(&stream, reserve);
+        datastream_write_u8(&stream, clip);
+        datastream_write_u8(&stream, reserve);
     } else {
-        WriteByte(&stream, server->player[playerID].weaponClip);
-        WriteByte(&stream, server->player[playerID].weaponReserve);
+        datastream_write_u8(&stream, server->player[playerID].weapon_clip);
+        datastream_write_u8(&stream, server->player[playerID].weapon_reserve);
     }
     if (startAnimation) {
-        uint8 sendSucc = 0;
-        for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-            if (isPastStateData(server, player) && player != playerID) {
+        uint8_t sendSucc = 0;
+        for (int player = 0; player < server->protocol.max_players; ++player) {
+            if (is_past_state_data(server, player) && player != playerID) {
                 if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                     sendSucc = 1;
                 }
@@ -324,7 +301,7 @@ void sendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint
             enet_packet_destroy(packet);
         }
     } else {
-        if (isPastJoinScreen(server, playerID)) {
+        if (is_past_join_screen(server, playerID)) {
             if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
                 enet_packet_destroy(packet);
             }
@@ -332,107 +309,105 @@ void sendWeaponReload(Server* server, uint8 playerID, uint8 startAnimation, uint
     }
 }
 
-void sendWeaponInput(Server* server, uint8 playerID, uint8 wInput)
+void send_weapon_input(server_t* server, uint8_t playerID, uint8_t wInput)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_WEAPON_INPUT);
-    WriteByte(&stream, playerID);
+    ENetPacket*  packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_WEAPON_INPUT);
+    datastream_write_u8(&stream, playerID);
     if (server->player[playerID].sprinting) {
         wInput = 0;
     }
-    WriteByte(&stream, wInput);
+    datastream_write_u8(&stream, wInput);
     if (SendPacketExceptSender(server, packet, playerID) == 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void sendSetColor(Server* server, uint8 playerID, uint8 R, uint8 G, uint8 B)
+void send_set_color(server_t* server, uint8_t playerID, uint8_t R, uint8_t G, uint8_t B)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_SET_COLOR);
-    WriteByte(&stream, playerID);
-    WriteByte(&stream, B);
-    WriteByte(&stream, G);
-    WriteByte(&stream, R);
+    ENetPacket*  packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_SET_COLOR);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u8(&stream, B);
+    datastream_write_u8(&stream, G);
+    datastream_write_u8(&stream, R);
     if (SendPacketExceptSender(server, packet, playerID) == 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void sendSetColorToPlayer(Server* server, uint8 playerID, uint8 sendToID, uint8 R, uint8 G, uint8 B)
+void send_set_color_to_player(server_t* server, uint8_t playerID, uint8_t sendToID, uint8_t R, uint8_t G, uint8_t B)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_SET_COLOR);
-    WriteByte(&stream, playerID);
-    WriteByte(&stream, B);
-    WriteByte(&stream, G);
-    WriteByte(&stream, R);
+    ENetPacket*  packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_SET_COLOR);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u8(&stream, B);
+    datastream_write_u8(&stream, G);
+    datastream_write_u8(&stream, R);
     if (enet_peer_send(server->player[sendToID].peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void sendSetTool(Server* server, uint8 playerID, uint8 tool)
+void send_set_tool(server_t* server, uint8_t playerID, uint8_t tool)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_SET_TOOL);
-    WriteByte(&stream, playerID);
-    WriteByte(&stream, tool);
+    ENetPacket*  packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_SET_TOOL);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u8(&stream, tool);
     if (SendPacketExceptSender(server, packet, playerID) == 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void sendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
+void send_block_line(server_t* server, uint8_t playerID, vector3i_t start, vector3i_t end)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_BLOCK_LINE);
-    WriteByte(&stream, playerID);
-    WriteInt(&stream, start.x);
-    WriteInt(&stream, start.y);
-    WriteInt(&stream, start.z);
-    WriteInt(&stream, end.x);
-    WriteInt(&stream, end.y);
-    WriteInt(&stream, end.z);
-    uint8 sent = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player)) {
+    ENetPacket*  packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_BLOCK_LINE);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u32(&stream, start.x);
+    datastream_write_u32(&stream, start.y);
+    datastream_write_u32(&stream, start.z);
+    datastream_write_u32(&stream, end.x);
+    datastream_write_u32(&stream, end.y);
+    datastream_write_u32(&stream, end.z);
+    uint8_t sent = 0;
+    for (int player = 0; player < server->protocol.max_players; ++player) {
+        if (is_past_state_data(server, player)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
-        } else if (server->player[player].state == STATE_STARTING_MAP ||
-                   server->player[player].state == STATE_LOADING_CHUNKS)
-        {
-            blockNode* node     = (blockNode*) malloc(sizeof(*node));
-            node->position.x    = start.x;
-            node->position.y    = start.y;
-            node->position.z    = start.z;
-            node->positionEnd.x = end.x;
-            node->positionEnd.y = end.y;
-            node->positionEnd.z = end.z;
-            node->color         = server->player[playerID].color;
-            node->type          = 10;
-            node->senderID      = playerID;
+        } else if (server->player[player].state == STATE_STARTING_MAP || server->player[player].state == STATE_LOADING_CHUNKS) {
+            block_node_t* node   = (block_node_t*)malloc(sizeof(*node));
+            node->position.x     = start.x;
+            node->position.y     = start.y;
+            node->position.z     = start.z;
+            node->position_end.x = end.x;
+            node->position_end.y = end.y;
+            node->position_end.z = end.z;
+            node->color          = server->player[playerID].color;
+            node->type           = 10;
+            node->sender_id      = playerID;
             LL_APPEND(server->player[player].blockBuffer, node);
         }
     }
@@ -441,22 +416,22 @@ void sendBlockLine(Server* server, uint8 playerID, Vector3i start, Vector3i end)
     }
 }
 
-void sendBlockLineToPlayer(Server* server, uint8 playerID, uint8 sendToID, Vector3i start, Vector3i end)
+void block_line_to_player(server_t* server, uint8_t playerID, uint8_t sendToID, vector3i_t start, vector3i_t end)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_BLOCK_LINE);
-    WriteByte(&stream, playerID);
-    WriteInt(&stream, start.x);
-    WriteInt(&stream, start.y);
-    WriteInt(&stream, start.z);
-    WriteInt(&stream, end.x);
-    WriteInt(&stream, end.y);
-    WriteInt(&stream, end.z);
-    uint8 sent = 0;
+    ENetPacket*  packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_BLOCK_LINE);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u32(&stream, start.x);
+    datastream_write_u32(&stream, start.y);
+    datastream_write_u32(&stream, start.z);
+    datastream_write_u32(&stream, end.x);
+    datastream_write_u32(&stream, end.y);
+    datastream_write_u32(&stream, end.z);
+    uint8_t sent = 0;
     if (enet_peer_send(server->player[sendToID].peer, 0, packet) == 0) {
         sent = 1;
     }
@@ -465,35 +440,33 @@ void sendBlockLineToPlayer(Server* server, uint8 playerID, uint8 sendToID, Vecto
     }
 }
 
-void sendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, int Y, int Z)
+void send_block_action(server_t* server, uint8_t playerID, uint8_t actionType, int X, int Y, int Z)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_BLOCK_ACTION);
-    WriteByte(&stream, playerID);
-    WriteByte(&stream, actionType);
-    WriteInt(&stream, X);
-    WriteInt(&stream, Y);
-    WriteInt(&stream, Z);
-    uint8 sent = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        if (isPastStateData(server, player)) {
+    ENetPacket*  packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_BLOCK_ACTION);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u8(&stream, actionType);
+    datastream_write_u32(&stream, X);
+    datastream_write_u32(&stream, Y);
+    datastream_write_u32(&stream, Z);
+    uint8_t sent = 0;
+    for (int player = 0; player < server->protocol.max_players; ++player) {
+        if (is_past_state_data(server, player)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
             }
-        } else if (server->player[player].state == STATE_STARTING_MAP ||
-                   server->player[player].state == STATE_LOADING_CHUNKS)
-        {
-            blockNode* node  = (blockNode*) malloc(sizeof(*node));
-            node->position.x = X;
-            node->position.y = Y;
-            node->position.z = Z;
-            node->color      = server->player[playerID].color;
-            node->type       = actionType;
-            node->senderID   = playerID;
+        } else if (server->player[player].state == STATE_STARTING_MAP || server->player[player].state == STATE_LOADING_CHUNKS) {
+            block_node_t* node = (block_node_t*)malloc(sizeof(*node));
+            node->position.x   = X;
+            node->position.y   = Y;
+            node->position.z   = Z;
+            node->color        = server->player[playerID].color;
+            node->type         = actionType;
+            node->sender_id    = playerID;
             LL_APPEND(server->player[player].blockBuffer, node);
         }
     }
@@ -501,20 +474,26 @@ void sendBlockAction(Server* server, uint8 playerID, uint8 actionType, int X, in
         enet_packet_destroy(packet);
     }
 }
-void sendBlockActionToPlayer(Server* server, uint8 playerID, uint8 sendToID, uint8 actionType, int X, int Y, int Z)
+void send_block_action_to_player(server_t* server,
+    uint8_t                                playerID,
+    uint8_t                                sendToID,
+    uint8_t                                actionType,
+    int                                    X,
+    int                                    Y,
+    int                                    Z)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_BLOCK_ACTION);
-    WriteByte(&stream, playerID);
-    WriteByte(&stream, actionType);
-    WriteInt(&stream, X);
-    WriteInt(&stream, Y);
-    WriteInt(&stream, Z);
-    uint8 sent = 0;
+    ENetPacket*  packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_BLOCK_ACTION);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u8(&stream, actionType);
+    datastream_write_u32(&stream, X);
+    datastream_write_u32(&stream, Y);
+    datastream_write_u32(&stream, Z);
+    uint8_t sent = 0;
     if (enet_peer_send(server->player[sendToID].peer, 0, packet) == 0) {
         sent = 1;
     }
@@ -523,64 +502,64 @@ void sendBlockActionToPlayer(Server* server, uint8 playerID, uint8 sendToID, uin
     }
 }
 
-void sendStateData(Server* server, uint8 playerID)
+void send_state_data(server_t* server, uint8_t playerID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 104, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_STATE_DATA);
-    WriteByte(&stream, playerID);
-    WriteColor3i(&stream, server->protocol.colorFog);
-    WriteColor3i(&stream, server->protocol.colorTeam[0]);
-    WriteColor3i(&stream, server->protocol.colorTeam[1]);
-    WriteArray(&stream, server->protocol.nameTeam[0], 10);
-    WriteArray(&stream, server->protocol.nameTeam[1], 10);
-    if (server->protocol.currentGameMode == 0 || server->protocol.currentGameMode == 1) {
-        WriteByte(&stream, server->protocol.currentGameMode);
+    ENetPacket*  packet = enet_packet_create(NULL, 104, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_STATE_DATA);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_color_rgb(&stream, server->protocol.color_fog);
+    datastream_write_color_rgb(&stream, server->protocol.color_team[0]);
+    datastream_write_color_rgb(&stream, server->protocol.color_team[1]);
+    datastream_write_array(&stream, server->protocol.name_team[0], 10);
+    datastream_write_array(&stream, server->protocol.name_team[1], 10);
+    if (server->protocol.current_gamemode == 0 || server->protocol.current_gamemode == 1) {
+        datastream_write_u8(&stream, server->protocol.current_gamemode);
     } else {
-        WriteByte(&stream, 0);
+        datastream_write_u8(&stream, 0);
     }
 
     // MODE CTF:
 
-    WriteByte(&stream, server->protocol.gameMode.score[0]);   // SCORE TEAM A
-    WriteByte(&stream, server->protocol.gameMode.score[1]);   // SCORE TEAM B
-    WriteByte(&stream, server->protocol.gameMode.scoreLimit); // SCORE LIMIT
+    datastream_write_u8(&stream, server->protocol.gamemode.score[0]); // SCORE TEAM A
+    datastream_write_u8(&stream, server->protocol.gamemode.score[1]); // SCORE TEAM B
+    datastream_write_u8(&stream, server->protocol.gamemode.score_limit); // SCORE LIMIT
 
-    server->protocol.gameMode.intelFlags = 0;
+    server->protocol.gamemode.intel_flags = 0;
 
-    if (server->protocol.gameMode.intelHeld[0]) {
-        server->protocol.gameMode.intelFlags = INTEL_TEAM_B;
-    } else if (server->protocol.gameMode.intelHeld[1]) {
-        server->protocol.gameMode.intelFlags = INTEL_TEAM_A;
-    } else if (server->protocol.gameMode.intelHeld[0] && server->protocol.gameMode.intelHeld[1]) {
-        server->protocol.gameMode.intelFlags = INTEL_TEAM_BOTH;
+    if (server->protocol.gamemode.intel_held[0]) {
+        server->protocol.gamemode.intel_flags = INTEL_TEAM_B;
+    } else if (server->protocol.gamemode.intel_held[1]) {
+        server->protocol.gamemode.intel_flags = INTEL_TEAM_A;
+    } else if (server->protocol.gamemode.intel_held[0] && server->protocol.gamemode.intel_held[1]) {
+        server->protocol.gamemode.intel_flags = INTEL_TEAM_BOTH;
     }
 
-    WriteByte(&stream, server->protocol.gameMode.intelFlags); // INTEL FLAGS
+    datastream_write_u8(&stream, server->protocol.gamemode.intel_flags); // INTEL FLAGS
 
-    if ((server->protocol.gameMode.intelFlags & 1) == 0) {
-        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[1]);
+    if ((server->protocol.gamemode.intel_flags & 1) == 0) {
+        datastream_write_u8(&stream, server->protocol.gamemode.player_intel_team[1]);
         for (int i = 0; i < 11; ++i) {
-            WriteByte(&stream, 255);
+            datastream_write_u8(&stream, 255);
         }
     } else {
-        WriteVector3f(&stream, server->protocol.gameMode.intel[0]);
+        datastream_write_vector3f(&stream, server->protocol.gamemode.intel[0]);
     }
 
-    if ((server->protocol.gameMode.intelFlags & 2) == 0) {
-        WriteByte(&stream, server->protocol.gameMode.playerIntelTeam[0]);
+    if ((server->protocol.gamemode.intel_flags & 2) == 0) {
+        datastream_write_u8(&stream, server->protocol.gamemode.player_intel_team[0]);
         for (int i = 0; i < 11; ++i) {
-            WriteByte(&stream, 255);
+            datastream_write_u8(&stream, 255);
         }
     } else {
-        WriteVector3f(&stream, server->protocol.gameMode.intel[1]);
+        datastream_write_vector3f(&stream, server->protocol.gamemode.intel[1]);
     }
 
-    WriteVector3f(&stream, server->protocol.gameMode.base[0]);
-    WriteVector3f(&stream, server->protocol.gameMode.base[1]);
+    datastream_write_vector3f(&stream, server->protocol.gamemode.base[0]);
+    datastream_write_vector3f(&stream, server->protocol.gamemode.base[1]);
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
         server->player[playerID].state = STATE_PICK_SCREEN;
@@ -589,44 +568,44 @@ void sendStateData(Server* server, uint8 playerID)
     }
 }
 
-void sendInputData(Server* server, uint8 playerID)
+void send_input_data(server_t* server, uint8_t playerID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_INPUT_DATA);
-    WriteByte(&stream, playerID);
-    WriteByte(&stream, server->player[playerID].input);
+    ENetPacket*  packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_INPUT_DATA);
+    datastream_write_u8(&stream, playerID);
+    datastream_write_u8(&stream, server->player[playerID].input);
     if (SendPacketExceptSenderDistCheck(server, packet, playerID) == 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void sendKillActionPacket(Server* server,
-                          uint8   killerID,
-                          uint8   playerID,
-                          uint8   killReason,
-                          uint8   respawnTime,
-                          uint8   makeInvisible)
+void send_kill_action_packet(server_t* server,
+    uint8_t                            killerID,
+    uint8_t                            playerID,
+    uint8_t                            killReason,
+    uint8_t                            respawnTime,
+    uint8_t                            makeInvisible)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
     if (server->player[playerID].alive == 0) {
         return; // Cant kill player if they are dead
     }
-    ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_KILL_ACTION);
-    WriteByte(&stream, playerID);    // Player that died.
-    WriteByte(&stream, killerID);    // Player that killed.
-    WriteByte(&stream, killReason);  // Killing reason (1 is headshot)
-    WriteByte(&stream, respawnTime); // Time before respawn happens
-    uint8 sent = 0;
-    for (int player = 0; player < server->protocol.maxPlayers; ++player) {
-        uint8 isPast = isPastStateData(server, player);
+    ENetPacket*  packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_KILL_ACTION);
+    datastream_write_u8(&stream, playerID); // Player that died.
+    datastream_write_u8(&stream, killerID); // Player that killed.
+    datastream_write_u8(&stream, killReason); // Killing reason (1 is headshot)
+    datastream_write_u8(&stream, respawnTime); // Time before respawn happens
+    uint8_t sent = 0;
+    for (int player = 0; player < server->protocol.max_players; ++player) {
+        uint8_t isPast = is_past_state_data(server, player);
         if ((makeInvisible && player != playerID && isPast) || (isPast && !makeInvisible)) {
             if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
                 sent = 1;
@@ -637,95 +616,88 @@ void sendKillActionPacket(Server* server,
         enet_packet_destroy(packet);
         return; // Do not kill the player since sending the packet failed
     }
-    if (!makeInvisible && server->player[playerID].isInvisible == 0) {
+    if (!makeInvisible && server->player[playerID].is_invisible == 0) {
         if (killerID != playerID) {
             server->player[killerID].kills++;
         }
         server->player[playerID].deaths++;
-        server->player[playerID].alive                     = 0;
-        server->player[playerID].respawnTime               = respawnTime;
-        server->player[playerID].timers.startOfRespawnWait = time(NULL);
-        server->player[playerID].state                     = STATE_WAITING_FOR_RESPAWN;
+        server->player[playerID].alive                        = 0;
+        server->player[playerID].respawn_time                 = respawnTime;
+        server->player[playerID].timers.start_of_respawn_wait = time(NULL);
+        server->player[playerID].state                        = STATE_WAITING_FOR_RESPAWN;
         switch (server->player[playerID].weapon) {
-            case 0:
-                server->player[playerID].weaponReserve  = 50;
-                server->player[playerID].weaponClip     = 10;
-                server->player[playerID].defaultClip    = RIFLE_DEFAULT_CLIP;
-                server->player[playerID].defaultReserve = RIFLE_DEFAULT_RESERVE;
-                break;
-            case 1:
-                server->player[playerID].weaponReserve  = 120;
-                server->player[playerID].weaponClip     = 30;
-                server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
-                server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
-                break;
-            case 2:
-                server->player[playerID].weaponReserve  = 48;
-                server->player[playerID].weaponClip     = 6;
-                server->player[playerID].defaultClip    = SHOTGUN_DEFAULT_CLIP;
-                server->player[playerID].defaultReserve = SHOTGUN_DEFAULT_RESERVE;
-                break;
+        case 0:
+            server->player[playerID].weapon_reserve  = 50;
+            server->player[playerID].weapon_clip     = 10;
+            server->player[playerID].default_clip    = RIFLE_DEFAULT_CLIP;
+            server->player[playerID].default_reserve = RIFLE_DEFAULT_RESERVE;
+            break;
+        case 1:
+            server->player[playerID].weapon_reserve  = 120;
+            server->player[playerID].weapon_clip     = 30;
+            server->player[playerID].default_clip    = SMG_DEFAULT_CLIP;
+            server->player[playerID].default_reserve = SMG_DEFAULT_RESERVE;
+            break;
+        case 2:
+            server->player[playerID].weapon_reserve  = 48;
+            server->player[playerID].weapon_clip     = 6;
+            server->player[playerID].default_clip    = SHOTGUN_DEFAULT_CLIP;
+            server->player[playerID].default_reserve = SHOTGUN_DEFAULT_RESERVE;
+            break;
         }
     }
-    if (server->player[playerID].hasIntel) {
-        sendIntelDrop(server, playerID);
+    if (server->player[playerID].has_intel) {
+        send_intel_drop(server, playerID);
     }
 }
 
-void sendSetHP(Server*  server,
-               uint8    playerID,
-               uint8    hitPlayerID,
-               long     HPChange,
-               uint8    typeOfDamage,
-               uint8    killReason,
-               uint8    respawnTime,
-               uint8    isGrenade,
-               Vector3f position)
+void send_set_hp(server_t* server,
+    uint8_t                playerID,
+    uint8_t                hitPlayerID,
+    long                   HPChange,
+    uint8_t                typeOfDamage,
+    uint8_t                killReason,
+    uint8_t                respawnTime,
+    uint8_t                isGrenade,
+    vector3f_t             position)
 {
-    if (server->protocol.numPlayers == 0 || server->player[hitPlayerID].team == TEAM_SPECTATOR ||
-        (!server->player[playerID].allowTeamKilling &&
-         server->player[playerID].team == server->player[hitPlayerID].team && playerID != hitPlayerID))
-    {
+    if (server->protocol.num_players == 0 || server->player[hitPlayerID].team == TEAM_SPECTATOR || (!server->player[playerID].allow_team_killing && server->player[playerID].team == server->player[hitPlayerID].team && playerID != hitPlayerID)) {
         return;
     }
-    if ((server->player[playerID].allowKilling && server->globalAK && server->player[playerID].allowKilling &&
-         server->player[playerID].alive) ||
-        typeOfDamage == 0)
-    {
-        if (HPChange > server->player[hitPlayerID].HP) {
-            HPChange = server->player[hitPlayerID].HP;
+    if ((server->player[playerID].allow_killing && server->global_ak && server->player[playerID].allow_killing && server->player[playerID].alive) || typeOfDamage == 0) {
+        if (HPChange > server->player[hitPlayerID].hp) {
+            HPChange = server->player[hitPlayerID].hp;
         }
-        server->player[hitPlayerID].HP -= HPChange;
-        if (server->player[hitPlayerID].HP < 0) // We should NEVER return true here. If we do stuff is really broken
-            server->player[hitPlayerID].HP = 0;
+        server->player[hitPlayerID].hp -= HPChange;
+        if (server->player[hitPlayerID].hp < 0) // We should NEVER return true here. If we do stuff is really broken
+            server->player[hitPlayerID].hp = 0;
 
-        else if (server->player[hitPlayerID].HP > 100) // Same as above
-            server->player[hitPlayerID].HP = 100;
+        else if (server->player[hitPlayerID].hp > 100) // Same as above
+            server->player[hitPlayerID].hp = 100;
 
-        if (server->player[hitPlayerID].HP == 0) {
-            sendKillActionPacket(server, playerID, hitPlayerID, killReason, respawnTime, 0);
+        if (server->player[hitPlayerID].hp == 0) {
+            send_kill_action_packet(server, playerID, hitPlayerID, killReason, respawnTime, 0);
             return;
         }
 
-        else if (server->player[hitPlayerID].HP > 0 && server->player[hitPlayerID].HP < 100)
-        {
-            ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
-            DataStream  stream = {packet->data, packet->dataLength, 0};
-            WriteByte(&stream, PACKET_TYPE_SET_HP);
-            WriteByte(&stream, server->player[hitPlayerID].HP);
-            WriteByte(&stream, typeOfDamage);
+        else if (server->player[hitPlayerID].hp > 0 && server->player[hitPlayerID].hp < 100) {
+            ENetPacket*  packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
+            datastream_t stream = { packet->data, packet->dataLength, 0 };
+            datastream_write_u8(&stream, PACKET_TYPE_SET_HP);
+            datastream_write_u8(&stream, server->player[hitPlayerID].hp);
+            datastream_write_u8(&stream, typeOfDamage);
             if (typeOfDamage != 0 && isGrenade == 0) {
-                WriteFloat(&stream, server->player[playerID].movement.position.x);
-                WriteFloat(&stream, server->player[playerID].movement.position.y);
-                WriteFloat(&stream, server->player[playerID].movement.position.z);
+                datastream_write_f(&stream, server->player[playerID].movement.position.x);
+                datastream_write_f(&stream, server->player[playerID].movement.position.y);
+                datastream_write_f(&stream, server->player[playerID].movement.position.z);
             } else if (typeOfDamage != 0 && isGrenade == 1) {
-                WriteFloat(&stream, position.x);
-                WriteFloat(&stream, position.y);
-                WriteFloat(&stream, position.z);
+                datastream_write_f(&stream, position.x);
+                datastream_write_f(&stream, position.y);
+                datastream_write_f(&stream, position.z);
             } else {
-                WriteFloat(&stream, 0);
-                WriteFloat(&stream, 0);
-                WriteFloat(&stream, 0);
+                datastream_write_f(&stream, 0);
+                datastream_write_f(&stream, 0);
+                datastream_write_f(&stream, 0);
             }
             if (enet_peer_send(server->player[hitPlayerID].peer, 0, packet) != 0) {
                 enet_packet_destroy(packet);
@@ -734,21 +706,21 @@ void sendSetHP(Server*  server,
     }
 }
 
-void sendExistingPlayer(Server* server, uint8 playerID, uint8 otherID)
+void send_existing_player(server_t* server, uint8_t playerID, uint8_t otherID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 28, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_EXISTING_PLAYER);
-    WriteByte(&stream, otherID);                           // ID
-    WriteByte(&stream, server->player[otherID].team);      // TEAM
-    WriteByte(&stream, server->player[otherID].weapon);    // WEAPON
-    WriteByte(&stream, server->player[otherID].item);      // HELD ITEM
-    WriteInt(&stream, server->player[otherID].kills);      // KILLS
-    WriteColor3i(&stream, server->player[otherID].color);  // COLOR
-    WriteArray(&stream, server->player[otherID].name, 16); // NAME
+    ENetPacket*  packet = enet_packet_create(NULL, 28, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_EXISTING_PLAYER);
+    datastream_write_u8(&stream, otherID); // ID
+    datastream_write_u8(&stream, server->player[otherID].team); // TEAM
+    datastream_write_u8(&stream, server->player[otherID].weapon); // WEAPON
+    datastream_write_u8(&stream, server->player[otherID].item); // HELD ITEM
+    datastream_write_u32(&stream, server->player[otherID].kills); // KILLS
+    datastream_write_color_rgb(&stream, server->player[otherID].color); // COLOR
+    datastream_write_array(&stream, server->player[otherID].name, 16); // NAME
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         LOG_WARNING("Failed to send player state");
@@ -756,65 +728,67 @@ void sendExistingPlayer(Server* server, uint8 playerID, uint8 otherID)
     }
 }
 
-void sendVersionRequest(Server* server, uint8 playerID)
+void sendVersionRequest(server_t* server, uint8_t playerID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_VERSION_REQUEST);
+    ENetPacket*  packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_VERSION_REQUEST);
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
 }
-void sendMapStart(Server* server, uint8 playerID)
+void send_map_start(server_t* server, uint8_t playerID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
     LOG_INFO("Sending map info to %s (#%hhu)", server->player[playerID].name, playerID);
-    ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_MAP_START);
-    WriteInt(&stream, server->map.compressedSize);
+    ENetPacket*  packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_MAP_START);
+    datastream_write_u32(&stream, server->s_map.compressed_size);
     if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
         server->player[playerID].state = STATE_LOADING_CHUNKS;
 
         // The biggest possible VXL size given the XYZ size
-        uint8* map = (uint8*) calloc(
-        server->map.map.size_x * server->map.map.size_y * (server->map.map.size_z / 2), sizeof(uint8));
+        uint8_t* map = (uint8_t*)calloc(server->s_map.map.size_x * server->s_map.map.size_y * (server->s_map.map.size_z / 2),
+            sizeof(uint8_t));
         // Write map to out
-        server->map.mapSize = mapvxl_write(&server->map.map, map);
+        server->s_map.map_size = mapvxl_write(&server->s_map.map, map);
         // Resize the map to the exact VXL memory size for given XYZ coordinate size
-        uint8* old_map;
-        old_map = (uint8*) realloc(map, server->map.mapSize);
+        uint8_t* old_map;
+        old_map = (uint8_t*)realloc(map, server->s_map.map_size);
         if (!old_map) {
             free(map);
             return;
         }
         map                             = old_map;
-        server->map.compressedMap       = CompressData(map, server->map.mapSize, DEFAULT_COMPRESSOR_CHUNK_SIZE);
-        server->player[playerID].queues = server->map.compressedMap;
+        server->s_map.compressed_map    = compress_queue(map, server->s_map.map_size, DEFAULT_COMPRESS_CHUNK_SIZE);
+        server->player[playerID].queues = server->s_map.compressed_map;
         free(map);
     }
 }
 
-void sendMapChunks(Server* server, uint8 playerID)
+void send_map_chunks(server_t* server, uint8_t playerID)
 {
     if (server->player[playerID].queues == NULL) {
-        while (server->map.compressedMap) {
-            server->map.compressedMap = Pop(server->map.compressedMap);
+        while (server->s_map.compressed_map) {
+            server->s_map.compressed_map = queue_pop(server->s_map.compressed_map);
         }
         sendVersionRequest(server, playerID);
         server->player[playerID].state = STATE_JOINING;
         LOG_INFO("Finished sending map to %s (#%hhu)", server->player[playerID].name, playerID);
     } else {
-        ENetPacket* packet =
-        enet_packet_create(NULL, server->player[playerID].queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
-        DataStream stream = {packet->data, packet->dataLength, 0};
-        WriteByte(&stream, PACKET_TYPE_MAP_CHUNK);
-        WriteArray(&stream, server->player[playerID].queues->block, server->player[playerID].queues->length);
+        ENetPacket*  packet = enet_packet_create(NULL, server->player[playerID].queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
+        datastream_t stream = { packet->data, packet->dataLength, 0 };
+        datastream_write_u8(&stream, PACKET_TYPE_MAP_CHUNK);
+        datastream_write_array(
+            &stream,
+            server->player[playerID].queues->block,
+            server->player[playerID].queues->length);
 
         if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
             server->player[playerID].queues = server->player[playerID].queues->next;
@@ -822,19 +796,19 @@ void sendMapChunks(Server* server, uint8 playerID)
     }
 }
 
-void sendCreatePlayer(Server* server, uint8 playerID, uint8 otherID)
+void send_create_player(server_t* server, uint8_t playerID, uint8_t otherID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_CREATE_PLAYER);
-    WriteByte(&stream, otherID);                                       // ID
-    WriteByte(&stream, server->player[otherID].weapon);                // WEAPON
-    WriteByte(&stream, server->player[otherID].team);                  // TEAM
-    WriteVector3f(&stream, server->player[otherID].movement.position); // X Y Z
-    WriteArray(&stream, server->player[otherID].name, 16);             // NAME
+    ENetPacket*  packet = enet_packet_create(NULL, 32, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_CREATE_PLAYER);
+    datastream_write_u8(&stream, otherID); // ID
+    datastream_write_u8(&stream, server->player[otherID].weapon); // WEAPON
+    datastream_write_u8(&stream, server->player[otherID].team); // TEAM
+    datastream_write_vector3f(&stream, server->player[otherID].movement.position); // X Y Z
+    datastream_write_array(&stream, server->player[otherID].name, 16); // NAME
 
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         LOG_WARNING("Failed to send player state");
@@ -842,31 +816,30 @@ void sendCreatePlayer(Server* server, uint8 playerID, uint8 otherID)
     }
 }
 
-void SendRespawn(Server* server, uint8 playerID)
+void send_respawn(server_t* server, uint8_t playerID)
 {
-    for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (isPastJoinScreen(server, i)) {
-            sendCreatePlayer(server, i, playerID);
+    for (uint8_t i = 0; i < server->protocol.max_players; ++i) {
+        if (is_past_join_screen(server, i)) {
+            send_create_player(server, i, playerID);
         }
     }
     server->player[playerID].state = STATE_READY;
 }
 
-void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uint8 player)
+void handle_and_send_message(ENetEvent event, datastream_t* data, server_t* server, uint8_t player)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    uint32 packetSize = event.packet->dataLength;
-    uint8  ID         = ReadByte(data);
-    int    meantfor   = ReadByte(data);
-    uint32 length     = DataLeft(data);
+    uint32_t packetSize = event.packet->dataLength;
+    uint8_t  ID         = datastream_read_u8(data);
+    int      meantfor   = datastream_read_u8(data);
+    uint32_t length     = datastream_left(data);
     if (length > 2048) {
         length = 2048; // Lets limit messages to 2048 characters
     }
-    char* message =
-    calloc(length + 1, sizeof(char)); // Allocated 1 more byte in the case that client sent us non null ending string
-    ReadArray(data, message, length);
+    char* message = calloc(length + 1, sizeof(char)); // Allocated 1 more byte in the case that client sent us non null ending string
+    datastream_read_array(data, message, length);
     if (message[length - 1] != '\0') {
         message[length] = '\0';
         length++;
@@ -875,67 +848,70 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     if (player != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player, ID);
     }
-    uint8 resetTime = 1;
+    uint8_t resetTime = 1;
     if (!diffIsOlderThenDontUpdate(
-        getNanos(), server->player[player].timers.sinceLastMessageForSpam, (uint64) NANO_IN_MILLI * 2000) &&
-        !server->player[player].muted && server->player[player].permLevel <= 1)
-    {
+            get_nanos(),
+            server->player[player].timers.since_last_message_from_spam,
+            (uint64_t)NANO_IN_MILLI * 2000)
+        && !server->player[player].muted && server->player[player].permissions <= 1) {
         server->player[player].spamCounter++;
         if (server->player[player].spamCounter >= 5) {
             sendMessageToStaff(
-            server, "WARNING: Player %s (#%d) is trying to spam. Muting.", server->player[player].name, player);
-            sendServerNotice(server,
-                             player,
-                             0,
-                             "SERVER: You have been muted for excessive spam. If you feel like this is a mistake "
-                             "contact staff via /admin command");
+                server,
+                "WARNING: Player %s (#%d) is trying to spam. Muting.",
+                server->player[player].name,
+                player);
+            send_server_notice(server,
+                player,
+                0,
+                "SERVER: You have been muted for excessive spam. If you feel like this is a mistake "
+                "contact staff via /admin command");
             server->player[player].muted       = 1;
             server->player[player].spamCounter = 0;
         }
         resetTime = 0;
     }
     if (resetTime) {
-        server->player[player].timers.sinceLastMessageForSpam = getNanos();
-        server->player[player].spamCounter                    = 0;
+        server->player[player].timers.since_last_message_from_spam = get_nanos();
+        server->player[player].spamCounter                         = 0;
     }
 
-    if (!diffIsOlderThen(getNanos(), &server->player[player].timers.sinceLastMessage, (uint64) NANO_IN_MILLI * 400) &&
-        server->player[player].permLevel <= 1)
-    {
-        sendServerNotice(
-        server, player, 0, "WARNING: You sent last message too fast and thus was not sent out to players");
+    if (!diffIsOlderThen(get_nanos(), &server->player[player].timers.since_last_message, (uint64_t)NANO_IN_MILLI * 400) && server->player[player].permissions <= 1) {
+        send_server_notice(
+            server,
+            player,
+            0,
+            "WARNING: You sent last message too fast and thus was not sent out to players");
         return;
     }
 
     char meantFor[7];
     switch (meantfor) {
-        case 0:
-            snprintf(meantFor, 7, "Global");
-            break;
-        case 1:
-            snprintf(meantFor, 5, "Team");
-            break;
-        case 2:
-            snprintf(meantFor, 7, "System");
-            break;
+    case 0:
+        snprintf(meantFor, 7, "Global");
+        break;
+    case 1:
+        snprintf(meantFor, 5, "Team");
+        break;
+    case 2:
+        snprintf(meantFor, 7, "System");
+        break;
     }
     LOG_INFO("Player %s (#%hhu) (%s) said: %s", server->player[player].name, player, meantFor, message);
 
-    uint8 sent = 0;
+    uint8_t sent = 0;
     if (message[0] == '/') {
-        handleCommands(server, player, message, 0);
+        command_handle(server, player, message, 0);
     } else {
         if (!server->player[player].muted) {
-            ENetPacket* packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
-            DataStream  stream = {packet->data, packet->dataLength, 0};
-            WriteByte(&stream, PACKET_TYPE_CHAT_MESSAGE);
-            WriteByte(&stream, player);
-            WriteByte(&stream, meantfor);
-            WriteArray(&stream, message, length);
-            for (int playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
-                if (isPastJoinScreen(server, playerID) && !server->player[player].muted &&
-                    ((server->player[playerID].team == server->player[player].team && meantfor == 1) || meantfor == 0))
-                {
+            ENetPacket*  packet = enet_packet_create(NULL, packetSize, ENET_PACKET_FLAG_RELIABLE);
+            datastream_t stream = { packet->data, packet->dataLength, 0 };
+            datastream_write_u8(&stream, PACKET_TYPE_CHAT_MESSAGE);
+            datastream_write_u8(&stream, player);
+            datastream_write_u8(&stream, meantfor);
+            datastream_write_array(&stream, message, length);
+            for (int playerID = 0; playerID < server->protocol.max_players; ++playerID) {
+                if (is_past_join_screen(server, playerID) && !server->player[player].muted && ((server->player[playerID].team == server->player[player].team && meantfor == 1) || meantfor == 0)) {
                     if (enet_peer_send(server->player[playerID].peer, 0, packet) == 0) {
                         sent = 1;
                     }
@@ -949,31 +925,31 @@ void handleAndSendMessage(ENetEvent event, DataStream* data, Server* server, uin
     free(message);
 }
 
-void SendWorldUpdate(Server* server, uint8 playerID)
+void send_world_update(server_t* server, uint8_t playerID)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 1 + (32 * 24), 0);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_WORLD_UPDATE);
+    ENetPacket*  packet = enet_packet_create(NULL, 1 + (32 * 24), 0);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_WORLD_UPDATE);
 
-    for (uint8 j = 0; j < server->protocol.maxPlayers; ++j) {
-        if (playerToPlayerVisible(server, playerID, j) && server->player[j].isInvisible == 0) {
+    for (uint8_t j = 0; j < server->protocol.max_players; ++j) {
+        if (playerToPlayerVisible(server, playerID, j) && server->player[j].is_invisible == 0) {
             /*float    dt       = (getNanos() - server->globalTimers.lastUpdateTime) / 1000000000.f;
             Vector3f position = {server->player[j].movement.velocity.x * dt + server->player[j].movement.position.x,
                                  server->player[j].movement.velocity.y * dt + server->player[j].movement.position.y,
                                  server->player[j].movement.velocity.z * dt + server->player[j].movement.position.z};
             WriteVector3f(&stream, position);*/
-            WriteVector3f(&stream, server->player[j].movement.position);
-            WriteVector3f(&stream, server->player[j].movement.forwardOrientation);
+            datastream_write_vector3f(&stream, server->player[j].movement.position);
+            datastream_write_vector3f(&stream, server->player[j].movement.forward_orientation);
         } else {
-            Vector3f empty;
+            vector3f_t empty;
             empty.x = 0;
             empty.y = 0;
             empty.z = 0;
-            WriteVector3f(&stream, empty);
-            WriteVector3f(&stream, empty);
+            datastream_write_vector3f(&stream, empty);
+            datastream_write_vector3f(&stream, empty);
         }
     }
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
@@ -981,48 +957,49 @@ void SendWorldUpdate(Server* server, uint8 playerID)
     }
 }
 
-void SendPositionPacket(Server* server, uint8 playerID, float x, float y, float z)
+void send_position_packet(server_t* server, uint8_t playerID, float x, float y, float z)
 {
-    if (server->protocol.numPlayers == 0) {
+    if (server->protocol.num_players == 0) {
         return;
     }
-    ENetPacket* packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, PACKET_TYPE_POSITION_DATA);
-    WriteFloat(&stream, x);
-    WriteFloat(&stream, y);
-    WriteFloat(&stream, z);
+    ENetPacket*  packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, PACKET_TYPE_POSITION_DATA);
+    datastream_write_f(&stream, x);
+    datastream_write_f(&stream, y);
+    datastream_write_f(&stream, z);
     if (enet_peer_send(server->player[playerID].peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
 }
 
-static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* data)
+static void receiveGrenadePacket(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 ID = ReadByte(data);
+    uint8_t ID = datastream_read_u8(data);
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet", playerID, ID);
     }
     if (server->player[playerID].primary_fire && server->player[playerID].item == 1) {
-        sendServerNotice(server, playerID, 0, "InstaSuicideNade detected. Grenade ineffective");
+        send_server_notice(server, playerID, 0, "InstaSuicideNade detected. Grenade ineffective");
         sendMessageToStaff(
-        server, 0, "Player %s (#%hhu) tried to use InstaSpadeNade", server->player[playerID].name, playerID);
+            server,
+            0,
+            "Player %s (#%hhu) tried to use InstaSpadeNade",
+            server->player[playerID].name,
+            playerID);
         return;
     }
-    uint64 timeNow = getNanos();
-    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastGrenadeThrown, NANO_IN_MILLI * 500) ||
-        !diffIsOlderThenDontUpdate(
-        timeNow, server->player[playerID].timers.sincePossibleSpadenade, (long) NANO_IN_MILLI * 1000))
-    {
+    uint64_t timeNow = get_nanos();
+    if (!diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_grenade_thrown, NANO_IN_MILLI * 500) || !diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.since_possible_spade_nade, (long)NANO_IN_MILLI * 1000)) {
         return;
     }
-    Grenade* grenade = malloc(sizeof(Grenade));
+    grenade_t* grenade = malloc(sizeof(grenade_t));
     if (server->player[playerID].grenades > 0) {
-        grenade->fuse       = ReadFloat(data);
-        grenade->position.x = ReadFloat(data);
-        grenade->position.y = ReadFloat(data);
-        grenade->position.z = ReadFloat(data);
-        float velX = ReadFloat(data), velY = ReadFloat(data), velZ = ReadFloat(data);
+        grenade->fuse       = datastream_read_f(data);
+        grenade->position.x = datastream_read_f(data);
+        grenade->position.y = datastream_read_f(data);
+        grenade->position.z = datastream_read_f(data);
+        float velX = datastream_read_f(data), velY = datastream_read_f(data), velZ = datastream_read_f(data);
         if (server->player[playerID].sprinting) {
             free(grenade);
             return;
@@ -1030,27 +1007,24 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
         grenade->velocity.x = velX;
         grenade->velocity.y = velY;
         grenade->velocity.z = velZ;
-        Vector3f velocity   = {grenade->velocity.x - server->player[playerID].movement.velocity.x,
-                               grenade->velocity.y - server->player[playerID].movement.velocity.y,
-                               grenade->velocity.z - server->player[playerID].movement.velocity.z};
-        float    length     = sqrt((velocity.x * velocity.x) + (velocity.y * velocity.y) + (velocity.z * velocity.z));
+        vector3f_t velocity = { grenade->velocity.x - server->player[playerID].movement.velocity.x,
+            grenade->velocity.y - server->player[playerID].movement.velocity.y,
+            grenade->velocity.z - server->player[playerID].movement.velocity.z };
+        float      length   = sqrt((velocity.x * velocity.x) + (velocity.y * velocity.y) + (velocity.z * velocity.z));
         if (length > 2) {
             float lenghtNorm = 1 / length;
             velocity.x       = ((velocity.x * lenghtNorm) * 2) + server->player[playerID].movement.velocity.x;
             velocity.y       = ((velocity.y * lenghtNorm) * 2) + server->player[playerID].movement.velocity.y;
             velocity.z       = ((velocity.z * lenghtNorm) * 2) + server->player[playerID].movement.velocity.z;
         }
-        Vector3f posZ1 = grenade->position;
+        vector3f_t posZ1 = grenade->position;
         posZ1.z += 1;
-        Vector3f posZ2 = grenade->position;
+        vector3f_t posZ2 = grenade->position;
         posZ2.z += 2;
-        if (vecfValidPos(server, grenade->position) ||
-            (vecfValidPos(server, posZ1) && server->player[playerID].movement.position.z < 0) ||
-            (vecfValidPos(server, posZ2) && server->player[playerID].movement.position.z < 0))
-        {
-            sendGrenade(server, playerID, grenade->fuse, grenade->position, grenade->velocity);
-            grenade->sent          = 1;
-            grenade->timeSinceSent = getNanos();
+        if (valid_pos_v3f(server, grenade->position) || (valid_pos_v3f(server, posZ1) && server->player[playerID].movement.position.z < 0) || (valid_pos_v3f(server, posZ2) && server->player[playerID].movement.position.z < 0)) {
+            send_grenade(server, playerID, grenade->fuse, grenade->position, grenade->velocity);
+            grenade->sent            = 1;
+            grenade->time_since_sent = get_nanos();
         }
         DL_APPEND(server->player[playerID].grenade, grenade);
         server->player[playerID].grenades--;
@@ -1059,201 +1033,183 @@ static void receiveGrenadePacket(Server* server, uint8 playerID, DataStream* dat
 
 // hitPlayerID is the player that got shot
 // playerID is the player who fired.
-static void receiveHitPacket(Server* server, uint8 playerID, DataStream* data)
+static void receiveHitPacket(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8    hitPlayerID = ReadByte(data);
-    Hit      hitType     = ReadByte(data);
-    Vector3f shotPos     = server->player[playerID].movement.position;
-    Vector3f shotEyePos  = server->player[playerID].movement.eyePos;
-    Vector3f hitPos      = server->player[hitPlayerID].movement.position;
-    Vector3f shotOrien   = server->player[playerID].movement.forwardOrientation;
-    float    distance    = DistanceIn2D(shotPos, hitPos);
-    long     x = 0, y = 0, z = 0;
+    uint8_t    hitPlayerID = datastream_read_u8(data);
+    hit_t      hitType     = datastream_read_u8(data);
+    vector3f_t shotPos     = server->player[playerID].movement.position;
+    vector3f_t shotEyePos  = server->player[playerID].movement.eye_pos;
+    vector3f_t hitPos      = server->player[hitPlayerID].movement.position;
+    vector3f_t shotOrien   = server->player[playerID].movement.forward_orientation;
+    float      distance    = DistanceIn2D(shotPos, hitPos);
+    long       x = 0, y = 0, z = 0;
 
-    if (server->player[playerID].sprinting ||
-        (server->player[playerID].item == 2 && server->player[playerID].weaponClip <= 0))
-    {
+    if (server->player[playerID].sprinting || (server->player[playerID].item == 2 && server->player[playerID].weapon_clip <= 0)) {
         return; // Sprinting and hitting somebody is impossible
     }
 
-    uint64 timeNow = getNanos();
+    uint64_t timeNow = get_nanos();
 
-    if (allowShot(server, playerID, hitPlayerID, timeNow, distance, &x, &y, &z, shotPos, shotOrien, hitPos, shotEyePos))
-    {
+    if (allowShot(server, playerID, hitPlayerID, timeNow, distance, &x, &y, &z, shotPos, shotOrien, hitPos, shotEyePos)) {
         switch (server->player[playerID].weapon) {
-            case WEAPON_RIFLE:
-            {
-                switch (hitType) {
-                    case HIT_TYPE_HEAD:
-                    {
-                        sendKillActionPacket(server, playerID, hitPlayerID, 1, 5, 0);
-                        break;
-                    }
-                    case HIT_TYPE_TORSO:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 49, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_ARMS:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_LEGS:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_MELEE:
-                        // Empty so we dont have errors :)
-                        break;
-                }
+        case WEAPON_RIFLE: {
+            switch (hitType) {
+            case HIT_TYPE_HEAD: {
+                send_kill_action_packet(server, playerID, hitPlayerID, 1, 5, 0);
                 break;
             }
-            case WEAPON_SMG:
-            {
-                switch (hitType) {
-                    case HIT_TYPE_HEAD:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 75, 1, 1, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_TORSO:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 29, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_ARMS:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_LEGS:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_MELEE:
-                        // Empty so we dont have errors :)
-                        break;
-                }
+            case HIT_TYPE_TORSO: {
+                send_set_hp(server, playerID, hitPlayerID, 49, 1, 0, 5, 0, shotPos);
                 break;
             }
-            case WEAPON_SHOTGUN:
-            {
-                switch (hitType) {
-                    case HIT_TYPE_HEAD:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 37, 1, 1, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_TORSO:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 27, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_ARMS:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_LEGS:
-                    {
-                        sendSetHP(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
-                        break;
-                    }
-                    case HIT_TYPE_MELEE:
-                        // Empty so we dont have errors :)
-                        break;
-                }
+            case HIT_TYPE_ARMS: {
+                send_set_hp(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
                 break;
             }
+            case HIT_TYPE_LEGS: {
+                send_set_hp(server, playerID, hitPlayerID, 33, 1, 0, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_MELEE:
+                // Empty so we dont have errors :)
+                break;
+            }
+            break;
+        }
+        case WEAPON_SMG: {
+            switch (hitType) {
+            case HIT_TYPE_HEAD: {
+                send_set_hp(server, playerID, hitPlayerID, 75, 1, 1, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_TORSO: {
+                send_set_hp(server, playerID, hitPlayerID, 29, 1, 0, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_ARMS: {
+                send_set_hp(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_LEGS: {
+                send_set_hp(server, playerID, hitPlayerID, 18, 1, 0, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_MELEE:
+                // Empty so we dont have errors :)
+                break;
+            }
+            break;
+        }
+        case WEAPON_SHOTGUN: {
+            switch (hitType) {
+            case HIT_TYPE_HEAD: {
+                send_set_hp(server, playerID, hitPlayerID, 37, 1, 1, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_TORSO: {
+                send_set_hp(server, playerID, hitPlayerID, 27, 1, 0, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_ARMS: {
+                send_set_hp(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_LEGS: {
+                send_set_hp(server, playerID, hitPlayerID, 16, 1, 0, 5, 0, shotPos);
+                break;
+            }
+            case HIT_TYPE_MELEE:
+                // Empty so we dont have errors :)
+                break;
+            }
+            break;
+        }
         }
         if (hitType == HIT_TYPE_MELEE) {
-            sendSetHP(server, playerID, hitPlayerID, 80, 1, 2, 5, 0, shotPos);
+            send_set_hp(server, playerID, hitPlayerID, 80, 1, 2, 5, 0, shotPos);
         }
     }
 }
 
-static void receiveOrientationData(Server* server, uint8 playerID, DataStream* data)
+static void receiveOrientationData(server_t* server, uint8_t playerID, datastream_t* data)
 {
     float x, y, z;
-    x                = ReadFloat(data);
-    y                = ReadFloat(data);
-    z                = ReadFloat(data);
+    x                = datastream_read_f(data);
+    y                = datastream_read_f(data);
+    z                = datastream_read_f(data);
     float length     = sqrt((x * x) + (y * y) + (z * z));
     float normLength = 1 / length;
     // Normalize the vectors if their length > 1
     if (length > 1.f) {
-        server->player[playerID].movement.forwardOrientation.x = x * normLength;
-        server->player[playerID].movement.forwardOrientation.y = y * normLength;
-        server->player[playerID].movement.forwardOrientation.z = z * normLength;
+        server->player[playerID].movement.forward_orientation.x = x * normLength;
+        server->player[playerID].movement.forward_orientation.y = y * normLength;
+        server->player[playerID].movement.forward_orientation.z = z * normLength;
     } else {
-        server->player[playerID].movement.forwardOrientation.x = x;
-        server->player[playerID].movement.forwardOrientation.y = y;
-        server->player[playerID].movement.forwardOrientation.z = z;
+        server->player[playerID].movement.forward_orientation.x = x;
+        server->player[playerID].movement.forward_orientation.y = y;
+        server->player[playerID].movement.forward_orientation.z = z;
     }
 
-    reorientPlayer(server, playerID, &server->player[playerID].movement.forwardOrientation);
+    physics_reorient_player(server, playerID, &server->player[playerID].movement.forward_orientation);
 }
 
-static void receiveInputData(Server* server, uint8 playerID, DataStream* data)
+static void receiveInputData(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 bits[8];
-    uint8 mask = 1;
-    uint8 ID;
-    ID = ReadByte(data);
+    uint8_t bits[8];
+    uint8_t mask = 1;
+    uint8_t ID;
+    ID = datastream_read_u8(data);
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in Input packet", playerID, ID);
     } else if (server->player[playerID].state == STATE_READY) {
-        server->player[playerID].input = ReadByte(data);
+        server->player[playerID].input = datastream_read_u8(data);
         for (int i = 0; i < 8; i++) {
             bits[i] = (server->player[playerID].input >> i) & mask;
         }
-        server->player[playerID].movForward   = bits[0];
-        server->player[playerID].movBackwards = bits[1];
-        server->player[playerID].movLeft      = bits[2];
-        server->player[playerID].movRight     = bits[3];
-        server->player[playerID].jumping      = bits[4];
-        server->player[playerID].crouching    = bits[5];
-        server->player[playerID].sneaking     = bits[6];
-        server->player[playerID].sprinting    = bits[7];
-        sendInputData(server, playerID);
+        server->player[playerID].move_forward   = bits[0];
+        server->player[playerID].move_backwards = bits[1];
+        server->player[playerID].move_left      = bits[2];
+        server->player[playerID].move_right     = bits[3];
+        server->player[playerID].jumping        = bits[4];
+        server->player[playerID].crouching      = bits[5];
+        server->player[playerID].sneaking       = bits[6];
+        server->player[playerID].sprinting      = bits[7];
+        send_input_data(server, playerID);
     }
 }
 
-static void receivePositionData(Server* server, uint8 playerID, DataStream* data)
+static void receivePositionData(server_t* server, uint8_t playerID, datastream_t* data)
 {
     float x, y, z;
-    x = ReadFloat(data);
-    y = ReadFloat(data);
-    z = ReadFloat(data);
+    x = datastream_read_f(data);
+    y = datastream_read_f(data);
+    z = datastream_read_f(data);
 #ifdef DEBUG
     LOG_DEBUG("Player: %d, Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f",
-              playerID,
-              server->player[playerID].movement.position.x,
-              server->player[playerID].movement.position.y,
-              server->player[playerID].movement.position.z,
-              x,
-              y,
-              z);
+        playerID,
+        server->player[playerID].movement.position.x,
+        server->player[playerID].movement.position.y,
+        server->player[playerID].movement.position.z,
+        x,
+        y,
+        z);
     LOG_DEBUG("Player: %d, Z solid: %d, Z+1 solid: %d, Z+2 solid: %d, Z: %d, Z+1: %d, Z+2: %d, Crouching: %d",
-              playerID,
-              mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z),
-              mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 1),
-              mapvxlIsSolid(&server->map.map, (int) x, (int) y, (int) z + 2),
-              (int) z,
-              (int) z + 1,
-              (int) z + 2,
-              server->player[playerID].crouching);
+        playerID,
+        mapvxlIsSolid(&server->s_map.map, (int)x, (int)y, (int)z),
+        mapvxlIsSolid(&server->s_map.map, (int)x, (int)y, (int)z + 1),
+        mapvxlIsSolid(&server->s_map.map, (int)x, (int)y, (int)z + 2),
+        (int)z,
+        (int)z + 1,
+        (int)z + 2,
+        server->player[playerID].crouching);
 #endif
-    server->player[playerID].movement.prevPosition = server->player[playerID].movement.position;
-    server->player[playerID].movement.position.x   = x;
-    server->player[playerID].movement.position.y   = y;
-    server->player[playerID].movement.position.z   = z;
-    /*uint8 resetTime                                = 1;
+    server->player[playerID].movement.prev_position = server->player[playerID].movement.position;
+    server->player[playerID].movement.position.x    = x;
+    server->player[playerID].movement.position.y    = y;
+    server->player[playerID].movement.position.z    = z;
+    /*uint8_t resetTime                                = 1;
     if (!diffIsOlderThenDontUpdate(
-        getNanos(), server->player[playerID].timers.duringNoclipPeriod, (uint64) NANO_IN_SECOND * 10))
+        getNanos(), server->player[playerID].timers.duringNoclipPeriod, (uint64_t) NANO_IN_SECOND * 10))
     {
         resetTime = 0;
         if (validPlayerPos(server, playerID, x, y, z) == 0) {
@@ -1268,8 +1224,8 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
         server->player[playerID].invalidPosCount           = 0;
     }*/
 
-    if (validPlayerPos(server, playerID, x, y, z)) {
-        server->player[playerID].movement.prevLegitPos = server->player[playerID].movement.position;
+    if (valid_pos_3f(server, playerID, x, y, z)) {
+        server->player[playerID].movement.prev_legit_pos = server->player[playerID].movement.position;
     } /*else if (validPlayerPos(server,
                               playerID,
                               server->player[playerID].movement.position.x,
@@ -1315,36 +1271,36 @@ static void receivePositionData(Server* server, uint8 playerID, DataStream* data
     }*/
 }
 
-static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* data)
+static void receiveExistingPlayer(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    StreamSkip(data, 1); // Clients always send a "dumb" ID here since server has not sent them their ID yet
+    datastream_skip(data, 1); // Clients always send a "dumb" ID here since server has not sent them their ID yet
 
-    server->player[playerID].team   = ReadByte(data);
-    server->player[playerID].weapon = ReadByte(data);
-    server->player[playerID].item   = ReadByte(data);
-    server->player[playerID].kills  = ReadInt(data);
+    server->player[playerID].team   = datastream_read_u8(data);
+    server->player[playerID].weapon = datastream_read_u8(data);
+    server->player[playerID].item   = datastream_read_u8(data);
+    server->player[playerID].kills  = datastream_read_u32(data);
 
-    if (server->player[playerID].team != 0 && server->player[playerID].team != 1 &&
-        server->player[playerID].team != 255)
-    {
+    if (server->player[playerID].team != 0 && server->player[playerID].team != 1 && server->player[playerID].team != 255) {
         LOG_WARNING(
-        "Player %s (#%hhu) sent invalid team. Switching them to Spectator", server->player[playerID].name, playerID);
+            "Player %s (#%hhu) sent invalid team. Switching them to Spectator",
+            server->player[playerID].name,
+            playerID);
         server->player[playerID].team = 255;
     }
 
-    server->protocol.teamUserCount[server->player[playerID].team]++;
+    server->protocol.num_team_users[server->player[playerID].team]++;
 
-    ReadColor3i(data, server->player[playerID].color);
+    datastream_read_color_rgb(data);
     server->player[playerID].ups = 60;
 
-    uint32 length  = DataLeft(data);
-    uint8  invName = 0;
+    uint32_t length  = datastream_left(data);
+    uint8_t  invName = 0;
     if (length > 16) {
         LOG_WARNING("Name of player %d is too long. Cutting", playerID);
         length = 16;
     } else {
         server->player[playerID].name[length] = '\0';
-        ReadArray(data, server->player[playerID].name, length);
+        datastream_read_array(data, server->player[playerID].name, length);
 
         if (strlen(server->player[playerID].name) == 0) {
             snprintf(server->player[playerID].name, strlen("Deuce") + 1, "Deuce");
@@ -1359,17 +1315,15 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         char* lowerCaseName = malloc((strlen(server->player[playerID].name) + 1) * sizeof(char));
         snprintf(lowerCaseName, strlen(server->player[playerID].name), "%s", server->player[playerID].name);
 
-        for (uint32 i = 0; i < strlen(server->player[playerID].name); ++i)
+        for (uint32_t i = 0; i < strlen(server->player[playerID].name); ++i)
             lowerCaseName[i] = tolower(lowerCaseName[i]);
 
-        char* unwantedNames[] = {"igger", "1gger", "igg3r", "1gg3r", NULL};
+        char* unwantedNames[] = { "igger", "1gger", "igg3r", "1gg3r", NULL };
 
         int index = 0;
 
         while (unwantedNames[index] != NULL) {
-            if (strstr(lowerCaseName, unwantedNames[index]) != NULL &&
-                strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
-            {
+            if (strstr(lowerCaseName, unwantedNames[index]) != NULL && strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0) {
                 snprintf(server->player[playerID].name, strlen("Deuce") + 1, "Deuce");
                 length  = 5;
                 invName = 1;
@@ -1381,8 +1335,8 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
 
         free(lowerCaseName);
         int count = 0;
-        for (uint8 i = 0; i < server->protocol.maxPlayers; i++) {
-            if (isPastJoinScreen(server, i) && i != playerID) {
+        for (uint8_t i = 0; i < server->protocol.max_players; i++) {
+            if (is_past_join_screen(server, i) && i != playerID) {
                 if (strcmp(server->player[playerID].name, server->player[i].name) == 0) {
                     count++;
                 }
@@ -1395,266 +1349,237 @@ static void receiveExistingPlayer(Server* server, uint8 playerID, DataStream* da
         }
     }
     switch (server->player[playerID].weapon) {
-        case 0:
-            server->player[playerID].weaponReserve  = 50;
-            server->player[playerID].weaponClip     = 10;
-            server->player[playerID].defaultClip    = RIFLE_DEFAULT_CLIP;
-            server->player[playerID].defaultReserve = RIFLE_DEFAULT_RESERVE;
-            break;
-        case 1:
-            server->player[playerID].weaponReserve  = 120;
-            server->player[playerID].weaponClip     = 30;
-            server->player[playerID].defaultClip    = SMG_DEFAULT_CLIP;
-            server->player[playerID].defaultReserve = SMG_DEFAULT_RESERVE;
-            break;
-        case 2:
-            server->player[playerID].weaponReserve  = 48;
-            server->player[playerID].weaponClip     = 6;
-            server->player[playerID].defaultClip    = SHOTGUN_DEFAULT_CLIP;
-            server->player[playerID].defaultReserve = SHOTGUN_DEFAULT_RESERVE;
-            break;
+    case 0:
+        server->player[playerID].weapon_reserve  = 50;
+        server->player[playerID].weapon_clip     = 10;
+        server->player[playerID].default_clip    = RIFLE_DEFAULT_CLIP;
+        server->player[playerID].default_reserve = RIFLE_DEFAULT_RESERVE;
+        break;
+    case 1:
+        server->player[playerID].weapon_reserve  = 120;
+        server->player[playerID].weapon_clip     = 30;
+        server->player[playerID].default_clip    = SMG_DEFAULT_CLIP;
+        server->player[playerID].default_reserve = SMG_DEFAULT_RESERVE;
+        break;
+    case 2:
+        server->player[playerID].weapon_reserve  = 48;
+        server->player[playerID].weapon_clip     = 6;
+        server->player[playerID].default_clip    = SHOTGUN_DEFAULT_CLIP;
+        server->player[playerID].default_reserve = SHOTGUN_DEFAULT_RESERVE;
+        break;
     }
     server->player[playerID].state = STATE_SPAWNING;
     char IP[17];
-    formatIPToString(IP, server->player[playerID].ipStruct);
+    format_ip_to_str(IP, server->player[playerID].ip);
     char team[15];
-    teamIDToString(server, team, server->player[playerID].team);
+    team_id_to_str(server, team, server->player[playerID].team);
     LOG_INFO("Player %s (%s, #%hhu) joined %s", server->player[playerID].name, IP, playerID, team);
-    if (server->player[playerID].welcomeSent == 0) {
-        stringNode* welcomeMessage;
-        DL_FOREACH(server->welcomeMessages, welcomeMessage)
+    if (server->player[playerID].welcome_sent == 0) {
+        string_node_t* welcomeMessage;
+        DL_FOREACH(server->welcome_messages, welcomeMessage)
         {
-            sendServerNotice(server, playerID, 0, welcomeMessage->string);
+            send_server_notice(server, playerID, 0, welcomeMessage->string);
         }
         if (invName) {
-            sendServerNotice(server,
-                             playerID,
-                             0,
-                             "Your name was either empty, had # in front of it or contained something nasty. Your name "
-                             "has been set to %s",
-                             server->player[playerID].name);
+            send_server_notice(
+                server,
+                playerID,
+                0,
+                "Your name was either empty, had # in front of it or contained something nasty. Your name "
+                "has been set to %s",
+                server->player[playerID].name);
         }
-        server->player[playerID].welcomeSent = 1; // So we dont send the message to the player on each time they spawn.
+        server->player[playerID].welcome_sent = 1; // So we dont send the message to the player on each time they spawn.
     }
 
-    if (server->protocol.gameMode.intelHeld[0] == 0) {
-        sendMoveObject(server, 0, 0, server->protocol.gameMode.intel[0]);
+    if (server->protocol.gamemode.intel_held[0] == 0) {
+        send_move_object(server, 0, 0, server->protocol.gamemode.intel[0]);
     }
-    if (server->protocol.gameMode.intelHeld[1] == 0) {
-        sendMoveObject(server, 1, 1, server->protocol.gameMode.intel[1]);
+    if (server->protocol.gamemode.intel_held[1] == 0) {
+        send_move_object(server, 1, 1, server->protocol.gamemode.intel[1]);
     }
 }
 
-static void receiveBlockAction(Server* server, uint8 playerID, DataStream* data)
+static void receiveBlockAction(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 ID = ReadByte(data);
+    uint8_t ID = datastream_read_u8(data);
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet", playerID, ID);
     }
-    if (server->player[playerID].canBuild && server->globalAB) {
-        uint8  actionType = ReadByte(data);
-        uint32 X          = ReadInt(data);
-        uint32 Y          = ReadInt(data);
-        uint32 Z          = ReadInt(data);
+    if (server->player[playerID].can_build && server->global_ab) {
+        uint8_t  actionType = datastream_read_u8(data);
+        uint32_t X          = datastream_read_u32(data);
+        uint32_t Y          = datastream_read_u32(data);
+        uint32_t Z          = datastream_read_u32(data);
         if (server->player[playerID].sprinting) {
             return;
         }
-        Vector3i vectorBlock  = {X, Y, Z};
-        Vector3f vectorfBlock = {(float) X, (float) Y, (float) Z};
-        Vector3f playerVector = server->player[playerID].movement.position;
-        if (((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) ||
-             (server->player[playerID].item == 1 && actionType == 0) ||
-             (server->player[playerID].item == 2 && actionType == 1)))
-        {
-            if ((DistanceIn3D(vectorfBlock, playerVector) <= 4 || server->player[playerID].item == 2) &&
-                vecValidPos(server, vectorBlock))
-            {
+        vector3i_t vectorBlock  = { X, Y, Z };
+        vector3f_t vectorfBlock = { (float)X, (float)Y, (float)Z };
+        vector3f_t playerVector = server->player[playerID].movement.position;
+        if (((server->player[playerID].item == 0 && (actionType == 1 || actionType == 2)) || (server->player[playerID].item == 1 && actionType == 0) || (server->player[playerID].item == 2 && actionType == 1))) {
+            if ((DistanceIn3D(vectorfBlock, playerVector) <= 4 || server->player[playerID].item == 2) && valid_pos_v3i(server, vectorBlock)) {
                 switch (actionType) {
-                    case 0:
-                    {
-                        if (gamemodeBlockChecks(server, X, Y, Z)) {
-                            uint64 timeNow = getNanos();
-                            if (server->player[playerID].blocks > 0 &&
-                                diffIsOlderThen(
-                                timeNow, &server->player[playerID].timers.sinceLastBlockPlac, BLOCK_DELAY) &&
-                                diffIsOlderThenDontUpdate(
-                                timeNow, server->player[playerID].timers.sinceLastBlockDest, BLOCK_DELAY) &&
-                                diffIsOlderThenDontUpdate(
-                                timeNow, server->player[playerID].timers.sinceLast3BlockDest, BLOCK_DELAY))
-                            {
-                                mapvxl_set_color(&server->map.map, X, Y, Z, server->player[playerID].toolColor.color);
-                                server->player[playerID].blocks--;
-                                moveIntelAndTentUp(server);
-                                sendBlockAction(server, playerID, actionType, X, Y, Z);
-                            }
+                case 0: {
+                    if (gamemode_block_checks(server, X, Y, Z)) {
+                        uint64_t timeNow = get_nanos();
+                        if (server->player[playerID].blocks > 0 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_block_plac, BLOCK_DELAY) && diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.since_last_block_dest, BLOCK_DELAY) && diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.since_last_3block_dest, BLOCK_DELAY)) {
+                            mapvxl_set_color(&server->s_map.map, X, Y, Z, server->player[playerID].tool_color.raw);
+                            server->player[playerID].blocks--;
+                            moveIntelAndTentUp(server);
+                            send_block_action(server, playerID, actionType, X, Y, Z);
                         }
-                    } break;
+                    }
+                } break;
 
-                    case 1:
-                    {
-                        if (Z < 62 && gamemodeBlockChecks(server, X, Y, Z)) {
-                            uint64 timeNow = getNanos();
-                            if ((diffIsOlderThen(
-                                 timeNow, &server->player[playerID].timers.sinceLastBlockDest, SPADE_DELAY) &&
-                                 diffIsOlderThenDontUpdate(
-                                 timeNow, server->player[playerID].timers.sinceLast3BlockDest, SPADE_DELAY) &&
-                                 diffIsOlderThenDontUpdate(
-                                 timeNow, server->player[playerID].timers.sinceLastBlockPlac, SPADE_DELAY)) ||
-                                server->player[playerID].item == 2)
-                            {
-                                if (server->player[playerID].item == 2) {
-                                    if (server->player[playerID].weaponClip <= 0) {
-                                        sendMessageToStaff(server,
-                                                           "Player %s (#%hhu) probably has hack to have more ammo",
-                                                           server->player[playerID].name,
-                                                           playerID);
-                                        return;
-                                    } else if (server->player[playerID].weapon == 0 &&
-                                               diffIsOlderThen(
-                                               timeNow,
-                                               &server->player[playerID].timers.sinceLastBlockDestWithGun,
-                                               ((RIFLE_DELAY * 2) - (NANO_IN_MILLI * 10))) == 0)
-                                    {
-                                        sendMessageToStaff(server,
-                                                           "Player %s (#%hhu) probably has rapid shooting hack",
-                                                           server->player[playerID].name,
-                                                           playerID);
-                                        return;
-                                    } else if (server->player[playerID].weapon == 1 &&
-                                               diffIsOlderThen(
-                                               timeNow,
-                                               &server->player[playerID].timers.sinceLastBlockDestWithGun,
-                                               ((SMG_DELAY * 3) - (NANO_IN_MILLI * 10))) == 0)
-                                    {
-                                        sendMessageToStaff(server,
-                                                           "Player %s (#%hhu) probably has rapid shooting hack",
-                                                           server->player[playerID].name,
-                                                           playerID);
-                                        return;
-                                    } else if (server->player[playerID].weapon == 2 &&
-                                               diffIsOlderThen(
-                                               timeNow,
-                                               &server->player[playerID].timers.sinceLastBlockDestWithGun,
-                                               (SHOTGUN_DELAY - (NANO_IN_MILLI * 10))) == 0)
-                                    {
-                                        sendMessageToStaff(server,
-                                                           "Player %s (#%hhu) probably has rapid shooting hack",
-                                                           server->player[playerID].name,
-                                                           playerID);
-                                        return;
-                                    }
+                case 1: {
+                    if (Z < 62 && gamemode_block_checks(server, X, Y, Z)) {
+                        uint64_t timeNow = get_nanos();
+                        if ((diffIsOlderThen(
+                                 timeNow,
+                                 &server->player[playerID].timers.since_last_block_dest,
+                                 SPADE_DELAY)
+                                && diffIsOlderThenDontUpdate(
+                                    timeNow,
+                                    server->player[playerID].timers.since_last_3block_dest,
+                                    SPADE_DELAY)
+                                && diffIsOlderThenDontUpdate(
+                                    timeNow,
+                                    server->player[playerID].timers.since_last_block_plac,
+                                    SPADE_DELAY))
+                            || server->player[playerID].item == 2) {
+                            if (server->player[playerID].item == 2) {
+                                if (server->player[playerID].weapon_clip <= 0) {
+                                    sendMessageToStaff(server,
+                                        "Player %s (#%hhu) probably has hack to have more ammo",
+                                        server->player[playerID].name,
+                                        playerID);
+                                    return;
+                                } else if (server->player[playerID].weapon == 0 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_block_dest_with_gun, ((RIFLE_DELAY * 2) - (NANO_IN_MILLI * 10))) == 0) {
+                                    sendMessageToStaff(server,
+                                        "Player %s (#%hhu) probably has rapid shooting hack",
+                                        server->player[playerID].name,
+                                        playerID);
+                                    return;
+                                } else if (server->player[playerID].weapon == 1 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_block_dest_with_gun, ((SMG_DELAY * 3) - (NANO_IN_MILLI * 10))) == 0) {
+                                    sendMessageToStaff(server,
+                                        "Player %s (#%hhu) probably has rapid shooting hack",
+                                        server->player[playerID].name,
+                                        playerID);
+                                    return;
+                                } else if (server->player[playerID].weapon == 2 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_block_dest_with_gun, (SHOTGUN_DELAY - (NANO_IN_MILLI * 10))) == 0) {
+                                    sendMessageToStaff(server,
+                                        "Player %s (#%hhu) probably has rapid shooting hack",
+                                        server->player[playerID].name,
+                                        playerID);
+                                    return;
                                 }
-
-                                Vector3i  position = {X, Y, Z};
-                                Vector3i* neigh    = getNeighbors(position);
-                                mapvxl_set_air(&server->map.map, position.x, position.y, position.z);
-                                for (int i = 0; i < 6; ++i) {
-                                    if (neigh[i].z < 62) {
-                                        checkNode(server, neigh[i]);
-                                    }
-                                }
-                                if (server->player[playerID].item != 2) {
-                                    if (server->player[playerID].blocks < 50) {
-                                        server->player[playerID].blocks++;
-                                    }
-                                }
-                                sendBlockAction(server, playerID, actionType, X, Y, Z);
                             }
-                        }
-                    } break;
 
-                    case 2:
-                    {
-                        if (gamemodeBlockChecks(server, X, Y, Z) && gamemodeBlockChecks(server, X, Y, Z + 1) &&
-                            gamemodeBlockChecks(server, X, Y, Z - 1))
-                        {
-                            uint64 timeNow = getNanos();
-                            if (diffIsOlderThen(
-                                timeNow, &server->player[playerID].timers.sinceLast3BlockDest, THREEBLOCK_DELAY) &&
-                                diffIsOlderThenDontUpdate(
-                                timeNow, server->player[playerID].timers.sinceLastBlockDest, THREEBLOCK_DELAY) &&
-                                diffIsOlderThenDontUpdate(
-                                timeNow, server->player[playerID].timers.sinceLastBlockPlac, THREEBLOCK_DELAY))
-                            {
-                                for (uint32 z = Z - 1; z <= Z + 1; z++) {
-                                    if (z < 62) {
-                                        mapvxl_set_air(&server->map.map, X, Y, z);
-                                        Vector3i  position = {X, Y, z};
-                                        Vector3i* neigh    = getNeighbors(position);
-                                        mapvxl_set_air(&server->map.map, position.x, position.y, position.z);
-                                        for (int i = 0; i < 6; ++i) {
-                                            if (neigh[i].z < 62) {
-                                                checkNode(server, neigh[i]);
-                                            }
+                            vector3i_t  position = { X, Y, Z };
+                            vector3i_t* neigh    = get_neighbours(position);
+                            mapvxl_set_air(&server->s_map.map, position.x, position.y, position.z);
+                            for (int i = 0; i < 6; ++i) {
+                                if (neigh[i].z < 62) {
+                                    check_node(server, neigh[i]);
+                                }
+                            }
+                            if (server->player[playerID].item != 2) {
+                                if (server->player[playerID].blocks < 50) {
+                                    server->player[playerID].blocks++;
+                                }
+                            }
+                            send_block_action(server, playerID, actionType, X, Y, Z);
+                        }
+                    }
+                } break;
+
+                case 2: {
+                    if (gamemode_block_checks(server, X, Y, Z) && gamemode_block_checks(server, X, Y, Z + 1) && gamemode_block_checks(server, X, Y, Z - 1)) {
+                        uint64_t timeNow = get_nanos();
+                        if (diffIsOlderThen(
+                                timeNow,
+                                &server->player[playerID].timers.since_last_3block_dest,
+                                THREEBLOCK_DELAY)
+                            && diffIsOlderThenDontUpdate(
+                                timeNow,
+                                server->player[playerID].timers.since_last_block_dest,
+                                THREEBLOCK_DELAY)
+                            && diffIsOlderThenDontUpdate(
+                                timeNow,
+                                server->player[playerID].timers.since_last_block_plac,
+                                THREEBLOCK_DELAY)) {
+                            for (uint32_t z = Z - 1; z <= Z + 1; z++) {
+                                if (z < 62) {
+                                    mapvxl_set_air(&server->s_map.map, X, Y, z);
+                                    vector3i_t  position = { X, Y, z };
+                                    vector3i_t* neigh    = get_neighbours(position);
+                                    mapvxl_set_air(&server->s_map.map, position.x, position.y, position.z);
+                                    for (int i = 0; i < 6; ++i) {
+                                        if (neigh[i].z < 62) {
+                                            check_node(server, neigh[i]);
                                         }
                                     }
                                 }
-                                sendBlockAction(server, playerID, actionType, X, Y, Z);
                             }
+                            send_block_action(server, playerID, actionType, X, Y, Z);
                         }
-                    } break;
+                    }
+                } break;
                 }
                 moveIntelAndTentDown(server);
             }
         } else {
             LOG_WARNING("Player %s (#%hhu) may be using BlockExploit with Item: %d and Action: %d",
-                        server->player[playerID].name,
-                        playerID,
-                        server->player[playerID].item,
-                        actionType);
+                server->player[playerID].name,
+                playerID,
+                server->player[playerID].item,
+                actionType);
         }
     }
 }
 
-static void receiveBlockLine(Server* server, uint8 playerID, DataStream* data)
+static void receiveBlockLine(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 ID = ReadByte(data);
+    uint8_t ID = datastream_read_u8(data);
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", playerID, ID);
     }
-    uint64 timeNow = getNanos();
-    if (server->player[playerID].blocks > 0 && server->player[playerID].canBuild && server->globalAB &&
-        server->player[playerID].item == 1 &&
-        diffIsOlderThen(timeNow, &server->player[playerID].timers.sinceLastBlockPlac, BLOCK_DELAY) &&
-        diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLastBlockDest, BLOCK_DELAY) &&
-        diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.sinceLast3BlockDest, BLOCK_DELAY))
-    {
-        Vector3i start;
-        Vector3i end;
-        start.x = ReadInt(data);
-        start.y = ReadInt(data);
-        start.z = ReadInt(data);
-        end.x   = ReadInt(data);
-        end.y   = ReadInt(data);
-        end.z   = ReadInt(data);
+    uint64_t timeNow = get_nanos();
+    if (server->player[playerID].blocks > 0 && server->player[playerID].can_build && server->global_ab && server->player[playerID].item == 1 && diffIsOlderThen(timeNow, &server->player[playerID].timers.since_last_block_plac, BLOCK_DELAY) && diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.since_last_block_dest, BLOCK_DELAY) && diffIsOlderThenDontUpdate(timeNow, server->player[playerID].timers.since_last_3block_dest, BLOCK_DELAY)) {
+        vector3i_t start;
+        vector3i_t end;
+        start.x = datastream_read_u32(data);
+        start.y = datastream_read_u32(data);
+        start.z = datastream_read_u32(data);
+        end.x   = datastream_read_u32(data);
+        end.y   = datastream_read_u32(data);
+        end.z   = datastream_read_u32(data);
         if (server->player[playerID].sprinting) {
             return;
         }
-        Vector3f startF = {start.x, start.y, start.z};
-        Vector3f endF   = {end.x, end.y, end.z};
-        if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 &&
-            DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4 && vecfValidPos(server, startF) &&
-            vecfValidPos(server, endF))
-        {
-            int size = blockLine(&start, &end, server->map.resultLine);
+        vector3f_t startF = { start.x, start.y, start.z };
+        vector3f_t endF   = { end.x, end.y, end.z };
+        if (DistanceIn3D(endF, server->player[playerID].movement.position) <= 4 && DistanceIn3D(startF, server->player[playerID].locAtClick) <= 4 && valid_pos_v3f(server, startF) && valid_pos_v3f(server, endF)) {
+            int size = line_get_blocks(&start, &end, server->s_map.result_line);
             server->player[playerID].blocks -= size;
             for (int i = 0; i < size; i++) {
-                mapvxl_set_color(&server->map.map,
-                               server->map.resultLine[i].x,
-                               server->map.resultLine[i].y,
-                               server->map.resultLine[i].z,
-                               server->player[playerID].toolColor.color);
+                mapvxl_set_color(&server->s_map.map,
+                    server->s_map.result_line[i].x,
+                    server->s_map.result_line[i].y,
+                    server->s_map.result_line[i].z,
+                    server->player[playerID].tool_color.raw);
             }
             moveIntelAndTentUp(server);
-            sendBlockLine(server, playerID, start, end);
+            send_block_line(server, playerID, start, end);
         }
     }
 }
 
-static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
+static void receiveSetTool(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 ID   = ReadByte(data);
-    uint8 tool = ReadByte(data);
+    uint8_t ID   = datastream_read_u8(data);
+    uint8_t tool = datastream_read_u8(data);
     if (server->player[playerID].item == tool) {
         return;
     }
@@ -1664,33 +1589,33 @@ static void receiveSetTool(Server* server, uint8 playerID, DataStream* data)
 
     server->player[playerID].item      = tool;
     server->player[playerID].reloading = 0;
-    sendSetTool(server, playerID, tool);
+    send_set_tool(server, playerID, tool);
 }
 
-static void receiveSetColor(Server* server, uint8 playerID, DataStream* data)
+static void receiveSetColor(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 ID = ReadByte(data);
-    uint8 B  = ReadByte(data);
-    uint8 G  = ReadByte(data);
-    uint8 R  = ReadByte(data);
-    uint8 A  = 0;
+    uint8_t ID = datastream_read_u8(data);
+    uint8_t B  = datastream_read_u8(data);
+    uint8_t G  = datastream_read_u8(data);
+    uint8_t R  = datastream_read_u8(data);
+    uint8_t A  = 0;
 
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set color packet", playerID, ID);
     }
 
-    server->player[playerID].toolColor.colorArray[A_CHANNEL] = A;
-    server->player[playerID].toolColor.colorArray[R_CHANNEL] = R;
-    server->player[playerID].toolColor.colorArray[G_CHANNEL] = G;
-    server->player[playerID].toolColor.colorArray[B_CHANNEL] = B;
-    sendSetColor(server, playerID, R, G, B);
+    server->player[playerID].tool_color.a = A;
+    server->player[playerID].tool_color.r = R;
+    server->player[playerID].tool_color.g = G;
+    server->player[playerID].tool_color.b = B;
+    send_set_color(server, playerID, R, G, B);
 }
 
-static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
+static void receiveWeaponInput(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 mask   = 1;
-    uint8 ID     = ReadByte(data);
-    uint8 wInput = ReadByte(data);
+    uint8_t mask   = 1;
+    uint8_t ID     = datastream_read_u8(data);
+    uint8_t wInput = datastream_read_u8(data);
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in weapon input packet", playerID, ID);
     } else if (server->player[playerID].state != STATE_READY) {
@@ -1705,89 +1630,77 @@ static void receiveWeaponInput(Server* server, uint8 playerID, DataStream* data)
     if (server->player[playerID].secondary_fire && server->player[playerID].item == 1) {
         server->player[playerID].locAtClick = server->player[playerID].movement.position;
     } else if (server->player[playerID].secondary_fire && server->player[playerID].item == 0) {
-        server->player[playerID].timers.sincePossibleSpadenade = getNanos();
+        server->player[playerID].timers.since_possible_spade_nade = get_nanos();
     }
 
-    else if (server->player[playerID].weaponClip > 0)
-    {
-        sendWeaponInput(server, playerID, wInput);
-        uint64 timeDiff = 0;
+    else if (server->player[playerID].weapon_clip > 0) {
+        send_weapon_input(server, playerID, wInput);
+        uint64_t timeDiff = 0;
         switch (server->player[playerID].weapon) {
-            case WEAPON_RIFLE:
-            {
-                timeDiff = NANO_IN_MILLI * 500;
-                break;
-            }
-            case WEAPON_SMG:
-            {
-                timeDiff = NANO_IN_MILLI * 100;
-                break;
-            }
-            case WEAPON_SHOTGUN:
-            {
-                timeDiff = NANO_IN_MILLI * 1000;
-                break;
-            }
+        case WEAPON_RIFLE: {
+            timeDiff = NANO_IN_MILLI * 500;
+            break;
+        }
+        case WEAPON_SMG: {
+            timeDiff = NANO_IN_MILLI * 100;
+            break;
+        }
+        case WEAPON_SHOTGUN: {
+            timeDiff = NANO_IN_MILLI * 1000;
+            break;
+        }
         }
 
-        if (server->player[playerID].primary_fire &&
-            diffIsOlderThen(getNanos(), &server->player[playerID].timers.sinceLastWeaponInput, timeDiff))
-        {
-            server->player[playerID].timers.sinceLastWeaponInput = getNanos();
-            server->player[playerID].weaponClip--;
+        if (server->player[playerID].primary_fire && diffIsOlderThen(get_nanos(), &server->player[playerID].timers.since_last_weapon_input, timeDiff)) {
+            server->player[playerID].timers.since_last_weapon_input = get_nanos();
+            server->player[playerID].weapon_clip--;
             server->player[playerID].reloading = 0;
-            if ((server->player[playerID].movement.previousOrientation.x ==
-                 server->player[playerID].movement.forwardOrientation.x) &&
-                (server->player[playerID].movement.previousOrientation.y ==
-                 server->player[playerID].movement.forwardOrientation.y) &&
-                (server->player[playerID].movement.previousOrientation.z ==
-                 server->player[playerID].movement.forwardOrientation.z) &&
-                server->player[playerID].item == TOOL_GUN)
-            {
-                for (int i = 0; i < server->protocol.maxPlayers; ++i) {
-                    if (isPastJoinScreen(server, i) && isStaff(server, i)) {
+            if ((server->player[playerID].movement.previous_orientation.x == server->player[playerID].movement.forward_orientation.x) && (server->player[playerID].movement.previous_orientation.y == server->player[playerID].movement.forward_orientation.y) && (server->player[playerID].movement.previous_orientation.z == server->player[playerID].movement.forward_orientation.z) && server->player[playerID].item == TOOL_GUN) {
+                for (int i = 0; i < server->protocol.max_players; ++i) {
+                    if (is_past_join_screen(server, i) && isStaff(server, i)) {
                         char message[200];
                         snprintf(message, 200, "WARNING. Player %d may be using no recoil", playerID);
-                        sendServerNotice(server, i, 0, message);
+                        send_server_notice(server, i, 0, message);
                     }
                 }
             }
-            server->player[playerID].movement.previousOrientation =
-            server->player[playerID].movement.forwardOrientation;
+            server->player[playerID].movement.previous_orientation = server->player[playerID].movement.forward_orientation;
         }
     } else {
         // sendKillActionPacket(server, playerID, playerID, 0, 30, 0);
     }
 }
 
-static void receiveWeaponReload(Server* server, uint8 playerID, DataStream* data)
+static void receiveWeaponReload(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 ID      = ReadByte(data);
-    uint8 clip    = ReadByte(data);
-    uint8 reserve = ReadByte(data);
+    uint8_t ID      = datastream_read_u8(data);
+    uint8_t clip    = datastream_read_u8(data);
+    uint8_t reserve = datastream_read_u8(data);
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in weapon reload packet", playerID, ID);
     }
     server->player[playerID].primary_fire   = 0;
     server->player[playerID].secondary_fire = 0;
 
-    if (server->player[playerID].weaponReserve == 0 || server->player[playerID].reloading) {
+    if (server->player[playerID].weapon_reserve == 0 || server->player[playerID].reloading) {
         return;
     }
-    server->player[playerID].reloading               = 1;
-    server->player[playerID].timers.sinceReloadStart = getNanos();
-    sendWeaponReload(server, playerID, 1, clip, reserve);
+    server->player[playerID].reloading                 = 1;
+    server->player[playerID].timers.since_reload_start = get_nanos();
+    send_weapon_reload(server, playerID, 1, clip, reserve);
 }
 
-static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
+static void receiveChangeTeam(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 ID = ReadByte(data);
-    server->protocol.teamUserCount[server->player[playerID].team]--;
-    uint8 team = ReadByte(data);
+    uint8_t ID = datastream_read_u8(data);
+    server->protocol.num_team_users[server->player[playerID].team]--;
+    uint8_t team = datastream_read_u8(data);
 
     if (team != 0 && team != 1 && team != 255) {
         LOG_WARNING(
-        "Player %s (#%hhu) sent invalid team. Switching them to Spectator", server->player[playerID].name, playerID);
+            "Player %s (#%hhu) sent invalid team. Switching them to Spectator",
+            server->player[playerID].name,
+            playerID);
         team = 255;
     }
 
@@ -1795,15 +1708,15 @@ static void receiveChangeTeam(Server* server, uint8 playerID, DataStream* data)
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change team packet", playerID, ID);
     }
-    server->protocol.teamUserCount[server->player[playerID].team]++;
-    sendKillActionPacket(server, playerID, playerID, 5, 5, 0);
+    server->protocol.num_team_users[server->player[playerID].team]++;
+    send_kill_action_packet(server, playerID, playerID, 5, 5, 0);
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
 
-static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data)
+static void receiveChangeWeapon(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    uint8 ID     = ReadByte(data);
-    uint8 weapon = ReadByte(data);
+    uint8_t ID     = datastream_read_u8(data);
+    uint8_t weapon = datastream_read_u8(data);
     if (server->player[playerID].weapon == weapon) {
         return;
     }
@@ -1811,91 +1724,87 @@ static void receiveChangeWeapon(Server* server, uint8 playerID, DataStream* data
     if (playerID != ID) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change weapon packet", playerID, ID);
     }
-    sendKillActionPacket(server, playerID, playerID, 6, 5, 0);
+    send_kill_action_packet(server, playerID, playerID, 6, 5, 0);
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
 
-static void receiveVersionResponse(Server* server, uint8 playerID, DataStream* data)
+static void receiveVersionResponse(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    server->player[playerID].client           = ReadByte(data);
-    server->player[playerID].version_major    = ReadByte(data);
-    server->player[playerID].version_minor    = ReadByte(data);
-    server->player[playerID].version_revision = ReadByte(data);
-    uint32 length                             = DataLeft(data);
+    server->player[playerID].client           = datastream_read_u8(data);
+    server->player[playerID].version_major    = datastream_read_u8(data);
+    server->player[playerID].version_minor    = datastream_read_u8(data);
+    server->player[playerID].version_revision = datastream_read_u8(data);
+    uint32_t length                           = datastream_left(data);
     if (length < 256) {
         server->player[playerID].os_info[length] = '\0';
-        ReadArray(data, server->player[playerID].os_info, length);
+        datastream_read_array(data, server->player[playerID].os_info, length);
     } else {
         snprintf(server->player[playerID].os_info, 8, "Unknown");
     }
     if (server->player[playerID].client == 'o') {
-        if (!(server->player[playerID].version_major == 0 && server->player[playerID].version_minor == 1 &&
-              (server->player[playerID].version_revision == 3 || server->player[playerID].version_revision == 5)))
-        {
+        if (!(server->player[playerID].version_major == 0 && server->player[playerID].version_minor == 1 && (server->player[playerID].version_revision == 3 || server->player[playerID].version_revision == 5))) {
             enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
         }
     } else if (server->player[playerID].client == 'B') {
-        if (!(server->player[playerID].version_major == 0 && server->player[playerID].version_minor == 1 &&
-              server->player[playerID].version_revision == 5))
-        {
+        if (!(server->player[playerID].version_major == 0 && server->player[playerID].version_minor == 1 && server->player[playerID].version_revision == 5)) {
             enet_peer_disconnect(server->player[playerID].peer, REASON_KICKED);
         }
     }
 }
-void OnPacketReceived(Server* server, uint8 playerID, DataStream* data, ENetEvent event)
+void on_packet_received(server_t* server, uint8_t playerID, datastream_t* data, ENetEvent event)
 {
-    PacketID type = (PacketID) ReadByte(data);
+    packet_id_t type = (packet_id_t)datastream_read_u8(data);
     switch (type) {
-        case PACKET_TYPE_EXISTING_PLAYER:
-            receiveExistingPlayer(server, playerID, data);
-            break;
-        case PACKET_TYPE_POSITION_DATA:
-            receivePositionData(server, playerID, data);
-            break;
-        case PACKET_TYPE_ORIENTATION_DATA:
-            receiveOrientationData(server, playerID, data);
-            break;
-        case PACKET_TYPE_INPUT_DATA:
-            receiveInputData(server, playerID, data);
-            break;
-        case PACKET_TYPE_CHAT_MESSAGE:
-            handleAndSendMessage(event, data, server, playerID);
-            break;
-        case PACKET_TYPE_BLOCK_ACTION:
-            receiveBlockAction(server, playerID, data);
-            break;
-        case PACKET_TYPE_BLOCK_LINE:
-            receiveBlockLine(server, playerID, data);
-            break;
-        case PACKET_TYPE_SET_TOOL:
-            receiveSetTool(server, playerID, data);
-            break;
-        case PACKET_TYPE_SET_COLOR:
-            receiveSetColor(server, playerID, data);
-            break;
-        case PACKET_TYPE_WEAPON_INPUT:
-            receiveWeaponInput(server, playerID, data);
-            break;
-        case PACKET_TYPE_HIT_PACKET:
-            receiveHitPacket(server, playerID, data);
-            break;
-        case PACKET_TYPE_WEAPON_RELOAD:
-            receiveWeaponReload(server, playerID, data);
-            break;
-        case PACKET_TYPE_CHANGE_TEAM:
-            receiveChangeTeam(server, playerID, data);
-            break;
-        case PACKET_TYPE_CHANGE_WEAPON:
-            receiveChangeWeapon(server, playerID, data);
-            break;
-        case PACKET_TYPE_GRENADE_PACKET:
-            receiveGrenadePacket(server, playerID, data);
-            break;
-        case PACKET_TYPE_VERSION_RESPONSE:
-            receiveVersionResponse(server, playerID, data);
-            break;
-        default:
-            LOG_WARNING("Unhandled input, id %u, code %u", playerID, type);
-            break;
+    case PACKET_TYPE_EXISTING_PLAYER:
+        receiveExistingPlayer(server, playerID, data);
+        break;
+    case PACKET_TYPE_POSITION_DATA:
+        receivePositionData(server, playerID, data);
+        break;
+    case PACKET_TYPE_ORIENTATION_DATA:
+        receiveOrientationData(server, playerID, data);
+        break;
+    case PACKET_TYPE_INPUT_DATA:
+        receiveInputData(server, playerID, data);
+        break;
+    case PACKET_TYPE_CHAT_MESSAGE:
+        handle_and_send_message(event, data, server, playerID);
+        break;
+    case PACKET_TYPE_BLOCK_ACTION:
+        receiveBlockAction(server, playerID, data);
+        break;
+    case PACKET_TYPE_BLOCK_LINE:
+        receiveBlockLine(server, playerID, data);
+        break;
+    case PACKET_TYPE_SET_TOOL:
+        receiveSetTool(server, playerID, data);
+        break;
+    case PACKET_TYPE_SET_COLOR:
+        receiveSetColor(server, playerID, data);
+        break;
+    case PACKET_TYPE_WEAPON_INPUT:
+        receiveWeaponInput(server, playerID, data);
+        break;
+    case PACKET_TYPE_HIT_PACKET:
+        receiveHitPacket(server, playerID, data);
+        break;
+    case PACKET_TYPE_WEAPON_RELOAD:
+        receiveWeaponReload(server, playerID, data);
+        break;
+    case PACKET_TYPE_CHANGE_TEAM:
+        receiveChangeTeam(server, playerID, data);
+        break;
+    case PACKET_TYPE_CHANGE_WEAPON:
+        receiveChangeWeapon(server, playerID, data);
+        break;
+    case PACKET_TYPE_GRENADE_PACKET:
+        receiveGrenadePacket(server, playerID, data);
+        break;
+    case PACKET_TYPE_VERSION_RESPONSE:
+        receiveVersionResponse(server, playerID, data);
+        break;
+    default:
+        LOG_WARNING("Unhandled input, id %u, code %u", playerID, type);
+        break;
     }
 }

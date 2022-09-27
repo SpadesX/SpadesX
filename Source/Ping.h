@@ -4,6 +4,6 @@
 
 #include <enet/enet.h>
 
-int rawUdpInterceptCallback(ENetHost* host, ENetEvent* event);
+int raw_udp_intercept_callback(ENetHost* host, ENetEvent* event);
 
 #endif

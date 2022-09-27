@@ -4,14 +4,15 @@
 
 #include "Structs.h"
 
-void handleCommands(Server* server, uint8 player, char* message, uint8 console);
-void populateCommands(Server* server);
-void freeCommands(Server* server);
-void createCommand(Server* server,
-                   uint8   parseArguments,
-                   void (*command)(void* serverP, CommandArguments arguments),
-                   char   id[30],
-                   char   commandDesc[1024],
-                   uint32 permLevel);
-void deleteCommand(Server* server, Command* command);
+void command_handle(server_t* server, uint8_t player, char* message, uint8_t console);
+void command_populate_all(server_t* server);
+void command_free_all(server_t* server);
+void command_create(server_t* server,
+    uint8_t                   parse_args,
+    void (*command)(void* server, command_args_t arguments),
+    char     id[30],
+    char     description[1024],
+    uint32_t permissions);
+void command_free(server_t* server, command_t* command);
+
 #endif

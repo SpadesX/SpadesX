@@ -3,9 +3,8 @@
 #include "Server.h"
 #include "Structs.h"
 #include "Util/DataStream.h"
-#include "Util/Types.h"
 #include "Util/Log.h"
-#include "Server.h"
+#include "Util/Types.h"
 
 #include <enet/enet.h>
 #include <pthread.h>
@@ -14,21 +13,21 @@
 #include <time.h>
 #include <unistd.h>
 
-void updateMaster(Server* server)
+void master_update(server_t* server)
 {
-    server->protocol.countOfUsers = 0;
+    server->protocol.num_users = 0;
     for (int i = 0; i < 32; i++) {
-        if (isPastJoinScreen(server, i)) {
-            server->protocol.countOfUsers++;
+        if (is_past_join_screen(server, i)) {
+            server->protocol.num_users++;
         }
     }
-    ENetPacket* packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
-    DataStream  stream = {packet->data, packet->dataLength, 0};
-    WriteByte(&stream, server->protocol.countOfUsers);
+    ENetPacket*  packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
+    datastream_t stream = { packet->data, packet->dataLength, 0 };
+    datastream_write_u8(&stream, server->protocol.num_users);
     enet_peer_send(server->master.peer, 0, packet);
 }
 
-int ConnectMaster(Server* server, uint16 port)
+int master_connect(server_t* server, uint16_t port)
 {
     server->master.client = enet_host_create(NULL, 1, 1, 0, 0);
 
@@ -55,35 +54,34 @@ int ConnectMaster(Server* server, uint16 port)
     ENetEvent event;
     while (enet_host_service(server->master.client, &event, 1000) > 0) {
         LOG_STATUS("Connection success");
-        ENetPacket* packet =
-        enet_packet_create(NULL,
-                           9 + strlen(server->serverName) + strlen(server->gamemodeName) + strlen(server->mapName) + 3,
-                           ENET_PACKET_FLAG_RELIABLE);
-        DataStream stream = {packet->data, packet->dataLength, 0};
-        WriteByte(&stream, 32);
-        WriteShort(&stream, port);
-        WriteArray(&stream, server->serverName, strlen(server->serverName) + 1);
-        WriteArray(&stream, server->gamemodeName, strlen(server->gamemodeName) + 1);
-        WriteArray(&stream, server->mapName, strlen(server->mapName) + 1);
+        ENetPacket*  packet = enet_packet_create(NULL,
+            9 + strlen(server->server_name) + strlen(server->gamemode_name) + strlen(server->map_name) + 3,
+            ENET_PACKET_FLAG_RELIABLE);
+        datastream_t stream = { packet->data, packet->dataLength, 0 };
+        datastream_write_u8(&stream, 32);
+        datastream_write_u16(&stream, port);
+        datastream_write_array(&stream, server->server_name, strlen(server->server_name) + 1);
+        datastream_write_array(&stream, server->gamemode_name, strlen(server->gamemode_name) + 1);
+        datastream_write_array(&stream, server->map_name, strlen(server->map_name) + 1);
         enet_peer_send(server->master.peer, 0, packet);
     }
     return 0;
 }
 
-void* keepMasterAlive(void* serverVoid)
+void* master_keep_alive(void* p_server)
 {
-    Server* server = serverVoid;
+    server_t* server = p_server;
     while (server->running) {
-        if (server->master.enableMasterConnection == 1) {
-            if (time(NULL) - server->master.timeSinceLastSend >= 1) {
+        if (server->master.enable_master_connection == 1) {
+            if (time(NULL) - server->master.time_since_last_send >= 1) {
                 if (enet_host_service(server->master.client, &server->master.event, 0) < 0) {
-                    pthread_mutex_lock(&serverLock);
+                    pthread_mutex_lock(&server_lock);
                     LOG_WARNING("Connection to master server lost. Waiting 30 seconds to reconnect...");
                     sleep(30);
-                    ConnectMaster(server, server->port);
-                    pthread_mutex_unlock(&serverLock);
+                    master_connect(server, server->port);
+                    pthread_mutex_unlock(&server_lock);
                 }
-                server->master.timeSinceLastSend = time(NULL);
+                server->master.time_since_last_send = time(NULL);
             }
         }
         sleep(0);

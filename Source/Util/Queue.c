@@ -3,23 +3,23 @@
 
 #include <stdlib.h>
 
-Queue* Push(Queue* node, uint32 capacity)
+queue_t* queue_push(queue_t* node, uint32_t capacity)
 {
-    Queue* next    = (Queue*) malloc(sizeof(Queue));
+    queue_t* next  = (queue_t*) malloc(sizeof(queue_t));
     next->next     = NULL;
     next->capacity = capacity;
     next->length   = 0;
-    next->block    = (uint8*) malloc(capacity);
+    next->block    = (uint8_t*) malloc(capacity);
     if (node != NULL) {
         node->next = next;
     }
     return next;
 }
 
-Queue* Pop(Queue* node)
+queue_t* queue_pop(queue_t* node)
 {
     if (node != NULL) {
-        Queue* next = node->next;
+        queue_t* next = node->next;
         free(node->block);
         free(node);
         return next;

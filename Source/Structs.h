@@ -23,285 +23,285 @@ typedef struct
 {
     union
     {
-        uint8  ip[4];
-        uint32 ip32;
-    } Union;
-    uint8 CIDR;
-} IPStruct;
+        uint8_t  ip[4];
+        uint32_t ip32;
+    };
+    uint8_t cidr;
+} ip_t;
 
-typedef struct
+typedef struct permissions
 {
-    char         accessLevel[32];
-    const char** accessPassword;
-    uint8        permLevelOffset;
-} PermLevel;
+    char         access_level[32];
+    const char** access_password;
+    uint8_t      perm_level_offset;
+} permissions_t;
 
-typedef struct Grenade
+typedef struct grenade
 {
-    uint8           sent;
+    uint8_t         sent;
     float           fuse;
-    uint8           exploded;
-    Vector3f        position;
-    Vector3f        velocity;
-    uint64          timeSinceSent;
-    struct Grenade *next, *prev;
-} Grenade;
+    uint8_t         exploded;
+    vector3f_t      position;
+    vector3f_t      velocity;
+    uint64_t        time_since_sent;
+    struct grenade *next, *prev;
+} grenade_t;
 
-typedef struct
+typedef struct movement
 { // Seriously what the F. Thank voxlap motion for this mess.
-    Vector3f position;
-    Vector3f prevPosition;
-    Vector3f prevLegitPos;
-    Vector3f eyePos;
-    Vector3f velocity;
-    Vector3f strafeOrientation;
-    Vector3f heightOrientation;
-    Vector3f forwardOrientation;
-    Vector3f previousOrientation;
-} Movement;
+    vector3f_t position;
+    vector3f_t prev_position;
+    vector3f_t prev_legit_pos;
+    vector3f_t eye_pos;
+    vector3f_t velocity;
+    vector3f_t strafe_orientation;
+    vector3f_t height_orientation;
+    vector3f_t forward_orientation;
+    vector3f_t previous_orientation;
+} movement_t;
 
-typedef struct
+typedef struct orientation
 { // Yet again thanks voxlap.
-    Vector3f forward;
-    Vector3f strafe;
-    Vector3f height;
-} Orientation;
+    vector3f_t forward;
+    vector3f_t strafe;
+    vector3f_t height;
+} orientation_t;
 
-typedef struct stringNode
+typedef struct string_node
 {
-    char*              string;
-    struct stringNode *next, *prev;
-} stringNode;
+    char*               string;
+    struct string_node *next, *prev;
+} string_node_t;
 
-typedef struct
+typedef struct map
 {
-    uint8       mapCount;
-    stringNode* currentMap;
+    uint8_t        map_count;
+    string_node_t* current_map;
     // compressed map
-    Queue*      compressedMap;
-    uint32      compressedSize;
-    Vector3i    resultLine[50];
-    size_t      mapSize;
-    mapvxl_t      map;
-    stringNode* mapList;
-} Map;
+    queue_t*       compressed_map;
+    uint32_t       compressed_size;
+    vector3i_t     result_line[50];
+    size_t         map_size;
+    mapvxl_t       map;
+    string_node_t* map_list;
+} map_t;
 
-typedef struct
+typedef struct gamemode_vars
 {
-    uint8     score[2];
-    uint8     scoreLimit;
-    IntelFlag intelFlags;
-    Vector3f  intel[2];
-    Vector3f  base[2];
-    uint8     playerIntelTeam[2];
-    uint8     intelHeld[2];
-} GameModeVars;
+    uint8_t      score[2];
+    uint8_t      score_limit;
+    intel_flag_t intel_flags;
+    vector3f_t   intel[2];
+    vector3f_t   base[2];
+    uint8_t      player_intel_team[2];
+    uint8_t      intel_held[2];
+} gamemode_vars_t;
 
-typedef struct
+typedef struct protocol
 {
-    uint8 countOfUsers;
-    uint8 teamUserCount[2];
+    uint8_t num_users;
+    uint8_t num_team_users[2];
     //
-    uint8 numPlayers;
-    uint8 maxPlayers;
+    uint8_t num_players;
+    uint8_t max_players;
     //
-    Color3i      colorFog;
-    Color3i      colorTeam[2];
-    char         nameTeam[2][11];
-    GameMode     currentGameMode;
-    GameModeVars gameMode;
+    color_t         color_fog;
+    color_t         color_team[2];
+    char            name_team[2][11];
+    gamemode_t      current_gamemode;
+    gamemode_vars_t gamemode;
     // respawn area
-    Quad3D spawns[2];
-    uint32 inputFlags;
-} Protocol;
+    quad3d_t spawns[2];
+    uint32_t input_flags;
+} protocol_t;
 
-typedef struct
+typedef struct timers
 {
-    uint64 timeSinceLastWU;
-    uint64 sinceLastBaseEnter;
-    uint64 sinceLastBaseEnterRestock;
-    uint64 startOfRespawnWait;
-    uint64 sinceLastShot;
-    uint64 sinceLastBlockDestWithGun;
-    uint64 sinceLastBlockDest;
-    uint64 sinceLastBlockPlac;
-    uint64 sinceLast3BlockDest;
-    uint64 sinceLastGrenadeThrown;
-    uint64 sinceLastWeaponInput;
-    uint64 sinceReloadStart;
-    uint64 sinceLastPrimaryWeaponInput;
-    uint64 sinceLastMessageForSpam;
-    uint64 sinceLastMessage;
-    uint64 sincePossibleSpadenade;
-    uint64 sincePeriodicMessage;
-    uint64 duringNoclipPeriod;
-} Timers;
+    uint64_t time_since_last_wu;
+    uint64_t since_last_base_enter;
+    uint64_t since_last_base_enter_restock;
+    uint64_t start_of_respawn_wait;
+    uint64_t since_last_shot;
+    uint64_t since_last_block_dest_with_gun;
+    uint64_t since_last_block_dest;
+    uint64_t since_last_block_plac;
+    uint64_t since_last_3block_dest;
+    uint64_t since_last_grenade_thrown;
+    uint64_t since_last_weapon_input;
+    uint64_t since_reload_start;
+    uint64_t since_last_primary_weapon_input;
+    uint64_t since_last_message_from_spam;
+    uint64_t since_last_message;
+    uint64_t since_possible_spade_nade;
+    uint64_t since_periodic_message;
+    uint64_t during_noclip_period;
+} timers_t;
 
-typedef struct
+typedef struct global_timers
 {
-    unsigned long long updateTime;
-    unsigned long long lastUpdateTime;
-    unsigned long long timeSinceStart;
-    float              timeSinceStartSimulated;
-} GlobalTimers;
+    uint64_t update_time;
+    uint64_t last_update_time;
+    uint64_t time_since_start;
+    float    time_since_start_simulated;
+} global_timers_t;
 
-typedef struct blockNode
+typedef struct block_node
 {
-    struct blockNode* next;
-    Vector3i          position;
-    Vector3i          positionEnd;
-    Color3i           color;
-    uint8             type;
-    uint8             senderID;
-} blockNode;
+    struct block_node* next;
+    vector3i_t         position;
+    vector3i_t         position_end;
+    color_t            color;
+    uint8_t            type;
+    uint8_t            sender_id;
+} block_node_t;
 
-typedef struct
+typedef struct player
 {
-    Queue*               queues;
-    State                state;
-    Weapon               weapon;
-    Team                 team;
-    Tool                 item;
-    PermLevel            roleList[5]; // Change me based on the number of access levels you require
-    Timers               timers;
-    WeaponDefaultClip    defaultClip;
-    WeaponDefaultReserve defaultReserve;
-    uint32               kills;
-    uint32               deaths;
-    Color3i              color;
-    char                 name[17];
-    char                 client;
-    int                  version_minor;
-    int                  version_major;
-    int                  version_revision;
-    char                 os_info[255];
-    ENetPeer*            peer;
-    uint8                respawnTime;
-    Color4i              toolColor;
-    int                  HP;
-    uint8                grenades;
-    uint8                blocks;
-    uint8                weaponReserve;
-    uint8                weaponClip;
-    Vector3i             resultLine[50];
-    IPStruct             ipStruct;
-    uint8                alive;
-    uint8                input;
-    uint8                allowKilling;
-    uint8                allowTeamKilling;
-    uint16               ups;
-    uint8                muted;
-    uint8                adminMuted;
-    uint8                canBuild;
-    Grenade*             grenade;
-    uint8                toldToMaster;
-    uint8                hasIntel;
-    uint8                isInvisible;
-    uint8                welcomeSent;
-    uint8                reloading;
-    uint64               permLevel;
-    uint8                spamCounter;
-    uint8                periodicDelayIndex;
-    uint8                invalidPosCount;
-    stringNode*          currentPeriodicMessage;
-    blockNode*           blockBuffer;
+    queue_t*                 queues;
+    state_t                  state;
+    weapon_t                 weapon;
+    team_t                   team;
+    tool_t                   item;
+    permissions_t            role_list[5]; // Change me based on the number of access levels you require
+    timers_t                 timers;
+    weapon_default_clip_t    default_clip;
+    weapon_default_reserve_t default_reserve;
+    uint32_t                 kills;
+    uint32_t                 deaths;
+    color_t                  color;
+    char                     name[17];
+    char                     client;
+    int                      version_minor;
+    int                      version_major;
+    int                      version_revision;
+    char                     os_info[255];
+    ENetPeer*                peer;
+    uint8_t                  respawn_time;
+    color_t                  tool_color;
+    int                      hp;
+    uint8_t                  grenades;
+    uint8_t                  blocks;
+    uint8_t                  weapon_reserve;
+    uint8_t                  weapon_clip;
+    vector3i_t               result_line[50];
+    ip_t                     ip;
+    uint8_t                  alive;
+    uint8_t                  input;
+    uint8_t                  allow_killing;
+    uint8_t                  allow_team_killing;
+    uint16_t                 ups;
+    uint8_t                  muted;
+    uint8_t                  admin_muted;
+    uint8_t                  can_build;
+    grenade_t*               grenade;
+    uint8_t                  told_to_master;
+    uint8_t                  has_intel;
+    uint8_t                  is_invisible;
+    uint8_t                  welcome_sent;
+    uint8_t                  reloading;
+    uint64_t                 permissions;
+    uint8_t                  spamCounter;
+    uint8_t                  periodic_delay_index;
+    uint8_t                  invalidPosCount;
+    string_node_t*           current_periodic_message;
+    block_node_t*            blockBuffer;
 
-    uint8    movForward;
-    uint8    movBackwards;
-    uint8    movLeft;
-    uint8    movRight;
-    uint8    jumping;
-    uint8    crouching;
-    uint8    sneaking;
-    uint8    sprinting;
-    uint8    primary_fire;
-    uint8    secondary_fire;
-    Vector3f locAtClick;
+    uint8_t    move_forward;
+    uint8_t    move_backwards;
+    uint8_t    move_left;
+    uint8_t    move_right;
+    uint8_t    jumping;
+    uint8_t    crouching;
+    uint8_t    sneaking;
+    uint8_t    sprinting;
+    uint8_t    primary_fire;
+    uint8_t    secondary_fire;
+    vector3f_t locAtClick;
 
     // Bellow this point is stuff used for calculating movement.
-    Movement movement;
-    uint8    airborne;
-    uint8    wade;
-    float    lastclimb;
-} Player;
+    movement_t movement;
+    uint8_t    airborne;
+    uint8_t    wade;
+    float      lastclimb;
+} player_t;
 
-typedef struct
+typedef struct master
 {
     // Master
     ENetHost* client;
     ENetPeer* peer;
     ENetEvent event;
-    uint8     enableMasterConnection;
-    uint64    timeSinceLastSend;
-} Master;
+    uint8_t   enable_master_connection;
+    uint64_t  time_since_last_send;
+} master_t;
 
-typedef struct
+typedef struct command_args
 {
-    uint8  player;
-    uint8  console;
-    uint32 commandPermissions;
-    uint32 argc;
-    char*  argv[32]; // 32 roles^W commands should be more than enough for anyone
-} CommandArguments;
+    uint8_t  player_id;
+    uint8_t  console;
+    uint32_t permissions;
+    uint32_t argc;
+    char*    argv[32]; // 32 roles^W commands should be more than enough for anyone
+} command_args_t;
 
-typedef struct Command
+typedef struct command
 {
-    char  id[30];
-    uint8 parseArguments; // Should we even bother parsing it? Would be useful for commands whose one and only argument
-                          // is a message, or which don't even have any arguments
-    void (*command)(void* serverP, CommandArguments arguments);
-    uint32          PermLevel; // 32 roles should be more then enough for anyone
-    char            commandDesc[1024];
+    char    id[30];
+    uint8_t parse_args; // Should we even bother parsing it? Would be useful for commands whose one and only
+                        // argument is a message, or which don't even have any arguments
+    void (*execute)(void* p_server, command_args_t arguments);
+    uint32_t        permissions; // 32 roles should be more then enough for anyone
+    char            description[1024];
     UT_hash_handle  hh;
-    struct Command* next;
-} Command;
+    struct command* next;
+} command_t;
 
 // Command but with removed hash map and linked list stuff for easy managment
-typedef struct
+typedef struct command_manager
 {
-    char  id[30];
-    uint8 parseArguments; // Should we even bother parsing it? Would be useful for commands whose one and only argument
-                          // is a message, or which don't even have any arguments
-    void (*command)(void* serverP, CommandArguments arguments);
-    uint32 PermLevel; // 32 roles should be more then enough for anyone
-    char   commandDesc[1024];
-} CommandManager;
+    char    id[30];
+    uint8_t parse_args; // Should we even bother parsing it? Would be useful for commands whose one and only
+                        // argument is a message, or which don't even have any arguments
+    void (*execute)(void* p_server, command_args_t arguments);
+    uint32_t permissions; // 32 roles should be more then enough for anyone
+    char     description[1024];
+} command_manager_t;
 
-typedef struct mapNode
+typedef struct map_node
 {
     int            id;
-    Vector3i       pos;
-    uint8          visited;
+    vector3i_t     pos;
+    uint8_t        visited;
     UT_hash_handle hh;
-} mapNode;
+} map_node_t;
 
-typedef struct
+typedef struct server
 {
     ENetHost*             host;
-    Player                player[32];
-    Protocol              protocol;
-    Master                master;
-    uint16                port;
-    Map                   map;
-    GlobalTimers          globalTimers;
-    Command*              commandsMap;
-    Command*              commandsList;
-    stringNode*           welcomeMessages;
-    uint8                 welcomeMessageCount;
-    stringNode*           periodicMessages;
-    uint8                 periodicMessageCount;
-    uint8*                periodicDelays;
-    uint8                 globalAK;
-    uint8                 globalAB;
-    const char*           managerPasswd;
-    const char*           adminPasswd;
-    const char*           modPasswd;
-    const char*           guardPasswd;
-    const char*           trustedPasswd;
-    char                  mapName[20];
-    char                  serverName[31];
-    char                  gamemodeName[7];
+    player_t              player[32];
+    protocol_t            protocol;
+    master_t              master;
+    uint16_t              port;
+    map_t                 s_map;
+    global_timers_t       global_timers;
+    command_t*            cmds_map;
+    command_t*            cmds_list;
+    string_node_t*        welcome_messages;
+    uint8_t               welcome_messages_count;
+    string_node_t*        periodic_messages;
+    uint8_t               periodic_message_count;
+    uint8_t*              periodic_delays;
+    uint8_t               global_ak;
+    uint8_t               global_ab;
+    const char*           manager_passwd;
+    const char*           admin_passwd;
+    const char*           mod_passwd;
+    const char*           guard_passwd;
+    const char*           trusted_passwd;
+    char                  map_name[20];
+    char                  server_name[31];
+    char                  gamemode_name[7];
     volatile sig_atomic_t running; // volatile keyword is required to have an access to this variable in any thread
-} Server;
+} server_t;
 
 #endif

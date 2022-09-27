@@ -1,4 +1,4 @@
-//Copyright CircumScriptor and DarkNeutrino 2021
+// Copyright CircumScriptor and DarkNeutrino 2021
 #ifndef QUEUE_H
 #define QUEUE_H
 
@@ -8,13 +8,13 @@
  * @brief Queue node - minimal linked list
  *
  */
-typedef struct _Queue
+typedef struct queue
 {
-    uint8*         block;
-    uint32         capacity;
-    uint32         length;
-    struct _Queue* next;
-} Queue;
+    uint8_t*      block;
+    uint32_t      capacity;
+    uint32_t      length;
+    struct queue* next;
+} queue_t;
 
 /**
  * @brief Append queue node
@@ -23,7 +23,7 @@ typedef struct _Queue
  * @param capacity Capacity of the queue node
  * @return Pointer to newly created queue node
  */
-Queue* Push(Queue* node, uint32 capacity);
+queue_t* queue_push(queue_t* node, uint32_t capacity);
 
 /**
  * @brief Pop queue node from the front of queue
@@ -31,6 +31,6 @@ Queue* Push(Queue* node, uint32 capacity);
  * @param node The first node in queue
  * @return Pointer to next queue node or null
  */
-Queue* Pop(Queue* node);
+queue_t* queue_pop(queue_t* node);
 
 #endif /* QUEUE_H */

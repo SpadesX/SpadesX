@@ -21,6 +21,8 @@
 #include "Util/Types.h"
 #include "Util/Utlist.h"
 
+#include <stdio.h>
+//
 #include <enet/enet.h>
 #include <errno.h>
 #include <json-c/json.h>
@@ -29,7 +31,6 @@
 #include <json-c/json_util.h>
 #include <math.h>
 #include <pthread.h>
-#include <stdio.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <signal.h>
@@ -38,19 +39,19 @@
 #include <time.h>
 #include <unistd.h>
 
-Server          server;
-pthread_mutex_t serverLock;
+server_t        server;
+pthread_mutex_t server_lock;
 
 volatile int ctrlc = 0;
 
-Server* getServer(void)
+server_t* get_server(void)
 {
     return &server; // Needed when we cant pass Server as argument into function
 }
 
-static void freeStringNodes(stringNode* root)
+static void _string_nodes_free(string_node_t* root)
 {
-    stringNode *el, *tmp;
+    string_node_t *el, *tmp;
     DL_FOREACH_SAFE(root, el, tmp)
     {
         free(el->string);
@@ -59,193 +60,191 @@ static void freeStringNodes(stringNode* root)
     }
 }
 
-static void forPlayers(void)
+static void _for_players(void)
 {
-    for (int playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
-        if (isPastJoinScreen(&server, playerID)) {
-            uint64 timeNow = getNanos();
+    for (int playerID = 0; playerID < server.protocol.max_players; ++playerID) {
+        if (is_past_join_screen(&server, playerID)) {
+            uint64_t timeNow = get_nanos();
             if (server.player[playerID].primary_fire == 1 && server.player[playerID].reloading == 0) {
-                if (server.player[playerID].weaponClip > 0) {
-                    uint64 milliseconds = 0;
+                if (server.player[playerID].weapon_clip > 0) {
+                    uint64_t milliseconds = 0;
                     switch (server.player[playerID].weapon) {
-                        case WEAPON_RIFLE:
-                        {
-                            milliseconds = 500;
-                            break;
-                        }
-                        case WEAPON_SMG:
-                        {
-                            milliseconds = 100;
-                            break;
-                        }
-                        case WEAPON_SHOTGUN:
-                        {
-                            milliseconds = 1000;
-                            break;
-                        }
+                    case WEAPON_RIFLE: {
+                        milliseconds = 500;
+                        break;
+                    }
+                    case WEAPON_SMG: {
+                        milliseconds = 100;
+                        break;
+                    }
+                    case WEAPON_SHOTGUN: {
+                        milliseconds = 1000;
+                        break;
+                    }
                     }
                     if (diffIsOlderThen(
-                        timeNow, &server.player[playerID].timers.sinceLastWeaponInput, NANO_IN_MILLI * milliseconds))
-                    {
-                        server.player[playerID].weaponClip--;
+                            timeNow,
+                            &server.player[playerID].timers.since_last_weapon_input,
+                            NANO_IN_MILLI * milliseconds)) {
+                        server.player[playerID].weapon_clip--;
                     }
                 }
             } else if (server.player[playerID].primary_fire == 0 && server.player[playerID].reloading == 1) {
                 switch (server.player[playerID].weapon) {
-                    case WEAPON_RIFLE:
-                    case WEAPON_SMG:
-                    {
-                        if (diffIsOlderThen(
-                            timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 2500))
-                        {
-                            uint8 defaultAmmo = RIFLE_DEFAULT_CLIP;
-                            if (server.player[playerID].weapon == WEAPON_SMG) {
-                                defaultAmmo = SMG_DEFAULT_CLIP;
-                            }
-                            double newReserve = fmax(0,
-                                                     server.player[playerID].weaponReserve -
-                                                     (defaultAmmo - server.player[playerID].weaponClip));
-                            server.player[playerID].weaponClip += server.player[playerID].weaponReserve - newReserve;
-                            server.player[playerID].weaponReserve = newReserve;
-                            server.player[playerID].reloading     = 0;
-                            sendWeaponReload(&server, playerID, 0, 0, 0);
+                case WEAPON_RIFLE:
+                case WEAPON_SMG: {
+                    if (diffIsOlderThen(
+                            timeNow,
+                            &server.player[playerID].timers.since_reload_start,
+                            NANO_IN_MILLI * (uint64_t)2500)) {
+                        uint8_t defaultAmmo = RIFLE_DEFAULT_CLIP;
+                        if (server.player[playerID].weapon == WEAPON_SMG) {
+                            defaultAmmo = SMG_DEFAULT_CLIP;
                         }
-                        break;
+                        double newReserve = fmax(0,
+                            server.player[playerID].weapon_reserve - (defaultAmmo - server.player[playerID].weapon_clip));
+                        server.player[playerID].weapon_clip += server.player[playerID].weapon_reserve - newReserve;
+                        server.player[playerID].weapon_reserve = newReserve;
+                        server.player[playerID].reloading      = 0;
+                        send_weapon_reload(&server, playerID, 0, 0, 0);
                     }
-                    case WEAPON_SHOTGUN:
-                    {
-                        if (diffIsOlderThen(
-                            timeNow, &server.player[playerID].timers.sinceReloadStart, NANO_IN_MILLI * (uint64) 500))
-                        {
-                            if (server.player[playerID].weaponReserve == 0 ||
-                                server.player[playerID].weaponClip == SHOTGUN_DEFAULT_CLIP)
-                            {
-                                server.player[playerID].reloading = 0;
-                                break;
-                            }
-                            server.player[playerID].weaponClip++;
-                            server.player[playerID].weaponReserve--;
-                            if (server.player[playerID].weaponClip == SHOTGUN_DEFAULT_CLIP) {
-                                server.player[playerID].reloading = 0;
-                            }
-                            sendWeaponReload(&server, playerID, 0, 0, 0);
+                    break;
+                }
+                case WEAPON_SHOTGUN: {
+                    if (diffIsOlderThen(
+                            timeNow,
+                            &server.player[playerID].timers.since_reload_start,
+                            NANO_IN_MILLI * (uint64_t)500)) {
+                        if (server.player[playerID].weapon_reserve == 0 || server.player[playerID].weapon_clip == SHOTGUN_DEFAULT_CLIP) {
+                            server.player[playerID].reloading = 0;
+                            break;
                         }
-                        break;
+                        server.player[playerID].weapon_clip++;
+                        server.player[playerID].weapon_reserve--;
+                        if (server.player[playerID].weapon_clip == SHOTGUN_DEFAULT_CLIP) {
+                            server.player[playerID].reloading = 0;
+                        }
+                        send_weapon_reload(&server, playerID, 0, 0, 0);
                     }
+                    break;
+                }
                 }
             }
             if (diffIsOlderThen(timeNow,
-                                &server.player[playerID].timers.sincePeriodicMessage,
-                                (uint64) (server.periodicDelays[server.player[playerID].periodicDelayIndex] * 60) *
-                                NANO_IN_SECOND))
-            {
-                stringNode* message;
-                DL_FOREACH(server.periodicMessages, message)
+                    &server.player[playerID].timers.since_periodic_message,
+                    (uint64_t)(server.periodic_delays[server.player[playerID].periodic_delay_index] * 60) * NANO_IN_SECOND)) {
+                string_node_t* message;
+                DL_FOREACH(server.periodic_messages, message)
                 {
-                    sendServerNotice(&server, playerID, 0, message->string);
+                    send_server_notice(&server, playerID, 0, message->string);
                 }
-                server.player[playerID].periodicDelayIndex = fmin(server.player[playerID].periodicDelayIndex + 1, 4);
+                server.player[playerID].periodic_delay_index = fmin(server.player[playerID].periodic_delay_index + 1, 4);
             }
         } else if (server.player[playerID].state == STATE_PICK_SCREEN) {
-            blockNode *node, *tmp;
+            block_node_t *node, *tmp;
             LL_FOREACH_SAFE(server.player[playerID].blockBuffer, node, tmp)
             {
                 if (node->type == 10) {
-                    sendSetColorToPlayer(&server,
-                                         node->senderID,
-                                         playerID,
-                                         node->color.colorArray[0],
-                                         node->color.colorArray[1],
-                                         node->color.colorArray[2]);
-                    sendBlockLineToPlayer(&server, node->senderID, playerID, node->position, node->positionEnd);
-                    sendSetColorToPlayer(&server,
-                                         node->senderID,
-                                         playerID,
-                                         server.player[node->senderID].color.colorArray[0],
-                                         server.player[node->senderID].color.colorArray[1],
-                                         server.player[node->senderID].color.colorArray[2]);
+                    send_set_color_to_player(
+                        &server,
+                        node->sender_id,
+                        playerID,
+                        node->color.r,
+                        node->color.g,
+                        node->color.b);
+                    block_line_to_player(&server, node->sender_id, playerID, node->position, node->position_end);
+                    send_set_color_to_player(&server,
+                        node->sender_id,
+                        playerID,
+                        server.player[node->sender_id].color.r,
+                        server.player[node->sender_id].color.g,
+                        server.player[node->sender_id].color.b);
                 } else {
-                    sendSetColorToPlayer(&server,
-                                         node->senderID,
-                                         playerID,
-                                         node->color.colorArray[0],
-                                         node->color.colorArray[1],
-                                         node->color.colorArray[2]);
-                    sendBlockActionToPlayer(&server,
-                                            node->senderID,
-                                            playerID,
-                                            node->type,
-                                            node->position.x,
-                                            node->position.y,
-                                            node->position.z);
-                    sendSetColorToPlayer(&server,
-                                         node->senderID,
-                                         playerID,
-                                         server.player[node->senderID].color.colorArray[0],
-                                         server.player[node->senderID].color.colorArray[1],
-                                         server.player[node->senderID].color.colorArray[2]);
+                    send_set_color_to_player(
+                        &server,
+                        node->sender_id,
+                        playerID,
+                        node->color.r,
+                        node->color.g,
+                        node->color.b);
+                    send_block_action_to_player(&server,
+                        node->sender_id,
+                        playerID,
+                        node->type,
+                        node->position.x,
+                        node->position.y,
+                        node->position.z);
+                    send_set_color_to_player(&server,
+                        node->sender_id,
+                        playerID,
+                        server.player[node->sender_id].color.r,
+                        server.player[node->sender_id].color.g,
+                        server.player[node->sender_id].color.b);
                 }
                 LL_DELETE(server.player[playerID].blockBuffer, node);
                 free(node);
             }
-        } else if (isPastStateData(&server, playerID)) {
+        } else if (is_past_state_data(&server, playerID)) {
         }
     }
 }
 
 static void* calculatePhysics(void)
 {
-    server.globalTimers.updateTime = getNanos();
-    if (server.globalTimers.updateTime - server.globalTimers.lastUpdateTime >= (1000000000 / 60)) {
+    server.global_timers.update_time = get_nanos();
+    if (server.global_timers.update_time - server.global_timers.last_update_time >= (1000000000 / 60)) {
         updateMovementAndGrenades(&server);
-        server.globalTimers.lastUpdateTime = getNanos();
+        server.global_timers.last_update_time = get_nanos();
     }
     return 0;
 }
 
-static void ServerInit(Server*     server,
-                       uint32      connections,
-                       const char* serverName,
-                       const char* team1Name,
-                       const char* team2Name,
-                       uint8*      team1Color,
-                       uint8*      team2Color,
-                       uint8       gamemode,
-                       uint8       reset)
+static void ServerInit(server_t* server,
+    uint32_t                     connections,
+    const char*                  serverName,
+    const char*                  team1Name,
+    const char*                  team2Name,
+    uint8_t*                     team1_color,
+    uint8_t*                     team2_color,
+    uint8_t                      gamemode,
+    uint8_t                      reset)
 {
-    server->globalTimers.updateTime = server->globalTimers.lastUpdateTime = getNanos();
+    server->global_timers.update_time = server->global_timers.last_update_time = get_nanos();
     if (reset == 0) {
-        server->protocol.numPlayers = 0;
-        server->protocol.maxPlayers = (connections <= 32) ? connections : 32;
+        server->protocol.num_players = 0;
+        server->protocol.max_players = (connections <= 32) ? connections : 32;
     }
 
-    server->map.compressedMap   = NULL;
-    server->map.compressedSize  = 0;
-    server->protocol.inputFlags = 0;
+    server->s_map.compressed_map  = NULL;
+    server->s_map.compressed_size = 0;
+    server->protocol.input_flags  = 0;
 
-    char  vxlMap[64];
-    uint8 index;
+    char    vxlMap[64];
+    uint8_t index;
     if (reset == 0) {
         srand(time(NULL));
     }
-    index                  = rand() % server->map.mapCount;
-    server->map.currentMap = server->map.mapList;
+    index                     = rand() % server->s_map.map_count;
+    server->s_map.current_map = server->s_map.map_list;
     for (int i = 0; i <= index; ++i) {
-        if (server->map.currentMap->next != NULL) {
-            server->map.currentMap = server->map.currentMap->next;
+        if (server->s_map.current_map->next != NULL) {
+            server->s_map.current_map = server->s_map.current_map->next;
         } else {
             break; // Safety if we by some magical reason go beyond the list
         }
     }
     snprintf(
-    server->mapName, fmin(strlen(server->map.currentMap->string) + 1, 20), "%s", server->map.currentMap->string);
-    LOG_STATUS("Selecting %s as map", server->mapName);
+        server->map_name,
+        fmin(strlen(server->s_map.current_map->string) + 1, 20),
+        "%s",
+        server->s_map.current_map->string);
+    LOG_STATUS("Selecting %s as map", server->map_name);
 
-    snprintf(vxlMap, 64, "%s.vxl", server->map.currentMap->string);
+    snprintf(vxlMap, 64, "%s.vxl", server->s_map.current_map->string);
 
     LOG_STATUS("Loading spawn ranges from map file");
     char mapConfig[64];
-    snprintf(mapConfig, 64, "%s.json", server->map.currentMap->string);
+    snprintf(mapConfig, 64, "%s.json", server->s_map.current_map->string);
 
     struct json_object* parsed_map_json;
     parsed_map_json = json_object_from_file(mapConfig);
@@ -254,33 +253,33 @@ static void ServerInit(Server*     server,
     int         team2Start[2];
     int         team1End[2];
     int         team2End[2];
-    int         mapSize[3];
+    int         map_size[3];
     const char* author;
 
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]){20, 20}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]){30, 30}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, mapSize, map_size, "map_size", ((int[]){512, 512, 64}), 3, 1)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]) { 0, 0 }), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]) { 10, 10 }), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]) { 20, 20 }), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]) { 30, 30 }), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, map_size, map_size, "map_size", ((int[]) { 512, 512, 64 }), 3, 1)
     READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
-    (void) author;
+    (void)author;
 
     json_object_put(parsed_map_json);
 
-    if (LoadMap(server, vxlMap, mapSize) == 0) {
+    if (map_load(server, vxlMap, map_size) == 0) {
         return;
     }
 
-    Vector3f empty   = {0, 0, 0};
-    Vector3f forward = {1, 0, 0};
-    Vector3f height  = {0, 0, 1};
-    Vector3f strafe  = {0, 1, 0};
-    for (uint32 i = 0; i < server->protocol.maxPlayers; ++i) {
-        initPlayer(server, i, reset, 0, empty, forward, strafe, height);
+    vector3f_t empty   = { 0, 0, 0 };
+    vector3f_t forward = { 1, 0, 0 };
+    vector3f_t height  = { 0, 0, 1 };
+    vector3f_t strafe  = { 0, 1, 0 };
+    for (uint32_t i = 0; i < server->protocol.max_players; ++i) {
+        init_player(server, i, reset, 0, empty, forward, strafe, height);
     }
 
-    server->globalAB = 1;
-    server->globalAK = 1;
+    server->global_ab = 1;
+    server->global_ak = 1;
 
     server->protocol.spawns[0].from.x = team1Start[0];
     server->protocol.spawns[0].from.y = team1Start[1];
@@ -292,290 +291,287 @@ static void ServerInit(Server*     server,
     server->protocol.spawns[1].to.x   = team2End[0];
     server->protocol.spawns[1].to.y   = team2End[1];
 
-    server->protocol.colorFog.colorArray[0] = 0x80;
-    server->protocol.colorFog.colorArray[1] = 0xE8;
-    server->protocol.colorFog.colorArray[2] = 0xFF;
+    server->protocol.color_fog.r = 0x80;
+    server->protocol.color_fog.g = 0xE8;
+    server->protocol.color_fog.b = 0xFF;
 
-    server->protocol.colorTeam[0].colorArray[B_CHANNEL] = team1Color[B_CHANNEL];
-    server->protocol.colorTeam[0].colorArray[G_CHANNEL] = team1Color[G_CHANNEL];
-    server->protocol.colorTeam[0].colorArray[R_CHANNEL] = team1Color[R_CHANNEL];
+    server->protocol.color_team[0].b = team1_color[B_CHANNEL];
+    server->protocol.color_team[0].g = team1_color[G_CHANNEL];
+    server->protocol.color_team[0].r = team1_color[R_CHANNEL];
 
-    server->protocol.colorTeam[1].colorArray[B_CHANNEL] = team2Color[B_CHANNEL];
-    server->protocol.colorTeam[1].colorArray[G_CHANNEL] = team2Color[G_CHANNEL];
-    server->protocol.colorTeam[1].colorArray[R_CHANNEL] = team2Color[R_CHANNEL];
+    server->protocol.color_team[1].b = team2_color[B_CHANNEL];
+    server->protocol.color_team[1].g = team2_color[G_CHANNEL];
+    server->protocol.color_team[1].r = team2_color[R_CHANNEL];
 
-    memcpy(server->protocol.nameTeam[0], team1Name, strlen(team1Name));
-    memcpy(server->protocol.nameTeam[1], team2Name, strlen(team2Name));
-    server->protocol.nameTeam[0][strlen(team1Name)] = '\0';
-    server->protocol.nameTeam[1][strlen(team2Name)] = '\0';
+    memcpy(server->protocol.name_team[0], team1Name, strlen(team1Name));
+    memcpy(server->protocol.name_team[1], team2Name, strlen(team2Name));
+    server->protocol.name_team[0][strlen(team1Name)] = '\0';
+    server->protocol.name_team[1][strlen(team2Name)] = '\0';
 
-    memcpy(server->serverName, serverName, strlen(serverName));
-    server->serverName[strlen(serverName)] = '\0';
-    initGameMode(server, gamemode);
+    memcpy(server->server_name, serverName, strlen(serverName));
+    server->server_name[strlen(serverName)] = '\0';
+    gamemode_init(server, gamemode);
 }
 
-void ServerReset(Server* server)
+void server_reset(server_t* server)
 {
     ServerInit(server,
-               server->protocol.maxPlayers,
-               server->serverName,
-               server->protocol.nameTeam[0],
-               server->protocol.nameTeam[1],
-               server->protocol.colorTeam[0].colorArray,
-               server->protocol.colorTeam[1].colorArray,
-               server->protocol.currentGameMode,
-               1);
+        server->protocol.max_players,
+        server->server_name,
+        server->protocol.name_team[0],
+        server->protocol.name_team[1],
+        server->protocol.color_team[0].arr,
+        server->protocol.color_team[1].arr,
+        server->protocol.current_gamemode,
+        1);
 }
 
-static void SendJoiningData(Server* server, uint8 playerID)
+static void SendJoiningData(server_t* server, uint8_t playerID)
 {
     LOG_INFO("Sending state to %s (#%hhu)", server->player[playerID].name, playerID);
-    for (uint8 i = 0; i < server->protocol.maxPlayers; ++i) {
-        if (i != playerID && isPastJoinScreen(server, i)) {
-            sendExistingPlayer(server, playerID, i);
+    for (uint8_t i = 0; i < server->protocol.max_players; ++i) {
+        if (i != playerID && is_past_join_screen(server, i)) {
+            send_existing_player(server, playerID, i);
         }
     }
-    sendStateData(server, playerID);
+    send_state_data(server, playerID);
 }
 
-static uint8 OnConnect(Server* server)
+static uint8_t OnConnect(server_t* server)
 {
-    if (server->protocol.numPlayers == server->protocol.maxPlayers) {
+    if (server->protocol.num_players == server->protocol.max_players) {
         return 0xFF;
     }
-    uint8 playerID;
-    for (playerID = 0; playerID < server->protocol.maxPlayers; ++playerID) {
+    uint8_t playerID;
+    for (playerID = 0; playerID < server->protocol.max_players; ++playerID) {
         if (server->player[playerID].state == STATE_DISCONNECTED) {
             server->player[playerID].state = STATE_STARTING_MAP;
             break;
         }
     }
-    server->protocol.numPlayers++;
+    server->protocol.num_players++;
     return playerID;
 }
 
-static void OnPlayerUpdate(Server* server, uint8 playerID)
+static void OnPlayerUpdate(server_t* server, uint8_t playerID)
 {
     switch (server->player[playerID].state) {
-        case STATE_STARTING_MAP:
-            server->player[playerID].blockBuffer = NULL;
-            sendMapStart(server, playerID);
-            break;
-        case STATE_LOADING_CHUNKS:
-            sendMapChunks(server, playerID);
-            break;
-        case STATE_JOINING:
-            SendJoiningData(server, playerID);
-            break;
-        case STATE_SPAWNING:
-            server->player[playerID].HP             = 100;
-            server->player[playerID].grenades       = 3;
-            server->player[playerID].blocks         = 50;
-            server->player[playerID].item           = 2;
-            server->player[playerID].input          = 0;
-            server->player[playerID].movForward     = 0;
-            server->player[playerID].movBackwards   = 0;
-            server->player[playerID].movLeft        = 0;
-            server->player[playerID].movRight       = 0;
-            server->player[playerID].jumping        = 0;
-            server->player[playerID].crouching      = 0;
-            server->player[playerID].sneaking       = 0;
-            server->player[playerID].sprinting      = 0;
-            server->player[playerID].primary_fire   = 0;
-            server->player[playerID].secondary_fire = 0;
-            server->player[playerID].alive          = 1;
-            server->player[playerID].reloading      = 0;
-            SetPlayerRespawnPoint(server, playerID);
-            SendRespawn(server, playerID);
-            LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
-                     server->player[playerID].name,
-                     playerID,
-                     server->player[playerID].movement.position.x,
-                     server->player[playerID].movement.position.y,
-                     server->player[playerID].movement.position.z);
-            break;
-        case STATE_WAITING_FOR_RESPAWN:
-        {
-            if (time(NULL) - server->player[playerID].timers.startOfRespawnWait >= server->player[playerID].respawnTime)
-            {
-                server->player[playerID].state = STATE_SPAWNING;
-            }
-            break;
+    case STATE_STARTING_MAP:
+        server->player[playerID].blockBuffer = NULL;
+        send_map_start(server, playerID);
+        break;
+    case STATE_LOADING_CHUNKS:
+        send_map_chunks(server, playerID);
+        break;
+    case STATE_JOINING:
+        SendJoiningData(server, playerID);
+        break;
+    case STATE_SPAWNING:
+        server->player[playerID].hp             = 100;
+        server->player[playerID].grenades       = 3;
+        server->player[playerID].blocks         = 50;
+        server->player[playerID].item           = 2;
+        server->player[playerID].input          = 0;
+        server->player[playerID].move_forward   = 0;
+        server->player[playerID].move_backwards = 0;
+        server->player[playerID].move_left      = 0;
+        server->player[playerID].move_right     = 0;
+        server->player[playerID].jumping        = 0;
+        server->player[playerID].crouching      = 0;
+        server->player[playerID].sneaking       = 0;
+        server->player[playerID].sprinting      = 0;
+        server->player[playerID].primary_fire   = 0;
+        server->player[playerID].secondary_fire = 0;
+        server->player[playerID].alive          = 1;
+        server->player[playerID].reloading      = 0;
+        SetPlayerRespawnPoint(server, playerID);
+        send_respawn(server, playerID);
+        LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
+            server->player[playerID].name,
+            playerID,
+            server->player[playerID].movement.position.x,
+            server->player[playerID].movement.position.y,
+            server->player[playerID].movement.position.z);
+        break;
+    case STATE_WAITING_FOR_RESPAWN: {
+        if (time(NULL) - server->player[playerID].timers.start_of_respawn_wait >= server->player[playerID].respawn_time) {
+            server->player[playerID].state = STATE_SPAWNING;
         }
-        case STATE_READY:
-            // send data
-            if (server->master.enableMasterConnection == 1) {
-                if (server->player[playerID].toldToMaster == 0) {
-                    updateMaster(server);
-                    server->player[playerID].toldToMaster = 1;
-                }
+        break;
+    }
+    case STATE_READY:
+        // send data
+        if (server->master.enable_master_connection == 1) {
+            if (server->player[playerID].told_to_master == 0) {
+                master_update(server);
+                server->player[playerID].told_to_master = 1;
             }
-            break;
-        default:
-            // disconnected
-            break;
+        }
+        break;
+    default:
+        // disconnected
+        break;
     }
 }
 
 static void* WorldUpdate(void)
 {
-    for (uint8 playerID = 0; playerID < server.protocol.maxPlayers; ++playerID) {
+    for (uint8_t playerID = 0; playerID < server.protocol.max_players; ++playerID) {
         OnPlayerUpdate(&server, playerID);
-        if (isPastJoinScreen(&server, playerID)) {
-            uint64 time = getNanos();
-            if (time - server.player[playerID].timers.timeSinceLastWU >=
-                (uint64) (NANO_IN_SECOND / server.player[playerID].ups))
-            {
-                SendWorldUpdate(&server, playerID);
-                server.player[playerID].timers.timeSinceLastWU = getNanos();
+        if (is_past_join_screen(&server, playerID)) {
+            uint64_t time = get_nanos();
+            if (time - server.player[playerID].timers.time_since_last_wu >= (uint64_t)(NANO_IN_SECOND / server.player[playerID].ups)) {
+                send_world_update(&server, playerID);
+                server.player[playerID].timers.time_since_last_wu = get_nanos();
             }
         }
     }
     return 0;
 }
 
-static void ServerUpdate(Server* server, int timeout)
+static void ServerUpdate(server_t* server, int timeout)
 {
 
     ENetEvent event;
     while (enet_host_service(server->host, &event, timeout) > 0) {
-        uint8 bannedUser = 0;
-        uint8 playerID;
+        uint8_t bannedUser = 0;
+        uint8_t playerID;
         switch (event.type) {
-            case ENET_EVENT_TYPE_NONE:
-                LOG_STATUS("Event of type none received. Ignoring");
+        case ENET_EVENT_TYPE_NONE:
+            LOG_STATUS("Event of type none received. Ignoring");
+            break;
+        case ENET_EVENT_TYPE_CONNECT:
+            if (event.data != VERSION_0_75) {
+                enet_peer_disconnect_now(event.peer, REASON_WRONG_PROTOCOL_VERSION);
                 break;
-            case ENET_EVENT_TYPE_CONNECT:
-                if (event.data != VERSION_0_75) {
-                    enet_peer_disconnect_now(event.peer, REASON_WRONG_PROTOCOL_VERSION);
-                    break;
-                }
+            }
 
-                struct json_object* root = json_object_from_file("Bans.json");
-                if (root == NULL) {
-                    FILE* fp;
-                    fp = fopen("Bans.json", "w+");
-                    if (fp == NULL) {
-                        perror("Unable to open/create Bans.json with error: ");
-                        exit(EXIT_FAILURE);
-                    }
-                    fclose(fp);
-                    root = json_object_new_object();
-                    json_object_object_add(root, "Bans", json_object_new_array());
-                    json_object_to_file("Bans.json", root);
+            struct json_object* root = json_object_from_file("Bans.json");
+            if (root == NULL) {
+                FILE* fp;
+                fp = fopen("Bans.json", "w+");
+                if (fp == NULL) {
+                    perror("Unable to open/create Bans.json with error: ");
+                    exit(EXIT_FAILURE);
                 }
-                IPStruct hostIP;
-                hostIP.CIDR       = 24;
-                hostIP.Union.ip32 = event.peer->address.host;
-                struct json_object* array;
-                json_object_object_get_ex(root, "Bans", &array);
-                int count = json_object_array_length(array);
-                for (int i = 0; i < count; ++i) {
-                    struct json_object* objectAtIndex = json_object_array_get_idx(array, i);
-                    const char*         IP;
-                    const char*         startOfRangeString;
-                    const char*         endOfRangeString;
-                    READ_STR_FROM_JSON(
-                    objectAtIndex, startOfRangeString, start_of_range, "start of range", "0.0.0.0", 1);
-                    READ_STR_FROM_JSON(objectAtIndex, endOfRangeString, end_of_range, "end of range", "0.0.0.0", 1);
-                    READ_STR_FROM_JSON(objectAtIndex, IP, IP, "IP", "0.0.0.0", 1);
-                    IPStruct ipStruct;
-                    IPStruct startOfRange, endOfRange;
-                    if (formatStringToIP((char*) IP, &ipStruct) &&
-                        (formatStringToIP((char*) startOfRangeString, &startOfRange) &&
-                         formatStringToIP((char*) endOfRangeString, &endOfRange)))
-                    {
-                        if (IPInRange(hostIP, ipStruct, startOfRange, endOfRange)) {
-                            const char* nameOfPlayer;
-                            const char* reason;
-                            double      time    = 0.0f;
-                            uint64      timeNow = getNanos();
-                            READ_STR_FROM_JSON(objectAtIndex, nameOfPlayer, Name, "Name", "Deuce", 0);
-                            READ_STR_FROM_JSON(objectAtIndex, reason, Reason, "Reason", "None", 0);
-                            READ_DOUBLE_FROM_JSON(objectAtIndex, time, Time, "Time", 0.0f, 0);
-                            if (((long double) timeNow / NANO_IN_MINUTE) > time && time != 0) {
-                                json_object_array_del_idx(array, i, 1);
-                                json_object_to_file("Bans.json", root);
-                                continue; // Continue searching for bans and delete all the old ones that match host IP
-                                          // or its range
-                            } else {
-                                enet_peer_disconnect(event.peer, REASON_BANNED);
+                fclose(fp);
+                root = json_object_new_object();
+                json_object_object_add(root, "Bans", json_object_new_array());
+                json_object_to_file("Bans.json", root);
+            }
+            ip_t hostIP;
+            hostIP.cidr = 24;
+            hostIP.ip32 = event.peer->address.host;
+            struct json_object* array;
+            json_object_object_get_ex(root, "Bans", &array);
+            int count = json_object_array_length(array);
+            for (int i = 0; i < count; ++i) {
+                struct json_object* objectAtIndex = json_object_array_get_idx(array, i);
+                const char*         IP;
+                const char*         startOfRangeString;
+                const char*         endOfRangeString;
+                READ_STR_FROM_JSON(
+                    objectAtIndex,
+                    startOfRangeString,
+                    start_of_range,
+                    "start of range",
+                    "0.0.0.0",
+                    1);
+                READ_STR_FROM_JSON(objectAtIndex, endOfRangeString, end_of_range, "end of range", "0.0.0.0", 1);
+                READ_STR_FROM_JSON(objectAtIndex, IP, IP, "IP", "0.0.0.0", 1);
+                ip_t ipStruct;
+                ip_t startOfRange, endOfRange;
+                if (format_str_to_ip((char*)IP, &ipStruct) && (format_str_to_ip((char*)startOfRangeString, &startOfRange) && format_str_to_ip((char*)endOfRangeString, &endOfRange))) {
+                    if (ip_in_range(hostIP, ipStruct, startOfRange, endOfRange)) {
+                        const char* nameOfPlayer;
+                        const char* reason;
+                        double      time    = 0.0f;
+                        uint64_t    timeNow = get_nanos();
+                        READ_STR_FROM_JSON(objectAtIndex, nameOfPlayer, Name, "Name", "Deuce", 0);
+                        READ_STR_FROM_JSON(objectAtIndex, reason, Reason, "Reason", "None", 0);
+                        READ_DOUBLE_FROM_JSON(objectAtIndex, time, Time, "Time", 0.0f, 0);
+                        if (((long double)timeNow / NANO_IN_MINUTE) > time && time != 0) {
+                            json_object_array_del_idx(array, i, 1);
+                            json_object_to_file("Bans.json", root);
+                            continue; // Continue searching for bans and delete all the old ones that match host IP
+                                      // or its range
+                        } else {
+                            enet_peer_disconnect(event.peer, REASON_BANNED);
 
-                                LOG_WARNING("Banned user %s tried to join with IP: %hhu.%hhu.%hhu.%hhu Banned for: %s",
-                                            nameOfPlayer,
-                                            hostIP.Union.ip[0],
-                                            hostIP.Union.ip[1],
-                                            hostIP.Union.ip[2],
-                                            hostIP.Union.ip[3],
-                                            reason);
-                                bannedUser       = 1;
-                                event.peer->data = (void*) ((size_t) server->protocol.maxPlayers - 1);
-                                break;
-                            }
+                            LOG_WARNING("Banned user %s tried to join with IP: %hhu.%hhu.%hhu.%hhu Banned for: %s",
+                                nameOfPlayer,
+                                hostIP.ip[0],
+                                hostIP.ip[1],
+                                hostIP.ip[2],
+                                hostIP.ip[3],
+                                reason);
+                            bannedUser       = 1;
+                            event.peer->data = (void*)((size_t)server->protocol.max_players - 1);
+                            break;
                         }
                     }
                 }
-                json_object_put(root);
+            }
+            json_object_put(root);
 
-                if (bannedUser) {
-                    break;
-                }
-                // check peer
-                // ...
-                // find next free ID
-                playerID = OnConnect(server);
-                if (playerID == 0xFF) {
-                    enet_peer_disconnect_now(event.peer, REASON_SERVER_FULL);
-                    LOG_WARNING("Server full. Kicking player");
-                    break;
-                }
-                server->player[playerID].peer                = event.peer;
-                event.peer->data                             = (void*) ((size_t) playerID);
-                server->player[playerID].HP                  = 100;
-                server->player[playerID].ipStruct.Union.ip32 = event.peer->address.host;
-
-                formatIPToString(server->player[playerID].name, server->player[playerID].ipStruct);
-                snprintf(server->player[playerID].name, 6, "Limbo");
-                char ipString[17];
-                formatIPToString(ipString, server->player[playerID].ipStruct);
-                LOG_INFO("Player %s (%s, #%hhu) connected", server->player[playerID].name, ipString, playerID);
-
-                server->player[playerID].timers.sincePeriodicMessage = getNanos();
-                server->player[playerID].currentPeriodicMessage      = server->periodicMessages;
-                server->player[playerID].periodicDelayIndex          = 0;
-                break;
-            case ENET_EVENT_TYPE_DISCONNECT:
-                playerID = (uint8) ((size_t) event.peer->data);
-                if (playerID != server->protocol.maxPlayers - 1) {
-                    sendIntelDrop(server, playerID);
-                    sendPlayerLeft(server, playerID);
-                    Vector3f empty   = {0, 0, 0};
-                    Vector3f forward = {1, 0, 0};
-                    Vector3f height  = {0, 0, 1};
-                    Vector3f strafe  = {0, 1, 0};
-                    initPlayer(server, playerID, 0, 1, empty, forward, strafe, height);
-                    server->protocol.numPlayers--;
-                    server->protocol.teamUserCount[server->player[playerID].team]--;
-                    if (server->master.enableMasterConnection == 1) {
-                        updateMaster(server);
-                    }
-                }
-                break;
-            case ENET_EVENT_TYPE_RECEIVE:
-            {
-                DataStream stream = {event.packet->data, event.packet->dataLength, 0};
-                playerID          = (uint8) ((size_t) event.peer->data);
-                OnPacketReceived(server, playerID, &stream, event);
-                enet_packet_destroy(event.packet);
+            if (bannedUser) {
                 break;
             }
+            // check peer
+            // ...
+            // find next free ID
+            playerID = OnConnect(server);
+            if (playerID == 0xFF) {
+                enet_peer_disconnect_now(event.peer, REASON_SERVER_FULL);
+                LOG_WARNING("Server full. Kicking player");
+                break;
+            }
+            server->player[playerID].peer    = event.peer;
+            event.peer->data                 = (void*)((size_t)playerID);
+            server->player[playerID].hp      = 100;
+            server->player[playerID].ip.ip32 = event.peer->address.host;
+
+            format_ip_to_str(server->player[playerID].name, server->player[playerID].ip);
+            snprintf(server->player[playerID].name, 6, "Limbo");
+            char ipString[17];
+            format_ip_to_str(ipString, server->player[playerID].ip);
+            LOG_INFO("Player %s (%s, #%hhu) connected", server->player[playerID].name, ipString, playerID);
+
+            server->player[playerID].timers.since_periodic_message = get_nanos();
+            server->player[playerID].current_periodic_message      = server->periodic_messages;
+            server->player[playerID].periodic_delay_index          = 0;
+            break;
+        case ENET_EVENT_TYPE_DISCONNECT:
+            playerID = (uint8_t)((size_t)event.peer->data);
+            if (playerID != server->protocol.max_players - 1) {
+                send_intel_drop(server, playerID);
+                send_player_left(server, playerID);
+                vector3f_t empty   = { 0, 0, 0 };
+                vector3f_t forward = { 1, 0, 0 };
+                vector3f_t height  = { 0, 0, 1 };
+                vector3f_t strafe  = { 0, 1, 0 };
+                init_player(server, playerID, 0, 1, empty, forward, strafe, height);
+                server->protocol.num_players--;
+                server->protocol.num_team_users[server->player[playerID].team]--;
+                if (server->master.enable_master_connection == 1) {
+                    master_update(server);
+                }
+            }
+            break;
+        case ENET_EVENT_TYPE_RECEIVE: {
+            datastream_t stream = { event.packet->data, event.packet->dataLength, 0 };
+            playerID            = (uint8_t)((size_t)event.peer->data);
+            on_packet_received(server, playerID, &stream, event);
+            enet_packet_destroy(event.packet);
+            break;
+        }
         }
     }
 }
 
 void ReadlineNewLine(int signal)
 {
-    (void) signal; // To prevent a warning about unused variable
+    (void)signal; // To prevent a warning about unused variable
 
     ctrlc = 1;
     printf("\n");
@@ -596,7 +592,7 @@ void StopServer(void)
 
 static void* serverConsole(void* arg)
 {
-    (void) arg;
+    (void)arg;
     char* buf;
 
     while ((buf = readline("\x1B[0;34mConsole> \x1B[0;37m")) != NULL) {
@@ -607,9 +603,9 @@ static void* serverConsole(void* arg)
             ctrlc = 0;
         } else if (strlen(buf) > 0) {
             add_history(buf);
-            pthread_mutex_lock(&serverLock);
-            handleCommands(&server, 255, buf, 1);
-            pthread_mutex_unlock(&serverLock);
+            pthread_mutex_lock(&server_lock);
+            command_handle(&server, 255, buf, 1);
+            pthread_mutex_unlock(&server_lock);
         }
         free(buf);
     }
@@ -625,32 +621,32 @@ static void* serverConsole(void* arg)
     return 0;
 }
 
-void StartServer(uint16      port,
-                 uint32      connections,
-                 uint32      channels,
-                 uint32      inBandwidth,
-                 uint32      outBandwidth,
-                 uint8       master,
-                 stringNode* mapList,
-                 uint8       mapCount,
-                 stringNode* welcomeMessageList,
-                 uint8       welcomeMessageListLen,
-                 stringNode* periodicMessageList,
-                 uint8       periodicMessageListLen,
-                 uint8*      periodicDelays,
-                 const char* managerPasswd,
-                 const char* adminPasswd,
-                 const char* modPasswd,
-                 const char* guardPasswd,
-                 const char* trustedPasswd,
-                 const char* serverName,
-                 const char* team1Name,
-                 const char* team2Name,
-                 uint8*      team1Color,
-                 uint8*      team2Color,
-                 uint8       gamemode)
+void server_start(uint16_t port,
+    uint32_t               connections,
+    uint32_t               channels,
+    uint32_t               inBandwidth,
+    uint32_t               outBandwidth,
+    uint8_t                master,
+    string_node_t*         map_list,
+    uint8_t                map_count,
+    string_node_t*         welcomeMessageList,
+    uint8_t                welcomeMessageListLen,
+    string_node_t*         periodicMessageList,
+    uint8_t                periodicMessageListLen,
+    uint8_t*               periodicDelays,
+    const char*            managerPasswd,
+    const char*            adminPasswd,
+    const char*            modPasswd,
+    const char*            guardPasswd,
+    const char*            trustedPasswd,
+    const char*            serverName,
+    const char*            team1Name,
+    const char*            team2Name,
+    uint8_t*               team1_color,
+    uint8_t*               team2_color,
+    uint8_t                gamemode)
 {
-    server.globalTimers.timeSinceStart = getNanos();
+    server.global_timers.time_since_start = get_nanos();
     LOG_STATUS("Welcome to SpadesX server");
     LOG_STATUS("Initializing ENet");
 
@@ -660,7 +656,7 @@ void StartServer(uint16      port,
     }
     atexit(enet_deinitialize);
 
-    if (pthread_mutex_init(&serverLock, NULL) != 0) {
+    if (pthread_mutex_init(&server_lock, NULL) != 0) {
         LOG_ERROR("Server mutex failed to initialize");
         exit(EXIT_FAILURE);
     }
@@ -683,38 +679,38 @@ void StartServer(uint16      port,
 
     server.port = port;
 
-    server.host->intercept = &rawUdpInterceptCallback;
+    server.host->intercept = &raw_udp_intercept_callback;
 
     LOG_STATUS("Intializing server");
-    server.running              = 1;
-    server.map.mapList          = mapList;
-    server.map.mapCount         = mapCount;
-    server.welcomeMessages      = welcomeMessageList;
-    server.welcomeMessageCount  = welcomeMessageListLen;
-    server.periodicMessages     = periodicMessageList;
-    server.periodicMessageCount = periodicMessageListLen;
-    server.periodicDelays       = periodicDelays;
-    ServerInit(&server, connections, serverName, team1Name, team2Name, team1Color, team2Color, gamemode, 0);
+    server.running                = 1;
+    server.s_map.map_list         = map_list;
+    server.s_map.map_count        = map_count;
+    server.welcome_messages       = welcomeMessageList;
+    server.welcome_messages_count = welcomeMessageListLen;
+    server.periodic_messages      = periodicMessageList;
+    server.periodic_message_count = periodicMessageListLen;
+    server.periodic_delays        = periodicDelays;
+    ServerInit(&server, connections, serverName, team1Name, team2Name, team1_color, team2_color, gamemode, 0);
 
-    populateCommands(&server);
+    command_populate_all(&server);
 
-    server.master.enableMasterConnection = master;
-    server.managerPasswd                 = managerPasswd;
-    server.adminPasswd                   = adminPasswd;
-    server.modPasswd                     = modPasswd;
-    server.guardPasswd                   = guardPasswd;
-    server.trustedPasswd                 = trustedPasswd;
+    server.master.enable_master_connection = master;
+    server.manager_passwd                  = managerPasswd;
+    server.admin_passwd                    = adminPasswd;
+    server.mod_passwd                      = modPasswd;
+    server.guard_passwd                    = guardPasswd;
+    server.trusted_passwd                  = trustedPasswd;
 
     if (server.running) {
         LOG_STATUS("Server started");
     }
-    if (server.master.enableMasterConnection == 1) {
-        ConnectMaster(&server, port);
+    if (server.master.enable_master_connection == 1) {
+        master_connect(&server, port);
     }
-    server.master.timeSinceLastSend = time(NULL);
+    server.master.time_since_last_send = time(NULL);
 
     pthread_t masterThread;
-    pthread_create(&masterThread, NULL, keepMasterAlive, (void*) &server);
+    pthread_create(&masterThread, NULL, master_keep_alive, (void*)&server);
     pthread_detach(masterThread);
 
     rl_catch_signals = 0;
@@ -725,27 +721,27 @@ void StartServer(uint16      port,
     signal(SIGINT, ReadlineNewLine);
 
     while (server.running) {
-        pthread_mutex_lock(&serverLock);
+        pthread_mutex_lock(&server_lock);
         calculatePhysics();
         ServerUpdate(&server, 0);
         WorldUpdate();
-        forPlayers();
-        pthread_mutex_unlock(&serverLock);
+        _for_players();
+        pthread_mutex_unlock(&server_lock);
         sleep(0);
     }
-    while (server.map.compressedMap) {
-        server.map.compressedMap = Pop(server.map.compressedMap);
+    while (server.s_map.compressed_map) {
+        server.s_map.compressed_map = queue_pop(server.s_map.compressed_map);
     }
-    free(server.map.compressedMap);
+    free(server.s_map.compressed_map);
 
-    freeCommands(&server);
+    command_free_all(&server);
 
-    freeStringNodes(server.welcomeMessages);
-    freeStringNodes(server.map.mapList);
-    freeStringNodes(server.periodicMessages);
-    mapvxl_free(&server.map.map);
+    _string_nodes_free(server.welcome_messages);
+    _string_nodes_free(server.s_map.map_list);
+    _string_nodes_free(server.periodic_messages);
+    mapvxl_free(&server.s_map.map);
 
-    pthread_mutex_destroy(&serverLock);
+    pthread_mutex_destroy(&server_lock);
 
     printf("\n");
     LOG_STATUS("Exiting");

@@ -2,6 +2,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include "../Extern/libmapvxl/libmapvxl.h"
 #include "Protocol.h"
 #include "Util/Enums.h"
 #include "Util/Line.h"
@@ -10,40 +11,40 @@
 
 #include <enet/enet.h>
 #include <pthread.h>
-#include "../Extern/libmapvxl/libmapvxl.h"
 
 #ifndef DEFAULT_SERVER_PORT
-    #define DEFAULT_SERVER_PORT 32887
+#define DEFAULT_SERVER_PORT 32887
 #endif
 
-extern pthread_mutex_t serverLock;
+extern pthread_mutex_t server_lock;
 
-Server* getServer(void);
+server_t* get_server(void);
 
-void StartServer(uint16      port,
-                 uint32      connections,
-                 uint32      channels,
-                 uint32      inBandwidth,
-                 uint32      outBandwidth,
-                 uint8       master,
-                 stringNode* mapList,
-                 uint8       mapCount,
-                 stringNode* welcomeMessageList,
-                 uint8       welcomeMessageListLen,
-                 stringNode* periodicMessageList,
-                 uint8       periodicMessageListLen,
-                 uint8*      periodicDelays,
-                 const char* managerPasswd,
-                 const char* adminPasswd,
-                 const char* modPasswd,
-                 const char* guardPasswd,
-                 const char* trustedPasswd,
-                 const char* serverName,
-                 const char* team1Name,
-                 const char* team2Name,
-                 uint8*      team1Color,
-                 uint8*      team2Color,
-                 uint8       gamemode);
-void ServerReset(Server* server);
+void server_start(uint16_t port,
+    uint32_t               connections,
+    uint32_t               channels,
+    uint32_t               inBandwidth,
+    uint32_t               outBandwidth,
+    uint8_t                master,
+    string_node_t*         map_list,
+    uint8_t                map_count,
+    string_node_t*         welcome_message_list,
+    uint8_t                welcome_message_list_length,
+    string_node_t*         periodic_message_list,
+    uint8_t                periodic_message_list_length,
+    uint8_t*               periodic_delays,
+    const char*            manager_password,
+    const char*            admin_password,
+    const char*            mod_passowrd,
+    const char*            guard_password,
+    const char*            trusted_password,
+    const char*            server_name,
+    const char*            team1_name,
+    const char*            team2_name,
+    uint8_t*               team1_color,
+    uint8_t*               team2_color,
+    uint8_t                gamemode);
+
+void server_reset(server_t* server);
 
 #endif /* SERVER_H */
