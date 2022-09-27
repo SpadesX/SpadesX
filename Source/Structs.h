@@ -237,7 +237,6 @@ typedef struct
 
 typedef struct
 {
-    Player srvPlayer;
     uint8  player;
     uint8  console;
     uint32 commandPermissions;

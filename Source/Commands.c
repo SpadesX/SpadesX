@@ -1030,10 +1030,6 @@ uint8 parseArguments(Server* server, CommandArguments* arguments, char* message,
 
 void handleCommands(Server* server, uint8 player, char* message, uint8 console)
 {
-    Player srvPlayer;
-    if (!console) {
-        srvPlayer = server->player[player];
-    }
     char* command = calloc(1000, sizeof(uint8));
     sscanf(message, "%s", command);
     uint8 commandLength = strlen(command);
@@ -1050,9 +1046,6 @@ void handleCommands(Server* server, uint8 player, char* message, uint8 console)
 
     CommandArguments arguments;
     arguments.player = player;
-    if (!console) {
-        arguments.srvPlayer = srvPlayer;
-    }
     arguments.commandPermissions = commandStruct->PermLevel;
     arguments.console            = console;
 
