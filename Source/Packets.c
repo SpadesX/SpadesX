@@ -860,12 +860,13 @@ void send_respawn(server_t* server, uint8_t playerID)
     server->player[playerID].state = STATE_READY;
 }
 
-void handle_and_send_message(ENetEvent event, datastream_t* data, server_t* server, uint8_t player)
+void handle_and_send_message(server_t* server, uint8_t player, datastream_t* data)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
-    uint32_t packetSize = event.packet->dataLength;
+    uint32_t packetSize = data->length;
+    LOG_STATUS("%d %d", packetSize, data->length);
     uint8_t  ID         = datastream_read_u8(data);
     int      meantfor   = datastream_read_u8(data);
     uint32_t length     = datastream_left(data);
@@ -1852,7 +1853,7 @@ static void receiveVersionResponse(server_t* server, uint8_t playerID, datastrea
         }
     }
 }
-void on_packet_received(server_t* server, uint8_t playerID, datastream_t* data, ENetEvent event)
+void on_packet_received(server_t* server, uint8_t playerID, datastream_t* data)
 {
     packet_id_t type = (packet_id_t) datastream_read_u8(data);
     switch (type) {
@@ -1869,7 +1870,7 @@ void on_packet_received(server_t* server, uint8_t playerID, datastream_t* data, 
             receiveInputData(server, playerID, data);
             break;
         case PACKET_TYPE_CHAT_MESSAGE:
-            handle_and_send_message(event, data, server, playerID);
+            handle_and_send_message(server, playerID, data);
             break;
         case PACKET_TYPE_BLOCK_ACTION:
             receiveBlockAction(server, playerID, data);

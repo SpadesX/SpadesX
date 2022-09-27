@@ -562,7 +562,7 @@ static void ServerUpdate(server_t* server, int timeout)
             {
                 datastream_t stream = {event.packet->data, event.packet->dataLength, 0};
                 playerID            = (uint8_t) ((size_t) event.peer->data);
-                on_packet_received(server, playerID, &stream, event);
+                on_packet_received(server, playerID, &stream);
                 enet_packet_destroy(event.packet);
                 break;
             }
