@@ -18,16 +18,16 @@ void send_player_left(server_t* server, uint8_t player_id);
 void send_weapon_reload(server_t* server, uint8_t player_id, uint8_t startAnimation, uint8_t clip, uint8_t reserve);
 void send_weapon_input(server_t* server, uint8_t player_id, uint8_t wInput);
 void send_set_color(server_t* server, uint8_t player_id, uint8_t R, uint8_t G, uint8_t B);
-void send_set_color_to_player(server_t* server, uint8_t player_id, uint8_t sendToID, uint8_t R, uint8_t G, uint8_t B);
+void send_set_color_to_player(server_t* server, uint8_t player_id, uint8_t send_to_id, uint8_t R, uint8_t G, uint8_t B);
 void send_set_tool(server_t* server, uint8_t player_id, uint8_t tool);
 void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vector3i_t end);
-void block_line_to_player(server_t* server, uint8_t player_id, uint8_t sendToID, vector3i_t start, vector3i_t end);
-void send_block_action(server_t* server, uint8_t player_id, uint8_t actionType, int X, int Y, int Z);
+void block_line_to_player(server_t* server, uint8_t player_id, uint8_t send_to_id, vector3i_t start, vector3i_t end);
+void send_block_action(server_t* server, uint8_t player_id, uint8_t action_type, int X, int Y, int Z);
 
 void send_block_action_to_player(server_t* server,
                                  uint8_t   player_id,
-                                 uint8_t   sendToID,
-                                 uint8_t   actionType,
+                                 uint8_t   send_to_id,
+                                 uint8_t   action_type,
                                  int       X,
                                  int       Y,
                                  int       Z);

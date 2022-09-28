@@ -429,7 +429,7 @@ uint8_t valid_pos_3f(server_t* server, uint8_t player_id, float X, float Y, floa
     return 0;
 }
 
-vector3i_t* get_neighbours(vector3i_t pos)
+vector3i_t* get_neighbors(vector3i_t pos)
 {
     static vector3i_t neighArray[6];
     neighArray[0].x = pos.x;
@@ -1144,7 +1144,7 @@ void handleGrenade(server_t* server, uint8_t player_id)
     }
 }
 
-void updateMovementAndGrenades(server_t* server)
+void update_movement_and_grenades(server_t* server)
 {
     physics_set_globals((server->global_timers.update_time - server->global_timers.time_since_start) / 1000000000.f,
                         (server->global_timers.update_time - server->global_timers.last_update_time) / 1000000000.f);
@@ -1164,7 +1164,7 @@ void updateMovementAndGrenades(server_t* server)
     }
 }
 
-void SetPlayerRespawnPoint(server_t* server, uint8_t player_id)
+void set_player_respawn_point(server_t* server, uint8_t player_id)
 {
     if (server->player[player_id].team != TEAM_SPECTATOR) {
         quad3d_t* spawn = server->protocol.spawns + server->player[player_id].team;
@@ -1244,7 +1244,7 @@ void broadcast_server_notice(server_t* server, uint8_t console, const char* mess
     }
 }
 
-uint8_t player_to_player_visibile(server_t* server, uint8_t player_id, uint8_t player_id2)
+uint8_t player_to_player_visible(server_t* server, uint8_t player_id, uint8_t player_id2)
 {
     float distance = 0;
     distance       = sqrt(
@@ -1285,7 +1285,7 @@ uint8_t Collision3D(vector3f_t vector1, vector3f_t vector2, uint8_t distance)
     }
 }
 
-uint8_t SendPacketExceptSender(server_t* server, ENetPacket* packet, uint8_t player_id)
+uint8_t send_packet_except_sender(server_t* server, ENetPacket* packet, uint8_t player_id)
 {
     uint8_t sent = 0;
     for (uint8_t i = 0; i < 32; ++i) {
@@ -1298,12 +1298,12 @@ uint8_t SendPacketExceptSender(server_t* server, ENetPacket* packet, uint8_t pla
     return sent;
 }
 
-uint8_t SendPacketExceptSenderDistCheck(server_t* server, ENetPacket* packet, uint8_t player_id)
+uint8_t send_packet_except_sender_dist_check(server_t* server, ENetPacket* packet, uint8_t player_id)
 {
     uint8_t sent = 0;
     for (uint8_t i = 0; i < 32; ++i) {
         if (player_id != i && is_past_state_data(server, i)) {
-            if (player_to_player_visibile(server, player_id, i) || server->player[i].team == TEAM_SPECTATOR) {
+            if (player_to_player_visible(server, player_id, i) || server->player[i].team == TEAM_SPECTATOR) {
                 if (enet_peer_send(server->player[i].peer, 0, packet) == 0) {
                     sent = 1;
                 }
@@ -1313,12 +1313,12 @@ uint8_t SendPacketExceptSenderDistCheck(server_t* server, ENetPacket* packet, ui
     return sent;
 }
 
-uint8_t SendPacketDistCheck(server_t* server, ENetPacket* packet, uint8_t player_id)
+uint8_t send_packet_dist_check(server_t* server, ENetPacket* packet, uint8_t player_id)
 {
     uint8_t sent = 0;
     for (uint8_t i = 0; i < 32; ++i) {
         if (is_past_state_data(server, i)) {
-            if (player_to_player_visibile(server, player_id, i) || server->player[i].team == TEAM_SPECTATOR) {
+            if (player_to_player_visible(server, player_id, i) || server->player[i].team == TEAM_SPECTATOR) {
                 if (enet_peer_send(server->player[i].peer, 0, packet) == 0) {
                     sent = 1;
                 }

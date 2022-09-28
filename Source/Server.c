@@ -192,7 +192,7 @@ static void* calculatePhysics(void)
 {
     server.global_timers.update_time = get_nanos();
     if (server.global_timers.update_time - server.global_timers.last_update_time >= (1000000000 / 60)) {
-        updateMovementAndGrenades(&server);
+        update_movement_and_grenades(&server);
         server.global_timers.last_update_time = get_nanos();
     }
     return 0;
@@ -380,7 +380,7 @@ static void OnPlayerUpdate(server_t* server, uint8_t player_id)
             server->player[player_id].secondary_fire = 0;
             server->player[player_id].alive          = 1;
             server->player[player_id].reloading      = 0;
-            SetPlayerRespawnPoint(server, player_id);
+            set_player_respawn_point(server, player_id);
             send_respawn(server, player_id);
             LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
                      server->player[player_id].name,

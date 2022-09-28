@@ -5,7 +5,6 @@
 #include "ParseConvert.h"
 #include "Protocol.h"
 #include "Structs.h"
-#include "Util/Uthash.h"
 #include "Util/Compress.h"
 #include "Util/DataStream.h"
 #include "Util/Enums.h"
@@ -14,6 +13,7 @@
 #include "Util/Physics.h"
 #include "Util/Queue.h"
 #include "Util/Types.h"
+#include "Util/Uthash.h"
 #include "Util/Utlist.h"
 
 #include <ctype.h>
@@ -89,8 +89,9 @@ void send_restock(server_t* server, uint8_t player_id)
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
     player_t*   player = &server->player[player_id];
+    stream_t    stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_RESTOCK);
     stream_write_u8(&stream, player_id);
     if (enet_peer_send(player->peer, 0, packet) != 0) {
@@ -104,7 +105,8 @@ void send_move_object(server_t* server, uint8_t object, uint8_t team, vector3f_t
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+    stream_t    stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_MOVE_OBJECT);
     stream_write_u8(&stream, object);
     stream_write_u8(&stream, team);
@@ -141,7 +143,8 @@ void send_intel_capture(server_t* server, uint8_t player_id, uint8_t winning)
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+    stream_t    stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_INTEL_CAPTURE);
     stream_write_u8(&stream, player_id);
     stream_write_u8(&stream, winning);
@@ -166,18 +169,24 @@ void send_intel_pickup(server_t* server, uint8_t player_id)
     if (server->protocol.num_players == 0) {
         return;
     }
+
     uint8_t   team;
     player_t* player = &server->player[player_id];
+
     if (player->team == 0) {
         team = 1;
     } else {
         team = 0;
     }
+
     if (player->has_intel == 1 || server->protocol.gamemode.intel_held[team] == 1) {
         return;
     }
+
     ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_INTEL_PICKUP);
     stream_write_u8(&stream, player_id);
     player->has_intel                                         = 1;
@@ -192,6 +201,7 @@ void send_intel_pickup(server_t* server, uint8_t player_id)
             }
         }
     }
+
     if (sent == 0) {
         enet_packet_destroy(packet);
     }
@@ -202,53 +212,61 @@ void send_intel_drop(server_t* server, uint8_t player_id)
     if (server->protocol.num_players == 0) {
         return;
     }
+
     uint8_t   team;
     player_t* player = &server->player[player_id];
-    if (player->team == 0) {
-        team = 1;
+
+    if (player->team == TEAM_A) {
+        team = TEAM_B;
     } else {
-        team = 0;
+        team = TEAM_A;
     }
+
     if (player->has_intel == 0 || server->protocol.gamemode.intel_held[team] == 0) {
         return;
     }
+
     ENetPacket* packet = enet_packet_create(NULL, 14, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_INTEL_DROP);
     stream_write_u8(&stream, player_id);
+
+    gamemode_vars_t* gamemode = &server->protocol.gamemode;
     if (server->protocol.current_gamemode == GAME_MODE_BABEL) {
+        uint16_t top_block =
+        mapvxl_find_top_block(&server->s_map.map, server->s_map.map.size_x / 2, server->s_map.map.size_y / 2);
+
         stream_write_f(&stream, (float) server->s_map.map.size_x / 2);
         stream_write_f(&stream, (float) server->s_map.map.size_y / 2);
-        stream_write_f(
-        &stream,
-        (float) mapvxl_find_top_block(&server->s_map.map, server->s_map.map.size_x / 2, server->s_map.map.size_y / 2));
+        stream_write_f(&stream, top_block);
 
-        server->protocol.gamemode.intel[team].x = (float) server->s_map.map.size_x / 2;
-        server->protocol.gamemode.intel[team].y = (float) server->s_map.map.size_y / 2;
-        server->protocol.gamemode.intel[team].z =
-        mapvxl_find_top_block(&server->s_map.map, server->s_map.map.size_x / 2, server->s_map.map.size_y / 2);
-        server->protocol.gamemode.intel[player->team] = server->protocol.gamemode.intel[team];
-        send_move_object(server, player->team, player->team, server->protocol.gamemode.intel[team]);
+        gamemode->intel[team].x       = (float) server->s_map.map.size_x / 2;
+        gamemode->intel[team].y       = (float) server->s_map.map.size_y / 2;
+        gamemode->intel[team].z       = top_block;
+        gamemode->intel[player->team] = gamemode->intel[team];
+        send_move_object(server, player->team, player->team, gamemode->intel[team]);
     } else {
-        stream_write_f(&stream, player->movement.position.x);
-        stream_write_f(&stream, player->movement.position.y);
-        stream_write_f(
-        &stream,
-        (float) mapvxl_find_top_block(&server->s_map.map, player->movement.position.x, player->movement.position.y));
+        vector3f_t* position = &player->movement.position;
+        stream_write_f(&stream, position->x);
+        stream_write_f(&stream, position->y);
+        stream_write_f(&stream, (float) mapvxl_find_top_block(&server->s_map.map, position->x, position->y));
 
-        server->protocol.gamemode.intel[team].x = (int) player->movement.position.x;
-        server->protocol.gamemode.intel[team].y = (int) player->movement.position.y;
-        server->protocol.gamemode.intel[team].z =
-        mapvxl_find_top_block(&server->s_map.map, player->movement.position.x, player->movement.position.y);
+        gamemode->intel[team].x = (int) position->x;
+        gamemode->intel[team].y = (int) position->y;
+        gamemode->intel[team].z = mapvxl_find_top_block(&server->s_map.map, position->x, position->y);
     }
-    player->has_intel                                         = 0;
-    server->protocol.gamemode.player_intel_team[player->team] = 32;
-    server->protocol.gamemode.intel_held[team]                = 0;
+
+    player->has_intel                         = 0;
+    gamemode->player_intel_team[player->team] = 32;
+    gamemode->intel_held[team]                = 0;
 
     LOG_INFO("Dropping intel at X: %d, Y: %d, Z: %d",
-             (int) server->protocol.gamemode.intel[team].x,
-             (int) server->protocol.gamemode.intel[team].y,
-             (int) server->protocol.gamemode.intel[team].z);
+             (int) gamemode->intel[team].x,
+             (int) gamemode->intel[team].y,
+             (int) gamemode->intel[team].z);
+
     uint8_t sent = 0;
     for (int player = 0; player < server->protocol.max_players; ++player) {
         if (is_past_state_data(server, player)) {
@@ -257,6 +275,7 @@ void send_intel_drop(server_t* server, uint8_t player_id)
             }
         }
     }
+
     if (sent == 0) {
         enet_packet_destroy(packet);
     }
@@ -268,7 +287,9 @@ void send_grenade(server_t* server, uint8_t player_id, float fuse, vector3f_t po
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 30, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_GRENADE_PACKET);
     stream_write_u8(&stream, player_id);
     stream_write_f(&stream, fuse);
@@ -278,7 +299,7 @@ void send_grenade(server_t* server, uint8_t player_id, float fuse, vector3f_t po
     stream_write_f(&stream, velocity.x);
     stream_write_f(&stream, velocity.y);
     stream_write_f(&stream, velocity.z);
-    if (SendPacketExceptSender(server, packet, player_id) == 0) {
+    if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -289,16 +310,15 @@ void send_player_left(server_t* server, uint8_t player_id)
     player_t* player = &server->player[player_id];
     format_ip_to_str(ipString, player->ip);
     LOG_INFO("Player %s (%s, #%hhu) disconnected", player->name, ipString, player_id);
-
-    PlayerDisconnectRun(player_id);
-
     if (server->protocol.num_players == 0) {
         return;
     }
     for (uint8_t i = 0; i < server->protocol.max_players; ++i) {
         if (i != player_id && is_past_state_data(server, i)) {
             ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
-            stream_t    stream = {packet->data, packet->dataLength, 0};
+
+            stream_t stream;
+            stream_from_enet_packet(&stream, packet);
             stream_write_u8(&stream, PACKET_TYPE_PLAYER_LEFT);
             stream_write_u8(&stream, player_id);
 
@@ -362,7 +382,7 @@ void send_weapon_input(server_t* server, uint8_t player_id, uint8_t wInput)
         wInput = 0;
     }
     stream_write_u8(&stream, wInput);
-    if (SendPacketExceptSender(server, packet, player_id) == 0) {
+    if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -373,30 +393,36 @@ void send_set_color(server_t* server, uint8_t player_id, color_t color)
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_SET_COLOR);
     stream_write_u8(&stream, player_id);
     stream_write_u8(&stream, color.b);
     stream_write_u8(&stream, color.g);
     stream_write_u8(&stream, color.r);
-    if (SendPacketExceptSender(server, packet, player_id) == 0) {
+    if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void send_set_color_to_player(server_t* server, uint8_t player_id, uint8_t sendToID, uint8_t R, uint8_t G, uint8_t B)
+void send_set_color_to_player(server_t* server, uint8_t player_id, uint8_t send_to_id, uint8_t R, uint8_t G, uint8_t B)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
+
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_SET_COLOR);
     stream_write_u8(&stream, player_id);
     stream_write_u8(&stream, B);
     stream_write_u8(&stream, G);
     stream_write_u8(&stream, R);
-    if (enet_peer_send(server->player[sendToID].peer, 0, packet) != 0) {
+
+    if (enet_peer_send(server->player[send_to_id].peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -406,12 +432,16 @@ void send_set_tool(server_t* server, uint8_t player_id, uint8_t tool)
     if (server->protocol.num_players == 0) {
         return;
     }
+
     ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_SET_TOOL);
     stream_write_u8(&stream, player_id);
     stream_write_u8(&stream, tool);
-    if (SendPacketExceptSender(server, packet, player_id) == 0) {
+
+    if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -421,8 +451,11 @@ void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vect
     if (server->protocol.num_players == 0) {
         return;
     }
+
     ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_BLOCK_LINE);
     stream_write_u8(&stream, player_id);
     stream_write_u32(&stream, start.x);
@@ -431,9 +464,11 @@ void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vect
     stream_write_u32(&stream, end.x);
     stream_write_u32(&stream, end.y);
     stream_write_u32(&stream, end.z);
+
     uint8_t sent = 0;
     for (int id = 0; id < server->protocol.max_players; ++id) {
         player_t* player = &server->player[id];
+
         if (is_past_state_data(server, id)) {
             if (enet_peer_send(player->peer, 0, packet) == 0) {
                 sent = 1;
@@ -452,18 +487,22 @@ void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vect
             LL_APPEND(player->blockBuffer, node);
         }
     }
+
     if (sent == 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void block_line_to_player(server_t* server, uint8_t player_id, uint8_t sendToID, vector3i_t start, vector3i_t end)
+void block_line_to_player(server_t* server, uint8_t player_id, uint8_t send_to_id, vector3i_t start, vector3i_t end)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
+
     ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_BLOCK_LINE);
     stream_write_u8(&stream, player_id);
     stream_write_u32(&stream, start.x);
@@ -473,27 +512,32 @@ void block_line_to_player(server_t* server, uint8_t player_id, uint8_t sendToID,
     stream_write_u32(&stream, end.y);
     stream_write_u32(&stream, end.z);
     uint8_t sent = 0;
-    if (enet_peer_send(server->player[sendToID].peer, 0, packet) == 0) {
+    if (enet_peer_send(server->player[send_to_id].peer, 0, packet) == 0) {
         sent = 1;
     }
+
     if (sent == 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void send_block_action(server_t* server, uint8_t player_id, uint8_t actionType, int X, int Y, int Z)
+void send_block_action(server_t* server, uint8_t player_id, uint8_t action_type, int X, int Y, int Z)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
+
     ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
-    stream_t    stream = {packet->data, packet->dataLength, 0};
+
+    stream_t stream;
+    stream_from_enet_packet(&stream, packet);
     stream_write_u8(&stream, PACKET_TYPE_BLOCK_ACTION);
     stream_write_u8(&stream, player_id);
-    stream_write_u8(&stream, actionType);
+    stream_write_u8(&stream, action_type);
     stream_write_u32(&stream, X);
     stream_write_u32(&stream, Y);
     stream_write_u32(&stream, Z);
+
     uint8_t sent = 0;
     for (int id = 0; id < server->protocol.max_players; ++id) {
         player_t* player = &server->player[id];
@@ -507,7 +551,7 @@ void send_block_action(server_t* server, uint8_t player_id, uint8_t actionType, 
             node->position.y   = Y;
             node->position.z   = Z;
             node->color        = player->color;
-            node->type         = actionType;
+            node->type         = action_type;
             node->sender_id    = player_id;
             LL_APPEND(player->blockBuffer, node);
         }
@@ -518,8 +562,8 @@ void send_block_action(server_t* server, uint8_t player_id, uint8_t actionType, 
 }
 void send_block_action_to_player(server_t* server,
                                  uint8_t   player_id,
-                                 uint8_t   sendToID,
-                                 uint8_t   actionType,
+                                 uint8_t   send_to_id,
+                                 uint8_t   action_type,
                                  int       X,
                                  int       Y,
                                  int       Z)
@@ -531,12 +575,12 @@ void send_block_action_to_player(server_t* server,
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_BLOCK_ACTION);
     stream_write_u8(&stream, player_id);
-    stream_write_u8(&stream, actionType);
+    stream_write_u8(&stream, action_type);
     stream_write_u32(&stream, X);
     stream_write_u32(&stream, Y);
     stream_write_u32(&stream, Z);
     uint8_t sent = 0;
-    if (enet_peer_send(server->player[sendToID].peer, 0, packet) == 0) {
+    if (enet_peer_send(server->player[send_to_id].peer, 0, packet) == 0) {
         sent = 1;
     }
     if (sent == 0) {
@@ -622,7 +666,7 @@ void send_input_data(server_t* server, uint8_t player_id)
     stream_write_u8(&stream, PACKET_TYPE_INPUT_DATA);
     stream_write_u8(&stream, player_id);
     stream_write_u8(&stream, player->input);
-    if (SendPacketExceptSenderDistCheck(server, packet, player_id) == 0) {
+    if (send_packet_except_sender_dist_check(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -992,7 +1036,7 @@ void send_world_update(server_t* server, uint8_t player_id)
     stream_write_u8(&stream, PACKET_TYPE_WORLD_UPDATE);
 
     for (uint8_t j = 0; j < server->protocol.max_players; ++j) {
-        if (player_to_player_visibile(server, player_id, j) && server->player[j].is_invisible == 0) {
+        if (player_to_player_visible(server, player_id, j) && server->player[j].is_invisible == 0) {
             /*float    dt       = (getNanos() - server->globalTimers.lastUpdateTime) / 1000000000.f;
             Vector3f position = {server->player[j].movement.velocity.x * dt + server->player[j].movement.position.x,
                                  server->player[j].movement.velocity.y * dt + server->player[j].movement.position.y,
@@ -1490,22 +1534,22 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
     }
     player_t* player = &server->player[player_id];
     if (player->can_build && server->global_ab) {
-        uint8_t  actionType = stream_read_u8(data);
-        uint32_t X          = stream_read_u32(data);
-        uint32_t Y          = stream_read_u32(data);
-        uint32_t Z          = stream_read_u32(data);
+        uint8_t  action_type = stream_read_u8(data);
+        uint32_t X           = stream_read_u32(data);
+        uint32_t Y           = stream_read_u32(data);
+        uint32_t Z           = stream_read_u32(data);
         if (player->sprinting) {
             return;
         }
         vector3i_t vectorBlock  = {X, Y, Z};
         vector3f_t vectorfBlock = {(float) X, (float) Y, (float) Z};
         vector3f_t playerVector = player->movement.position;
-        if (((player->item == 0 && (actionType == 1 || actionType == 2)) || (player->item == 1 && actionType == 0) ||
-             (player->item == 2 && actionType == 1)))
+        if (((player->item == 0 && (action_type == 1 || action_type == 2)) || (player->item == 1 && action_type == 0) ||
+             (player->item == 2 && action_type == 1)))
         {
             if ((distance_in_3d(vectorfBlock, playerVector) <= 4 || player->item == 2) &&
                 valid_pos_v3i(server, vectorBlock)) {
-                switch (actionType) {
+                switch (action_type) {
                     case 0:
                     {
                         if (gamemode_block_checks(server, X, Y, Z)) {
@@ -1520,7 +1564,7 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
                                 mapvxl_set_color(&server->s_map.map, X, Y, Z, player->tool_color.raw);
                                 player->blocks--;
                                 moveIntelAndTentUp(server);
-                                send_block_action(server, player_id, actionType, X, Y, Z);
+                                send_block_action(server, player_id, action_type, X, Y, Z);
                             }
                         }
                     } break;
@@ -1577,7 +1621,7 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
                                 }
 
                                 vector3i_t  position = {X, Y, Z};
-                                vector3i_t* neigh    = get_neighbours(position);
+                                vector3i_t* neigh    = get_neighbors(position);
                                 mapvxl_set_air(&server->s_map.map, position.x, position.y, position.z);
                                 for (int i = 0; i < 6; ++i) {
                                     if (neigh[i].z < 62) {
@@ -1589,7 +1633,7 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
                                         player->blocks++;
                                     }
                                 }
-                                send_block_action(server, player_id, actionType, X, Y, Z);
+                                send_block_action(server, player_id, action_type, X, Y, Z);
                             }
                         }
                     } break;
@@ -1610,7 +1654,7 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
                                     if (z < 62) {
                                         mapvxl_set_air(&server->s_map.map, X, Y, z);
                                         vector3i_t  position = {X, Y, z};
-                                        vector3i_t* neigh    = get_neighbours(position);
+                                        vector3i_t* neigh    = get_neighbors(position);
                                         mapvxl_set_air(&server->s_map.map, position.x, position.y, position.z);
                                         for (int i = 0; i < 6; ++i) {
                                             if (neigh[i].z < 62) {
@@ -1619,7 +1663,7 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
                                         }
                                     }
                                 }
-                                send_block_action(server, player_id, actionType, X, Y, Z);
+                                send_block_action(server, player_id, action_type, X, Y, Z);
                             }
                         }
                     } break;
@@ -1631,7 +1675,7 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
                         player->name,
                         player_id,
                         player->item,
-                        actionType);
+                        action_type);
         }
     }
 }
@@ -1869,27 +1913,27 @@ static void receive_version_response(server_t* server, uint8_t player_id, stream
 
 void init_packets(server_t* server)
 {
-    server->packets                = NULL;
+    server->packets            = NULL;
     packet_manager_t packets[] = {{0, &receive_position_data},
-                                      {1, &receive_orientation_data},
-                                      {3, &receive_input_data},
-                                      {4, &receive_weapon_input},
-                                      {5, &receive_hit_packet},
-                                      {6, &receive_grenade_packet},
-                                      {7, &receive_set_tool},
-                                      {8, &receive_set_color},
-                                      {9, &receive_existing_player},
-                                      {13, &receive_block_action},
-                                      {14, &receive_block_line},
-                                      {17, &receive_handle_send_message},
-                                      {28, &receive_weapon_reload},
-                                      {29, &receive_change_team},
-                                      {30, &receive_change_weapon},
-                                      {34, &receive_version_response}};
+                                  {1, &receive_orientation_data},
+                                  {3, &receive_input_data},
+                                  {4, &receive_weapon_input},
+                                  {5, &receive_hit_packet},
+                                  {6, &receive_grenade_packet},
+                                  {7, &receive_set_tool},
+                                  {8, &receive_set_color},
+                                  {9, &receive_existing_player},
+                                  {13, &receive_block_action},
+                                  {14, &receive_block_line},
+                                  {17, &receive_handle_send_message},
+                                  {28, &receive_weapon_reload},
+                                  {29, &receive_change_team},
+                                  {30, &receive_change_weapon},
+                                  {34, &receive_version_response}};
     for (unsigned long i = 0; i < sizeof(packets) / sizeof(packet_manager_t); i++) {
-        packet_t* packet  = malloc(sizeof(packet_t));
-        packet->id = packets[i].id;
-        packet->packet    = packets[i].packet;
+        packet_t* packet = malloc(sizeof(packet_t));
+        packet->id       = packets[i].id;
+        packet->packet   = packets[i].packet;
         HASH_ADD_INT(server->packets, id, packet);
     }
 }
@@ -1908,9 +1952,9 @@ void free_all_packets(server_t* server)
 
 void on_packet_received(server_t* server, uint8_t playerID, stream_t* data)
 {
-    uint8_t   type = stream_read_u8(data);
+    uint8_t   type     = stream_read_u8(data);
     packet_t* packet_p = NULL;
-    int type_int = (int)type;
+    int       type_int = (int) type;
     HASH_FIND_INT(server->packets, &type_int, packet_p);
     if (packet_p == NULL) {
         LOG_WARNING("Unknown packet with ID %d received", type_int);

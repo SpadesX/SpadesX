@@ -5,25 +5,26 @@
 #include "Enums.h"
 #include "Types.h"
 
-#define ACCESS_CHECK(stream, size)             \
-    if (stream->pos + size > stream->length) { \
-        return 0;                              \
+typedef struct _ENetPacket ENetPacket;
+
+#define ACCESS_CHECK(stream, size)                \
+    if (stream->offset + size > stream->length) { \
+        return 0;                                 \
     }
 
-#define ACCESS_CHECK_N(stream, size)           \
-    if (stream->pos + size > stream->length) { \
-        return;                                \
+#define ACCESS_CHECK_N(stream, size)              \
+    if (stream->offset + size > stream->length) { \
+        return;                                   \
     }
 
 typedef struct stream
 {
     uint8_t* data;
     uint32_t length;
-    uint32_t pos;
+    uint32_t offset;
 } stream_t;
 
-void     stream_create(stream_t* stream, uint32_t length);
-void     stream_free(stream_t* stream);
+void     stream_from_enet_packet(stream_t* stream, ENetPacket* packet);
 uint32_t stream_left(stream_t* stream);
 void     stream_skip(stream_t* stream, uint32_t skip);
 uint8_t  stream_read_u8(stream_t* stream);
