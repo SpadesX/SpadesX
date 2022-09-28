@@ -3,6 +3,7 @@
 #define COMMANDS_H
 
 #include "Structs.h"
+#include "../Extern/libmapvxl/libmapvxl.h"
 
 void command_handle(server_t* server, uint8_t player, char* message, uint8_t console);
 void command_populate_all(server_t* server);
