@@ -22,7 +22,7 @@
 #include "Util/Utlist.h"
 
 #include <stdio.h>
-//
+// Include stdio before readline cause it needs it for some reason
 #include <enet/enet.h>
 #include <errno.h>
 #include <json-c/json.h>
