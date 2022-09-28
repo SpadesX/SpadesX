@@ -21,9 +21,9 @@ void master_update(server_t* server)
             server->protocol.num_users++;
         }
     }
-    ENetPacket*  packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
-    datastream_t stream = {packet->data, packet->dataLength, 0};
-    datastream_write_u8(&stream, server->protocol.num_users);
+    ENetPacket* packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
+    stream_t    stream = {packet->data, packet->dataLength, 0};
+    stream_write_u8(&stream, server->protocol.num_users);
     enet_peer_send(server->master.peer, 0, packet);
 }
 
@@ -54,16 +54,16 @@ int master_connect(server_t* server, uint16_t port)
     ENetEvent event;
     while (enet_host_service(server->master.client, &event, 1000) > 0) {
         LOG_STATUS("Connection success");
-        ENetPacket*  packet = enet_packet_create(NULL,
+        ENetPacket* packet = enet_packet_create(NULL,
                                                 9 + strlen(server->server_name) + strlen(server->gamemode_name) +
                                                 strlen(server->map_name) + 3,
                                                 ENET_PACKET_FLAG_RELIABLE);
-        datastream_t stream = {packet->data, packet->dataLength, 0};
-        datastream_write_u8(&stream, 32);
-        datastream_write_u16(&stream, port);
-        datastream_write_array(&stream, server->server_name, strlen(server->server_name) + 1);
-        datastream_write_array(&stream, server->gamemode_name, strlen(server->gamemode_name) + 1);
-        datastream_write_array(&stream, server->map_name, strlen(server->map_name) + 1);
+        stream_t    stream = {packet->data, packet->dataLength, 0};
+        stream_write_u8(&stream, 32);
+        stream_write_u16(&stream, port);
+        stream_write_array(&stream, server->server_name, strlen(server->server_name) + 1);
+        stream_write_array(&stream, server->gamemode_name, strlen(server->gamemode_name) + 1);
+        stream_write_array(&stream, server->map_name, strlen(server->map_name) + 1);
         enet_peer_send(server->master.peer, 0, packet);
     }
     return 0;

@@ -62,13 +62,13 @@ static void _string_nodes_free(string_node_t* root)
 
 static void _for_players(void)
 {
-    for (int playerID = 0; playerID < server.protocol.max_players; ++playerID) {
-        if (is_past_join_screen(&server, playerID)) {
+    for (int player_id = 0; player_id < server.protocol.max_players; ++player_id) {
+        if (is_past_join_screen(&server, player_id)) {
             uint64_t timeNow = get_nanos();
-            if (server.player[playerID].primary_fire == 1 && server.player[playerID].reloading == 0) {
-                if (server.player[playerID].weapon_clip > 0) {
+            if (server.player[player_id].primary_fire == 1 && server.player[player_id].reloading == 0) {
+                if (server.player[player_id].weapon_clip > 0) {
                     uint64_t milliseconds = 0;
-                    switch (server.player[playerID].weapon) {
+                    switch (server.player[player_id].weapon) {
                         case WEAPON_RIFLE:
                         {
                             milliseconds = 500;
@@ -85,106 +85,105 @@ static void _for_players(void)
                             break;
                         }
                     }
-                    if (diffIsOlderThen(
-                        timeNow, &server.player[playerID].timers.since_last_weapon_input, NANO_IN_MILLI * milliseconds))
-                    {
-                        server.player[playerID].weapon_clip--;
+                    if (diff_is_older_then(timeNow,
+                                           &server.player[player_id].timers.since_last_weapon_input,
+                                           NANO_IN_MILLI * milliseconds)) {
+                        server.player[player_id].weapon_clip--;
                     }
                 }
-            } else if (server.player[playerID].primary_fire == 0 && server.player[playerID].reloading == 1) {
-                switch (server.player[playerID].weapon) {
+            } else if (server.player[player_id].primary_fire == 0 && server.player[player_id].reloading == 1) {
+                switch (server.player[player_id].weapon) {
                     case WEAPON_RIFLE:
                     case WEAPON_SMG:
                     {
-                        if (diffIsOlderThen(timeNow,
-                                            &server.player[playerID].timers.since_reload_start,
-                                            NANO_IN_MILLI * (uint64_t) 2500))
-                        {
+                        if (diff_is_older_then(timeNow,
+                                               &server.player[player_id].timers.since_reload_start,
+                                               NANO_IN_MILLI * (uint64_t) 2500)) {
                             uint8_t defaultAmmo = RIFLE_DEFAULT_CLIP;
-                            if (server.player[playerID].weapon == WEAPON_SMG) {
+                            if (server.player[player_id].weapon == WEAPON_SMG) {
                                 defaultAmmo = SMG_DEFAULT_CLIP;
                             }
                             double newReserve = fmax(0,
-                                                     server.player[playerID].weapon_reserve -
-                                                     (defaultAmmo - server.player[playerID].weapon_clip));
-                            server.player[playerID].weapon_clip += server.player[playerID].weapon_reserve - newReserve;
-                            server.player[playerID].weapon_reserve = newReserve;
-                            server.player[playerID].reloading      = 0;
-                            send_weapon_reload(&server, playerID, 0, 0, 0);
+                                                     server.player[player_id].weapon_reserve -
+                                                     (defaultAmmo - server.player[player_id].weapon_clip));
+                            server.player[player_id].weapon_clip +=
+                            server.player[player_id].weapon_reserve - newReserve;
+                            server.player[player_id].weapon_reserve = newReserve;
+                            server.player[player_id].reloading      = 0;
+                            send_weapon_reload(&server, player_id, 0, 0, 0);
                         }
                         break;
                     }
                     case WEAPON_SHOTGUN:
                     {
-                        if (diffIsOlderThen(timeNow,
-                                            &server.player[playerID].timers.since_reload_start,
-                                            NANO_IN_MILLI * (uint64_t) 500))
-                        {
-                            if (server.player[playerID].weapon_reserve == 0 ||
-                                server.player[playerID].weapon_clip == SHOTGUN_DEFAULT_CLIP)
-                            {
-                                server.player[playerID].reloading = 0;
+                        if (diff_is_older_then(timeNow,
+                                               &server.player[player_id].timers.since_reload_start,
+                                               NANO_IN_MILLI * (uint64_t) 500)) {
+                            if (server.player[player_id].weapon_reserve == 0 ||
+                                server.player[player_id].weapon_clip == SHOTGUN_DEFAULT_CLIP) {
+                                server.player[player_id].reloading = 0;
                                 break;
                             }
-                            server.player[playerID].weapon_clip++;
-                            server.player[playerID].weapon_reserve--;
-                            if (server.player[playerID].weapon_clip == SHOTGUN_DEFAULT_CLIP) {
-                                server.player[playerID].reloading = 0;
+                            server.player[player_id].weapon_clip++;
+                            server.player[player_id].weapon_reserve--;
+                            if (server.player[player_id].weapon_clip == SHOTGUN_DEFAULT_CLIP) {
+                                server.player[player_id].reloading = 0;
                             }
-                            send_weapon_reload(&server, playerID, 0, 0, 0);
+                            send_weapon_reload(&server, player_id, 0, 0, 0);
                         }
                         break;
                     }
                 }
             }
-            if (diffIsOlderThen(timeNow,
-                                &server.player[playerID].timers.since_periodic_message,
-                                (uint64_t) (server.periodic_delays[server.player[playerID].periodic_delay_index] * 60) *
-                                NANO_IN_SECOND))
+            if (diff_is_older_then(
+                timeNow,
+                &server.player[player_id].timers.since_periodic_message,
+                (uint64_t) (server.periodic_delays[server.player[player_id].periodic_delay_index] * 60) *
+                NANO_IN_SECOND))
             {
                 string_node_t* message;
                 DL_FOREACH(server.periodic_messages, message)
                 {
-                    send_server_notice(&server, playerID, 0, message->string);
+                    send_server_notice(&server, player_id, 0, message->string);
                 }
-                server.player[playerID].periodic_delay_index =
-                fmin(server.player[playerID].periodic_delay_index + 1, 4);
+                server.player[player_id].periodic_delay_index =
+                fmin(server.player[player_id].periodic_delay_index + 1, 4);
             }
-        } else if (server.player[playerID].state == STATE_PICK_SCREEN) {
+        } else if (server.player[player_id].state == STATE_PICK_SCREEN) {
             block_node_t *node, *tmp;
-            LL_FOREACH_SAFE(server.player[playerID].blockBuffer, node, tmp)
+            LL_FOREACH_SAFE(server.player[player_id].blockBuffer, node, tmp)
             {
                 if (node->type == 10) {
                     send_set_color_to_player(
-                    &server, node->sender_id, playerID, node->color.r, node->color.g, node->color.b);
-                    block_line_to_player(&server, node->sender_id, playerID, node->position, node->position_end);
+                    &server, node->sender_id, player_id, node->color.r, node->color.g, node->color.b);
+                    block_line_to_player(&server, node->sender_id, player_id, node->position, node->position_end);
                     send_set_color_to_player(&server,
                                              node->sender_id,
-                                             playerID,
+                                             player_id,
                                              server.player[node->sender_id].color.r,
                                              server.player[node->sender_id].color.g,
                                              server.player[node->sender_id].color.b);
                 } else {
                     send_set_color_to_player(
-                    &server, node->sender_id, playerID, node->color.r, node->color.g, node->color.b);
+                    &server, node->sender_id, player_id, node->color.r, node->color.g, node->color.b);
                     send_block_action_to_player(&server,
                                                 node->sender_id,
-                                                playerID,
+                                                player_id,
                                                 node->type,
                                                 node->position.x,
                                                 node->position.y,
                                                 node->position.z);
                     send_set_color_to_player(&server,
                                              node->sender_id,
-                                             playerID,
+                                             player_id,
                                              server.player[node->sender_id].color.r,
                                              server.player[node->sender_id].color.g,
                                              server.player[node->sender_id].color.b);
                 }
-                LL_DELETE(server.player[playerID].blockBuffer, node);
+                LL_DELETE(server.player[player_id].blockBuffer, node);
                 free(node);
             }
-        } else if (is_past_state_data(&server, playerID)) {
+        } else if (is_past_state_data(&server, player_id)) {
         }
     }
 }
@@ -323,15 +322,15 @@ void server_reset(server_t* server)
                1);
 }
 
-static void SendJoiningData(server_t* server, uint8_t playerID)
+static void SendJoiningData(server_t* server, uint8_t player_id)
 {
-    LOG_INFO("Sending state to %s (#%hhu)", server->player[playerID].name, playerID);
+    LOG_INFO("Sending state to %s (#%hhu)", server->player[player_id].name, player_id);
     for (uint8_t i = 0; i < server->protocol.max_players; ++i) {
-        if (i != playerID && is_past_join_screen(server, i)) {
-            send_existing_player(server, playerID, i);
+        if (i != player_id && is_past_join_screen(server, i)) {
+            send_existing_player(server, player_id, i);
         }
     }
-    send_state_data(server, playerID);
+    send_state_data(server, player_id);
 }
 
 static uint8_t OnConnect(server_t* server)
@@ -339,72 +338,71 @@ static uint8_t OnConnect(server_t* server)
     if (server->protocol.num_players == server->protocol.max_players) {
         return 0xFF;
     }
-    uint8_t playerID;
-    for (playerID = 0; playerID < server->protocol.max_players; ++playerID) {
-        if (server->player[playerID].state == STATE_DISCONNECTED) {
-            server->player[playerID].state = STATE_STARTING_MAP;
+    uint8_t player_id;
+    for (player_id = 0; player_id < server->protocol.max_players; ++player_id) {
+        if (server->player[player_id].state == STATE_DISCONNECTED) {
+            server->player[player_id].state = STATE_STARTING_MAP;
             break;
         }
     }
     server->protocol.num_players++;
-    return playerID;
+    return player_id;
 }
 
-static void OnPlayerUpdate(server_t* server, uint8_t playerID)
+static void OnPlayerUpdate(server_t* server, uint8_t player_id)
 {
-    switch (server->player[playerID].state) {
+    switch (server->player[player_id].state) {
         case STATE_STARTING_MAP:
-            server->player[playerID].blockBuffer = NULL;
-            send_map_start(server, playerID);
+            server->player[player_id].blockBuffer = NULL;
+            send_map_start(server, player_id);
             break;
         case STATE_LOADING_CHUNKS:
-            send_map_chunks(server, playerID);
+            send_map_chunks(server, player_id);
             break;
         case STATE_JOINING:
-            SendJoiningData(server, playerID);
+            SendJoiningData(server, player_id);
             break;
         case STATE_SPAWNING:
-            server->player[playerID].hp             = 100;
-            server->player[playerID].grenades       = 3;
-            server->player[playerID].blocks         = 50;
-            server->player[playerID].item           = 2;
-            server->player[playerID].input          = 0;
-            server->player[playerID].move_forward   = 0;
-            server->player[playerID].move_backwards = 0;
-            server->player[playerID].move_left      = 0;
-            server->player[playerID].move_right     = 0;
-            server->player[playerID].jumping        = 0;
-            server->player[playerID].crouching      = 0;
-            server->player[playerID].sneaking       = 0;
-            server->player[playerID].sprinting      = 0;
-            server->player[playerID].primary_fire   = 0;
-            server->player[playerID].secondary_fire = 0;
-            server->player[playerID].alive          = 1;
-            server->player[playerID].reloading      = 0;
-            SetPlayerRespawnPoint(server, playerID);
-            send_respawn(server, playerID);
+            server->player[player_id].hp             = 100;
+            server->player[player_id].grenades       = 3;
+            server->player[player_id].blocks         = 50;
+            server->player[player_id].item           = 2;
+            server->player[player_id].input          = 0;
+            server->player[player_id].move_forward   = 0;
+            server->player[player_id].move_backwards = 0;
+            server->player[player_id].move_left      = 0;
+            server->player[player_id].move_right     = 0;
+            server->player[player_id].jumping        = 0;
+            server->player[player_id].crouching      = 0;
+            server->player[player_id].sneaking       = 0;
+            server->player[player_id].sprinting      = 0;
+            server->player[player_id].primary_fire   = 0;
+            server->player[player_id].secondary_fire = 0;
+            server->player[player_id].alive          = 1;
+            server->player[player_id].reloading      = 0;
+            SetPlayerRespawnPoint(server, player_id);
+            send_respawn(server, player_id);
             LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
-                     server->player[playerID].name,
-                     playerID,
-                     server->player[playerID].movement.position.x,
-                     server->player[playerID].movement.position.y,
-                     server->player[playerID].movement.position.z);
+                     server->player[player_id].name,
+                     player_id,
+                     server->player[player_id].movement.position.x,
+                     server->player[player_id].movement.position.y,
+                     server->player[player_id].movement.position.z);
             break;
         case STATE_WAITING_FOR_RESPAWN:
         {
-            if (time(NULL) - server->player[playerID].timers.start_of_respawn_wait >=
-                server->player[playerID].respawn_time)
-            {
-                server->player[playerID].state = STATE_SPAWNING;
+            if (time(NULL) - server->player[player_id].timers.start_of_respawn_wait >=
+                server->player[player_id].respawn_time) {
+                server->player[player_id].state = STATE_SPAWNING;
             }
             break;
         }
         case STATE_READY:
             // send data
             if (server->master.enable_master_connection == 1) {
-                if (server->player[playerID].told_to_master == 0) {
+                if (server->player[player_id].told_to_master == 0) {
                     master_update(server);
-                    server->player[playerID].told_to_master = 1;
+                    server->player[player_id].told_to_master = 1;
                 }
             }
             break;
@@ -416,15 +414,15 @@ static void OnPlayerUpdate(server_t* server, uint8_t playerID)
 
 static void* WorldUpdate(void)
 {
-    for (uint8_t playerID = 0; playerID < server.protocol.max_players; ++playerID) {
-        OnPlayerUpdate(&server, playerID);
-        if (is_past_join_screen(&server, playerID)) {
+    for (uint8_t player_id = 0; player_id < server.protocol.max_players; ++player_id) {
+        OnPlayerUpdate(&server, player_id);
+        if (is_past_join_screen(&server, player_id)) {
             uint64_t time = get_nanos();
-            if (time - server.player[playerID].timers.time_since_last_wu >=
-                (uint64_t) (NANO_IN_SECOND / server.player[playerID].ups))
+            if (time - server.player[player_id].timers.time_since_last_wu >=
+                (uint64_t) (NANO_IN_SECOND / server.player[player_id].ups))
             {
-                send_world_update(&server, playerID);
-                server.player[playerID].timers.time_since_last_wu = get_nanos();
+                send_world_update(&server, player_id);
+                server.player[player_id].timers.time_since_last_wu = get_nanos();
             }
         }
     }
@@ -437,7 +435,7 @@ static void ServerUpdate(server_t* server, int timeout)
     ENetEvent event;
     while (enet_host_service(server->host, &event, timeout) > 0) {
         uint8_t bannedUser = 0;
-        uint8_t playerID;
+        uint8_t player_id;
         switch (event.type) {
             case ENET_EVENT_TYPE_NONE:
                 LOG_STATUS("Event of type none received. Ignoring");
@@ -520,39 +518,39 @@ static void ServerUpdate(server_t* server, int timeout)
                 // check peer
                 // ...
                 // find next free ID
-                playerID = OnConnect(server);
-                if (playerID == 0xFF) {
+                player_id = OnConnect(server);
+                if (player_id == 0xFF) {
                     enet_peer_disconnect_now(event.peer, REASON_SERVER_FULL);
                     LOG_WARNING("Server full. Kicking player");
                     break;
                 }
-                server->player[playerID].peer    = event.peer;
-                event.peer->data                 = (void*) ((size_t) playerID);
-                server->player[playerID].hp      = 100;
-                server->player[playerID].ip.ip32 = event.peer->address.host;
+                server->player[player_id].peer    = event.peer;
+                event.peer->data                  = (void*) ((size_t) player_id);
+                server->player[player_id].hp      = 100;
+                server->player[player_id].ip.ip32 = event.peer->address.host;
 
-                format_ip_to_str(server->player[playerID].name, server->player[playerID].ip);
-                snprintf(server->player[playerID].name, 6, "Limbo");
+                format_ip_to_str(server->player[player_id].name, server->player[player_id].ip);
+                snprintf(server->player[player_id].name, 6, "Limbo");
                 char ipString[17];
-                format_ip_to_str(ipString, server->player[playerID].ip);
-                LOG_INFO("Player %s (%s, #%hhu) connected", server->player[playerID].name, ipString, playerID);
+                format_ip_to_str(ipString, server->player[player_id].ip);
+                LOG_INFO("Player %s (%s, #%hhu) connected", server->player[player_id].name, ipString, player_id);
 
-                server->player[playerID].timers.since_periodic_message = get_nanos();
-                server->player[playerID].current_periodic_message      = server->periodic_messages;
-                server->player[playerID].periodic_delay_index          = 0;
+                server->player[player_id].timers.since_periodic_message = get_nanos();
+                server->player[player_id].current_periodic_message      = server->periodic_messages;
+                server->player[player_id].periodic_delay_index          = 0;
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
-                playerID = (uint8_t) ((size_t) event.peer->data);
-                if (playerID != server->protocol.max_players - 1) {
-                    send_intel_drop(server, playerID);
-                    send_player_left(server, playerID);
+                player_id = (uint8_t) ((size_t) event.peer->data);
+                if (player_id != server->protocol.max_players - 1) {
+                    send_intel_drop(server, player_id);
+                    send_player_left(server, player_id);
                     vector3f_t empty   = {0, 0, 0};
                     vector3f_t forward = {1, 0, 0};
                     vector3f_t height  = {0, 0, 1};
                     vector3f_t strafe  = {0, 1, 0};
-                    init_player(server, playerID, 0, 1, empty, forward, strafe, height);
+                    init_player(server, player_id, 0, 1, empty, forward, strafe, height);
                     server->protocol.num_players--;
-                    server->protocol.num_team_users[server->player[playerID].team]--;
+                    server->protocol.num_team_users[server->player[player_id].team]--;
                     if (server->master.enable_master_connection == 1) {
                         master_update(server);
                     }
@@ -560,9 +558,9 @@ static void ServerUpdate(server_t* server, int timeout)
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
             {
-                datastream_t stream = {event.packet->data, event.packet->dataLength, 0};
-                playerID            = (uint8_t) ((size_t) event.peer->data);
-                on_packet_received(server, playerID, &stream);
+                stream_t stream = {event.packet->data, event.packet->dataLength, 0};
+                player_id       = (uint8_t) ((size_t) event.peer->data);
+                on_packet_received(server, player_id, &stream);
                 enet_packet_destroy(event.packet);
                 break;
             }

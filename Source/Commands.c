@@ -76,9 +76,9 @@ static void _cmd_admin(void* p_server, command_args_t arguments)
             return;
         }
         if (arguments.console) {
-            sendMessageToStaff(server, "Staff from %s: %s", "Console", arguments.argv[1]);
+            send_message_to_staff(server, "Staff from %s: %s", "Console", arguments.argv[1]);
         } else {
-            sendMessageToStaff(
+            send_message_to_staff(
             server, "Staff from %s: %s", server->player[arguments.player_id].name, arguments.argv[1]);
         }
         send_server_notice(server, arguments.player_id, arguments.console, "Message sent to all staff members online");
@@ -199,8 +199,7 @@ static void _cmd_ban_range(void* p_server, command_args_t arguments)
             uint8_t banned = 0;
             for (uint8_t ID = 0; ID < server->protocol.max_players; ++ID) {
                 if (server->player[ID].state != STATE_DISCONNECTED &&
-                    octets_in_range(startRange, endRange, server->player[ID].ip))
-                {
+                    octets_in_range(startRange, endRange, server->player[ID].ip)) {
                     if (banned == 0) {
                         nameString = server->player[ID].name;
                         banned     = 1; // Do not add multiples of the same IP. Its pointless.
@@ -292,8 +291,7 @@ static void _cmd_help(void* p_server, command_args_t arguments)
             return; // Just for safety
         }
         if (player_has_permission(server, arguments.player_id, arguments.console, cmd->permissions) ||
-            cmd->permissions == 0)
-        {
+            cmd->permissions == 0) {
             send_server_notice(server,
                                arguments.player_id,
                                arguments.console,
@@ -310,14 +308,14 @@ static void _cmd_intel(void* p_server, command_args_t arguments)
 {
     server_t* server          = (server_t*) p_server;
     uint8_t   sentAtLeastOnce = 0;
-    for (uint8_t playerID = 0; playerID < server->protocol.max_players; ++playerID) {
-        if (server->player[playerID].state != STATE_DISCONNECTED && server->player[playerID].has_intel) {
+    for (uint8_t player_id = 0; player_id < server->protocol.max_players; ++player_id) {
+        if (server->player[player_id].state != STATE_DISCONNECTED && server->player[player_id].has_intel) {
             send_server_notice(server,
                                arguments.player_id,
                                arguments.console,
                                "Player %s (#%hhu) has intel",
-                               server->player[playerID].name,
-                               playerID);
+                               server->player[player_id].name,
+                               player_id);
             sentAtLeastOnce = 1;
         }
     }
@@ -395,8 +393,7 @@ static void _cmd_kill(void* p_server, command_args_t arguments)
             int count = 0;
             for (int i = 0; i < server->protocol.max_players; ++i) {
                 if (is_past_join_screen(server, i) && server->player[i].hp > 0 &&
-                    server->player[i].team != TEAM_SPECTATOR)
-                {
+                    server->player[i].team != TEAM_SPECTATOR) {
                     send_kill_action_packet(server, i, i, 0, 5, 0);
                     count++;
                 }
@@ -440,8 +437,7 @@ static void _cmd_login(void* p_server, command_args_t arguments)
             }
             uint8_t failed = 0;
             for (unsigned long i = 0; i < sizeof(server->player[arguments.player_id].role_list) / sizeof(permissions_t);
-                 ++i)
-            {
+                 ++i) {
                 if (strcmp(level, server->player[arguments.player_id].role_list[i].access_level) == 0) {
                     if (*server->player[arguments.player_id].role_list[i].access_password[0] !=
                         '\0' // disable the role if no password is set
@@ -816,8 +812,7 @@ static void _cmd_unban_range(void* p_server, command_args_t arguments)
             READ_STR_FROM_JSON(object_at_index, start_ip_string, start_of_range, "start of range", "0.0.0.0", 0);
             READ_STR_FROM_JSON(object_at_index, end_ip_string, end_of_range, "end of range", "0.0.0.0", 0);
             if (strcmp(unban_start_range_string, start_ip_string) == 0 &&
-                strcmp(unban_end_range_string, end_ip_string) == 0)
-            {
+                strcmp(unban_end_range_string, end_ip_string) == 0) {
                 json_object_array_del_idx(array, i, 1);
                 json_object_to_file("Bans.json", root);
                 unbanned = 1;

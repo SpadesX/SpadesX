@@ -42,10 +42,10 @@ long  physics_cast_ray(server_t* server,
                        long*     y,
                        long*     z);
 
-void physics_reorient_player(server_t* server, uint8_t playerID, vector3f_t* orientation);
-int  physics_try_uncrouch(server_t* server, uint8_t playerID);
-void physics_box_clip_move(server_t* server, uint8_t playerID);
-long physics_move_player(server_t* server, uint8_t playerID);
+void physics_reorient_player(server_t* server, uint8_t player_id, vector3f_t* orientation);
+int  physics_try_uncrouch(server_t* server, uint8_t player_id);
+void physics_box_clip_move(server_t* server, uint8_t player_id);
+long physics_move_player(server_t* server, uint8_t player_id);
 int  physics_move_grenade(server_t* server, grenade_t* grenade);
 void physics_set_globals(float time, float dt);
 
