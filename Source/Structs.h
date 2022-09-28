@@ -3,6 +3,7 @@
 #define STRUCTS_H
 
 #include "../Extern/libmapvxl/libmapvxl.h"
+#include "Util/DataStream.h"
 #include "Util/Enums.h"
 #include "Util/Queue.h"
 #include "Util/Types.h"
@@ -232,6 +233,21 @@ typedef struct master
     uint64_t  time_since_last_send;
 } master_t;
 
+typedef struct server server_t;
+
+typedef struct packet
+{
+    int id;
+    void (*packet)(server_t* server, uint8_t playerID, datastream_t* data);
+    UT_hash_handle hh;
+} packet_t;
+
+typedef struct packet_manager
+{
+    int id;
+    void (*packet)(server_t* server, uint8_t playerID, datastream_t* data);
+} packet_manager_t;
+
 typedef struct command_args
 {
     uint8_t  player_id;
@@ -259,7 +275,7 @@ typedef struct command_manager
     char    id[30];
     uint8_t parse_args; // Should we even bother parsing it? Would be useful for commands whose one and only
                         // argument is a message, or which don't even have any arguments
-    void (*execute)(void* p_server, command_args_t arguments);
+    void (*command)(void* p_server, command_args_t arguments);
     uint32_t permissions; // 32 roles should be more then enough for anyone
     char     description[1024];
 } command_manager_t;
@@ -278,6 +294,7 @@ typedef struct server
     player_t              player[32];
     protocol_t            protocol;
     master_t              master;
+    packet_t*              packets;
     uint16_t              port;
     map_t                 s_map;
     global_timers_t       global_timers;

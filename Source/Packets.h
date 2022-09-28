@@ -54,9 +54,12 @@ void send_map_start(server_t* server, uint8_t playerID);
 void send_map_chunks(server_t* server, uint8_t playerID);
 void send_create_player(server_t* server, uint8_t playerID, uint8_t otherID);
 void send_respawn(server_t* server, uint8_t playerID);
-void handle_and_send_message(server_t* server, uint8_t player, datastream_t* data);
+void receive_handle_send_message(server_t* server, uint8_t player, datastream_t* data);
 void send_world_update(server_t* server, uint8_t playerID);
 void send_position_packet(server_t* server, uint8_t playerID, float x, float y, float z);
+
+void init_packets(server_t* server);
+void free_all_packets(server_t* server);
 
 void on_packet_received(server_t* server, uint8_t playerID, datastream_t* data);
 

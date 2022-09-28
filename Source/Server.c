@@ -694,6 +694,7 @@ void server_start(uint16_t       port,
     ServerInit(&server, connections, serverName, team1Name, team2Name, team1_color, team2_color, gamemode, 0);
 
     command_populate_all(&server);
+    init_packets(&server);
 
     server.master.enable_master_connection = master;
     server.manager_passwd                  = managerPasswd;
@@ -736,6 +737,7 @@ void server_start(uint16_t       port,
     free(server.s_map.compressed_map);
 
     command_free_all(&server);
+    free_all_packets(&server);
 
     _string_nodes_free(server.welcome_messages);
     _string_nodes_free(server.s_map.map_list);
