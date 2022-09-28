@@ -951,7 +951,7 @@ void command_populate_all(server_t* server)
     for (unsigned long i = 0; i < sizeof(commands) / sizeof(command_manager_t); i++) {
         command_create(server,
                        commands[i].parse_args,
-                       commands[i].execute,
+                       commands[i].command,
                        commands[i].id,
                        commands[i].description,
                        commands[i].permissions);

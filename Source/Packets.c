@@ -4,6 +4,7 @@
 #include "ParseConvert.h"
 #include "Protocol.h"
 #include "Structs.h"
+#include "Util/Uthash.h"
 #include "Util/Compress.h"
 #include "Util/DataStream.h"
 #include "Util/Enums.h"
@@ -422,8 +423,7 @@ void send_block_line(server_t* server, uint8_t playerID, vector3i_t start, vecto
                 sent = 1;
             }
         } else if (server->player[player].state == STATE_STARTING_MAP ||
-                   server->player[player].state == STATE_LOADING_CHUNKS)
-        {
+                   server->player[player].state == STATE_LOADING_CHUNKS) {
             block_node_t* node   = (block_node_t*) malloc(sizeof(*node));
             node->position.x     = start.x;
             node->position.y     = start.y;
@@ -486,8 +486,7 @@ void send_block_action(server_t* server, uint8_t playerID, uint8_t actionType, i
                 sent = 1;
             }
         } else if (server->player[player].state == STATE_STARTING_MAP ||
-                   server->player[player].state == STATE_LOADING_CHUNKS)
-        {
+                   server->player[player].state == STATE_LOADING_CHUNKS) {
             block_node_t* node = (block_node_t*) malloc(sizeof(*node));
             node->position.x   = X;
             node->position.y   = Y;
@@ -860,16 +859,16 @@ void send_respawn(server_t* server, uint8_t playerID)
     server->player[playerID].state = STATE_READY;
 }
 
-void handle_and_send_message(server_t* server, uint8_t player, datastream_t* data)
+void receive_handle_send_message(server_t* server, uint8_t player, datastream_t* data)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
     uint32_t packetSize = data->length;
     LOG_STATUS("%d %d", packetSize, data->length);
-    uint8_t  ID         = datastream_read_u8(data);
-    int      meantfor   = datastream_read_u8(data);
-    uint32_t length     = datastream_left(data);
+    uint8_t  ID       = datastream_read_u8(data);
+    int      meantfor = datastream_read_u8(data);
+    uint32_t length   = datastream_left(data);
     if (length > 2048) {
         length = 2048; // Lets limit messages to 2048 characters
     }
@@ -898,14 +897,14 @@ void handle_and_send_message(server_t* server, uint8_t player, datastream_t* dat
                                0,
                                "SERVER: You have been muted for excessive spam. If you feel like this is a mistake "
                                "contact staff via /admin command");
-            server->player[player].muted       = 1;
+            server->player[player].muted        = 1;
             server->player[player].spam_counter = 0;
         }
         resetTime = 0;
     }
     if (resetTime) {
         server->player[player].timers.since_last_message_from_spam = get_nanos();
-        server->player[player].spam_counter                         = 0;
+        server->player[player].spam_counter                        = 0;
     }
 
     if (!diffIsOlderThen(
@@ -1007,7 +1006,7 @@ void send_position_packet(server_t* server, uint8_t playerID, float x, float y, 
     }
 }
 
-static void receiveGrenadePacket(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_grenade_packet(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t ID = datastream_read_u8(data);
     if (playerID != ID) {
@@ -1069,7 +1068,7 @@ static void receiveGrenadePacket(server_t* server, uint8_t playerID, datastream_
 
 // hitPlayerID is the player that got shot
 // playerID is the player who fired.
-static void receiveHitPacket(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_hit_packet(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t    hitPlayerID = datastream_read_u8(data);
     hit_t      hitType     = datastream_read_u8(data);
@@ -1185,7 +1184,7 @@ static void receiveHitPacket(server_t* server, uint8_t playerID, datastream_t* d
     }
 }
 
-static void receiveOrientationData(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_orientation_data(server_t* server, uint8_t playerID, datastream_t* data)
 {
     float x, y, z;
     x                = datastream_read_f(data);
@@ -1207,7 +1206,7 @@ static void receiveOrientationData(server_t* server, uint8_t playerID, datastrea
     physics_reorient_player(server, playerID, &server->player[playerID].movement.forward_orientation);
 }
 
-static void receiveInputData(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_input_data(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t bits[8];
     uint8_t mask = 1;
@@ -1232,7 +1231,7 @@ static void receiveInputData(server_t* server, uint8_t playerID, datastream_t* d
     }
 }
 
-static void receivePositionData(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_position_data(server_t* server, uint8_t playerID, datastream_t* data)
 {
     float x, y, z;
     x = datastream_read_f(data);
@@ -1325,7 +1324,7 @@ static void receivePositionData(server_t* server, uint8_t playerID, datastream_t
     }*/
 }
 
-static void receiveExistingPlayer(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_existing_player(server_t* server, uint8_t playerID, datastream_t* data)
 {
     datastream_skip(data, 1); // Clients always send a "dumb" ID here since server has not sent them their ID yet
 
@@ -1335,8 +1334,7 @@ static void receiveExistingPlayer(server_t* server, uint8_t playerID, datastream
     server->player[playerID].kills  = datastream_read_u32(data);
 
     if (server->player[playerID].team != 0 && server->player[playerID].team != 1 &&
-        server->player[playerID].team != 255)
-    {
+        server->player[playerID].team != 255) {
         LOG_WARNING(
         "Player %s (#%hhu) sent invalid team. Switching them to Spectator", server->player[playerID].name, playerID);
         server->player[playerID].team = 255;
@@ -1456,7 +1454,7 @@ static void receiveExistingPlayer(server_t* server, uint8_t playerID, datastream
     }
 }
 
-static void receiveBlockAction(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_block_action(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t ID = datastream_read_u8(data);
     if (playerID != ID) {
@@ -1617,7 +1615,7 @@ static void receiveBlockAction(server_t* server, uint8_t playerID, datastream_t*
     }
 }
 
-static void receiveBlockLine(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_block_line(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t ID = datastream_read_u8(data);
     if (playerID != ID) {
@@ -1662,7 +1660,7 @@ static void receiveBlockLine(server_t* server, uint8_t playerID, datastream_t* d
     }
 }
 
-static void receiveSetTool(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_set_tool(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t ID   = datastream_read_u8(data);
     uint8_t tool = datastream_read_u8(data);
@@ -1678,7 +1676,7 @@ static void receiveSetTool(server_t* server, uint8_t playerID, datastream_t* dat
     send_set_tool(server, playerID, tool);
 }
 
-static void receiveSetColor(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_set_color(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t ID = datastream_read_u8(data);
     uint8_t B  = datastream_read_u8(data);
@@ -1697,7 +1695,7 @@ static void receiveSetColor(server_t* server, uint8_t playerID, datastream_t* da
     send_set_color(server, playerID, R, G, B);
 }
 
-static void receiveWeaponInput(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_weapon_input(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t mask   = 1;
     uint8_t ID     = datastream_read_u8(data);
@@ -1771,7 +1769,7 @@ static void receiveWeaponInput(server_t* server, uint8_t playerID, datastream_t*
     }
 }
 
-static void receiveWeaponReload(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_weapon_reload(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t ID      = datastream_read_u8(data);
     uint8_t clip    = datastream_read_u8(data);
@@ -1790,7 +1788,7 @@ static void receiveWeaponReload(server_t* server, uint8_t playerID, datastream_t
     send_weapon_reload(server, playerID, 1, clip, reserve);
 }
 
-static void receiveChangeTeam(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_change_team(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t ID = datastream_read_u8(data);
     server->protocol.num_team_users[server->player[playerID].team]--;
@@ -1811,7 +1809,7 @@ static void receiveChangeTeam(server_t* server, uint8_t playerID, datastream_t* 
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
 
-static void receiveChangeWeapon(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_change_weapon(server_t* server, uint8_t playerID, datastream_t* data)
 {
     uint8_t ID     = datastream_read_u8(data);
     uint8_t weapon = datastream_read_u8(data);
@@ -1826,7 +1824,7 @@ static void receiveChangeWeapon(server_t* server, uint8_t playerID, datastream_t
     server->player[playerID].state = STATE_WAITING_FOR_RESPAWN;
 }
 
-static void receiveVersionResponse(server_t* server, uint8_t playerID, datastream_t* data)
+static void receive_version_response(server_t* server, uint8_t playerID, datastream_t* data)
 {
     server->player[playerID].client           = datastream_read_u8(data);
     server->player[playerID].version_major    = datastream_read_u8(data);
@@ -1853,60 +1851,55 @@ static void receiveVersionResponse(server_t* server, uint8_t playerID, datastrea
         }
     }
 }
+
+void init_packets(server_t* server)
+{
+    server->packets                = NULL;
+    packet_manager_t packets[] = {{0, &receive_position_data},
+                                      {1, &receive_orientation_data},
+                                      {3, &receive_input_data},
+                                      {4, &receive_weapon_input},
+                                      {5, &receive_hit_packet},
+                                      {6, &receive_grenade_packet},
+                                      {7, &receive_set_tool},
+                                      {8, &receive_set_color},
+                                      {9, &receive_existing_player},
+                                      {13, &receive_block_action},
+                                      {14, &receive_block_line},
+                                      {17, &receive_handle_send_message},
+                                      {28, &receive_weapon_reload},
+                                      {29, &receive_change_team},
+                                      {30, &receive_change_weapon},
+                                      {34, &receive_version_response}};
+    for (unsigned long i = 0; i < sizeof(packets) / sizeof(packet_manager_t); i++) {
+        packet_t* packet  = malloc(sizeof(packet_t));
+        packet->id = packets[i].id;
+        packet->packet    = packets[i].packet;
+        HASH_ADD_INT(server->packets, id, packet);
+    }
+}
+
+void free_all_packets(server_t* server)
+{
+    packet_t* current_packet;
+    packet_t* tmp;
+
+    HASH_ITER(hh, server->packets, current_packet, tmp)
+    {
+        HASH_DEL(server->packets, current_packet);
+        free(current_packet);
+    }
+}
+
 void on_packet_received(server_t* server, uint8_t playerID, datastream_t* data)
 {
-    packet_id_t type = (packet_id_t) datastream_read_u8(data);
-    switch (type) {
-        case PACKET_TYPE_EXISTING_PLAYER:
-            receiveExistingPlayer(server, playerID, data);
-            break;
-        case PACKET_TYPE_POSITION_DATA:
-            receivePositionData(server, playerID, data);
-            break;
-        case PACKET_TYPE_ORIENTATION_DATA:
-            receiveOrientationData(server, playerID, data);
-            break;
-        case PACKET_TYPE_INPUT_DATA:
-            receiveInputData(server, playerID, data);
-            break;
-        case PACKET_TYPE_CHAT_MESSAGE:
-            handle_and_send_message(server, playerID, data);
-            break;
-        case PACKET_TYPE_BLOCK_ACTION:
-            receiveBlockAction(server, playerID, data);
-            break;
-        case PACKET_TYPE_BLOCK_LINE:
-            receiveBlockLine(server, playerID, data);
-            break;
-        case PACKET_TYPE_SET_TOOL:
-            receiveSetTool(server, playerID, data);
-            break;
-        case PACKET_TYPE_SET_COLOR:
-            receiveSetColor(server, playerID, data);
-            break;
-        case PACKET_TYPE_WEAPON_INPUT:
-            receiveWeaponInput(server, playerID, data);
-            break;
-        case PACKET_TYPE_HIT_PACKET:
-            receiveHitPacket(server, playerID, data);
-            break;
-        case PACKET_TYPE_WEAPON_RELOAD:
-            receiveWeaponReload(server, playerID, data);
-            break;
-        case PACKET_TYPE_CHANGE_TEAM:
-            receiveChangeTeam(server, playerID, data);
-            break;
-        case PACKET_TYPE_CHANGE_WEAPON:
-            receiveChangeWeapon(server, playerID, data);
-            break;
-        case PACKET_TYPE_GRENADE_PACKET:
-            receiveGrenadePacket(server, playerID, data);
-            break;
-        case PACKET_TYPE_VERSION_RESPONSE:
-            receiveVersionResponse(server, playerID, data);
-            break;
-        default:
-            LOG_WARNING("Unhandled input, id %u, code %u", playerID, type);
-            break;
+    uint8_t   type = datastream_read_u8(data);
+    packet_t* packet_p = NULL;
+    int type_int = (int)type;
+    HASH_FIND_INT(server->packets, &type_int, packet_p);
+    if (packet_p == NULL) {
+        LOG_WARNING("Unknown packet with ID %d received", type_int);
+        return;
     }
+    packet_p->packet(server, playerID, data);
 }
