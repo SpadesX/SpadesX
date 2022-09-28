@@ -5,11 +5,14 @@
 
 queue_t* queue_push(queue_t* node, uint32_t capacity)
 {
-    queue_t* next  = (queue_t*) malloc(sizeof(queue_t));
+    // Allocate everything in one call
+    void* memory = malloc(sizeof(queue_t) + capacity);
+
+    queue_t* next  = (queue_t*) memory;
     next->next     = NULL;
     next->capacity = capacity;
     next->length   = 0;
-    next->block    = (uint8_t*) malloc(capacity);
+    next->block    = (uint8_t*) memory + sizeof(queue_t);
     if (node != NULL) {
         node->next = next;
     }
@@ -20,7 +23,6 @@ queue_t* queue_pop(queue_t* node)
 {
     if (node != NULL) {
         queue_t* next = node->next;
-        free(node->block);
         free(node);
         return next;
     }
