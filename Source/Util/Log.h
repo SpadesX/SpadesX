@@ -1,6 +1,8 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include <stdio.h> // required by LOG_ERROR
+
 void log_print_with_time(const char* format, ...);
 
 #define LOG__INT(msg, ...)              log_print_with_time(msg "%s", __VA_ARGS__);
