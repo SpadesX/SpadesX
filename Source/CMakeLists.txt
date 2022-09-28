@@ -3,6 +3,7 @@
 #
 
 set(SERVER_HEADERS
+    Events.h
     Protocol.h
     Master.h
     Server.h
@@ -16,6 +17,7 @@ set(SERVER_HEADERS
 )
 
 set(SERVER_SOURCES
+    Events.c
     Server.c
     Main.c
     Master.c
