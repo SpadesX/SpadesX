@@ -102,7 +102,7 @@ int main(void)
         uint8_t      string_len = json_object_get_string_len(temp);
         if (string_len > 128) {
             LOG_WARNING(
-            "Welcome message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
+            "Periodic message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
             continue;
         }
         string_node_t* periodic_message        = malloc(sizeof(string_node_t));

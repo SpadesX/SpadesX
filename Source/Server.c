@@ -188,17 +188,17 @@ static void _for_players(void)
     }
 }
 
-static void* calculatePhysics(void)
+static void* _calculate_physics(void)
 {
     server.global_timers.update_time = get_nanos();
     if (server.global_timers.update_time - server.global_timers.last_update_time >= (1000000000 / 60)) {
-        updateMovementAndGrenades(&server);
+        update_movement_and_grenades(&server);
         server.global_timers.last_update_time = get_nanos();
     }
     return 0;
 }
 
-static void ServerInit(server_t*   server,
+static void _server_init(server_t*   server,
                        uint32_t    connections,
                        const char* serverName,
                        const char* team1Name,
@@ -218,7 +218,7 @@ static void ServerInit(server_t*   server,
     server->s_map.compressed_size = 0;
     server->protocol.input_flags  = 0;
 
-    char    vxlMap[64];
+    char    vxl_map[64];
     uint8_t index;
     if (reset == 0) {
         srand(time(NULL));
@@ -236,7 +236,7 @@ static void ServerInit(server_t*   server,
     server->map_name, fmin(strlen(server->s_map.current_map->string) + 1, 20), "%s", server->s_map.current_map->string);
     LOG_STATUS("Selecting %s as map", server->map_name);
 
-    snprintf(vxlMap, 64, "%s.vxl", server->s_map.current_map->string);
+    snprintf(vxl_map, 64, "%s.vxl", server->s_map.current_map->string);
 
     LOG_STATUS("Loading spawn ranges from map file");
     char mapConfig[64];
@@ -245,24 +245,24 @@ static void ServerInit(server_t*   server,
     struct json_object* parsed_map_json;
     parsed_map_json = json_object_from_file(mapConfig);
 
-    int         team1Start[2];
-    int         team2Start[2];
-    int         team1End[2];
-    int         team2End[2];
+    int         team1_start[2];
+    int         team2_start[2];
+    int         team1_end[2];
+    int         team2_end[2];
     int         map_size[3];
     const char* author;
 
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1Start, team1_start, "team1 start", ((int[]){0, 0}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1End, team1_end, "team1 end", ((int[]){10, 10}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2Start, team2_start, "team2 start", ((int[]){20, 20}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2End, team2_end, "team2 end", ((int[]){30, 30}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1_start, team1_start, "team1 start", ((int[]){0, 0}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1_end, team1_end, "team1 end", ((int[]){10, 10}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2_start, team2_start, "team2 start", ((int[]){20, 20}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2_end, team2_end, "team2 end", ((int[]){30, 30}), 2, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, map_size, map_size, "map_size", ((int[]){512, 512, 64}), 3, 1)
     READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
     (void) author;
 
     json_object_put(parsed_map_json);
 
-    if (map_load(server, vxlMap, map_size) == 0) {
+    if (map_load(server, vxl_map, map_size) == 0) {
         return;
     }
 
@@ -277,15 +277,15 @@ static void ServerInit(server_t*   server,
     server->global_ab = 1;
     server->global_ak = 1;
 
-    server->protocol.spawns[0].from.x = team1Start[0];
-    server->protocol.spawns[0].from.y = team1Start[1];
-    server->protocol.spawns[0].to.x   = team1End[0];
-    server->protocol.spawns[0].to.y   = team1End[1];
+    server->protocol.spawns[0].from.x = team1_start[0];
+    server->protocol.spawns[0].from.y = team1_start[1];
+    server->protocol.spawns[0].to.x   = team1_end[0];
+    server->protocol.spawns[0].to.y   = team1_end[1];
 
-    server->protocol.spawns[1].from.x = team2Start[0];
-    server->protocol.spawns[1].from.y = team2Start[1];
-    server->protocol.spawns[1].to.x   = team2End[0];
-    server->protocol.spawns[1].to.y   = team2End[1];
+    server->protocol.spawns[1].from.x = team2_start[0];
+    server->protocol.spawns[1].from.y = team2_start[1];
+    server->protocol.spawns[1].to.x   = team2_end[0];
+    server->protocol.spawns[1].to.y   = team2_end[1];
 
     server->protocol.color_fog.r = 0x80;
     server->protocol.color_fog.g = 0xE8;
@@ -311,7 +311,7 @@ static void ServerInit(server_t*   server,
 
 void server_reset(server_t* server)
 {
-    ServerInit(server,
+    _server_init(server,
                server->protocol.max_players,
                server->server_name,
                server->protocol.name_team[0],
@@ -322,7 +322,7 @@ void server_reset(server_t* server)
                1);
 }
 
-static void SendJoiningData(server_t* server, uint8_t player_id)
+static void _send_joining_data(server_t* server, uint8_t player_id)
 {
     LOG_INFO("Sending state to %s (#%hhu)", server->player[player_id].name, player_id);
     for (uint8_t i = 0; i < server->protocol.max_players; ++i) {
@@ -333,7 +333,7 @@ static void SendJoiningData(server_t* server, uint8_t player_id)
     send_state_data(server, player_id);
 }
 
-static uint8_t OnConnect(server_t* server)
+static uint8_t _on_connect(server_t* server)
 {
     if (server->protocol.num_players == server->protocol.max_players) {
         return 0xFF;
@@ -349,7 +349,7 @@ static uint8_t OnConnect(server_t* server)
     return player_id;
 }
 
-static void OnPlayerUpdate(server_t* server, uint8_t player_id)
+static void _on_player_update(server_t* server, uint8_t player_id)
 {
     switch (server->player[player_id].state) {
         case STATE_STARTING_MAP:
@@ -360,7 +360,7 @@ static void OnPlayerUpdate(server_t* server, uint8_t player_id)
             send_map_chunks(server, player_id);
             break;
         case STATE_JOINING:
-            SendJoiningData(server, player_id);
+            _send_joining_data(server, player_id);
             break;
         case STATE_SPAWNING:
             server->player[player_id].hp             = 100;
@@ -380,7 +380,7 @@ static void OnPlayerUpdate(server_t* server, uint8_t player_id)
             server->player[player_id].secondary_fire = 0;
             server->player[player_id].alive          = 1;
             server->player[player_id].reloading      = 0;
-            SetPlayerRespawnPoint(server, player_id);
+            set_player_respawn_point(server, player_id);
             send_respawn(server, player_id);
             LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
                      server->player[player_id].name,
@@ -412,10 +412,10 @@ static void OnPlayerUpdate(server_t* server, uint8_t player_id)
     }
 }
 
-static void* WorldUpdate(void)
+static void* _world_update(void)
 {
     for (uint8_t player_id = 0; player_id < server.protocol.max_players; ++player_id) {
-        OnPlayerUpdate(&server, player_id);
+        _on_player_update(&server, player_id);
         if (is_past_join_screen(&server, player_id)) {
             uint64_t time = get_nanos();
             if (time - server.player[player_id].timers.time_since_last_wu >=
@@ -429,12 +429,12 @@ static void* WorldUpdate(void)
     return 0;
 }
 
-static void ServerUpdate(server_t* server, int timeout)
+static void _server_update(server_t* server, int timeout)
 {
 
     ENetEvent event;
     while (enet_host_service(server->host, &event, timeout) > 0) {
-        uint8_t bannedUser = 0;
+        uint8_t banned_user = 0;
         uint8_t player_id;
         switch (event.type) {
             case ENET_EVENT_TYPE_NONE:
@@ -466,28 +466,28 @@ static void ServerUpdate(server_t* server, int timeout)
                 json_object_object_get_ex(root, "Bans", &array);
                 int count = json_object_array_length(array);
                 for (int i = 0; i < count; ++i) {
-                    struct json_object* objectAtIndex = json_object_array_get_idx(array, i);
+                    struct json_object* object_at_index = json_object_array_get_idx(array, i);
                     const char*         IP;
-                    const char*         startOfRangeString;
-                    const char*         endOfRangeString;
+                    const char*         start_of_range_string;
+                    const char*         end_of_range_string;
                     READ_STR_FROM_JSON(
-                    objectAtIndex, startOfRangeString, start_of_range, "start of range", "0.0.0.0", 1);
-                    READ_STR_FROM_JSON(objectAtIndex, endOfRangeString, end_of_range, "end of range", "0.0.0.0", 1);
-                    READ_STR_FROM_JSON(objectAtIndex, IP, IP, "IP", "0.0.0.0", 1);
+                    object_at_index, start_of_range_string, start_of_range, "start of range", "0.0.0.0", 1);
+                    READ_STR_FROM_JSON(object_at_index, end_of_range_string, end_of_range, "end of range", "0.0.0.0", 1);
+                    READ_STR_FROM_JSON(object_at_index, IP, IP, "IP", "0.0.0.0", 1);
                     ip_t ipStruct;
-                    ip_t startOfRange, endOfRange;
+                    ip_t start_of_range, end_of_range;
                     if (format_str_to_ip((char*) IP, &ipStruct) &&
-                        (format_str_to_ip((char*) startOfRangeString, &startOfRange) &&
-                         format_str_to_ip((char*) endOfRangeString, &endOfRange)))
+                        (format_str_to_ip((char*) start_of_range_string, &start_of_range) &&
+                         format_str_to_ip((char*) end_of_range_string, &end_of_range)))
                     {
-                        if (ip_in_range(hostIP, ipStruct, startOfRange, endOfRange)) {
-                            const char* nameOfPlayer;
+                        if (ip_in_range(hostIP, ipStruct, start_of_range, end_of_range)) {
+                            const char* name_of_player;
                             const char* reason;
                             double      time    = 0.0f;
                             uint64_t    timeNow = get_nanos();
-                            READ_STR_FROM_JSON(objectAtIndex, nameOfPlayer, Name, "Name", "Deuce", 0);
-                            READ_STR_FROM_JSON(objectAtIndex, reason, Reason, "Reason", "None", 0);
-                            READ_DOUBLE_FROM_JSON(objectAtIndex, time, Time, "Time", 0.0f, 0);
+                            READ_STR_FROM_JSON(object_at_index, name_of_player, Name, "Name", "Deuce", 0);
+                            READ_STR_FROM_JSON(object_at_index, reason, Reason, "Reason", "None", 0);
+                            READ_DOUBLE_FROM_JSON(object_at_index, time, Time, "Time", 0.0f, 0);
                             if (((long double) timeNow / NANO_IN_MINUTE) > time && time != 0) {
                                 json_object_array_del_idx(array, i, 1);
                                 json_object_to_file("Bans.json", root);
@@ -497,13 +497,13 @@ static void ServerUpdate(server_t* server, int timeout)
                                 enet_peer_disconnect(event.peer, REASON_BANNED);
 
                                 LOG_WARNING("Banned user %s tried to join with IP: %hhu.%hhu.%hhu.%hhu Banned for: %s",
-                                            nameOfPlayer,
+                                            name_of_player,
                                             hostIP.ip[0],
                                             hostIP.ip[1],
                                             hostIP.ip[2],
                                             hostIP.ip[3],
                                             reason);
-                                bannedUser       = 1;
+                                banned_user       = 1;
                                 event.peer->data = (void*) ((size_t) server->protocol.max_players - 1);
                                 break;
                             }
@@ -512,13 +512,13 @@ static void ServerUpdate(server_t* server, int timeout)
                 }
                 json_object_put(root);
 
-                if (bannedUser) {
+                if (banned_user) {
                     break;
                 }
                 // check peer
                 // ...
                 // find next free ID
-                player_id = OnConnect(server);
+                player_id = _on_connect(server);
                 if (player_id == 0xFF) {
                     enet_peer_disconnect_now(event.peer, REASON_SERVER_FULL);
                     LOG_WARNING("Server full. Kicking player");
@@ -568,7 +568,7 @@ static void ServerUpdate(server_t* server, int timeout)
     }
 }
 
-void ReadlineNewLine(int signal)
+void readline_new_line(int signal)
 {
     (void) signal; // To prevent a warning about unused variable
 
@@ -584,12 +584,12 @@ void ReadlineNewLine(int signal)
     rl_redisplay();
 }
 
-void StopServer(void)
+void stop_server(void)
 {
     server.running = 0;
 }
 
-static void* serverConsole(void* arg)
+static void* _server_console(void* arg)
 {
     (void) arg;
     char* buf;
@@ -609,7 +609,7 @@ static void* serverConsole(void* arg)
         free(buf);
     }
     rl_clear_history();
-    StopServer();
+    stop_server();
 
     sleep(5); // wait 5 seconds for the server to stop
 
@@ -623,24 +623,24 @@ static void* serverConsole(void* arg)
 void server_start(uint16_t       port,
                   uint32_t       connections,
                   uint32_t       channels,
-                  uint32_t       inBandwidth,
-                  uint32_t       outBandwidth,
+                  uint32_t       in_bandwidth,
+                  uint32_t       out_bandwidth,
                   uint8_t        master,
                   string_node_t* map_list,
                   uint8_t        map_count,
-                  string_node_t* welcomeMessageList,
-                  uint8_t        welcomeMessageListLen,
-                  string_node_t* periodicMessageList,
-                  uint8_t        periodicMessageListLen,
-                  uint8_t*       periodicDelays,
-                  const char*    managerPasswd,
-                  const char*    adminPasswd,
-                  const char*    modPasswd,
-                  const char*    guardPasswd,
-                  const char*    trustedPasswd,
-                  const char*    serverName,
-                  const char*    team1Name,
-                  const char*    team2Name,
+                  string_node_t* welcome_message_list,
+                  uint8_t        welcome_message_list_len,
+                  string_node_t* periodic_message_list,
+                  uint8_t        periodic_message_list_len,
+                  uint8_t*       periodic_delays,
+                  const char*    manager_passwd,
+                  const char*    admin_passwd,
+                  const char*    mod_passwd,
+                  const char*    guard_passwd,
+                  const char*    trusted_passwd,
+                  const char*    server_name,
+                  const char*    team1_name,
+                  const char*    team2_name,
                   uint8_t*       team1_color,
                   uint8_t*       team2_color,
                   uint8_t        gamemode)
@@ -666,7 +666,7 @@ void server_start(uint16_t       port,
 
     LOG_STATUS("Creating server at port %d", port);
 
-    server.host = enet_host_create(&address, connections, channels, inBandwidth, outBandwidth);
+    server.host = enet_host_create(&address, connections, channels, in_bandwidth, out_bandwidth);
     if (server.host == NULL) {
         LOG_ERROR("Failed to create server");
         exit(EXIT_FAILURE);
@@ -684,22 +684,22 @@ void server_start(uint16_t       port,
     server.running                = 1;
     server.s_map.map_list         = map_list;
     server.s_map.map_count        = map_count;
-    server.welcome_messages       = welcomeMessageList;
-    server.welcome_messages_count = welcomeMessageListLen;
-    server.periodic_messages      = periodicMessageList;
-    server.periodic_message_count = periodicMessageListLen;
-    server.periodic_delays        = periodicDelays;
-    ServerInit(&server, connections, serverName, team1Name, team2Name, team1_color, team2_color, gamemode, 0);
+    server.welcome_messages       = welcome_message_list;
+    server.welcome_messages_count = welcome_message_list_len;
+    server.periodic_messages      = periodic_message_list;
+    server.periodic_message_count = periodic_message_list_len;
+    server.periodic_delays        = periodic_delays;
+    _server_init(&server, connections, server_name, team1_name, team2_name, team1_color, team2_color, gamemode, 0);
 
     command_populate_all(&server);
     init_packets(&server);
 
     server.master.enable_master_connection = master;
-    server.manager_passwd                  = managerPasswd;
-    server.admin_passwd                    = adminPasswd;
-    server.mod_passwd                      = modPasswd;
-    server.guard_passwd                    = guardPasswd;
-    server.trusted_passwd                  = trustedPasswd;
+    server.manager_passwd                  = manager_passwd;
+    server.admin_passwd                    = admin_passwd;
+    server.mod_passwd                      = mod_passwd;
+    server.guard_passwd                    = guard_passwd;
+    server.trusted_passwd                  = trusted_passwd;
 
     if (server.running) {
         LOG_STATUS("Server started");
@@ -715,16 +715,16 @@ void server_start(uint16_t       port,
 
     rl_catch_signals = 0;
     pthread_t console;
-    pthread_create(&console, NULL, serverConsole, NULL);
+    pthread_create(&console, NULL, _server_console, NULL);
     pthread_detach(console);
 
-    signal(SIGINT, ReadlineNewLine);
+    signal(SIGINT, readline_new_line);
 
     while (server.running) {
         pthread_mutex_lock(&server_lock);
-        calculatePhysics();
-        ServerUpdate(&server, 0);
-        WorldUpdate();
+        _calculate_physics();
+        _server_update(&server, 0);
+        _world_update();
         _for_players();
         pthread_mutex_unlock(&server_lock);
         sleep(0);

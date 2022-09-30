@@ -278,7 +278,7 @@ void send_grenade(server_t* server, uint8_t player_id, float fuse, vector3f_t po
     stream_write_f(&stream, velocity.x);
     stream_write_f(&stream, velocity.y);
     stream_write_f(&stream, velocity.z);
-    if (SendPacketExceptSender(server, packet, player_id) == 0) {
+    if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -362,7 +362,7 @@ void send_weapon_input(server_t* server, uint8_t player_id, uint8_t wInput)
         wInput = 0;
     }
     stream_write_u8(&stream, wInput);
-    if (SendPacketExceptSender(server, packet, player_id) == 0) {
+    if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -379,7 +379,7 @@ void send_set_color(server_t* server, uint8_t player_id, color_t color)
     stream_write_u8(&stream, color.b);
     stream_write_u8(&stream, color.g);
     stream_write_u8(&stream, color.r);
-    if (SendPacketExceptSender(server, packet, player_id) == 0) {
+    if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -411,7 +411,7 @@ void send_set_tool(server_t* server, uint8_t player_id, uint8_t tool)
     stream_write_u8(&stream, PACKET_TYPE_SET_TOOL);
     stream_write_u8(&stream, player_id);
     stream_write_u8(&stream, tool);
-    if (SendPacketExceptSender(server, packet, player_id) == 0) {
+    if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -622,7 +622,7 @@ void send_input_data(server_t* server, uint8_t player_id)
     stream_write_u8(&stream, PACKET_TYPE_INPUT_DATA);
     stream_write_u8(&stream, player_id);
     stream_write_u8(&stream, player->input);
-    if (SendPacketExceptSenderDistCheck(server, packet, player_id) == 0) {
+    if (send_packet_except_sender_dist_check(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
 }
@@ -1103,7 +1103,7 @@ static void receive_hit_packet(server_t* server, uint8_t player_id, stream_t* da
     vector3f_t shot_eye_pos  = player->movement.eye_pos;
     vector3f_t hit_pos       = server->player[hit_player_id].movement.position;
     vector3f_t shot_orien    = player->movement.forward_orientation;
-    float      distance      = DistanceIn2D(shot_pos, hit_pos);
+    float      distance      = distance_in_2d(shot_pos, hit_pos);
     long       x = 0, y = 0, z = 0;
 
     if (player->sprinting || (player->item == 2 && player->weapon_clip <= 0)) {
@@ -1503,7 +1503,7 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
         if (((player->item == 0 && (actionType == 1 || actionType == 2)) || (player->item == 1 && actionType == 0) ||
              (player->item == 2 && actionType == 1)))
         {
-            if ((distance_in_3d(vectorfBlock, playerVector) <= 4 || player->item == 2) &&
+            if ((distance_in_3(vectorfBlock, playerVector) <= 4 || player->item == 2) &&
                 valid_pos_v3i(server, vectorBlock)) {
                 switch (actionType) {
                     case 0:
@@ -1664,7 +1664,7 @@ static void receive_block_line(server_t* server, uint8_t player_id, stream_t* da
         }
         vector3f_t startF = {start.x, start.y, start.z};
         vector3f_t endF   = {end.x, end.y, end.z};
-        if (distance_in_3d(endF, player->movement.position) <= 4 && distance_in_3d(startF, player->locAtClick) <= 4 &&
+        if (distance_in_3(endF, player->movement.position) <= 4 && distance_in_3(startF, player->locAtClick) <= 4 &&
             valid_pos_v3f(server, startF) && valid_pos_v3f(server, endF))
         {
             int size = line_get_blocks(&start, &end, server->s_map.result_line);
@@ -1769,7 +1769,7 @@ static void receive_weapon_input(server_t* server, uint8_t player_id, stream_t* 
                 player->item == TOOL_GUN)
             {
                 for (int i = 0; i < server->protocol.max_players; ++i) {
-                    if (is_past_join_screen(server, i) && isStaff(server, i)) {
+                    if (is_past_join_screen(server, i) && is_staff(server, i)) {
                         char message[200];
                         snprintf(message, 200, "WARNING. Player %d may be using no recoil", player_id);
                         send_server_notice(server, i, 0, message);

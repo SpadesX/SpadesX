@@ -157,7 +157,7 @@ uint8_t player_has_permission(server_t* server, uint8_t player_id, uint8_t conso
     }
 }
 
-uint8_t getPlayerUnstuck(server_t* server, uint8_t player_id)
+uint8_t get_player_unstuck(server_t* server, uint8_t player_id)
 {
     for (float z = server->player[player_id].movement.prev_legit_pos.z - 1;
          z <= server->player[player_id].movement.prev_legit_pos.z + 1;
@@ -194,7 +194,7 @@ uint8_t getPlayerUnstuck(server_t* server, uint8_t player_id)
     return 0;
 }
 
-uint8_t getGrenadeDamage(server_t* server, uint8_t damageID, grenade_t* grenade)
+uint8_t get_grenade_damage(server_t* server, uint8_t damageID, grenade_t* grenade)
 {
     double     diffX      = fabs(server->player[damageID].movement.position.x - grenade->position.x);
     double     diffY      = fabs(server->player[damageID].movement.position.y - grenade->position.y);
@@ -315,7 +315,7 @@ void init_player(server_t*  server,
     memset(server->player[player_id].os_info, 0, 255);
 }
 
-uint8_t isStaff(server_t* server, uint8_t player_id)
+uint8_t is_staff(server_t* server, uint8_t player_id)
 {
     if (player_has_permission(server, player_id, 0, 4294967294)) {
         return 1;
@@ -334,7 +334,7 @@ void send_message_to_staff(server_t* server, const char* format, ...)
     send_server_notice(server, 32, 1, fMessage);
 
     for (uint8_t ID = 0; ID < server->protocol.max_players; ++ID) {
-        if (is_past_join_screen(server, ID) && isStaff(server, ID)) {
+        if (is_past_join_screen(server, ID) && is_staff(server, ID)) {
             send_server_notice(server, ID, 0, fMessage);
         }
     }
@@ -803,28 +803,28 @@ uint8_t check_node(server_t* server, vector3i_t position)
 
 void move_intel_and_tent_down(server_t* server)
 {
-    while (checkUnderIntel(server, 0)) {
+    while (check_under_intel(server, 0)) {
         vector3f_t newPos = {server->protocol.gamemode.intel[0].x,
                              server->protocol.gamemode.intel[0].y,
                              server->protocol.gamemode.intel[0].z + 1};
         send_move_object(server, 0, 0, newPos);
         server->protocol.gamemode.intel[0] = newPos;
     }
-    while (checkUnderIntel(server, 1)) {
+    while (check_under_intel(server, 1)) {
         vector3f_t newPos = {server->protocol.gamemode.intel[1].x,
                              server->protocol.gamemode.intel[1].y,
                              server->protocol.gamemode.intel[1].z + 1};
         send_move_object(server, 1, 1, newPos);
         server->protocol.gamemode.intel[1] = newPos;
     }
-    while (checkUnderTent(server, 0) == 4) {
+    while (check_under_tent(server, 0) == 4) {
         vector3f_t newPos = {server->protocol.gamemode.base[0].x,
                              server->protocol.gamemode.base[0].y,
                              server->protocol.gamemode.base[0].z + 1};
         send_move_object(server, 2, 0, newPos);
         server->protocol.gamemode.base[0] = newPos;
     }
-    while (checkUnderTent(server, 1) == 4) {
+    while (check_under_tent(server, 1) == 4) {
         vector3f_t newPos = {server->protocol.gamemode.base[1].x,
                              server->protocol.gamemode.base[1].y,
                              server->protocol.gamemode.base[1].z + 1};
@@ -835,22 +835,22 @@ void move_intel_and_tent_down(server_t* server)
 
 void moveIntelAndTentUp(server_t* server)
 {
-    if (checkInTent(server, 0)) {
+    if (check_in_tent(server, 0)) {
         vector3f_t newTentPos = server->protocol.gamemode.base[0];
         newTentPos.z -= 1;
         send_move_object(server, 0 + 2, 0, newTentPos);
         server->protocol.gamemode.base[0] = newTentPos;
-    } else if (checkInTent(server, 1)) {
+    } else if (check_in_tent(server, 1)) {
         vector3f_t newTentPos = server->protocol.gamemode.base[1];
         newTentPos.z -= 1;
         send_move_object(server, 1 + 2, 1, newTentPos);
         server->protocol.gamemode.base[1] = newTentPos;
-    } else if (checkInIntel(server, 1)) {
+    } else if (check_in_intel(server, 1)) {
         vector3f_t newIntelPos = server->protocol.gamemode.intel[1];
         newIntelPos.z -= 1;
         send_move_object(server, 1, 1, newIntelPos);
         server->protocol.gamemode.intel[1] = newIntelPos;
-    } else if (checkInIntel(server, 0)) {
+    } else if (check_in_intel(server, 0)) {
         vector3f_t newIntelPos = server->protocol.gamemode.intel[0];
         newIntelPos.z -= 1;
         send_move_object(server, 0, 0, newIntelPos);
@@ -858,7 +858,7 @@ void moveIntelAndTentUp(server_t* server)
     }
 }
 
-uint8_t checkUnderTent(server_t* server, uint8_t team)
+uint8_t check_under_tent(server_t* server, uint8_t team)
 {
     uint8_t count = 0;
     for (int x = server->protocol.gamemode.base[team].x - 1; x <= server->protocol.gamemode.base[team].x; x++) {
@@ -871,7 +871,7 @@ uint8_t checkUnderTent(server_t* server, uint8_t team)
     return count;
 }
 
-uint8_t checkUnderIntel(server_t* server, uint8_t team)
+uint8_t check_under_intel(server_t* server, uint8_t team)
 {
     uint8_t ret = 0;
     if (mapvxl_is_solid(&server->s_map.map,
@@ -884,7 +884,7 @@ uint8_t checkUnderIntel(server_t* server, uint8_t team)
     return ret;
 }
 
-uint8_t checkPlayerOnIntel(server_t* server, uint8_t player_id, uint8_t team)
+uint8_t check_player_on_intel(server_t* server, uint8_t player_id, uint8_t team)
 {
     uint8_t ret = 0;
     if (server->player[player_id].alive == 0) {
@@ -902,7 +902,7 @@ uint8_t checkPlayerOnIntel(server_t* server, uint8_t player_id, uint8_t team)
     return ret;
 }
 
-uint8_t checkPlayerInTent(server_t* server, uint8_t player_id)
+uint8_t check_player_in_tent(server_t* server, uint8_t player_id)
 {
     uint8_t ret = 0;
     if (server->player[player_id].alive == 0) {
@@ -920,7 +920,7 @@ uint8_t checkPlayerInTent(server_t* server, uint8_t player_id)
     return ret;
 }
 
-uint8_t checkItemOnIntel(server_t* server, uint8_t team, vector3f_t itemPos)
+uint8_t check_item_on_intel(server_t* server, uint8_t team, vector3f_t itemPos)
 {
     uint8_t    ret      = 0;
     vector3f_t intelPos = server->protocol.gamemode.intel[team];
@@ -931,7 +931,7 @@ uint8_t checkItemOnIntel(server_t* server, uint8_t team, vector3f_t itemPos)
     return ret;
 }
 
-uint8_t checkItemInTent(server_t* server, uint8_t team, vector3f_t itemPos)
+uint8_t check_item_in_tent(server_t* server, uint8_t team, vector3f_t itemPos)
 {
     uint8_t    ret     = 0;
     vector3f_t tentPos = server->protocol.gamemode.base[team];
@@ -944,7 +944,7 @@ uint8_t checkItemInTent(server_t* server, uint8_t team, vector3f_t itemPos)
     return ret;
 }
 
-uint8_t checkInTent(server_t* server, uint8_t team)
+uint8_t check_in_tent(server_t* server, uint8_t team)
 {
     uint8_t    ret      = 0;
     vector3f_t checkPos = server->protocol.gamemode.base[team];
@@ -963,7 +963,7 @@ uint8_t checkInTent(server_t* server, uint8_t team)
     return ret;
 }
 
-uint8_t checkInIntel(server_t* server, uint8_t team)
+uint8_t check_in_intel(server_t* server, uint8_t team)
 {
     uint8_t    ret      = 0;
     vector3f_t checkPos = server->protocol.gamemode.intel[team];
@@ -974,7 +974,7 @@ uint8_t checkInIntel(server_t* server, uint8_t team)
     return ret;
 }
 
-vector3f_t SetIntelTentSpawnPoint(server_t* server, uint8_t team)
+vector3f_t set_intel_spawn_point(server_t* server, uint8_t team)
 {
     quad3d_t* spawn = server->protocol.spawns + team;
 
@@ -999,14 +999,14 @@ void handleTentAndIntel(server_t* server, uint8_t player_id)
         uint64_t timeNow = time(NULL);
         if (server->player[player_id].has_intel == 0) {
 
-            if (checkPlayerOnIntel(server, player_id, team) && (!server->protocol.gamemode.intel_held[team])) {
+            if (check_player_on_intel(server, player_id, team) && (!server->protocol.gamemode.intel_held[team])) {
                 send_intel_pickup(server, player_id);
                 if (server->protocol.current_gamemode == GAME_MODE_BABEL) {
                     vector3f_t pos = {0, 0, 64};
                     send_move_object(server, server->player[player_id].team, server->player[player_id].team, pos);
                     server->protocol.gamemode.intel[server->player[player_id].team] = pos;
                 }
-            } else if (checkPlayerInTent(server, player_id) &&
+            } else if (check_player_in_tent(server, player_id) &&
                        timeNow - server->player[player_id].timers.since_last_base_enter_restock >= 15)
             {
                 send_restock(server, player_id);
@@ -1027,7 +1027,7 @@ void handleTentAndIntel(server_t* server, uint8_t player_id)
                 server->player[player_id].timers.since_last_base_enter_restock = time(NULL);
             }
         } else if (server->player[player_id].has_intel) {
-            if (checkPlayerInTent(server, player_id) &&
+            if (check_player_in_tent(server, player_id) &&
                 timeNow - server->player[player_id].timers.since_last_base_enter >= 5) {
                 server->protocol.gamemode.score[server->player[player_id].team]++;
                 uint8_t winning = 0;
@@ -1059,7 +1059,7 @@ void handleTentAndIntel(server_t* server, uint8_t player_id)
                     send_move_object(server, 0, 0, server->protocol.gamemode.intel[0]);
                     send_move_object(server, 1, 1, server->protocol.gamemode.intel[1]);
                 } else {
-                    server->protocol.gamemode.intel[team] = SetIntelTentSpawnPoint(server, team);
+                    server->protocol.gamemode.intel[team] = set_intel_spawn_point(server, team);
                     send_move_object(server, team, team, server->protocol.gamemode.intel[team]);
                 }
                 if (winning) {
@@ -1075,7 +1075,7 @@ void handleTentAndIntel(server_t* server, uint8_t player_id)
     }
 }
 
-void handleGrenade(server_t* server, uint8_t player_id)
+void handle_grenade(server_t* server, uint8_t player_id)
 {
     grenade_t* grenade;
     grenade_t* tmp;
@@ -1096,7 +1096,7 @@ void handleGrenade(server_t* server, uint8_t player_id)
                 }
                 for (int y = 0; y < server->protocol.max_players; ++y) {
                     if (server->player[y].state == STATE_READY) {
-                        uint8_t value = getGrenadeDamage(server, y, grenade);
+                        uint8_t value = get_grenade_damage(server, y, grenade);
                         if (value > 0) {
                             send_set_hp(server, player_id, y, value, 1, 3, 5, 1, grenade->position);
                         }
@@ -1144,7 +1144,7 @@ void handleGrenade(server_t* server, uint8_t player_id)
     }
 }
 
-void updateMovementAndGrenades(server_t* server)
+void update_movement_and_grenades(server_t* server)
 {
     physics_set_globals((server->global_timers.update_time - server->global_timers.time_since_start) / 1000000000.f,
                         (server->global_timers.update_time - server->global_timers.last_update_time) / 1000000000.f);
@@ -1160,11 +1160,11 @@ void updateMovementAndGrenades(server_t* server)
                 handleTentAndIntel(server, player_id);
             }
         }
-        handleGrenade(server, player_id);
+        handle_grenade(server, player_id);
     }
 }
 
-void SetPlayerRespawnPoint(server_t* server, uint8_t player_id)
+void set_player_respawn_point(server_t* server, uint8_t player_id)
 {
     if (server->player[player_id].team != TEAM_SPECTATOR) {
         quad3d_t* spawn = server->protocol.spawns + server->player[player_id].team;
@@ -1259,7 +1259,7 @@ uint8_t player_to_player_visibile(server_t* server, uint8_t player_id, uint8_t p
     }
 }
 
-uint32_t distance_in_3d(vector3f_t vector1, vector3f_t vector2)
+uint32_t distance_in_3(vector3f_t vector1, vector3f_t vector2)
 {
     uint32_t distance = 0;
     distance          = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)) +
@@ -1267,14 +1267,14 @@ uint32_t distance_in_3d(vector3f_t vector1, vector3f_t vector2)
     return distance;
 }
 
-uint32_t DistanceIn2D(vector3f_t vector1, vector3f_t vector2)
+uint32_t distance_in_2d(vector3f_t vector1, vector3f_t vector2)
 {
     uint32_t distance = 0;
     distance          = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)));
     return distance;
 }
 
-uint8_t Collision3D(vector3f_t vector1, vector3f_t vector2, uint8_t distance)
+uint8_t collision_3d(vector3f_t vector1, vector3f_t vector2, uint8_t distance)
 {
     if (fabs(vector1.x - vector2.x) < distance && fabs(vector1.y - vector2.y) < distance &&
         fabs(vector1.x - vector2.x) < distance)
@@ -1285,7 +1285,7 @@ uint8_t Collision3D(vector3f_t vector1, vector3f_t vector2, uint8_t distance)
     }
 }
 
-uint8_t SendPacketExceptSender(server_t* server, ENetPacket* packet, uint8_t player_id)
+uint8_t send_packet_except_sender(server_t* server, ENetPacket* packet, uint8_t player_id)
 {
     uint8_t sent = 0;
     for (uint8_t i = 0; i < 32; ++i) {
@@ -1298,7 +1298,7 @@ uint8_t SendPacketExceptSender(server_t* server, ENetPacket* packet, uint8_t pla
     return sent;
 }
 
-uint8_t SendPacketExceptSenderDistCheck(server_t* server, ENetPacket* packet, uint8_t player_id)
+uint8_t send_packet_except_sender_dist_check(server_t* server, ENetPacket* packet, uint8_t player_id)
 {
     uint8_t sent = 0;
     for (uint8_t i = 0; i < 32; ++i) {
@@ -1313,7 +1313,7 @@ uint8_t SendPacketExceptSenderDistCheck(server_t* server, ENetPacket* packet, ui
     return sent;
 }
 
-uint8_t SendPacketDistCheck(server_t* server, ENetPacket* packet, uint8_t player_id)
+uint8_t send_packet_dist_check(server_t* server, ENetPacket* packet, uint8_t player_id)
 {
     uint8_t sent = 0;
     for (uint8_t i = 0; i < 32; ++i) {
