@@ -974,7 +974,7 @@ uint8_t check_in_intel(server_t* server, uint8_t team)
     return ret;
 }
 
-vector3f_t set_intel_spawn_point(server_t* server, uint8_t team)
+vector3f_t set_intel_tent_spawn_point(server_t* server, uint8_t team)
 {
     quad3d_t* spawn = server->protocol.spawns + team;
 
@@ -1059,7 +1059,7 @@ void handleTentAndIntel(server_t* server, uint8_t player_id)
                     send_move_object(server, 0, 0, server->protocol.gamemode.intel[0]);
                     send_move_object(server, 1, 1, server->protocol.gamemode.intel[1]);
                 } else {
-                    server->protocol.gamemode.intel[team] = set_intel_spawn_point(server, team);
+                    server->protocol.gamemode.intel[team] = set_intel_tent_spawn_point(server, team);
                     send_move_object(server, team, team, server->protocol.gamemode.intel[team]);
                 }
                 if (winning) {
@@ -1259,7 +1259,7 @@ uint8_t player_to_player_visibile(server_t* server, uint8_t player_id, uint8_t p
     }
 }
 
-uint32_t distance_in_3(vector3f_t vector1, vector3f_t vector2)
+uint32_t distance_in_3d(vector3f_t vector1, vector3f_t vector2)
 {
     uint32_t distance = 0;
     distance          = sqrt(fabs(pow(vector1.x - vector2.x, 2)) + fabs(pow(vector1.y - vector2.y, 2)) +

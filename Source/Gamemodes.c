@@ -18,13 +18,13 @@ static void _init_ctf(server_t* server)
     server->protocol.gamemode.score_limit = 10;
     server->protocol.gamemode.intel_flags = 0;
     // intel
-    server->protocol.gamemode.intel[0]      = set_intel_spawn_point(server, 0);
-    server->protocol.gamemode.intel[1]      = set_intel_spawn_point(server, 1);
+    server->protocol.gamemode.intel[0]      = set_intel_tent_spawn_point(server, 0);
+    server->protocol.gamemode.intel[1]      = set_intel_tent_spawn_point(server, 1);
     server->protocol.gamemode.intel_held[0] = 0;
     server->protocol.gamemode.intel_held[1] = 0;
     // bases
-    server->protocol.gamemode.base[0] = set_intel_spawn_point(server, 0);
-    server->protocol.gamemode.base[1] = set_intel_spawn_point(server, 1);
+    server->protocol.gamemode.base[0] = set_intel_tent_spawn_point(server, 0);
+    server->protocol.gamemode.base[1] = set_intel_tent_spawn_point(server, 1);
 
     server->protocol.gamemode.base[0].x = floorf(server->protocol.gamemode.base[0].x);
     server->protocol.gamemode.base[0].y = floorf(server->protocol.gamemode.base[0].y);
@@ -71,8 +71,8 @@ static void _init_babel(server_t* server)
     server->protocol.gamemode.intel[1].y    = round((float) server->s_map.map.size_y / 2);
     server->protocol.gamemode.intel_held[1] = 0;
     // bases
-    server->protocol.gamemode.base[0] = set_intel_spawn_point(server, 0);
-    server->protocol.gamemode.base[1] = set_intel_spawn_point(server, 1);
+    server->protocol.gamemode.base[0] = set_intel_tent_spawn_point(server, 0);
+    server->protocol.gamemode.base[1] = set_intel_tent_spawn_point(server, 1);
 
     server->protocol.gamemode.base[0].x = floorf(server->protocol.gamemode.base[0].x);
     server->protocol.gamemode.base[0].y = floorf(server->protocol.gamemode.base[0].y);

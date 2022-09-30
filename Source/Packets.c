@@ -1503,7 +1503,7 @@ static void receive_block_action(server_t* server, uint8_t player_id, stream_t* 
         if (((player->item == 0 && (actionType == 1 || actionType == 2)) || (player->item == 1 && actionType == 0) ||
              (player->item == 2 && actionType == 1)))
         {
-            if ((distance_in_3(vectorfBlock, playerVector) <= 4 || player->item == 2) &&
+            if ((distance_in_3d(vectorfBlock, playerVector) <= 4 || player->item == 2) &&
                 valid_pos_v3i(server, vectorBlock)) {
                 switch (actionType) {
                     case 0:
@@ -1664,7 +1664,7 @@ static void receive_block_line(server_t* server, uint8_t player_id, stream_t* da
         }
         vector3f_t startF = {start.x, start.y, start.z};
         vector3f_t endF   = {end.x, end.y, end.z};
-        if (distance_in_3(endF, player->movement.position) <= 4 && distance_in_3(startF, player->locAtClick) <= 4 &&
+        if (distance_in_3d(endF, player->movement.position) <= 4 && distance_in_3d(startF, player->locAtClick) <= 4 &&
             valid_pos_v3f(server, startF) && valid_pos_v3f(server, endF))
         {
             int size = line_get_blocks(&start, &end, server->s_map.result_line);
