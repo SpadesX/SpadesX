@@ -2,10 +2,12 @@
 #include <stddef.h>
 
 // SpadesX
-#include "../../Extern/libmapvxl/libmapvxl.h"
-#include "../Structs.h"
-#include "Physics.h"
-#include "Types.h"
+#include <Server/IntelTent.h>
+#include <Server/Packets/Packets.h>
+#include <Server/Structs/ServerStruct.h>
+#include <Util/Physics.h>
+#include <Util/Types.h>
+#include <libmapvxl/libmapvxl.h>
 
 #define SQRT                 0.70710678f
 #define MINERANGE            3

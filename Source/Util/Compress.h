@@ -2,8 +2,8 @@
 #ifndef COMPRESS_H
 #define COMPRESS_H
 
-#include "Queue.h"
-#include "Types.h"
+#include <Util/Queue.h>
+#include <Util/Types.h>
 
 #ifndef DEFAULT_COMPRESS_CHUNK_SIZE
     #define DEFAULT_COMPRESS_CHUNK_SIZE 8192

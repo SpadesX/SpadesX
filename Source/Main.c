@@ -1,10 +1,10 @@
 // Copyright DarkNeutrino 2021
-#include "Server.h"
-#include "Structs.h"
-#include "Util/JSONHelpers.h"
-#include "Util/Log.h"
-#include "Util/Types.h"
-#include "Util/Utlist.h"
+#include <Server/Server.h>
+#include <Server/Structs/ServerStruct.h>
+#include <Util/JSONHelpers.h>
+#include <Util/Log.h>
+#include <Util/Types.h>
+#include <Util/Utlist.h>
 
 #include <json-c/json.h>
 #include <json-c/json_object.h>

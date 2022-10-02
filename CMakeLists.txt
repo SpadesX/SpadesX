@@ -28,6 +28,8 @@ find_package_handle_standard_args(enet
     enet_INCLUDE_DIR
 )
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS On)
+
 # Add third party libraries
 add_subdirectory(Extern)
 
@@ -50,8 +52,9 @@ endif (enet_FOUND)
 
 target_link_libraries(SpadesX
     PRIVATE
+        Server
+        Util
         enet::enet
-        util
         mapvxl
         m
         json-c
@@ -64,3 +67,12 @@ if (UNIX)
 endif()
 
 add_subdirectory(Source)
+
+set_target_properties(SpadesX Util Server
+  PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION true
+) 
+
+configure_file(${PROJECT_SOURCE_DIR}/Resources/config.json ${CMAKE_BINARY_DIR}/config.json COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/Resources/Border_Hallway.vxl ${CMAKE_BINARY_DIR}/Border_Hallway.vxl COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/Resources/Border_Hallway.json ${CMAKE_BINARY_DIR}/Border_Hallway.json COPYONLY)

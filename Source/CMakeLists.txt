@@ -2,38 +2,13 @@
 # Add sources
 #
 
-set(SERVER_HEADERS
-    Events.h
-    Protocol.h
-    Master.h
-    Server.h
-    Structs.h
-    Map.h
-    Packets.h
-    Commands.h
-    Gamemodes.h
-    Ping.h
-    ParseConvert.h
-)
-
-set(SERVER_SOURCES
-    Events.c
-    Server.c
+set(SPADESX_SOURCES
     Main.c
-    Master.c
-    Map.c
-    Protocol.c
-    Packets.c
-    Commands.c
-    Gamemodes.c
-    Ping.c
-    ParseConvert.c
 )
 
 target_sources(SpadesX
     PRIVATE
-        ${SERVER_SOURCES}
-        ${SERVER_HEADERS}
+        ${SPADESX_SOURCES}
 )
 
 target_compile_features(SpadesX
@@ -41,10 +16,20 @@ target_compile_features(SpadesX
         c_std_11
 )
 
-target_include_directories(SpadesX
-    PRIVATE
+add_library(SpadesXCommon INTERFACE)
+
+target_include_directories(SpadesXCommon
+    INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/Extern
 )
 
 add_subdirectory(Util)
+add_subdirectory(Server)
+
+target_link_libraries(Server
+    PRIVATE
+        SpadesXCommon
+        Util
+        mapvxl
+)

@@ -9,7 +9,7 @@
 #ifndef UTIL_LINE_H
 #define UTIL_LINE_H
 
-#include "../Structs.h"
+#include <Util/Types.h>
 /**
  * @brief Calculate block line
  *

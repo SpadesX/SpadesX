@@ -2,7 +2,7 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
-#include "Types.h"
+#include <Util/Types.h>
 
 #define NANO_IN_SECOND 1000000000
 #define NANO_IN_MILLI  1000000

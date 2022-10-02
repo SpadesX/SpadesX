@@ -1,7 +1,6 @@
-#include "../Server.h"
-#include "../Structs.h"
-#include "Types.h"
-
+#include <Server/Server.h>
+#include <Server/Structs/ServerStruct.h>
+#include <Util/Types.h>
 #include <stdlib.h>
 
 #define TMAX_ALT_VALUE  (0x3FFFFFFF / 1024)

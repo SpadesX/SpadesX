@@ -1,12 +1,11 @@
 // Copyright CircumScriptor and DarkNeutrino 2021
-#include "Compress.h"
-
-#include "Log.h"
-#include "Queue.h"
-
+#include <Util/Compress.h>
+#include <Util/Log.h>
+#include <Util/Queue.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
+
 
 static z_stream* g_compressor = NULL;
 

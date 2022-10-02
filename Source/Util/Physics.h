@@ -22,8 +22,8 @@
 #define PHYSICS_H
 
 // SpadesX
-#include "../Structs.h"
-#include "Types.h"
+#include <Server/Structs/ServerStruct.h>
+#include <Util/Types.h>
 
 enum damage_index { BODY_TORSO, BODY_HEAD, BODY_ARMS, BODY_LEGS, BODY_MELEE };
 

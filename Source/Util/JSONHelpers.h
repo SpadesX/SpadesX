@@ -1,7 +1,7 @@
 #ifndef JSONHELPERS_H
 #define JSONHELPERS_H
 
-#include "Log.h"
+#include <Util/Log.h>
 
 #define READ_VAR_FROM_JSON(type, fmt, pj, var, jsonvar, description, fallback, optional)                 \
     {                                                                                                    \

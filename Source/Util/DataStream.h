@@ -2,8 +2,8 @@
 #ifndef stream_H
 #define stream_H
 
-#include "Enums.h"
-#include "Types.h"
+#include <Util/Enums.h>
+#include <Util/Queue.h>
 
 #define ACCESS_CHECK(stream, size)             \
     if (stream->pos + size > stream->length) { \

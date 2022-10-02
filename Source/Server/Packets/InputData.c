@@ -1,0 +1,44 @@
+#include <Server/Server.h>
+#include <Util/Checks/PacketChecks.h>
+#include <Util/Log.h>
+
+void send_input_data(server_t* server, uint8_t player_id)
+{
+    if (server->protocol.num_players == 0) {
+        return;
+    }
+    ENetPacket* packet = enet_packet_create(NULL, 3, ENET_PACKET_FLAG_RELIABLE);
+    stream_t    stream = {packet->data, packet->dataLength, 0};
+    player_t*   player = &server->player[player_id];
+    stream_write_u8(&stream, PACKET_TYPE_INPUT_DATA);
+    stream_write_u8(&stream, player_id);
+    stream_write_u8(&stream, player->input);
+    if (send_packet_except_sender_dist_check(server, packet, player_id) == 0) {
+        enet_packet_destroy(packet);
+    }
+}
+
+void receive_input_data(server_t* server, uint8_t player_id, stream_t* data)
+{
+    uint8_t   bits[8];
+    uint8_t   mask        = 1;
+    uint8_t   received_id = stream_read_u8(data);
+    player_t* player      = &server->player[player_id];
+    if (player_id != received_id) {
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in Input packet", player_id, received_id);
+    } else if (player->state == STATE_READY) {
+        player->input = stream_read_u8(data);
+        for (int i = 0; i < 8; i++) {
+            bits[i] = (player->input >> i) & mask;
+        }
+        player->move_forward   = bits[0];
+        player->move_backwards = bits[1];
+        player->move_left      = bits[2];
+        player->move_right     = bits[3];
+        player->jumping        = bits[4];
+        player->crouching      = bits[5];
+        player->sneaking       = bits[6];
+        player->sprinting      = bits[7];
+        send_input_data(server, player_id);
+    }
+}

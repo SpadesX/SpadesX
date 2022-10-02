@@ -2,7 +2,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include "Types.h"
+#include <Util/Types.h>
 
 /**
  * @brief Queue node - minimal linked list
