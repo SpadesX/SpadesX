@@ -3,7 +3,7 @@
 #define SERVER_H
 
 #define VERSION \
-    "Beta 1.1"  \
+    "Beta 2.0"  \
     " Compiled on " __DATE__ " " __TIME__
 
 #include <Server/Structs/ServerStruct.h>
