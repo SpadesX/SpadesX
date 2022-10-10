@@ -73,6 +73,14 @@ set_target_properties(SpadesX Util Server
     INTERPROCEDURAL_OPTIMIZATION true
 ) 
 
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/config.json)
 configure_file(${PROJECT_SOURCE_DIR}/Resources/config.json ${CMAKE_BINARY_DIR}/config.json COPYONLY)
+endif()
+
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/Border_Hallway.vxl)
 configure_file(${PROJECT_SOURCE_DIR}/Resources/Border_Hallway.vxl ${CMAKE_BINARY_DIR}/Border_Hallway.vxl COPYONLY)
+endif()
+
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/Border_Hallway.json)
 configure_file(${PROJECT_SOURCE_DIR}/Resources/Border_Hallway.json ${CMAKE_BINARY_DIR}/Border_Hallway.json COPYONLY)
+endif()
