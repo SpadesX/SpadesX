@@ -301,17 +301,17 @@ void server_start(struct server_start_options options)
     server.running                = 1;
     server.s_map.map_list         = options.map_list;
     server.s_map.map_count        = options.map_count;
-    server.welcome_messages               = options.welcome_message_list;
-    server.welcome_messages_count         = options.welcome_message_list_len;
-    server.periodic_messages              = options.periodic_message_list;
-    server.periodic_message_count         = options.periodic_message_list_len;
+    server.welcome_messages       = options.welcome_message_list;
+    server.welcome_messages_count = options.welcome_message_list_len;
+    server.periodic_messages      = options.periodic_message_list;
+    server.periodic_message_count = options.periodic_message_list_len;
     server.periodic_delays        = options.periodic_delays;
     _server_init(&server, options.connections, options.server_name, options.team1_name, options.team2_name, options.team1_color, options.team2_color, options.gamemode, 0);
 
     command_populate_all(&server);
     init_packets(&server);
 
-    server.master.enable_master_connection        = options.master;
+    server.master.enable_master_connection = options.master;
     server.manager_passwd                  = options.manager_password;
     server.admin_passwd                    = options.admin_password;
     server.mod_passwd                      = options.mod_password;
