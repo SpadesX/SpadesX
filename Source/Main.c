@@ -1,12 +1,11 @@
 // Copyright DarkNeutrino 2021
 #include <Server/Server.h>
-#include <Server/Structs/ServerStruct.h>
 #include <Server/ServerStartOptions.h>
+#include <Server/Structs/ServerStruct.h>
 #include <Util/JSONHelpers.h>
 #include <Util/Log.h>
 #include <Util/Types.h>
 #include <Util/Utlist.h>
-
 #include <json-c/json.h>
 #include <json-c/json_object.h>
 #include <stdio.h>
@@ -27,7 +26,7 @@ int main(void)
     const char* team2_name;
     uint8_t     team1_color[3];
     uint8_t     team2_color[3];
-    uint8_t     periodicDelays[5];
+    uint8_t     periodic_delays[5];
 
     struct json_object* parsed_json;
     struct json_object* map_in_config;
@@ -62,7 +61,7 @@ int main(void)
     READ_INT_ARR_FROM_JSON(parsed_json, team1_color, team1_color, "team1 color", ((uint8_t[]){0, 0, 255}), 3, 0);
     READ_INT_ARR_FROM_JSON(parsed_json, team2_color, team2_color, "team2 color", ((uint8_t[]){255, 0, 0}), 3, 0);
     READ_INT_ARR_FROM_JSON(
-    parsed_json, periodicDelays, periodic_delays, "periodic delays", ((uint8_t[]){1, 5, 10, 30, 60}), 5, 1);
+    parsed_json, periodic_delays, periodic_delays, "periodic delays", ((uint8_t[]){1, 5, 10, 30, 60}), 5, 1);
 
     uint8_t        map_list_len = json_object_array_length(map_in_config);
     string_node_t* map_list     = NULL;
@@ -113,32 +112,30 @@ int main(void)
         DL_APPEND(periodic_message_list, periodic_message);
     }
 
-    struct server_start_options options = {
-      port,
-      64,
-      2,
-      0,
-      0,
-      master,
-      map_list,
-      map_list_len,
-      welcome_message_list,
-      welcome_message_list_len,
-      periodic_message_list,
-      periodic_message_list_len,
-      periodicDelays,
-      manager_passwd,
-      admin_passwd,
-      mod_passwd,
-      guard_passwd,
-      trusted_passwd,
-      server_name,
-      team1_name,
-      team2_name,
-      team1_color,
-      team2_color,
-      gamemode
-    };
+    struct server_start_options options = {.port                      = port,
+                                           .connections               = 64,
+                                           .channels                  = 2,
+                                           .in_bandwidth              = 0,
+                                           .out_bandwidth             = 0,
+                                           .master                    = master,
+                                           .map_list                  = map_list,
+                                           .map_count                 = map_list_len,
+                                           .welcome_message_list      = welcome_message_list,
+                                           .welcome_message_list_len  = welcome_message_list_len,
+                                           .periodic_message_list     = periodic_message_list,
+                                           .periodic_message_list_len = periodic_message_list_len,
+                                           .periodic_delays           = periodic_delays,
+                                           .manager_password          = manager_passwd,
+                                           .admin_password            = admin_passwd,
+                                           .mod_password              = mod_passwd,
+                                           .guard_password            = guard_passwd,
+                                           .trusted_password          = trusted_passwd,
+                                           .server_name               = server_name,
+                                           .team1_name                = team1_name,
+                                           .team2_name                = team2_name,
+                                           .team1_color               = team1_color,
+                                           .team2_color               = team2_color,
+                                           .gamemode                  = gamemode};
 
     server_start(options);
 
