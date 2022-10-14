@@ -1,6 +1,7 @@
 // Copyright DarkNeutrino 2021
 #include <Server/Server.h>
 #include <Server/Structs/ServerStruct.h>
+#include <Server/ServerStartOptions.h>
 #include <Util/JSONHelpers.h>
 #include <Util/Log.h>
 #include <Util/Types.h>
@@ -112,30 +113,34 @@ int main(void)
         DL_APPEND(periodic_message_list, periodic_message);
     }
 
-    server_start(port,
-                 64,
-                 2,
-                 0,
-                 0,
-                 master,
-                 map_list,
-                 map_list_len,
-                 welcome_message_list,
-                 welcome_message_list_len,
-                 periodic_message_list,
-                 periodic_message_list_len,
-                 periodicDelays,
-                 manager_passwd,
-                 admin_passwd,
-                 mod_passwd,
-                 guard_passwd,
-                 trusted_passwd,
-                 server_name,
-                 team1_name,
-                 team2_name,
-                 team1_color,
-                 team2_color,
-                 gamemode);
+    struct server_start_options options = {
+      port,
+      64,
+      2,
+      0,
+      0,
+      master,
+      map_list,
+      map_list_len,
+      welcome_message_list,
+      welcome_message_list_len,
+      periodic_message_list,
+      periodic_message_list_len,
+      periodicDelays,
+      manager_passwd,
+      admin_passwd,
+      mod_passwd,
+      guard_passwd,
+      trusted_passwd,
+      server_name,
+      team1_name,
+      team2_name,
+      team1_color,
+      team2_color,
+      gamemode
+    };
+
+    server_start(options);
 
     while (json_object_put(parsed_json) != 1) {
         // Free the memory from the JSON object

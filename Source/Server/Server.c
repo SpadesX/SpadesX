@@ -10,6 +10,7 @@
 #include <Server/Player.h>
 #include <Server/Server.h>
 #include <Server/Structs/ServerStruct.h>
+#include <Server/ServerStartOptions.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Compress.h>
 #include <Util/DataStream.h>
@@ -258,30 +259,8 @@ void stop_server(void)
     server.running = 0;
 }
 
-void server_start(uint16_t       port,
-                  uint32_t       connections,
-                  uint32_t       channels,
-                  uint32_t       in_bandwidth,
-                  uint32_t       out_bandwidth,
-                  uint8_t        master,
-                  string_node_t* map_list,
-                  uint8_t        map_count,
-                  string_node_t* welcome_message_list,
-                  uint8_t        welcome_message_list_len,
-                  string_node_t* periodic_message_list,
-                  uint8_t        periodic_message_list_len,
-                  uint8_t*       periodic_delays,
-                  const char*    manager_passwd,
-                  const char*    admin_passwd,
-                  const char*    mod_passwd,
-                  const char*    guard_passwd,
-                  const char*    trusted_passwd,
-                  const char*    server_name,
-                  const char*    team1_name,
-                  const char*    team2_name,
-                  uint8_t*       team1_color,
-                  uint8_t*       team2_color,
-                  uint8_t        gamemode)
+
+void server_start(struct server_start_options options)
 {
     server.global_timers.time_since_start = get_nanos();
     LOG_STATUS("Welcome to SpadesX server");
@@ -300,11 +279,11 @@ void server_start(uint16_t       port,
 
     ENetAddress address;
     address.host = ENET_HOST_ANY;
-    address.port = port;
+    address.port = options.port;
 
-    LOG_STATUS("Creating server at port %d", port);
+    LOG_STATUS("Creating server at port %d", options.port);
 
-    server.host = enet_host_create(&address, connections, channels, in_bandwidth, out_bandwidth);
+    server.host = enet_host_create(&address, options.connections, options.channels, options.in_bandwidth, options.out_bandwidth);
     if (server.host == NULL) {
         LOG_ERROR("Failed to create server");
         exit(EXIT_FAILURE);
@@ -314,36 +293,36 @@ void server_start(uint16_t       port,
         LOG_WARNING("Compress with range coder failed");
     }
 
-    server.port = port;
+    server.port = options.port;
 
     server.host->intercept = &raw_udp_intercept_callback;
 
     LOG_STATUS("Intializing server");
     server.running                = 1;
-    server.s_map.map_list         = map_list;
-    server.s_map.map_count        = map_count;
-    server.welcome_messages       = welcome_message_list;
-    server.welcome_messages_count = welcome_message_list_len;
-    server.periodic_messages      = periodic_message_list;
-    server.periodic_message_count = periodic_message_list_len;
-    server.periodic_delays        = periodic_delays;
-    _server_init(&server, connections, server_name, team1_name, team2_name, team1_color, team2_color, gamemode, 0);
+    server.s_map.map_list         = options.map_list;
+    server.s_map.map_count        = options.map_count;
+    server.welcome_messages               = options.welcome_message_list;
+    server.welcome_messages_count         = options.welcome_message_list_len;
+    server.periodic_messages              = options.periodic_message_list;
+    server.periodic_message_count         = options.periodic_message_list_len;
+    server.periodic_delays        = options.periodic_delays;
+    _server_init(&server, options.connections, options.server_name, options.team1_name, options.team2_name, options.team1_color, options.team2_color, options.gamemode, 0);
 
     command_populate_all(&server);
     init_packets(&server);
 
-    server.master.enable_master_connection = master;
-    server.manager_passwd                  = manager_passwd;
-    server.admin_passwd                    = admin_passwd;
-    server.mod_passwd                      = mod_passwd;
-    server.guard_passwd                    = guard_passwd;
-    server.trusted_passwd                  = trusted_passwd;
+    server.master.enable_master_connection        = options.master;
+    server.manager_passwd                  = options.manager_password;
+    server.admin_passwd                    = options.admin_password;
+    server.mod_passwd                      = options.mod_password;
+    server.guard_passwd                    = options.guard_password;
+    server.trusted_passwd                  = options.trusted_password;
 
     if (server.running) {
         LOG_STATUS("Server started");
     }
     if (server.master.enable_master_connection == 1) {
-        master_connect(&server, port);
+        master_connect(&server, options.port);
     }
     server.master.time_since_last_send = time(NULL);
 

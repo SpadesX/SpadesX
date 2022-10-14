@@ -102,6 +102,7 @@ set(SERVER_HEADERS
     Ping.h
     ParseConvert.h
     Player.h
+    ServerStartOptions.h
 )
 
 set(SERVER_SOURCES
