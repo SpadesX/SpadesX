@@ -83,7 +83,8 @@ set(STRUCTS_HEADERS
     Structs/PlayerStruct.h
     Structs/ProtocolStruct.h
     Structs/ServerStruct.h
-    Structs/TimerStruct.h)
+    Structs/TimerStruct.h
+    Structs/StartStruct.h)
 
 set(SERVER_HEADERS
     ${COMMANDS_HEADERS}
@@ -102,7 +103,6 @@ set(SERVER_HEADERS
     Ping.h
     ParseConvert.h
     Player.h
-    ServerStartOptions.h
 )
 
 set(SERVER_SOURCES
