@@ -1,7 +1,7 @@
-#ifndef SERVERSTARTOPTIONS_H
-#define SERVERSTARTOPTIONS_H
+#ifndef STARTSTRUCT_H
+#define STARTSTRUCT_H
 
-struct server_args
+typedef struct server_args
 {
     uint16_t       port;
     uint32_t       connections;
@@ -27,6 +27,6 @@ struct server_args
     uint8_t*       team1_color;
     uint8_t*       team2_color;
     uint8_t        gamemode;
-};
+} server_args;
 
 #endif
