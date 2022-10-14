@@ -1,7 +1,7 @@
 // Copyright DarkNeutrino 2021
 #include <Server/Server.h>
-#include <Server/ServerStartOptions.h>
 #include <Server/Structs/ServerStruct.h>
+#include <Server/Structs/StartStruct.h>
 #include <Util/JSONHelpers.h>
 #include <Util/Log.h>
 #include <Util/Types.h>
@@ -112,32 +112,32 @@ int main(void)
         DL_APPEND(periodic_message_list, periodic_message);
     }
 
-    struct server_start_options options = {.port                      = port,
-                                           .connections               = 64,
-                                           .channels                  = 2,
-                                           .in_bandwidth              = 0,
-                                           .out_bandwidth             = 0,
-                                           .master                    = master,
-                                           .map_list                  = map_list,
-                                           .map_count                 = map_list_len,
-                                           .welcome_message_list      = welcome_message_list,
-                                           .welcome_message_list_len  = welcome_message_list_len,
-                                           .periodic_message_list     = periodic_message_list,
-                                           .periodic_message_list_len = periodic_message_list_len,
-                                           .periodic_delays           = periodic_delays,
-                                           .manager_password          = manager_passwd,
-                                           .admin_password            = admin_passwd,
-                                           .mod_password              = mod_passwd,
-                                           .guard_password            = guard_passwd,
-                                           .trusted_password          = trusted_passwd,
-                                           .server_name               = server_name,
-                                           .team1_name                = team1_name,
-                                           .team2_name                = team2_name,
-                                           .team1_color               = team1_color,
-                                           .team2_color               = team2_color,
-                                           .gamemode                  = gamemode};
+    struct server_args args = {.port                      = port,
+                               .connections               = 64,
+                               .channels                  = 2,
+                               .in_bandwidth              = 0,
+                               .out_bandwidth             = 0,
+                               .master                    = master,
+                               .map_list                  = map_list,
+                               .map_count                 = map_list_len,
+                               .welcome_message_list      = welcome_message_list,
+                               .welcome_message_list_len  = welcome_message_list_len,
+                               .periodic_message_list     = periodic_message_list,
+                               .periodic_message_list_len = periodic_message_list_len,
+                               .periodic_delays           = periodic_delays,
+                               .manager_password          = manager_passwd,
+                               .admin_password            = admin_passwd,
+                               .mod_password              = mod_passwd,
+                               .guard_password            = guard_passwd,
+                               .trusted_password          = trusted_passwd,
+                               .server_name               = server_name,
+                               .team1_name                = team1_name,
+                               .team2_name                = team2_name,
+                               .team1_color               = team1_color,
+                               .team2_color               = team2_color,
+                               .gamemode                  = gamemode};
 
-    server_start(options);
+    server_start(args);
 
     while (json_object_put(parsed_json) != 1) {
         // Free the memory from the JSON object

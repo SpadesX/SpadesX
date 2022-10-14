@@ -10,7 +10,7 @@
 #include <Server/Player.h>
 #include <Server/Server.h>
 #include <Server/Structs/ServerStruct.h>
-#include <Server/ServerStartOptions.h>
+#include <Server/Structs/StartStruct.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Compress.h>
 #include <Util/DataStream.h>
@@ -259,8 +259,7 @@ void stop_server(void)
     server.running = 0;
 }
 
-
-void server_start(struct server_start_options options)
+void server_start(struct server_args args)
 {
     server.global_timers.time_since_start = get_nanos();
     LOG_STATUS("Welcome to SpadesX server");
@@ -279,11 +278,11 @@ void server_start(struct server_start_options options)
 
     ENetAddress address;
     address.host = ENET_HOST_ANY;
-    address.port = options.port;
+    address.port = args.port;
 
-    LOG_STATUS("Creating server at port %d", options.port);
+    LOG_STATUS("Creating server at port %d", args.port);
 
-    server.host = enet_host_create(&address, options.connections, options.channels, options.in_bandwidth, options.out_bandwidth);
+    server.host = enet_host_create(&address, args.connections, args.channels, args.in_bandwidth, args.out_bandwidth);
     if (server.host == NULL) {
         LOG_ERROR("Failed to create server");
         exit(EXIT_FAILURE);
@@ -293,36 +292,44 @@ void server_start(struct server_start_options options)
         LOG_WARNING("Compress with range coder failed");
     }
 
-    server.port = options.port;
+    server.port = args.port;
 
     server.host->intercept = &raw_udp_intercept_callback;
 
     LOG_STATUS("Intializing server");
     server.running                = 1;
-    server.s_map.map_list         = options.map_list;
-    server.s_map.map_count        = options.map_count;
-    server.welcome_messages       = options.welcome_message_list;
-    server.welcome_messages_count = options.welcome_message_list_len;
-    server.periodic_messages      = options.periodic_message_list;
-    server.periodic_message_count = options.periodic_message_list_len;
-    server.periodic_delays        = options.periodic_delays;
-    _server_init(&server, options.connections, options.server_name, options.team1_name, options.team2_name, options.team1_color, options.team2_color, options.gamemode, 0);
+    server.s_map.map_list         = args.map_list;
+    server.s_map.map_count        = args.map_count;
+    server.welcome_messages       = args.welcome_message_list;
+    server.welcome_messages_count = args.welcome_message_list_len;
+    server.periodic_messages      = args.periodic_message_list;
+    server.periodic_message_count = args.periodic_message_list_len;
+    server.periodic_delays        = args.periodic_delays;
+    _server_init(&server,
+                 args.connections,
+                 args.server_name,
+                 args.team1_name,
+                 args.team2_name,
+                 args.team1_color,
+                 args.team2_color,
+                 args.gamemode,
+                 0);
 
     command_populate_all(&server);
     init_packets(&server);
 
-    server.master.enable_master_connection = options.master;
-    server.manager_passwd                  = options.manager_password;
-    server.admin_passwd                    = options.admin_password;
-    server.mod_passwd                      = options.mod_password;
-    server.guard_passwd                    = options.guard_password;
-    server.trusted_passwd                  = options.trusted_password;
+    server.master.enable_master_connection = args.master;
+    server.manager_passwd                  = args.manager_password;
+    server.admin_passwd                    = args.admin_password;
+    server.mod_passwd                      = args.mod_password;
+    server.guard_passwd                    = args.guard_password;
+    server.trusted_passwd                  = args.trusted_password;
 
     if (server.running) {
         LOG_STATUS("Server started");
     }
     if (server.master.enable_master_connection == 1) {
-        master_connect(&server, options.port);
+        master_connect(&server, args.port);
     }
     server.master.time_since_last_send = time(NULL);
 

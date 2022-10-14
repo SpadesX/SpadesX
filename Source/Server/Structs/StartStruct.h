@@ -1,7 +1,7 @@
 #ifndef SERVERSTARTOPTIONS_H
 #define SERVERSTARTOPTIONS_H
 
-struct server_start_options
+struct server_args
 {
     uint16_t       port;
     uint32_t       connections;

@@ -7,7 +7,7 @@
     " Compiled on " __DATE__ " " __TIME__
 
 #include <Server/Structs/ServerStruct.h>
-#include <Server/ServerStartOptions.h>
+#include <Server/Structs/StartStruct.h>
 #include <Util/Enums.h>
 #include <Util/Line.h>
 #include <Util/Queue.h>
@@ -26,7 +26,7 @@ server_t* get_server(void);
 
 void stop_server(void);
 
-void server_start(struct server_start_options);
+void server_start(struct server_args);
 
 void server_reset(server_t* server);
 
