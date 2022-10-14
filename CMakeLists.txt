@@ -71,7 +71,7 @@ add_subdirectory(Source)
 set_target_properties(SpadesX Util Server
   PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION true
-) 
+)
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/config.json)
 configure_file(${PROJECT_SOURCE_DIR}/Resources/config.json ${CMAKE_BINARY_DIR}/config.json COPYONLY)
