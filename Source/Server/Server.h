@@ -26,7 +26,7 @@ server_t* get_server(void);
 
 void stop_server(void);
 
-void server_start(struct server_args);
+void server_start(server_args args);
 
 void server_reset(server_t* server);
 

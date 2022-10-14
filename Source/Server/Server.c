@@ -259,7 +259,7 @@ void stop_server(void)
     server.running = 0;
 }
 
-void server_start(struct server_args args)
+void server_start(server_args args)
 {
     server.global_timers.time_since_start = get_nanos();
     LOG_STATUS("Welcome to SpadesX server");
