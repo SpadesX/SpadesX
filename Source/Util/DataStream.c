@@ -149,18 +149,18 @@ void stream_write_vector3f(stream_t* stream, vector3f_t vector)
 void stream_write_color_rgb(stream_t* stream, color_t color)
 {
     ACCESS_CHECK_N(stream, 3);
-    stream->data[stream->pos++] = color.b;
-    stream->data[stream->pos++] = color.g;
     stream->data[stream->pos++] = color.r;
+    stream->data[stream->pos++] = color.g;
+    stream->data[stream->pos++] = color.b;
 }
 
 void stream_write_color_argb(stream_t* stream, color_t color)
 {
     ACCESS_CHECK_N(stream, 4);
-    stream->data[stream->pos++] = color.b;
-    stream->data[stream->pos++] = color.g;
-    stream->data[stream->pos++] = color.r;
     stream->data[stream->pos++] = color.a;
+    stream->data[stream->pos++] = color.r;
+    stream->data[stream->pos++] = color.g;
+    stream->data[stream->pos++] = color.b;
 }
 
 void stream_write_color_3u8(stream_t* stream, uint8_t r, uint8_t g, uint8_t b)
