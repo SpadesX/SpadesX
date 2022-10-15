@@ -71,10 +71,10 @@ color_t stream_read_color_rgb(stream_t* stream)
         color.raw = 0;
         return color;
     }
-    color.a = 0xFF;
-    color.r = stream->data[stream->pos++];
-    color.g = stream->data[stream->pos++];
     color.b = stream->data[stream->pos++];
+    color.g = stream->data[stream->pos++];
+    color.r = stream->data[stream->pos++];
+    color.a = 0x0;
     return color;
 }
 
@@ -85,10 +85,10 @@ color_t stream_read_color_argb(stream_t* stream)
         color.raw = 0;
         return color;
     }
-    color.a = stream->data[stream->pos++];
-    color.r = stream->data[stream->pos++];
-    color.g = stream->data[stream->pos++];
     color.b = stream->data[stream->pos++];
+    color.g = stream->data[stream->pos++];
+    color.r = stream->data[stream->pos++];
+    color.a = stream->data[stream->pos++];
     return color;
 }
 

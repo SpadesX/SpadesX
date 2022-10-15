@@ -58,8 +58,8 @@ int main(void)
     READ_STR_FROM_JSON(parsed_json, team1_name, team1_name, "team1 name", "Blue", 0);
     READ_STR_FROM_JSON(parsed_json, team2_name, team2_name, "team2 name", "Red", 0);
     // array requires additional pair of parentheses because of how macros work in C
-    READ_INT_ARR_FROM_JSON(parsed_json, team1_color, team1_color, "team1 color", ((uint8_t[]){0, 0, 255}), 3, 0);
-    READ_INT_ARR_FROM_JSON(parsed_json, team2_color, team2_color, "team2 color", ((uint8_t[]){255, 0, 0}), 3, 0);
+    READ_INT_ARR_FROM_JSON(parsed_json, team1_color, team1_color, "team1 color", ((uint8_t[]){255, 0, 0}), 3, 0);
+    READ_INT_ARR_FROM_JSON(parsed_json, team2_color, team2_color, "team2 color", ((uint8_t[]){0, 0, 255}), 3, 0);
     READ_INT_ARR_FROM_JSON(
     parsed_json, periodic_delays, periodic_delays, "periodic delays", ((uint8_t[]){1, 5, 10, 30, 60}), 5, 1);
 

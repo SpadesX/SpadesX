@@ -11,9 +11,7 @@ void send_set_color(server_t* server, uint8_t player_id, color_t color)
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_SET_COLOR);
     stream_write_u8(&stream, player_id);
-    stream_write_u8(&stream, color.b);
-    stream_write_u8(&stream, color.g);
-    stream_write_u8(&stream, color.r);
+    stream_write_color_rgb(&stream, color);
     if (send_packet_except_sender(server, packet, player_id) == 0) {
         enet_packet_destroy(packet);
     }
@@ -28,9 +26,7 @@ void send_set_color_to_player(server_t* server, uint8_t player_id, uint8_t sendT
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_SET_COLOR);
     stream_write_u8(&stream, player_id);
-    stream_write_u8(&stream, color.b);
-    stream_write_u8(&stream, color.g);
-    stream_write_u8(&stream, color.r);
+    stream_write_color_rgb(&stream, color);
     if (enet_peer_send(server->player[sendToID].peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
