@@ -27,7 +27,7 @@ inline uint8_t allow_shot(server_t*  server,
          (player->item == 2 && player->weapon == 0 &&
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 500)) ||
          (player->item == 2 && player->weapon == 1 &&
-          diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 110)) ||
+          diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
          (player->item == 2 && player->weapon == 2 &&
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 1000))) &&
         player->alive && player_hit->alive && (player->team != player_hit->team || player->allow_team_killing) &&
