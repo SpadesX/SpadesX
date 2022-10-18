@@ -11,19 +11,20 @@ void cmd_inv(void* p_server, command_args_t arguments)
         LOG_INFO("You cannot use this command from console");
         return;
     }
-    if (server->player[arguments.player_id].is_invisible == 1) {
-        server->player[arguments.player_id].is_invisible  = 0;
-        server->player[arguments.player_id].allow_killing = 1;
-        for (uint8_t i = 0; i < server->protocol.max_players; ++i) {
-            if (is_past_join_screen(server, i) && i != arguments.player_id) {
-                send_create_player(server, i, arguments.player_id);
+    if (arguments.player->is_invisible == 1) {
+        arguments.player->is_invisible  = 0;
+        arguments.player->allow_killing = 1;
+        player_t* connected_player, *tmp;
+        HASH_ITER(hh, server->players, connected_player, tmp) {
+            if (is_past_join_screen(connected_player) && connected_player != arguments.player) {
+                send_create_player(server, connected_player, arguments.player);
             }
         }
-        send_server_notice(server, arguments.player_id, arguments.console, "You are no longer invisible");
-    } else if (server->player[arguments.player_id].is_invisible == 0) {
-        server->player[arguments.player_id].is_invisible  = 1;
-        server->player[arguments.player_id].allow_killing = 0;
-        send_kill_action_packet(server, arguments.player_id, arguments.player_id, 0, 0, 1);
-        send_server_notice(server, arguments.player_id, arguments.console, "You are now invisible");
+        send_server_notice(arguments.player, arguments.console, "You are no longer invisible");
+    } else if (arguments.player->is_invisible == 0) {
+        arguments.player->is_invisible  = 1;
+        arguments.player->allow_killing = 0;
+        send_kill_action_packet(server, arguments.player, arguments.player, 0, 0, 1);
+        send_server_notice(arguments.player, arguments.console, "You are now invisible");
     }
 }

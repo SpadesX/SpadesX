@@ -1,14 +1,13 @@
 #include <Server/Server.h>
 #include <Util/Checks/PositionChecks.h>
 
-void send_position_packet(server_t* server, uint8_t player_id, float x, float y, float z)
+void send_position_packet(server_t* server, player_t* player, float x, float y, float z)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
-    player_t*   player = &server->player[player_id];
     stream_write_u8(&stream, PACKET_TYPE_POSITION_DATA);
     stream_write_f(&stream, x);
     stream_write_f(&stream, y);
@@ -18,14 +17,13 @@ void send_position_packet(server_t* server, uint8_t player_id, float x, float y,
     }
 }
 
-void receive_position_data(server_t* server, uint8_t player_id, stream_t* data)
+void receive_position_data(server_t* server, player_t* player, stream_t* data)
 {
     float x, y, z;
     x = stream_read_f(data);
     y = stream_read_f(data);
     z = stream_read_f(data);
 
-    player_t* player = &server->player[player_id];
 #ifdef DEBUG
     LOG_DEBUG("Player: %d, Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f",
               player_id,
@@ -66,7 +64,7 @@ void receive_position_data(server_t* server, uint8_t player_id, stream_t* data)
         player->invalidPosCount           = 0;
     }*/
 
-    if (valid_pos_3f(server, player_id, x, y, z)) {
+    if (valid_pos_3f(server, player, x, y, z)) {
         player->movement.prev_legit_pos = player->movement.position;
     } /*else if (validPlayerPos(server,
                               player_id,

@@ -2,16 +2,15 @@
 #include <Server/Server.h>
 #include <Util/Log.h>
 
-void send_map_chunks(server_t* server, uint8_t player_id)
+void send_map_chunks(server_t* server, player_t* player)
 {
-    player_t* player = &server->player[player_id];
     if (player->queues == NULL) {
         while (server->s_map.compressed_map) {
             server->s_map.compressed_map = queue_pop(server->s_map.compressed_map);
         }
-        send_version_request(server, player_id);
+        send_version_request(server, player);
         player->state = STATE_JOINING;
-        LOG_INFO("Finished sending map to %s (#%hhu)", player->name, player_id);
+        LOG_INFO("Finished sending map to %s (#%hhu)", player->name, player->id);
     } else {
         ENetPacket* packet = enet_packet_create(NULL, player->queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
         stream_t    stream = {packet->data, packet->dataLength, 0};

@@ -27,12 +27,12 @@ static uint32_t _cmds_compare(command_t* first, command_t* second)
     return strcmp(first->id, second->id);
 }
 
-uint8_t player_has_permission(server_t* server, uint8_t player_id, uint8_t console, uint32_t permission)
+uint8_t player_has_permission(player_t* player, uint8_t console, uint32_t permission)
 {
     if (console) {
         return permission;
     } else {
-        return (permission & server->player[player_id].permissions);
+        return (permission & player->permissions);
     }
 }
 
@@ -47,13 +47,14 @@ void cmd_generate_ban(server_t* server, command_args_t arguments, float time, ip
     json_object_object_get_ex(root, "Bans", &array);
 
     uint8_t banned = 0;
-    for (uint8_t ID = 0; ID < server->protocol.max_players; ++ID) {
-        if (server->player[ID].state != STATE_DISCONNECTED && server->player[ID].ip.ip32 == ip.ip32) {
+    player_t *connected_player, *tmp;
+    HASH_ITER(hh, server->players, connected_player, tmp) {
+        if (connected_player->state != STATE_DISCONNECTED && connected_player->ip.ip32 == ip.ip32) {
             if (banned == 0) {
-                nameString = server->player[ID].name;
+                nameString = connected_player->name;
                 banned     = 1; // Do not add multiples of the same IP. Its pointless.
             }
-            enet_peer_disconnect(server->player[ID].peer, REASON_BANNED);
+            enet_peer_disconnect(connected_player->peer, REASON_BANNED);
         }
     }
     json_object_object_add(ban, "Name", json_object_new_string(nameString));
@@ -66,11 +67,9 @@ void cmd_generate_ban(server_t* server, command_args_t arguments, float time, ip
     json_object_to_file("Bans.json", root);
     json_object_put(root);
     if (time == 0) {
-        send_server_notice(
-        server, arguments.player_id, arguments.console, "IP %s has been permanently banned", ipString);
+        send_server_notice(arguments.player, arguments.console, "IP %s has been permanently banned", ipString);
     } else {
-        send_server_notice(
-        server, arguments.player_id, arguments.console, "IP %s has been for %f minutes", ipString, time);
+        send_server_notice(arguments.player, arguments.console, "IP %s has been for %f minutes", ipString, time);
     }
 }
 
@@ -142,7 +141,7 @@ void command_populate_all(server_t* server)
     LL_SORT(server->cmds_list, _cmds_compare);
 }
 
-void command_free_all(server_t* server)
+void free_all_commands(server_t* server)
 {
     command_t* current_command;
     command_t* tmp;
@@ -160,7 +159,7 @@ void command_free(server_t* server, command_t* command)
     free(command);
 }
 
-static uint8_t parse_arguments(server_t* server, command_args_t* arguments, char* message, uint8_t commandLength)
+static uint8_t parse_arguments(command_args_t* arguments, char* message, uint8_t commandLength)
 {
     char* p = message + commandLength; // message beginning + command length
     while (*p != '\0' && arguments->argc < 32) {
@@ -191,16 +190,16 @@ static uint8_t parse_arguments(server_t* server, command_args_t* arguments, char
                         break;
                     case '"':
                         if (quotesCount == 0) {
-                            send_server_notice(server,
-                                               arguments->player_id,
+                            send_server_notice(
+                                               arguments->player,
                                                arguments->console,
                                                "Failed to parse the command: found a stray \" symbol");
                             return 0;
                         }
                         char next = *(end + 1);
                         if (next != ' ' && next != '\t' && next != '\0') {
-                            send_server_notice(server,
-                                               arguments->player_id,
+                            send_server_notice(
+                                               arguments->player,
                                                arguments->console,
                                                "Failed to parse the command: found more symbols after the \" symbol");
                             return 0;
@@ -216,8 +215,7 @@ static uint8_t parse_arguments(server_t* server, command_args_t* arguments, char
             end++;
         }
         if (quotesCount == 1) {
-            send_server_notice(
-            server, arguments->player_id, arguments->console, "Failed to parse the command: missing a \" symbol");
+            send_server_notice(arguments->player, arguments->console, "Failed to parse the command: missing a \" symbol");
             return 0;
         }
     argparse_loop_exit:
@@ -236,7 +234,7 @@ static uint8_t parse_arguments(server_t* server, command_args_t* arguments, char
     return 1;
 }
 
-void command_handle(server_t* server, uint8_t player_id, char* message, uint8_t console)
+void command_handle(server_t* server, player_t* player, char* message, uint8_t console)
 {
     char* command = calloc(1000, sizeof(char));
     sscanf(message, "%s", command);
@@ -253,7 +251,7 @@ void command_handle(server_t* server, uint8_t player_id, char* message, uint8_t 
     }
 
     command_args_t arguments;
-    arguments.player_id   = player_id;
+    arguments.player   = player;
     arguments.permissions = cmd->permissions;
     arguments.console     = console;
     arguments.argv[0]     = command;
@@ -261,7 +259,7 @@ void command_handle(server_t* server, uint8_t player_id, char* message, uint8_t 
 
     uint8_t message_length;
     if (cmd->parse_args) {
-        if (!parse_arguments(server, &arguments, message, command_length)) {
+        if (!parse_arguments(&arguments, message, command_length)) {
             goto epic_parsing_fail;
         }
     } else if ((message_length = strlen(message)) - command_length > 1)
@@ -271,10 +269,10 @@ void command_handle(server_t* server, uint8_t player_id, char* message, uint8_t 
         arguments.argv[arguments.argc++] = argument;
     }
 
-    if (player_has_permission(server, player_id, console, cmd->permissions) > 0 || cmd->permissions == 0) {
+    if (player_has_permission(player, console, cmd->permissions) > 0 || cmd->permissions == 0) {
         cmd->execute((void*) server, arguments);
     } else {
-        send_server_notice(server, player_id, console, "You do not have permissions to use this command");
+        send_server_notice(player, console, "You do not have permissions to use this command");
     }
 epic_parsing_fail:
     for (uint8_t i = 1; i < arguments.argc; i++) { // Starting from 1 since we'll free the command anyway

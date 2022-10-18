@@ -2,6 +2,7 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 
+#include <Server/Structs/PlayerStruct.h>
 #include <Util/Log.h>
 #include <Util/Utlist.h>
 #include <stddef.h>
@@ -93,7 +94,7 @@ enum { EVENT_FIRST, EVENT_LAST };
     }
 
 // Happens when a player disconnects.
-// Arguments: player ID
-EVENT(player_disconnect, uint8_t id)
+// Arguments: player struct pointer
+EVENT(player_disconnect, player_t* player)
 
 #endif

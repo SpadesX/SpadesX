@@ -119,7 +119,7 @@ void team_id_to_str(server_t* server, char* dst, int team)
     snprintf(dst, 11, "%s", server->protocol.name_team[team]);
 }
 
-uint8_t parse_player(char* s, uint8_t* id, char** end)
+uint8_t parse_player(char* s, uint8_t* player_id, char** end)
 {
     uint8_t sLength;
     if (s[0] != '#' || (sLength = strlen(s)) < 2)
@@ -127,7 +127,7 @@ uint8_t parse_player(char* s, uint8_t* id, char** end)
         return 0;
     }
 
-    return parse_byte(s + 1, id, end);
+    return parse_byte(s + 1, player_id, end);
 }
 
 uint8_t parse_byte(char* s, uint8_t* byte, char** end)

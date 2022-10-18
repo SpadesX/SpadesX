@@ -1,3 +1,6 @@
+#include "Util/Enums.h"
+#include "Util/Log.h"
+#include "Util/Uthash.h"
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Nodes.h>
@@ -240,12 +243,12 @@ vector3i_t* getGrenadeNeighbors(vector3i_t pos)
     return neighArray;
 }
 
-uint8_t get_grenade_damage(server_t* server, uint8_t damageID, grenade_t* grenade)
+uint8_t get_grenade_damage(server_t* server, player_t* damaged_player, grenade_t* grenade)
 {
-    double     diffX      = fabs(server->player[damageID].movement.position.x - grenade->position.x);
-    double     diffY      = fabs(server->player[damageID].movement.position.y - grenade->position.y);
-    double     diffZ      = fabs(server->player[damageID].movement.position.z - grenade->position.z);
-    vector3f_t playerPos  = server->player[damageID].movement.position;
+    double     diffX      = fabs(damaged_player->movement.position.x - grenade->position.x);
+    double     diffY      = fabs(damaged_player->movement.position.y - grenade->position.y);
+    double     diffZ      = fabs(damaged_player->movement.position.z - grenade->position.z);
+    vector3f_t playerPos  = damaged_player->movement.position;
     vector3f_t grenadePos = grenade->position;
     if (diffX < 16 && diffY < 16 && diffZ < 16 &&
         physics_can_see(server, playerPos.x, playerPos.y, playerPos.z, grenadePos.x, grenadePos.y, grenadePos.z) &&
@@ -260,11 +263,21 @@ uint8_t get_grenade_damage(server_t* server, uint8_t damageID, grenade_t* grenad
     return 0;
 }
 
-void handle_grenade(server_t* server, uint8_t player_id)
+void handle_grenade(server_t* server, player_t* player)
 {
     grenade_t* grenade;
     grenade_t* tmp;
-    DL_FOREACH_SAFE(server->player[player_id].grenade, grenade, tmp)
+    if (player->state == STATE_DISCONNECTED) {
+        grenade_t* elt;
+        uint32_t counter = 0;
+        DL_COUNT(player->grenade, elt, counter);
+        if (counter == 0) {
+            HASH_DELETE(hh, server->players, player);
+            free(player);
+            return;
+        }
+    }
+    DL_FOREACH_SAFE(player->grenade, grenade, tmp)
     {
         if (grenade->sent) {
             physics_move_grenade(server, grenade);
@@ -272,18 +285,19 @@ void handle_grenade(server_t* server, uint8_t player_id)
                 uint8_t allowToDestroy = 0;
                 if (grenadeGamemodeCheck(server, grenade->position)) {
                     send_block_action(server,
-                                      player_id,
+                                      player,
                                       3,
                                       floor(grenade->position.x),
                                       floor(grenade->position.y),
                                       floor(grenade->position.z));
                     allowToDestroy = 1;
                 }
-                for (int y = 0; y < server->protocol.max_players; ++y) {
-                    if (server->player[y].state == STATE_READY) {
-                        uint8_t value = get_grenade_damage(server, y, grenade);
+                player_t *connected_player, *tmp;
+                HASH_ITER(hh, server->players, connected_player, tmp) {
+                    if (connected_player->state == STATE_READY) {
+                        uint8_t value = get_grenade_damage(server, connected_player, grenade);
                         if (value > 0) {
-                            send_set_hp(server, player_id, y, value, 1, 3, 5, 1, grenade->position);
+                            send_set_hp(server, player, connected_player, value, 1, 3, 5, 1, grenade->position);
                         }
                     }
                 }
@@ -321,7 +335,7 @@ void handle_grenade(server_t* server, uint8_t player_id)
                     }
                 }
                 grenade->sent = 0;
-                DL_DELETE(server->player[player_id].grenade, grenade);
+                DL_DELETE(player->grenade, grenade);
                 free(grenade);
                 move_intel_and_tent_down(server);
             }

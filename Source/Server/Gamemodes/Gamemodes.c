@@ -46,7 +46,7 @@ static void _init_ctf(server_t* server)
     // Init CTF
     server->protocol.gamemode.score[0]    = 0;
     server->protocol.gamemode.score[1]    = 0;
-    server->protocol.gamemode.score_limit = 10;
+    server->protocol.gamemode.score_limit = 1;
     server->protocol.gamemode.intel_flags = 0;
     // intel
     server->protocol.gamemode.intel[0]      = set_intel_tent_spawn_point(server, 0);

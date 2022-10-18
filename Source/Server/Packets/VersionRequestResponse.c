@@ -1,23 +1,22 @@
 #include <Server/Server.h>
 #include <stdio.h>
 
-void send_version_request(server_t* server, uint8_t player_id)
+void send_version_request(server_t* server, player_t* player)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 1, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
-    player_t*   player = &server->player[player_id];
     stream_write_u8(&stream, PACKET_TYPE_VERSION_REQUEST);
     if (enet_peer_send(player->peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
 }
 
-void receive_version_response(server_t* server, uint8_t player_id, stream_t* data)
+void receive_version_response(server_t* server, player_t* player, stream_t* data)
 {
-    player_t* player         = &server->player[player_id];
+    (void)server;
     player->client           = stream_read_u8(data);
     player->version_major    = stream_read_u8(data);
     player->version_minor    = stream_read_u8(data);

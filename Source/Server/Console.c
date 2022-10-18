@@ -40,7 +40,8 @@ void* server_console(void* arg)
         } else if (strlen(buf) > 0) {
             add_history(buf);
             pthread_mutex_lock(&server_lock);
-            command_handle(server, 255, buf, 1);
+            player_t* player = NULL;
+            command_handle(server, player, buf, 1);
             pthread_mutex_unlock(&server_lock);
         }
         free(buf);

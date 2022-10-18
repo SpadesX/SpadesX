@@ -4,6 +4,8 @@
 #include <Util/Types.h>
 #include <Util/Uthash.h>
 
+typedef struct player player_t;
+
 typedef struct permissions
 {
     char         access_level[32];
@@ -13,7 +15,7 @@ typedef struct permissions
 
 typedef struct command_args
 {
-    uint8_t  player_id;
+    player_t*  player;
     uint8_t  console;
     uint32_t permissions;
     uint32_t argc;

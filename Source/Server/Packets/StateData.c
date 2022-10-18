@@ -1,15 +1,14 @@
 #include <Server/Server.h>
 
-void send_state_data(server_t* server, uint8_t player_id)
+void send_state_data(server_t* server, player_t* player)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
     ENetPacket* packet = enet_packet_create(NULL, 104, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
-    player_t*   player = &server->player[player_id];
     stream_write_u8(&stream, PACKET_TYPE_STATE_DATA);
-    stream_write_u8(&stream, player_id);
+    stream_write_u8(&stream, player->id);
     stream_write_color_rgb(&stream, server->protocol.color_fog);
     stream_write_color_rgb(&stream, server->protocol.color_team[0]);
     stream_write_color_rgb(&stream, server->protocol.color_team[1]);

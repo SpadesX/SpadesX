@@ -297,14 +297,14 @@ long physics_cast_ray(server_t* server,
 
 // original C code
 
-static inline void repositionPlayer(server_t* server, uint8_t player_id, vector3f_t* position)
+static inline void repositionPlayer(player_t* player, vector3f_t* position)
 {
     float f; /* FIXME meaningful name */
 
-    server->player[player_id].movement.eye_pos = server->player[player_id].movement.position = *position;
-    f = server->player[player_id].lastclimb - ftotclk; /* FIXME meaningful name */
+    player->movement.eye_pos = player->movement.position = *position;
+    f = player->lastclimb - ftotclk; /* FIXME meaningful name */
     if (f > -0.25f)
-        server->player[player_id].movement.eye_pos.z += (f + 0.25f) / 0.25f;
+        player->movement.eye_pos.z += (f + 0.25f) / 0.25f;
 }
 
 static inline void setOrientationVectors(vector3f_t* o, vector3f_t* s, vector3f_t* h)
@@ -317,49 +317,49 @@ static inline void setOrientationVectors(vector3f_t* o, vector3f_t* s, vector3f_
     h->z    = o->x * s->y - o->y * s->x;
 }
 
-void physics_reorient_player(server_t* server, uint8_t player_id, vector3f_t* orientation)
+void physics_reorient_player(player_t* player, vector3f_t* orientation)
 {
-    server->player[player_id].movement.forward_orientation = *orientation;
+    player->movement.forward_orientation = *orientation;
     setOrientationVectors(orientation,
-                          &server->player[player_id].movement.strafe_orientation,
-                          &server->player[player_id].movement.height_orientation);
+                          &player->movement.strafe_orientation,
+                          &player->movement.height_orientation);
 }
 
-int physics_try_uncrouch(server_t* server, uint8_t player_id)
+int physics_try_uncrouch(server_t* server, player_t* player)
 {
-    float x1 = server->player[player_id].movement.position.x + 0.45f;
-    float x2 = server->player[player_id].movement.position.x - 0.45f;
-    float y1 = server->player[player_id].movement.position.y + 0.45f;
-    float y2 = server->player[player_id].movement.position.y - 0.45f;
-    float z1 = server->player[player_id].movement.position.z + 2.25f;
-    float z2 = server->player[player_id].movement.position.z - 1.35f;
+    float x1 = player->movement.position.x + 0.45f;
+    float x2 = player->movement.position.x - 0.45f;
+    float y1 = player->movement.position.y + 0.45f;
+    float y2 = player->movement.position.y - 0.45f;
+    float z1 = player->movement.position.z + 2.25f;
+    float z2 = player->movement.position.z - 1.35f;
 
     // first check if player can lower feet (in midair)
-    if (server->player[player_id].airborne && !(clipbox(server, x1, y1, z1) || clipbox(server, x1, y2, z1) ||
+    if (player->airborne && !(clipbox(server, x1, y1, z1) || clipbox(server, x1, y2, z1) ||
                                                 clipbox(server, x2, y1, z1) || clipbox(server, x2, y2, z1)))
         return (1);
     // then check if they can raise their head
     else if (!(clipbox(server, x1, y1, z2) || clipbox(server, x1, y2, z2) || clipbox(server, x2, y1, z2) ||
                clipbox(server, x2, y2, z2)))
     {
-        server->player[player_id].movement.position.z -= 0.9f;
-        server->player[player_id].movement.eye_pos.z -= 0.9f;
+        player->movement.position.z -= 0.9f;
+        player->movement.eye_pos.z -= 0.9f;
         return (1);
     }
     return (0);
 }
 
 // player movement with autoclimb
-void physics_box_clip_move(server_t* server, uint8_t player_id)
+void physics_box_clip_move(server_t* server, player_t* player)
 {
     float offset, m, f, nx, ny, nz, z;
     long  climb = 0;
 
     f  = fsynctics * 32.f;
-    nx = f * server->player[player_id].movement.velocity.x + server->player[player_id].movement.position.x;
-    ny = f * server->player[player_id].movement.velocity.y + server->player[player_id].movement.position.y;
+    nx = f * player->movement.velocity.x + player->movement.position.x;
+    ny = f * player->movement.velocity.y + player->movement.position.y;
 
-    if (server->player[player_id].crouching) {
+    if (player->crouching) {
         offset = 0.45f;
         m      = 0.9f;
     } else {
@@ -367,156 +367,156 @@ void physics_box_clip_move(server_t* server, uint8_t player_id)
         m      = 1.35f;
     }
 
-    nz = server->player[player_id].movement.position.z + offset;
+    nz = player->movement.position.z + offset;
 
-    if (server->player[player_id].movement.velocity.x < 0)
+    if (player->movement.velocity.x < 0)
         f = -0.45f;
     else
         f = 0.45f;
     z = m;
-    while (z >= -1.36f && !clipbox(server, nx + f, server->player[player_id].movement.position.y - 0.45f, nz + z) &&
-           !clipbox(server, nx + f, server->player[player_id].movement.position.y + 0.45f, nz + z))
+    while (z >= -1.36f && !clipbox(server, nx + f, player->movement.position.y - 0.45f, nz + z) &&
+           !clipbox(server, nx + f, player->movement.position.y + 0.45f, nz + z))
         z -= 0.9f;
     if (z < -1.36f)
-        server->player[player_id].movement.position.x = nx;
-    else if (!server->player[player_id].crouching && server->player[player_id].movement.forward_orientation.z < 0.5f &&
-             !server->player[player_id].sprinting)
+        player->movement.position.x = nx;
+    else if (!player->crouching && player->movement.forward_orientation.z < 0.5f &&
+             !player->sprinting)
     {
         z = 0.35f;
-        while (z >= -2.36f && !clipbox(server, nx + f, server->player[player_id].movement.position.y - 0.45f, nz + z) &&
-               !clipbox(server, nx + f, server->player[player_id].movement.position.y + 0.45f, nz + z))
+        while (z >= -2.36f && !clipbox(server, nx + f, player->movement.position.y - 0.45f, nz + z) &&
+               !clipbox(server, nx + f, player->movement.position.y + 0.45f, nz + z))
             z -= 0.9f;
         if (z < -2.36f) {
-            server->player[player_id].movement.position.x = nx;
+            player->movement.position.x = nx;
             climb                                         = 1;
         } else
-            server->player[player_id].movement.velocity.x = 0;
+            player->movement.velocity.x = 0;
     } else
-        server->player[player_id].movement.velocity.x = 0;
+        player->movement.velocity.x = 0;
 
-    if (server->player[player_id].movement.velocity.y < 0)
+    if (player->movement.velocity.y < 0)
         f = -0.45f;
     else
         f = 0.45f;
     z = m;
-    while (z >= -1.36f && !clipbox(server, server->player[player_id].movement.position.x - 0.45f, ny + f, nz + z) &&
-           !clipbox(server, server->player[player_id].movement.position.x + 0.45f, ny + f, nz + z))
+    while (z >= -1.36f && !clipbox(server, player->movement.position.x - 0.45f, ny + f, nz + z) &&
+           !clipbox(server, player->movement.position.x + 0.45f, ny + f, nz + z))
         z -= 0.9f;
     if (z < -1.36f)
-        server->player[player_id].movement.position.y = ny;
-    else if (!server->player[player_id].crouching && server->player[player_id].movement.forward_orientation.z < 0.5f &&
-             !server->player[player_id].sprinting && !climb)
+        player->movement.position.y = ny;
+    else if (!player->crouching && player->movement.forward_orientation.z < 0.5f &&
+             !player->sprinting && !climb)
     {
         z = 0.35f;
-        while (z >= -2.36f && !clipbox(server, server->player[player_id].movement.position.x - 0.45f, ny + f, nz + z) &&
-               !clipbox(server, server->player[player_id].movement.position.x + 0.45f, ny + f, nz + z))
+        while (z >= -2.36f && !clipbox(server, player->movement.position.x - 0.45f, ny + f, nz + z) &&
+               !clipbox(server, player->movement.position.x + 0.45f, ny + f, nz + z))
             z -= 0.9f;
         if (z < -2.36f) {
-            server->player[player_id].movement.position.y = ny;
+            player->movement.position.y = ny;
             climb                                         = 1;
         } else
-            server->player[player_id].movement.velocity.y = 0;
+            player->movement.velocity.y = 0;
     } else if (!climb)
-        server->player[player_id].movement.velocity.y = 0;
+        player->movement.velocity.y = 0;
 
     if (climb) {
-        server->player[player_id].movement.velocity.x *= 0.5f;
-        server->player[player_id].movement.velocity.y *= 0.5f;
-        server->player[player_id].lastclimb = ftotclk;
+        player->movement.velocity.x *= 0.5f;
+        player->movement.velocity.y *= 0.5f;
+        player->lastclimb = ftotclk;
         nz--;
         m = -1.35f;
     } else {
-        if (server->player[player_id].movement.velocity.z < 0)
+        if (player->movement.velocity.z < 0)
             m = -m;
-        nz += server->player[player_id].movement.velocity.z * fsynctics * 32.f;
+        nz += player->movement.velocity.z * fsynctics * 32.f;
     }
 
-    server->player[player_id].airborne = 1;
+    player->airborne = 1;
 
     if (clipbox(server,
-                server->player[player_id].movement.position.x - 0.45f,
-                server->player[player_id].movement.position.y - 0.45f,
+                player->movement.position.x - 0.45f,
+                player->movement.position.y - 0.45f,
                 nz + m) ||
         clipbox(server,
-                server->player[player_id].movement.position.x - 0.45f,
-                server->player[player_id].movement.position.y + 0.45f,
+                player->movement.position.x - 0.45f,
+                player->movement.position.y + 0.45f,
                 nz + m) ||
         clipbox(server,
-                server->player[player_id].movement.position.x + 0.45f,
-                server->player[player_id].movement.position.y - 0.45f,
+                player->movement.position.x + 0.45f,
+                player->movement.position.y - 0.45f,
                 nz + m) ||
         clipbox(server,
-                server->player[player_id].movement.position.x + 0.45f,
-                server->player[player_id].movement.position.y + 0.45f,
+                player->movement.position.x + 0.45f,
+                player->movement.position.y + 0.45f,
                 nz + m))
     {
-        if (server->player[player_id].movement.velocity.z >= 0) {
-            server->player[player_id].wade     = server->player[player_id].movement.position.z > 61;
-            server->player[player_id].airborne = 0;
+        if (player->movement.velocity.z >= 0) {
+            player->wade     = player->movement.position.z > 61;
+            player->airborne = 0;
         }
-        server->player[player_id].movement.velocity.z = 0;
+        player->movement.velocity.z = 0;
     } else
-        server->player[player_id].movement.position.z = nz - offset;
+        player->movement.position.z = nz - offset;
 
-    repositionPlayer(server, player_id, &server->player[player_id].movement.position);
+    repositionPlayer(player, &player->movement.position);
 }
 
-long physics_move_player(server_t* server, uint8_t player_id)
+long physics_move_player(server_t* server, player_t* player)
 {
     float f, f2;
 
     // move player and perform simple physics (gravity, momentum, friction)
-    if (server->player[player_id].jumping) {
-        server->player[player_id].jumping             = 0;
-        server->player[player_id].movement.velocity.z = -0.36f;
+    if (player->jumping) {
+        player->jumping             = 0;
+        player->movement.velocity.z = -0.36f;
     }
 
     f = fsynctics; // player acceleration scalar
-    if (server->player[player_id].airborne)
+    if (player->airborne)
         f *= 0.1f;
-    else if (server->player[player_id].crouching)
+    else if (player->crouching)
         f *= 0.3f;
-    else if ((server->player[player_id].secondary_fire && server->player[player_id].item == 2) ||
-             server->player[player_id].sneaking) // Replace me later with ITEM_GUN
+    else if ((player->secondary_fire && player->item == 2) ||
+             player->sneaking) // Replace me later with ITEM_GUN
         f *= 0.5f;
-    else if (server->player[player_id].sprinting)
+    else if (player->sprinting)
         f *= 1.3f;
 
-    if ((server->player[player_id].move_forward || server->player[player_id].move_backwards) &&
-        (server->player[player_id].move_left || server->player[player_id].move_right))
+    if ((player->move_forward || player->move_backwards) &&
+        (player->move_left || player->move_right))
         f *= SQRT; // if strafe + forward/backwards then limit diagonal velocity
 
-    if (server->player[player_id].move_forward) {
-        server->player[player_id].movement.velocity.x += server->player[player_id].movement.forward_orientation.x * f;
-        server->player[player_id].movement.velocity.y += server->player[player_id].movement.forward_orientation.y * f;
-    } else if (server->player[player_id].move_backwards) {
-        server->player[player_id].movement.velocity.x -= server->player[player_id].movement.forward_orientation.x * f;
-        server->player[player_id].movement.velocity.y -= server->player[player_id].movement.forward_orientation.y * f;
+    if (player->move_forward) {
+        player->movement.velocity.x += player->movement.forward_orientation.x * f;
+        player->movement.velocity.y += player->movement.forward_orientation.y * f;
+    } else if (player->move_backwards) {
+        player->movement.velocity.x -= player->movement.forward_orientation.x * f;
+        player->movement.velocity.y -= player->movement.forward_orientation.y * f;
     }
-    if (server->player[player_id].move_left) {
-        server->player[player_id].movement.velocity.x -= server->player[player_id].movement.strafe_orientation.x * f;
-        server->player[player_id].movement.velocity.y -= server->player[player_id].movement.strafe_orientation.y * f;
-    } else if (server->player[player_id].move_right) {
-        server->player[player_id].movement.velocity.x += server->player[player_id].movement.strafe_orientation.x * f;
-        server->player[player_id].movement.velocity.y += server->player[player_id].movement.strafe_orientation.y * f;
+    if (player->move_left) {
+        player->movement.velocity.x -= player->movement.strafe_orientation.x * f;
+        player->movement.velocity.y -= player->movement.strafe_orientation.y * f;
+    } else if (player->move_right) {
+        player->movement.velocity.x += player->movement.strafe_orientation.x * f;
+        player->movement.velocity.y += player->movement.strafe_orientation.y * f;
     }
 
     f = fsynctics + 1;
-    server->player[player_id].movement.velocity.z += fsynctics;
-    server->player[player_id].movement.velocity.z /= f; // air friction
-    if (server->player[player_id].wade)
+    player->movement.velocity.z += fsynctics;
+    player->movement.velocity.z /= f; // air friction
+    if (player->wade)
         f = fsynctics * 6.f + 1; // water friction
-    else if (!server->player[player_id].airborne)
+    else if (!player->airborne)
         f = fsynctics * 4.f + 1; // ground friction
-    server->player[player_id].movement.velocity.x /= f;
-    server->player[player_id].movement.velocity.y /= f;
-    f2 = server->player[player_id].movement.velocity.z;
-    physics_box_clip_move(server, player_id);
+    player->movement.velocity.x /= f;
+    player->movement.velocity.y /= f;
+    f2 = player->movement.velocity.z;
+    physics_box_clip_move(server, player);
     // hit ground... check if hurt
-    if (!server->player[player_id].movement.velocity.z && (f2 > FALL_SLOW_DOWN)) {
+    if (!player->movement.velocity.z && (f2 > FALL_SLOW_DOWN)) {
         // slow down on landing
-        server->player[player_id].movement.velocity.x *= 0.5f;
-        server->player[player_id].movement.velocity.y *= 0.5f;
+        player->movement.velocity.x *= 0.5f;
+        player->movement.velocity.y *= 0.5f;
 
         // return fall damage
         if (f2 > FALL_DAMAGE_VELOCITY) {

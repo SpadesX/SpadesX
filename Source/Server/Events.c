@@ -1,3 +1,3 @@
 #include <Server/Events.h>
 
-EVENT_DEFINITION(player_disconnect, (id), uint8_t id)
+EVENT_DEFINITION(player_disconnect, (player), player_t* player)

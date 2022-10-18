@@ -11,10 +11,13 @@
 #include <Util/Enums.h>
 #include <Util/Queue.h>
 #include <Util/Types.h>
+#include <Util/Uthash.h>
 #include <enet/enet.h>
+#include <stdint.h>
 
 typedef struct player
 {
+    UT_hash_handle           hh;
     queue_t*                 queues;
     ENetPeer*                peer;
     grenade_t*               grenade;
@@ -44,6 +47,7 @@ typedef struct player
     vector3i_t               result_line[50];
     uint16_t                 ups;
     char                     client;
+    uint8_t                  id;
     uint8_t                  respawn_time;
     uint8_t                  grenades;
     uint8_t                  blocks;

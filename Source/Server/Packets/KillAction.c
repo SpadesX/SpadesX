@@ -3,8 +3,8 @@
 #include <Util/Checks/PlayerChecks.h>
 
 void send_kill_action_packet(server_t* server,
-                             uint8_t   killerID,
-                             uint8_t   player_id,
+                             player_t*   killer,
+                             player_t*   player,
                              uint8_t   killReason,
                              uint8_t   respawnTime,
                              uint8_t   makeInvisible)
@@ -12,22 +12,22 @@ void send_kill_action_packet(server_t* server,
     if (server->protocol.num_players == 0) {
         return;
     }
-    player_t* player = &server->player[player_id];
     if (player->alive == 0) {
         return; // Cant kill player if they are dead
     }
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_KILL_ACTION);
-    stream_write_u8(&stream, player_id);   // Player that died.
-    stream_write_u8(&stream, killerID);    // Player that killed.
+    stream_write_u8(&stream, player->id);   // Player that died.
+    stream_write_u8(&stream, killer->id);    // Player that killed.
     stream_write_u8(&stream, killReason);  // Killing reason (1 is headshot)
     stream_write_u8(&stream, respawnTime); // Time before respawn happens
     uint8_t sent = 0;
-    for (int player = 0; player < server->protocol.max_players; ++player) {
-        uint8_t isPast = is_past_state_data(server, player);
-        if ((makeInvisible && player != player_id && isPast) || (isPast && !makeInvisible)) {
-            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+    player_t *connected_player, *tmp;
+    HASH_ITER(hh, server->players, connected_player, tmp) {
+        uint8_t isPast = is_past_state_data(connected_player);
+        if ((makeInvisible && connected_player->id != player->id && isPast) || (isPast && !makeInvisible)) {
+            if (enet_peer_send(connected_player->peer, 0, packet) == 0) {
                 sent = 1;
             }
         }
@@ -37,8 +37,8 @@ void send_kill_action_packet(server_t* server,
         return; // Do not kill the player since sending the packet failed
     }
     if (!makeInvisible && player->is_invisible == 0) {
-        if (killerID != player_id) {
-            server->player[killerID].kills++;
+        if (killer != player) {
+            killer->kills++;
         }
         player->deaths++;
         player->alive                        = 0;
@@ -67,6 +67,6 @@ void send_kill_action_packet(server_t* server,
         }
     }
     if (player->has_intel) {
-        send_intel_drop(server, player_id);
+        send_intel_drop(server, player);
     }
 }

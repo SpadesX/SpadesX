@@ -1,4 +1,7 @@
 // Copyright DarkNeutrino 2021
+#include "Server/Structs/GrenadeStruct.h"
+#include "Util/Uthash.h"
+
 #include <Server/Commands/Commands.h>
 #include <Server/Console.h>
 #include <Server/Gamemodes/Gamemodes.h>
@@ -24,6 +27,7 @@
 #include <Util/Types.h>
 #include <Util/Utlist.h>
 #include <libmapvxl/libmapvxl.h>
+#include <stddef.h>
 #include <stdio.h>
 // Include stdio before readline cause it needs it for some reason
 #include <enet/enet.h>
@@ -139,12 +143,16 @@ static void _server_init(server_t*   server,
         return;
     }
 
-    vector3f_t empty   = {0, 0, 0};
-    vector3f_t forward = {1, 0, 0};
-    vector3f_t height  = {0, 0, 1};
-    vector3f_t strafe  = {0, 1, 0};
-    for (uint32_t i = 0; i < server->protocol.max_players; ++i) {
-        init_player(server, i, reset, 0, empty, forward, strafe, height);
+    if (reset) {
+        vector3f_t empty   = {0, 0, 0};
+        vector3f_t forward = {1, 0, 0};
+        vector3f_t height  = {0, 0, 1};
+        vector3f_t strafe  = {0, 1, 0};
+        player_t * player, *tmp;
+        HASH_ITER(hh, server->players, player, tmp)
+        {
+            init_player(server, player, reset, 0, empty, forward, strafe, height);
+        }
     }
 
     server->global_ab = 1;
@@ -197,15 +205,16 @@ void server_reset(server_t* server)
 
 static void* _world_update(void)
 {
-    for (uint8_t player_id = 0; player_id < server.protocol.max_players; ++player_id) {
-        on_player_update(&server, player_id);
-        if (is_past_join_screen(&server, player_id)) {
+    player_t *player, *tmp;
+    HASH_ITER(hh, server.players, player, tmp) {
+        on_player_update(&server, player);
+        if (is_past_join_screen(player)) {
             uint64_t time = get_nanos();
-            if (time - server.player[player_id].timers.time_since_last_wu >=
-                (uint64_t) (NANO_IN_SECOND / server.player[player_id].ups))
+            if (time - player->timers.time_since_last_wu >=
+                (uint64_t) (NANO_IN_SECOND / player->ups))
             {
-                send_world_update(&server, player_id);
-                server.player[player_id].timers.time_since_last_wu = get_nanos();
+                send_world_update(&server, player);
+                player->timers.time_since_last_wu = get_nanos();
             }
         }
     }
@@ -228,25 +237,44 @@ static void _server_update(server_t* server, int timeout)
             case ENET_EVENT_TYPE_DISCONNECT:
                 player_id = (uint8_t) ((size_t) event.peer->data);
                 if (player_id != server->protocol.max_players - 1) {
-                    send_intel_drop(server, player_id);
-                    send_player_left(server, player_id);
+                    player_t *player;
+                    HASH_FIND(hh, server->players, &player_id, sizeof(player_id), player);
+                    if (player == NULL) {
+                        LOG_ERROR("Server tried to disconnect non existent player!");
+                        return;
+                    }
+                    send_intel_drop(server, player);
+                    send_player_left(server, player);
                     vector3f_t empty   = {0, 0, 0};
                     vector3f_t forward = {1, 0, 0};
                     vector3f_t height  = {0, 0, 1};
                     vector3f_t strafe  = {0, 1, 0};
-                    init_player(server, player_id, 0, 1, empty, forward, strafe, height);
+                    init_player(server, player, 0, 1, empty, forward, strafe, height);
                     server->protocol.num_players--;
-                    server->protocol.num_team_users[server->player[player_id].team]--;
+                    server->protocol.num_team_users[player->team]--;
                     if (server->master.enable_master_connection == 1) {
                         master_update(server);
+                    }
+                    grenade_t* elt;
+                    uint32_t counter = 0;
+                    DL_COUNT(player->grenade, elt, counter);
+                    if (counter == 0) {
+                        HASH_DEL(server->players, player);
+                        free(player);
                     }
                 }
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
             {
                 stream_t stream = {event.packet->data, event.packet->dataLength, 0};
-                player_id       = (uint8_t) ((size_t) event.peer->data);
-                on_packet_received(server, player_id, &stream);
+                player_id = ((size_t)event.peer->data) & 0xFF;
+                player_t* player;
+                HASH_FIND(hh, server->players, &player_id, sizeof(player_id), player);
+                if (player == NULL) {
+                    LOG_ERROR("Could not find player with ID %hhu", player_id);
+                    break;
+                }
+                on_packet_received(server, player, &stream);
                 enet_packet_destroy(event.packet);
                 break;
             }
@@ -297,6 +325,7 @@ void server_start(server_args args)
     server.host->intercept = &raw_udp_intercept_callback;
 
     LOG_STATUS("Intializing server");
+    server.players                = NULL;
     server.running                = 1;
     server.s_map.map_list         = args.map_list;
     server.s_map.map_count        = args.map_count;
@@ -358,12 +387,14 @@ void server_start(server_args args)
     }
     free(server.s_map.compressed_map);
 
-    command_free_all(&server);
+    free_all_commands(&server);
     free_all_packets(&server);
+    free_all_players(&server);
 
     _string_nodes_free(server.welcome_messages);
     _string_nodes_free(server.s_map.map_list);
     _string_nodes_free(server.periodic_messages);
+
     mapvxl_free(&server.s_map.map);
 
     pthread_mutex_destroy(&server_lock);

@@ -1,12 +1,14 @@
+#include "Util/Uthash.h"
 #include <Server/Server.h>
 
 void cmd_reset(void* p_server, command_args_t arguments)
 {
     server_t* server = (server_t*) p_server;
     (void) arguments;
-    for (uint32_t i = 0; i < server->protocol.max_players; ++i) {
-        if (server->player[i].state != STATE_DISCONNECTED) {
-            server->player[i].state = STATE_STARTING_MAP;
+    player_t *connected_player, *tmp;
+    HASH_ITER(hh, server->players, connected_player, tmp) {
+        if (connected_player->state != STATE_DISCONNECTED) {
+            connected_player->state = STATE_STARTING_MAP;
         }
     }
     server_reset(server);

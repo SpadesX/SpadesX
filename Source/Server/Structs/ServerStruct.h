@@ -12,7 +12,7 @@
 typedef struct server
 {
     ENetHost*             host;
-    player_t              player[32];
+    player_t*             players;
     protocol_t            protocol;
     master_t              master;
     packet_t*             packets;

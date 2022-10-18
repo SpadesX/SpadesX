@@ -1,3 +1,4 @@
+#include "Util/Uthash.h"
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
 
@@ -16,9 +17,10 @@ void send_move_object(server_t* server, uint8_t object, uint8_t team, vector3f_t
     stream_write_f(&stream, pos.z);
 
     uint8_t sent = 0;
-    for (int player = 0; player < server->protocol.max_players; ++player) {
-        if (is_past_state_data(server, player)) {
-            if (enet_peer_send(server->player[player].peer, 0, packet) == 0) {
+    player_t *connected_player, *tmp;
+    HASH_ITER(hh, server->players, connected_player, tmp) {
+        if (is_past_state_data(connected_player)) {
+            if (enet_peer_send(connected_player->peer, 0, packet) == 0) {
                 sent = 1;
             }
         }

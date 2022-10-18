@@ -2,8 +2,8 @@
 #include <Server/Server.h>
 
 void send_set_hp(server_t*  server,
-                 uint8_t    player_id,
-                 uint8_t    player_hit_id,
+                 player_t*    player,
+                 player_t*    player_hit,
                  long       hp_chnage,
                  uint8_t    type_of_damage,
                  uint8_t    kill_reason,
@@ -11,10 +11,8 @@ void send_set_hp(server_t*  server,
                  uint8_t    is_grenade,
                  vector3f_t position)
 {
-    player_t* player     = &server->player[player_id];
-    player_t* player_hit = &server->player[player_hit_id];
     if (server->protocol.num_players == 0 || player_hit->team == TEAM_SPECTATOR ||
-        (!player->allow_team_killing && player->team == player_hit->team && player_id != player_hit_id))
+        (!player->allow_team_killing && player->team == player_hit->team && player->id != player_hit->id))
     {
         return;
     }
@@ -30,7 +28,7 @@ void send_set_hp(server_t*  server,
             player_hit->hp = 100;
 
         if (player_hit->hp == 0) {
-            send_kill_action_packet(server, player_id, player_hit_id, kill_reason, respawn_time, 0);
+            send_kill_action_packet(server, player, player_hit, kill_reason, respawn_time, 0);
             return;
         }
 

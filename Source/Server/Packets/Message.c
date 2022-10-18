@@ -1,3 +1,5 @@
+#include "Util/Uthash.h"
+
 #include <Server/Commands/Commands.h>
 #include <Server/Server.h>
 #include <Server/Staff.h>
@@ -7,7 +9,7 @@
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
 
-void receive_handle_send_message(server_t* server, uint8_t player_id, stream_t* data)
+void receive_handle_send_message(server_t* server, player_t* player, stream_t* data)
 {
     if (server->protocol.num_players == 0) {
         return;
@@ -28,11 +30,10 @@ void receive_handle_send_message(server_t* server, uint8_t player_id, stream_t* 
         length++;
         packet_size = length + 3;
     }
-    if (player_id != received_id) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player_id, received_id);
+    if (player->id != received_id) {
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in message packet", player->id, received_id);
     }
-    uint8_t   reset_time = 1;
-    player_t* player     = &server->player[player_id];
+    uint8_t reset_time = 1;
     if (!diff_is_older_then_dont_update(
         get_nanos(), player->timers.since_last_message_from_spam, (uint64_t) NANO_IN_MILLI * 2000) &&
         !player->muted && player->permissions <= 1)
@@ -40,9 +41,8 @@ void receive_handle_send_message(server_t* server, uint8_t player_id, stream_t* 
         player->spam_counter++;
         if (player->spam_counter >= 5) {
             send_message_to_staff(
-            server, "WARNING: Player %s (#%d) is trying to spam. Muting.", player->name, player_id);
-            send_server_notice(server,
-                               player_id,
+            server, "WARNING: Player %s (#%d) is trying to spam. Muting.", player->name, player->id);
+            send_server_notice(player,
                                0,
                                "SERVER: You have been muted for excessive spam. If you feel like this is a mistake "
                                "contact staff via /admin command");
@@ -59,8 +59,7 @@ void receive_handle_send_message(server_t* server, uint8_t player_id, stream_t* 
     if (!diff_is_older_then(get_nanos(), &player->timers.since_last_message, (uint64_t) NANO_IN_MILLI * 400) &&
         player->permissions <= 1)
     {
-        send_server_notice(
-        server, player_id, 0, "WARNING: You sent last message too fast and thus was not sent out to players");
+        send_server_notice(player, 0, "WARNING: You sent last message too fast and thus was not sent out to players");
         return;
     }
 
@@ -76,25 +75,26 @@ void receive_handle_send_message(server_t* server, uint8_t player_id, stream_t* 
             snprintf(meantFor, 7, "System");
             break;
     }
-    LOG_INFO("Player %s (#%hhu) (%s) said: %s", player->name, player_id, meantFor, message);
+    LOG_INFO("Player %s (#%hhu) (%s) said: %s", player->name, player->id, meantFor, message);
 
     uint8_t sent = 0;
     if (message[0] == '/') {
-        command_handle(server, player_id, message, 0);
+        command_handle(server, player, message, 0);
     } else {
         if (!player->muted) {
             ENetPacket* packet = enet_packet_create(NULL, packet_size, ENET_PACKET_FLAG_RELIABLE);
             stream_t    stream = {packet->data, packet->dataLength, 0};
             stream_write_u8(&stream, PACKET_TYPE_CHAT_MESSAGE);
-            stream_write_u8(&stream, player_id);
+            stream_write_u8(&stream, player->id);
             stream_write_u8(&stream, meant_for);
             stream_write_array(&stream, message, length);
-            for (int id = 0; id < server->protocol.max_players; ++id) {
-                player_t* player_other = &server->player[id];
-                if (is_past_join_screen(server, id) && !player->muted &&
-                    ((player_other->team == player->team && meant_for == 1) || meant_for == 0))
+            player_t *connected_player, *tmp;
+            HASH_ITER(hh, server->players, connected_player, tmp)
+            {
+                if (is_past_join_screen(connected_player) && !player->muted &&
+                    ((connected_player->team == player->team && meant_for == 1) || meant_for == 0))
                 {
-                    if (enet_peer_send(player_other->peer, 0, packet) == 0) {
+                    if (enet_peer_send(connected_player->peer, 0, packet) == 0) {
                         sent = 1;
                     }
                 }

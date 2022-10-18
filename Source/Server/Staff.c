@@ -5,9 +5,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-uint8_t is_staff(server_t* server, uint8_t player_id)
+uint8_t is_staff(server_t* server, player_t* player)
 {
-    if (player_has_permission(server, player_id, 0, 4294967294)) {
+    (void)server;
+    if (player_has_permission(player, 0, 4294967294)) {
         return 1;
     }
     return 0;
@@ -21,11 +22,13 @@ void send_message_to_staff(server_t* server, const char* format, ...)
     vsnprintf(fMessage, 1024, format, args);
     va_end(args);
 
-    send_server_notice(server, 32, 1, fMessage);
+    player_t* null_player = NULL;
+    send_server_notice(null_player, 1, fMessage);
 
-    for (uint8_t ID = 0; ID < server->protocol.max_players; ++ID) {
-        if (is_past_join_screen(server, ID) && is_staff(server, ID)) {
-            send_server_notice(server, ID, 0, fMessage);
+    player_t *connected_player, *tmp;
+    HASH_ITER(hh, server->players, connected_player, tmp) {
+        if (is_past_join_screen(connected_player) && is_staff(server, connected_player)) {
+            send_server_notice(connected_player, 0, fMessage);
         }
     }
 }

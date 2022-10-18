@@ -1,3 +1,4 @@
+#include "Server/Structs/PlayerStruct.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Server/Structs/ServerStruct.h>
@@ -59,16 +60,16 @@ uint8_t check_in_intel(server_t* server, uint8_t team)
     return ret;
 }
 
-uint8_t check_player_in_tent(server_t* server, uint8_t player_id)
+uint8_t check_player_in_tent(server_t* server, player_t* player)
 {
     uint8_t ret = 0;
-    if (server->player[player_id].alive == 0) {
+    if (player->alive == 0) {
         return ret;
     }
-    vector3f_t playerPos = server->player[player_id].movement.position;
-    vector3f_t tentPos   = server->protocol.gamemode.base[server->player[player_id].team];
+    vector3f_t playerPos = player->movement.position;
+    vector3f_t tentPos   = server->protocol.gamemode.base[player->team];
     if (((int) playerPos.z + 3 == (int) tentPos.z ||
-         ((server->player[player_id].crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) tentPos.z)) &&
+         ((player->crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) tentPos.z)) &&
         ((int) playerPos.x >= (int) tentPos.x - 1 && (int) playerPos.x <= (int) tentPos.x) &&
         ((int) playerPos.y >= (int) tentPos.y - 1 && (int) playerPos.y <= (int) tentPos.y))
     {
@@ -146,17 +147,17 @@ void moveIntelAndTentUp(server_t* server)
     }
 }
 
-uint8_t check_player_on_intel(server_t* server, uint8_t player_id, uint8_t team)
+uint8_t check_player_on_intel(server_t* server, player_t* player, uint8_t team)
 {
     uint8_t ret = 0;
-    if (server->player[player_id].alive == 0) {
+    if (player->alive == 0) {
         return ret;
     }
-    vector3f_t playerPos = server->player[player_id].movement.position;
+    vector3f_t playerPos = player->movement.position;
     vector3f_t intelPos  = server->protocol.gamemode.intel[team];
     if ((int) playerPos.y == (int) intelPos.y &&
         ((int) playerPos.z + 3 == (int) intelPos.z ||
-         ((server->player[player_id].crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) intelPos.z)) &&
+         ((player->crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) intelPos.z)) &&
         (int) playerPos.x == (int) intelPos.x)
     {
         ret = 1;
@@ -190,73 +191,73 @@ vector3f_t set_intel_tent_spawn_point(server_t* server, uint8_t team)
     return position;
 }
 
-void handleTentAndIntel(server_t* server, uint8_t player_id)
+void handleTentAndIntel(server_t* server, player_t* player)
 {
     uint8_t team;
-    if (server->player[player_id].team == 0) {
+    if (player->team == 0) {
         team = 1;
     } else {
         team = 0;
     }
-    if (server->player[player_id].team != TEAM_SPECTATOR) {
+    if (player->team != TEAM_SPECTATOR) {
         uint64_t timeNow = time(NULL);
-        if (server->player[player_id].has_intel == 0) {
+        if (player->has_intel == 0) {
 
-            if (check_player_on_intel(server, player_id, team) && (!server->protocol.gamemode.intel_held[team])) {
-                send_intel_pickup(server, player_id);
+            if (check_player_on_intel(server, player, team) && (!server->protocol.gamemode.intel_held[team])) {
+                send_intel_pickup(server, player);
                 if (server->protocol.current_gamemode == GAME_MODE_BABEL) {
                     vector3f_t pos = {0, 0, 64};
-                    send_move_object(server, server->player[player_id].team, server->player[player_id].team, pos);
-                    server->protocol.gamemode.intel[server->player[player_id].team] = pos;
+                    send_move_object(server, player->team, player->team, pos);
+                    server->protocol.gamemode.intel[player->team] = pos;
                 }
-            } else if (check_player_in_tent(server, player_id) &&
-                       timeNow - server->player[player_id].timers.since_last_base_enter_restock >= 15)
+            } else if (check_player_in_tent(server, player) &&
+                       timeNow - player->timers.since_last_base_enter_restock >= 15)
             {
-                send_restock(server, player_id);
-                server->player[player_id].hp       = 100;
-                server->player[player_id].grenades = 3;
-                server->player[player_id].blocks   = 50;
-                switch (server->player[player_id].weapon) {
+                send_restock(server, player);
+                player->hp       = 100;
+                player->grenades = 3;
+                player->blocks   = 50;
+                switch (player->weapon) {
                     case 0:
-                        server->player[player_id].weapon_reserve = 50;
+                        player->weapon_reserve = 50;
                         break;
                     case 1:
-                        server->player[player_id].weapon_reserve = 120;
+                        player->weapon_reserve = 120;
                         break;
                     case 2:
-                        server->player[player_id].weapon_reserve = 48;
+                        player->weapon_reserve = 48;
                         break;
                 }
-                server->player[player_id].timers.since_last_base_enter_restock = time(NULL);
+                player->timers.since_last_base_enter_restock = time(NULL);
             }
-        } else if (server->player[player_id].has_intel) {
-            if (check_player_in_tent(server, player_id) &&
-                timeNow - server->player[player_id].timers.since_last_base_enter >= 5)
+        } else if (player->has_intel) {
+            if (check_player_in_tent(server, player) &&
+                timeNow - player->timers.since_last_base_enter >= 5)
             {
-                server->protocol.gamemode.score[server->player[player_id].team]++;
+                server->protocol.gamemode.score[player->team]++;
                 uint8_t winning = 0;
-                if (server->protocol.gamemode.score[server->player[player_id].team] >=
+                if (server->protocol.gamemode.score[player->team] >=
                     server->protocol.gamemode.score_limit)
                 {
                     winning = 1;
                 }
-                send_intel_capture(server, player_id, winning);
-                server->player[player_id].hp       = 100;
-                server->player[player_id].grenades = 3;
-                server->player[player_id].blocks   = 50;
-                switch (server->player[player_id].weapon) {
+                send_intel_capture(server, player, winning);
+                player->hp       = 100;
+                player->grenades = 3;
+                player->blocks   = 50;
+                switch (player->weapon) {
                     case 0:
-                        server->player[player_id].weapon_reserve = 50;
+                        player->weapon_reserve = 50;
                         break;
                     case 1:
-                        server->player[player_id].weapon_reserve = 120;
+                        player->weapon_reserve = 120;
                         break;
                     case 2:
-                        server->player[player_id].weapon_reserve = 48;
+                        player->weapon_reserve = 48;
                         break;
                 }
-                send_restock(server, player_id);
-                server->player[player_id].timers.since_last_base_enter = time(NULL);
+                send_restock(server, player);
+                player->timers.since_last_base_enter = time(NULL);
                 if (server->protocol.current_gamemode == GAME_MODE_BABEL) {
                     vector3f_t babelIntelPos = {255, 255, mapvxl_find_top_block(&server->s_map.map, 255, 255)};
                     server->protocol.gamemode.intel[0] = babelIntelPos;
@@ -268,9 +269,10 @@ void handleTentAndIntel(server_t* server, uint8_t player_id)
                     send_move_object(server, team, team, server->protocol.gamemode.intel[team]);
                 }
                 if (winning) {
-                    for (uint32_t i = 0; i < server->protocol.max_players; ++i) {
-                        if (server->player[i].state != STATE_DISCONNECTED) {
-                            server->player[i].state = STATE_STARTING_MAP;
+                    player_t *connected_player, *tmp;
+                    HASH_ITER(hh, server->players, connected_player, tmp) {
+                        if (connected_player->state != STATE_DISCONNECTED) {
+                            connected_player->state = STATE_STARTING_MAP;
                         }
                     }
                     server_reset(server);

@@ -1,3 +1,4 @@
+#include "Util/Uthash.h"
 #include <Server/Commands/Commands.h>
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
@@ -14,40 +15,42 @@ void cmd_kill(void* p_server, command_args_t arguments)
             LOG_INFO("You cannot use this command without arguments from console");
             return;
         }
-        send_kill_action_packet(server, arguments.player_id, arguments.player_id, 0, 5, 0);
+        send_kill_action_packet(server, arguments.player, arguments.player, 0, 5, 0);
     } else {
-        if (!player_has_permission(server, arguments.player_id, arguments.console, 30)) {
-            send_server_notice(
-            server, arguments.player_id, arguments.console, "You have no permission to use this command.");
+        if (!player_has_permission(arguments.player, arguments.console, 30)) {
+            send_server_notice(arguments.player, arguments.console, "You have no permission to use this command.");
             return;
         }
         if (strcmp(arguments.argv[1], "all") == 0) { // KILL THEM ALL!!!! >:D
             int count = 0;
-            for (int i = 0; i < server->protocol.max_players; ++i) {
-                if (is_past_join_screen(server, i) && server->player[i].hp > 0 &&
-                    server->player[i].team != TEAM_SPECTATOR)
+            player_t *connected_player, *tmp;
+            HASH_ITER(hh, server->players, connected_player, tmp) {
+                if (is_past_join_screen(connected_player) && connected_player->hp > 0 &&
+                    connected_player->team != TEAM_SPECTATOR)
                 {
-                    send_kill_action_packet(server, i, i, 0, 5, 0);
+                    send_kill_action_packet(server, connected_player, connected_player, 0, 5, 0);
                     count++;
                 }
             }
-            send_server_notice(server, arguments.player_id, arguments.console, "Killed %i players.", count);
+            send_server_notice(arguments.player, arguments.console, "Killed %i players.", count);
             return;
         }
 
         uint8_t ID = 0;
         for (uint32_t i = 1; i < arguments.argc; i++) {
-            if (!parse_player(arguments.argv[i], &ID, NULL) || ID > 32) {
-                send_server_notice(
-                server, arguments.player_id, arguments.console, "Invalid player \"%s\"!", arguments.argv[i]);
+            if (!parse_player(arguments.argv[i], &ID, NULL) || ID > server->protocol.max_players) {
+                send_server_notice(arguments.player, arguments.console, "Invalid player \"%s\"!", arguments.argv[i]);
                 return;
             }
-            if (is_past_join_screen(server, ID) && server->player[i].team != TEAM_SPECTATOR) {
-                send_kill_action_packet(server, ID, ID, 0, 5, 0);
-                send_server_notice(server, arguments.player_id, arguments.console, "Killing player #%i...", ID);
-            } else {
-                send_server_notice(
-                server, arguments.player_id, arguments.console, "Player %hhu does not exist or is already dead", ID);
+            player_t* player;
+            HASH_FIND(hh, server->players, &ID, sizeof(ID), player);
+            if (player == NULL) {
+                send_server_notice(arguments.player, arguments.console, "Player %hhu does not exist or is already dead", ID);
+                return;
+            }
+            if (is_past_join_screen(player) && player->team != TEAM_SPECTATOR) {
+                send_kill_action_packet(server, player, player, 0, 5, 0);
+                send_server_notice(arguments.player, arguments.console, "Killing player #%i...", ID);
             }
         }
     }

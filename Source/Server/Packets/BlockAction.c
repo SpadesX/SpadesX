@@ -1,3 +1,4 @@
+#include "Util/Uthash.h"
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Nodes.h>
@@ -10,7 +11,7 @@
 #include <Util/Nanos.h>
 #include <Util/Utlist.h>
 
-void send_block_action(server_t* server, uint8_t player_id, uint8_t actionType, int X, int Y, int Z)
+void send_block_action(server_t* server, player_t* player, uint8_t actionType, int X, int Y, int Z)
 {
     if (server->protocol.num_players == 0) {
         return;
@@ -18,15 +19,15 @@ void send_block_action(server_t* server, uint8_t player_id, uint8_t actionType, 
     ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_BLOCK_ACTION);
-    stream_write_u8(&stream, player_id);
+    stream_write_u8(&stream, player->id);
     stream_write_u8(&stream, actionType);
     stream_write_u32(&stream, X);
     stream_write_u32(&stream, Y);
     stream_write_u32(&stream, Z);
     uint8_t sent = 0;
-    for (int id = 0; id < server->protocol.max_players; ++id) {
-        player_t* player = &server->player[id];
-        if (is_past_state_data(server, id)) {
+    player_t *check, *tmp;
+    HASH_ITER(hh, server->players, check, tmp) {
+        if (is_past_state_data(check)) {
             if (enet_peer_send(player->peer, 0, packet) == 0) {
                 sent = 1;
             }
@@ -37,7 +38,7 @@ void send_block_action(server_t* server, uint8_t player_id, uint8_t actionType, 
             node->position.z   = Z;
             node->color        = player->color;
             node->type         = actionType;
-            node->sender_id    = player_id;
+            node->sender_id    = player->id;
             LL_APPEND(player->blockBuffer, node);
         }
     }
@@ -46,8 +47,8 @@ void send_block_action(server_t* server, uint8_t player_id, uint8_t actionType, 
     }
 }
 void send_block_action_to_player(server_t* server,
-                                 uint8_t   player_id,
-                                 uint8_t   sendToID,
+                                 player_t*   player,
+                                 player_t*   receiver,
                                  uint8_t   actionType,
                                  int       X,
                                  int       Y,
@@ -59,13 +60,13 @@ void send_block_action_to_player(server_t* server,
     ENetPacket* packet = enet_packet_create(NULL, 15, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_BLOCK_ACTION);
-    stream_write_u8(&stream, player_id);
+    stream_write_u8(&stream, player->id);
     stream_write_u8(&stream, actionType);
     stream_write_u32(&stream, X);
     stream_write_u32(&stream, Y);
     stream_write_u32(&stream, Z);
     uint8_t sent = 0;
-    if (enet_peer_send(server->player[sendToID].peer, 0, packet) == 0) {
+    if (enet_peer_send(receiver->peer, 0, packet) == 0) {
         sent = 1;
     }
     if (sent == 0) {
@@ -73,13 +74,12 @@ void send_block_action_to_player(server_t* server,
     }
 }
 
-void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
+void receive_block_action(server_t* server, player_t* player, stream_t* data)
 {
     uint8_t received_id = stream_read_u8(data);
-    if (player_id != received_id) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet", player_id, received_id);
+    if (player->id != received_id) {
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet", player->id, received_id);
     }
-    player_t* player = &server->player[player_id];
     if (player->can_build && server->global_ab) {
         uint8_t  actionType = stream_read_u8(data);
         uint32_t X          = stream_read_u32(data);
@@ -112,7 +112,7 @@ void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
                                 mapvxl_set_color(&server->s_map.map, X, Y, Z, player->tool_color.raw);
                                 player->blocks--;
                                 moveIntelAndTentUp(server);
-                                send_block_action(server, player_id, actionType, X, Y, Z);
+                                send_block_action(server, player, actionType, X, Y, Z);
                             }
                         }
                     } break;
@@ -133,7 +133,7 @@ void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
                                         send_message_to_staff(server,
                                                               "Player %s (#%hhu) probably has hack to have more ammo",
                                                               player->name,
-                                                              player_id);
+                                                              player->id);
                                         return;
                                     } else if (player->weapon == 0 &&
                                                diff_is_older_then(timeNow,
@@ -143,7 +143,7 @@ void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
                                         send_message_to_staff(server,
                                                               "Player %s (#%hhu) probably has rapid shooting hack",
                                                               player->name,
-                                                              player_id);
+                                                              player->id);
                                         return;
                                     } else if (player->weapon == 1 &&
                                                diff_is_older_then(timeNow,
@@ -153,7 +153,7 @@ void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
                                         send_message_to_staff(server,
                                                               "Player %s (#%hhu) probably has rapid shooting hack",
                                                               player->name,
-                                                              player_id);
+                                                              player->id);
                                         return;
                                     } else if (player->weapon == 2 &&
                                                diff_is_older_then(timeNow,
@@ -163,7 +163,7 @@ void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
                                         send_message_to_staff(server,
                                                               "Player %s (#%hhu) probably has rapid shooting hack",
                                                               player->name,
-                                                              player_id);
+                                                              player->id);
                                         return;
                                     }
                                 }
@@ -181,7 +181,7 @@ void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
                                         player->blocks++;
                                     }
                                 }
-                                send_block_action(server, player_id, actionType, X, Y, Z);
+                                send_block_action(server, player, actionType, X, Y, Z);
                             }
                         }
                     } break;
@@ -211,7 +211,7 @@ void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
                                         }
                                     }
                                 }
-                                send_block_action(server, player_id, actionType, X, Y, Z);
+                                send_block_action(server, player, actionType, X, Y, Z);
                             }
                         }
                     } break;
@@ -221,7 +221,7 @@ void receive_block_action(server_t* server, uint8_t player_id, stream_t* data)
         } else {
             LOG_WARNING("Player %s (#%hhu) may be using BlockExploit with Item: %d and Action: %d",
                         player->name,
-                        player_id,
+                        player->id,
                         player->item,
                         actionType);
         }

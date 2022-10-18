@@ -1,3 +1,4 @@
+#include "Util/Uthash.h"
 #include <Server/IntelTent.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
@@ -7,7 +8,7 @@
 #include <Util/Nanos.h>
 #include <Util/Utlist.h>
 
-void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vector3i_t end)
+void send_block_line(server_t* server, player_t* player, vector3i_t start, vector3i_t end)
 {
     if (server->protocol.num_players == 0) {
         return;
@@ -15,7 +16,7 @@ void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vect
     ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_BLOCK_LINE);
-    stream_write_u8(&stream, player_id);
+    stream_write_u8(&stream, player->id);
     stream_write_u32(&stream, start.x);
     stream_write_u32(&stream, start.y);
     stream_write_u32(&stream, start.z);
@@ -23,9 +24,9 @@ void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vect
     stream_write_u32(&stream, end.y);
     stream_write_u32(&stream, end.z);
     uint8_t sent = 0;
-    for (int id = 0; id < server->protocol.max_players; ++id) {
-        player_t* player = &server->player[id];
-        if (is_past_state_data(server, id)) {
+    player_t *check, *tmp;
+    HASH_ITER(hh, server->players, check, tmp) {
+        if (is_past_state_data(check)) {
             if (enet_peer_send(player->peer, 0, packet) == 0) {
                 sent = 1;
             }
@@ -39,7 +40,7 @@ void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vect
             node->position_end.z = end.z;
             node->color          = player->color;
             node->type           = 10;
-            node->sender_id      = player_id;
+            node->sender_id      = player->id;
             LL_APPEND(player->blockBuffer, node);
         }
     }
@@ -48,7 +49,7 @@ void send_block_line(server_t* server, uint8_t player_id, vector3i_t start, vect
     }
 }
 
-void block_line_to_player(server_t* server, uint8_t player_id, uint8_t sendToID, vector3i_t start, vector3i_t end)
+void send_block_line_to_player(server_t* server, player_t* player, player_t* receiver, vector3i_t start, vector3i_t end)
 {
     if (server->protocol.num_players == 0) {
         return;
@@ -56,7 +57,7 @@ void block_line_to_player(server_t* server, uint8_t player_id, uint8_t sendToID,
     ENetPacket* packet = enet_packet_create(NULL, 26, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_BLOCK_LINE);
-    stream_write_u8(&stream, player_id);
+    stream_write_u8(&stream, player->id);
     stream_write_u32(&stream, start.x);
     stream_write_u32(&stream, start.y);
     stream_write_u32(&stream, start.z);
@@ -64,7 +65,7 @@ void block_line_to_player(server_t* server, uint8_t player_id, uint8_t sendToID,
     stream_write_u32(&stream, end.y);
     stream_write_u32(&stream, end.z);
     uint8_t sent = 0;
-    if (enet_peer_send(server->player[sendToID].peer, 0, packet) == 0) {
+    if (enet_peer_send(receiver->peer, 0, packet) == 0) {
         sent = 1;
     }
     if (sent == 0) {
@@ -72,14 +73,13 @@ void block_line_to_player(server_t* server, uint8_t player_id, uint8_t sendToID,
     }
 }
 
-void receive_block_line(server_t* server, uint8_t player_id, stream_t* data)
+void receive_block_line(server_t* server, player_t* player, stream_t* data)
 {
     uint8_t received_id = stream_read_u8(data);
-    if (player_id != received_id) {
-        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", player_id, received_id);
+    if (player->id != received_id) {
+        LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", player->id, received_id);
     }
     uint64_t  time_now = get_nanos();
-    player_t* player   = &server->player[player_id];
     if (player->blocks > 0 && player->can_build && server->global_ab && player->item == 1 &&
         diff_is_older_then(time_now, &player->timers.since_last_block_plac, BLOCK_DELAY) &&
         diff_is_older_then_dont_update(time_now, player->timers.since_last_block_dest, BLOCK_DELAY) &&
@@ -94,7 +94,6 @@ void receive_block_line(server_t* server, uint8_t player_id, stream_t* data)
         end.y   = stream_read_u32(data);
         end.z   = stream_read_u32(data);
 
-        player_t* player = &server->player[player_id];
         if (player->sprinting) {
             return;
         }
@@ -113,7 +112,7 @@ void receive_block_line(server_t* server, uint8_t player_id, stream_t* data)
                                  player->tool_color.raw);
             }
             moveIntelAndTentUp(server);
-            send_block_line(server, player_id, start, end);
+            send_block_line(server, player, start, end);
         }
     }
 }

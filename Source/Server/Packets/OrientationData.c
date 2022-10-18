@@ -3,15 +3,15 @@
 #include <Util/Physics.h>
 #include <math.h>
 
-void receive_orientation_data(server_t* server, uint8_t player_id, stream_t* data)
+void receive_orientation_data(server_t* server, player_t* player, stream_t* data)
 {
+    (void)server;
     float x, y, z;
     x                     = stream_read_f(data);
     y                     = stream_read_f(data);
     z                     = stream_read_f(data);
     float     length      = sqrt((x * x) + (y * y) + (z * z));
     float     norm_legnth = 1 / length;
-    player_t* player      = &server->player[player_id];
     // Normalize the vectors if their length > 1
     if (length > 1.f) {
         player->movement.forward_orientation.x = x * norm_legnth;
@@ -23,5 +23,5 @@ void receive_orientation_data(server_t* server, uint8_t player_id, stream_t* dat
         player->movement.forward_orientation.z = z;
     }
 
-    physics_reorient_player(server, player_id, &player->movement.forward_orientation);
+    physics_reorient_player(player, &player->movement.forward_orientation);
 }

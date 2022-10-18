@@ -2,13 +2,12 @@
 #include <Util/Compress.h>
 #include <Util/Log.h>
 
-void send_map_start(server_t* server, uint8_t player_id)
+void send_map_start(server_t* server, player_t* player)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
-    player_t* player = &server->player[player_id];
-    LOG_INFO("Sending map info to %s (#%hhu)", player->name, player_id);
+    LOG_INFO("Sending map info to %s (#%hhu)", player->name, player->id);
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_MAP_START);

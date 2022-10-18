@@ -7,8 +7,8 @@
 #include <Util/Utlist.h>
 
 inline uint8_t allow_shot(server_t*  server,
-                          uint8_t    player_id,
-                          uint8_t    player_hit_id,
+                          player_t*  player,
+                          player_t*  player_hit,
                           uint64_t   time_now,
                           float      distance,
                           long*      x,
@@ -19,9 +19,7 @@ inline uint8_t allow_shot(server_t*  server,
                           vector3f_t hit_pos,
                           vector3f_t shot_eye_pos)
 {
-    uint8_t   ret        = 0;
-    player_t* player     = &server->player[player_id];
-    player_t* player_hit = &server->player[player_hit_id];
+    uint8_t ret = 0;
     if (player->primary_fire &&
         ((player->item == 0 && diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
          (player->item == 2 && player->weapon == 0 &&
@@ -91,7 +89,6 @@ void free_all_packets(server_t* server)
 {
     packet_t* current_packet;
     packet_t* tmp;
-
     HASH_ITER(hh, server->packets, current_packet, tmp)
     {
         HASH_DEL(server->packets, current_packet);
@@ -99,7 +96,7 @@ void free_all_packets(server_t* server)
     }
 }
 
-void on_packet_received(server_t* server, uint8_t playerID, stream_t* data)
+void on_packet_received(server_t* server, player_t* player, stream_t* data)
 {
     uint8_t   type     = stream_read_u8(data);
     packet_t* packet_p = NULL;
@@ -109,5 +106,5 @@ void on_packet_received(server_t* server, uint8_t playerID, stream_t* data)
         LOG_WARNING("Unknown packet with ID %d received", type_int);
         return;
     }
-    packet_p->packet(server, playerID, data);
+    packet_p->packet(server, player, data);
 }
