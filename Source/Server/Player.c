@@ -75,7 +75,7 @@ uint8_t get_player_unstuck(server_t* server, player_t* player)
          z <= player->movement.prev_legit_pos.z + 1;
          z++)
     {
-        if (valid_pos_3f(server,
+        if (valid_player_pos(server,
                          player,
                          player->movement.prev_legit_pos.x,
                          player->movement.prev_legit_pos.y,
@@ -93,7 +93,7 @@ uint8_t get_player_unstuck(server_t* server, player_t* player)
                  y <= player->movement.prev_legit_pos.y + 1;
                  y++)
             {
-                if (valid_pos_3f(server, player, x, y, z)) {
+                if (valid_player_pos(server, player, x, y, z)) {
                     player->movement.prev_legit_pos.x = x;
                     player->movement.prev_legit_pos.y = y;
                     player->movement.prev_legit_pos.z = z;

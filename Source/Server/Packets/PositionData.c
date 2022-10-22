@@ -64,7 +64,7 @@ void receive_position_data(server_t* server, player_t* player, stream_t* data)
         player->invalidPosCount           = 0;
     }*/
 
-    if (valid_pos_3f(server, player, x, y, z)) {
+    if (valid_player_pos(server, player, x, y, z)) {
         player->movement.prev_legit_pos = player->movement.position;
     } /*else if (validPlayerPos(server,
                               player_id,

@@ -59,7 +59,18 @@ uint8_t valid_pos_3i(server_t* server, int x, int y, int z)
     }
 }
 
-uint8_t valid_pos_3f(server_t* server, player_t* player, float X, float Y, float Z)
+uint8_t valid_pos_3f(server_t* server, float x, float y, float z)
+{
+    if (x < server->s_map.map.size_x && x >= 0 && y < server->s_map.map.size_y && y >= 0 &&
+        z < server->s_map.map.size_z && z >= 0)
+    {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+uint8_t valid_player_pos(server_t* server, player_t* player, float X, float Y, float Z)
 {
     int x = (int) X;
     int y = (int) Y;

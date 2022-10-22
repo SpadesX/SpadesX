@@ -1,6 +1,7 @@
 #include "Util/Enums.h"
 #include "Util/Log.h"
 #include "Util/Uthash.h"
+
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Nodes.h>
@@ -269,7 +270,7 @@ void handle_grenade(server_t* server, player_t* player)
     grenade_t* tmp;
     if (player->state == STATE_DISCONNECTED) {
         grenade_t* elt;
-        uint32_t counter = 0;
+        uint32_t   counter = 0;
         DL_COUNT(player->grenade, elt, counter);
         if (counter == 0) {
             HASH_DELETE(hh, server->players, player);
@@ -293,7 +294,8 @@ void handle_grenade(server_t* server, player_t* player)
                     allowToDestroy = 1;
                 }
                 player_t *connected_player, *tmp;
-                HASH_ITER(hh, server->players, connected_player, tmp) {
+                HASH_ITER(hh, server->players, connected_player, tmp)
+                {
                     if (connected_player->state == STATE_READY) {
                         uint8_t value = get_grenade_damage(server, connected_player, grenade);
                         if (value > 0) {
@@ -310,16 +312,18 @@ void handle_grenade(server_t* server, player_t* player)
                         (y >= 0 && y <= server->s_map.map.size_y && y - 1 >= 0 && y - 1 <= server->s_map.map.size_y &&
                          y + 1 >= 0 && y + 1 <= server->s_map.map.size_y))
                     {
-                        if (allowToDestroy) {
-                            mapvxl_set_air(&server->s_map.map, x - 1, y - 1, z);
-                            mapvxl_set_air(&server->s_map.map, x, y - 1, z);
-                            mapvxl_set_air(&server->s_map.map, x + 1, y - 1, z);
-                            mapvxl_set_air(&server->s_map.map, x - 1, y, z);
-                            mapvxl_set_air(&server->s_map.map, x, y, z);
-                            mapvxl_set_air(&server->s_map.map, x + 1, y, z);
-                            mapvxl_set_air(&server->s_map.map, x - 1, y + 1, z);
-                            mapvxl_set_air(&server->s_map.map, x, y + 1, z);
-                            mapvxl_set_air(&server->s_map.map, x + 1, y + 1, z);
+                        if (allowToDestroy && (z >= 0 && z < server->s_map.map.size_z)) {
+                            // This is cause casting float to int produces an edge case where
+                            // float < 0 rounds to value closer to 0. Which for -0.(>0) is bad
+                            int x_rounded = floorf(x - 1);
+                            int y_rounded = floorf(y - 1);
+                            for (int X = x_rounded; X < x_rounded + 3; ++X) {
+                                for (int Y = y_rounded; Y < y_rounded + 3; ++Y)
+                                { // I hate nested loops as any other C dev but here they do not cost that much perf
+                                    if (valid_pos_3f(server, X, Y, z))
+                                        mapvxl_set_air(&server->s_map.map, X, Y, z);
+                                }
+                            }
                         }
                         vector3i_t pos;
                         pos.x = grenade->position.x;
