@@ -1,6 +1,10 @@
-<img align="right" width="300" height="300" src="docs/SpadesX-Logo.png">
-
 # SpadesX
+[![Build Status](
+https://github.com/SpadesX/SpadesX/actions/workflows/cmake.yml/badge.svg)
+](https://github.com/SpadesX/SpadesX/actions/workflows/cmake.yml)
+
+[SpadesX Logo](docs/SpadesX-Logo.png)(https://spadesx.org)
+
 SpadesX is a C implementation for an Ace of Spades server that supports the protocol 0.75.
 
 C was chosen because of its speed and the need for low latency in FPS games when modding the server as well as when scaling up.
@@ -53,3 +57,4 @@ Check the [Contributor List](CONTRIBUTORS.md) for a list of the people that help
 [GNU General Public License v3.0](LICENSE)
 
 [discord]: https://discord.gg/dsRjTzJpZC
+[build]: https://github.com/SpadesX/SpadesX/actions/workflows/cmake.yml
