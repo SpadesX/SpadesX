@@ -3,7 +3,7 @@
 https://github.com/SpadesX/SpadesX/actions/workflows/cmake.yml/badge.svg)
 ](https://github.com/SpadesX/SpadesX/actions/workflows/cmake.yml)
 
-[SpadesX Logo](docs/SpadesX-Logo.png)(https://spadesx.org)
+<img align="top" width="110" height="110" src="docs/SpadesX-Logo.png">
 
 SpadesX is a C implementation for an Ace of Spades server that supports the protocol 0.75.
 
