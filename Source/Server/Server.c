@@ -15,6 +15,7 @@
 #include <Server/Structs/ServerStruct.h>
 #include <Server/Structs/StartStruct.h>
 #include <Util/Checks/PlayerChecks.h>
+#include <Util/Checks/PositionChecks.h>
 #include <Util/Compress.h>
 #include <Util/DataStream.h>
 #include <Util/Enums.h>
@@ -143,6 +144,17 @@ static void _server_init(server_t*   server,
         return;
     }
 
+    vector3i_t team1_start_range = {team1_start[0], team1_start[1], 1};
+    vector3i_t team1_end_range   = {team1_end[0], team1_end[1], 1};
+    vector3i_t team2_start_range = {team2_start[0], team2_start[1], 1};
+    vector3i_t team2_end_range   = {team2_end[0], team2_end[1], 1};
+    if (valid_pos_v3i(server, team1_start_range) == 0 || valid_pos_v3i(server, team2_start_range) == 0 ||
+        valid_pos_v3i(server, team1_end_range) == 0 || valid_pos_v3i(server, team2_end_range) == 0)
+    {
+        LOG_ERROR("Map spawn ranges are outside of map limits");
+        exit(EXIT_FAILURE);
+    }
+
     if (reset) {
         vector3f_t empty   = {0, 0, 0};
         vector3f_t forward = {1, 0, 0};
@@ -206,13 +218,12 @@ void server_reset(server_t* server)
 static void* _world_update(void)
 {
     player_t *player, *tmp;
-    HASH_ITER(hh, server.players, player, tmp) {
+    HASH_ITER(hh, server.players, player, tmp)
+    {
         on_player_update(&server, player);
         if (is_past_join_screen(player)) {
             uint64_t time = get_nanos();
-            if (time - player->timers.time_since_last_wu >=
-                (uint64_t) (NANO_IN_SECOND / player->ups))
-            {
+            if (time - player->timers.time_since_last_wu >= (uint64_t) (NANO_IN_SECOND / player->ups)) {
                 send_world_update(&server, player);
                 player->timers.time_since_last_wu = get_nanos();
             }
@@ -237,7 +248,7 @@ static void _server_update(server_t* server, int timeout)
             case ENET_EVENT_TYPE_DISCONNECT:
                 player_id = (uint8_t) ((size_t) event.peer->data);
                 if (player_id != server->protocol.max_players - 1) {
-                    player_t *player;
+                    player_t* player;
                     HASH_FIND(hh, server->players, &player_id, sizeof(player_id), player);
                     if (player == NULL) {
                         LOG_ERROR("Server tried to disconnect non existent player!");
@@ -256,7 +267,7 @@ static void _server_update(server_t* server, int timeout)
                         master_update(server);
                     }
                     grenade_t* elt;
-                    uint32_t counter = 0;
+                    uint32_t   counter = 0;
                     DL_COUNT(player->grenade, elt, counter);
                     if (counter == 0) {
                         HASH_DEL(server->players, player);
@@ -267,7 +278,7 @@ static void _server_update(server_t* server, int timeout)
             case ENET_EVENT_TYPE_RECEIVE:
             {
                 stream_t stream = {event.packet->data, event.packet->dataLength, 0};
-                player_id = ((size_t)event.peer->data) & 0xFF;
+                player_id       = ((size_t) event.peer->data) & 0xFF;
                 player_t* player;
                 HASH_FIND(hh, server->players, &player_id, sizeof(player_id), player);
                 if (player == NULL) {
