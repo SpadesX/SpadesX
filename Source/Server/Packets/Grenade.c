@@ -74,13 +74,8 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
             velocity.y       = ((velocity.y * lenghtNorm) * 2) + player->movement.velocity.y;
             velocity.z       = ((velocity.z * lenghtNorm) * 2) + player->movement.velocity.z;
         }
-        vector3f_t posZ1 = grenade->position;
-        posZ1.z += 1;
-        vector3f_t posZ2 = grenade->position;
-        posZ2.z += 2;
         if (valid_pos_v3f(server, grenade->position) ||
-            (valid_pos_v3f(server, posZ1) && player->movement.position.z < 0) ||
-            (valid_pos_v3f(server, posZ2) && player->movement.position.z < 0))
+            (valid_pos_v3f_below_z(server, grenade->position) && player->movement.position.z < 0))
         {
             send_grenade(server, player, grenade->fuse, grenade->position, grenade->velocity);
             grenade->sent            = 1;

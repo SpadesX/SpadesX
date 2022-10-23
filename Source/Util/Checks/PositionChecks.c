@@ -48,6 +48,18 @@ uint8_t valid_pos_v3f(server_t* server, vector3f_t pos)
         return 0;
     }
 }
+
+uint8_t valid_pos_v3f_below_z(server_t* server, vector3f_t pos)
+{
+    if (pos.x < server->s_map.map.size_x && pos.x >= 0 && pos.y < server->s_map.map.size_y && pos.y >= 0 &&
+        pos.z < server->s_map.map.size_z && pos.z >= -4)
+    {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 uint8_t valid_pos_3i(server_t* server, int x, int y, int z)
 {
     if (x < server->s_map.map.size_x && x >= 0 && y < server->s_map.map.size_y && y >= 0 &&
