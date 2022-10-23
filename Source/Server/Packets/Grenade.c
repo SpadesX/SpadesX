@@ -88,5 +88,7 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
         }
         DL_APPEND(player->grenade, grenade);
         player->grenades--;
+    } else {
+        free(grenade);
     }
 }
