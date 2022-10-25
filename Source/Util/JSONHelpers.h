@@ -18,7 +18,7 @@
 #define READ_INT_FROM_JSON(pj, var, jsonvar, description, fallback, optional) \
     READ_VAR_FROM_JSON(int, "%i", pj, var, jsonvar, description, fallback, optional)
 #define READ_DOUBLE_FROM_JSON(pj, var, jsonvar, description, fallback, optional) \
-    READ_VAR_FROM_JSON(int, "%lf", pj, var, jsonvar, description, fallback, optional)
+    READ_VAR_FROM_JSON(double, "%lf", pj, var, jsonvar, description, fallback, optional)
 #define READ_STR_FROM_JSON(pj, var, jsonvar, description, fallback, optional) \
     READ_VAR_FROM_JSON(string, "\"%s\"", pj, var, jsonvar, description, fallback, optional)
 
