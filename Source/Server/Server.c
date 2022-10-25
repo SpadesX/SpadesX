@@ -127,6 +127,7 @@ static void _server_init(server_t*   server,
     int         team2_start[2];
     int         team1_end[2];
     int         team2_end[2];
+    int         fog_color[3];
     int         map_size[3];
     const char* author;
 
@@ -134,6 +135,7 @@ static void _server_init(server_t*   server,
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1_end, team1_end, "team1 end", ((int[]){10, 10}), 2, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, team2_start, team2_start, "team2 start", ((int[]){20, 20}), 2, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, team2_end, team2_end, "team2 end", ((int[]){30, 30}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, fog_color, fog_color, "fog_color", ((int[]){128, 232, 255}), 3, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, map_size, map_size, "map_size", ((int[]){512, 512, 64}), 3, 1)
     READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
     (void) author;
@@ -180,9 +182,9 @@ static void _server_init(server_t*   server,
     server->protocol.spawns[1].to.x   = team2_end[0];
     server->protocol.spawns[1].to.y   = team2_end[1];
 
-    server->protocol.color_fog.r = 0x80;
-    server->protocol.color_fog.g = 0xE8;
-    server->protocol.color_fog.b = 0xFF;
+    server->protocol.color_fog.r = fog_color[0];
+    server->protocol.color_fog.g = fog_color[1];
+    server->protocol.color_fog.b = fog_color[2];
 
     server->protocol.color_team[0].b = team1_color[B_CHANNEL];
     server->protocol.color_team[0].g = team1_color[G_CHANNEL];
