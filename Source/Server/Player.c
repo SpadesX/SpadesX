@@ -345,7 +345,7 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
                 uint64_t    timeNow = get_nanos();
                 READ_STR_FROM_JSON(object_at_index, name_of_player, Name, "Name", "Deuce", 0);
                 READ_STR_FROM_JSON(object_at_index, reason, Reason, "Reason", "None", 0);
-                READ_DOUBLE_FROM_JSON(object_at_index, time, Time, "Time", 0.0f, 0);
+                READ_DOUBLE_FROM_JSON(object_at_index, time, Time, "Time", 0.0, 0);
                 if (((long double) timeNow / NANO_IN_MINUTE) > time && time != 0) {
                     json_object_array_del_idx(array, i, 1);
                     json_object_to_file("Bans.json", root);
