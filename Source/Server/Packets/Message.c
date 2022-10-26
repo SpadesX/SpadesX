@@ -8,6 +8,8 @@
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
+#include <ctype.h>
+#include <string.h>
 
 void receive_handle_send_message(server_t* server, player_t* player, stream_t* data)
 {
@@ -15,7 +17,6 @@ void receive_handle_send_message(server_t* server, player_t* player, stream_t* d
         return;
     }
     uint32_t packet_size = data->length;
-    LOG_STATUS("%d %d", packet_size, data->length);
     uint8_t  received_id = stream_read_u8(data);
     int      meant_for   = stream_read_u8(data);
     uint32_t length      = stream_left(data);
@@ -61,6 +62,14 @@ void receive_handle_send_message(server_t* server, player_t* player, stream_t* d
     {
         send_server_notice(player, 0, "WARNING: You sent last message too fast and thus was not sent out to players");
         return;
+    }
+
+    for (unsigned long index = 0; index < strlen(message); ++index) {
+        if (isgraph(message[index]) == 0 && message[index] != ' ' && message[index] > '\b') {
+            send_server_notice(player, 0, "WARNING: The message you sent contained unreadable characters and thus was ignored");
+            LOG_WARNING("Player %s (#%hhu) tried to send message containing unreadable character. Message ignored", player->name, player->id);
+            return;
+        }
     }
 
     char meantFor[7];
