@@ -62,71 +62,63 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
         length = 16;
     } else {
         player->name[length] = '\0';
-        stream_read_array(data, player->name, length);
+    }
+    stream_read_array(data, player->name, length);
 
-        if (strlen(player->name) == 0) {
+    if (strlen(player->name) == 0) {
+        snprintf(player->name, strlen("Deuce") + 1, "Deuce");
+        invName = 1;
+    } else if (player->name[0] == '#') {
+        snprintf(player->name, strlen("Deuce") + 1, "Deuce");
+        invName = 1;
+    }
+
+    char* lowerCaseName = malloc((strlen(player->name) + 1) * sizeof(char));
+    snprintf(lowerCaseName, strlen(player->name), "%s", player->name);
+
+    for (uint32_t i = 0; i < strlen(player->name); ++i)
+        lowerCaseName[i] = tolower(lowerCaseName[i]);
+
+    char* unwantedNames[] = {"igger", "1gger", "igg3r", "1gg3r", NULL};
+
+    for (unsigned long index = 0; index < strlen(lowerCaseName); ++index) {
+        if (isgraph(lowerCaseName[index]) == 0 && lowerCaseName[index] != ' ' && lowerCaseName[index] != '\0') {
             snprintf(player->name, strlen("Deuce") + 1, "Deuce");
-            length  = 5;
             invName = 1;
-        } else if (player->name[0] == '#') {
-            snprintf(player->name, strlen("Deuce") + 1, "Deuce");
-            length  = 5;
-            invName = 1;
-        }
-
-        char* lowerCaseName = malloc((strlen(player->name) + 1) * sizeof(char));
-        snprintf(lowerCaseName, strlen(player->name), "%s", player->name);
-
-        for (uint32_t i = 0; i < strlen(player->name); ++i)
-            lowerCaseName[i] = tolower(lowerCaseName[i]);
-
-        char* unwantedNames[] = {"igger", "1gger", "igg3r", "1gg3r", NULL};
-
-        uint8_t bad_char = 0;
-
-        for (unsigned long index = 0; index < strlen(lowerCaseName); ++index) {
-            if (isgraph(lowerCaseName[index]) == 0 && lowerCaseName[index] != ' ' && lowerCaseName[index] != '\0') {
-                player->name[index] = '.';
-                bad_char = 1;
-            }
-        }
-
-        if (bad_char) {
-            LOG_WARNING("Player with ID #%hhu name contained unreadable character and has been replaced with .");
-        }
-
-        int index = 0;
-
-        while (unwantedNames[index] != NULL) {
-            if (strstr(lowerCaseName, unwantedNames[index]) != NULL &&
-                strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
-            {
-                snprintf(player->name, strlen("Deuce") + 1, "Deuce");
-                length  = 5;
-                invName = 1;
-                free(lowerCaseName);
-                return;
-            }
-            index++;
-        }
-
-        free(lowerCaseName);
-        int       count = 0;
-        player_t *connected_player, *tmp;
-        HASH_ITER(hh, server->players, connected_player, tmp)
-        {
-            if (is_past_join_screen(connected_player) && connected_player->id != player->id) {
-                if (strcmp(player->name, connected_player->name) == 0) {
-                    count++;
-                }
-            }
-        }
-        if (count > 0) {
-            char idChar[4];
-            snprintf(idChar, 4, "%d", player->id);
-            strlcat(player->name, idChar, 17);
         }
     }
+
+    int index = 0;
+
+    while (unwantedNames[index] != NULL) {
+        if (strstr(lowerCaseName, unwantedNames[index]) != NULL &&
+            strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
+        {
+            snprintf(player->name, strlen("Deuce") + 1, "Deuce");
+            invName = 1;
+            free(lowerCaseName);
+            return;
+        }
+        index++;
+    }
+
+    free(lowerCaseName);
+    int       count = 0;
+    player_t *connected_player, *tmp;
+    HASH_ITER(hh, server->players, connected_player, tmp)
+    {
+        if (is_past_join_screen(connected_player) && connected_player->id != player->id) {
+            if (strcmp(player->name, connected_player->name) == 0) {
+                count++;
+            }
+        }
+    }
+    if (count > 0) {
+        char idChar[4];
+        snprintf(idChar, 4, "%d", player->id);
+        strlcat(player->name, idChar, 17);
+    }
+
     switch (player->weapon) {
         case 0:
             player->weapon_reserve  = 50;
@@ -163,7 +155,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
             send_server_notice(
             player,
             0,
-            "Your name was either empty, had # in front of it or contained something nasty. Your name "
+            "Your name was either empty, had # in front of it, had unreadable character in it or contained something nasty. Your name "
             "has been set to %s",
             player->name);
         }
