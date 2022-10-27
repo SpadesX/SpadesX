@@ -82,6 +82,19 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 
         char* unwantedNames[] = {"igger", "1gger", "igg3r", "1gg3r", NULL};
 
+        uint8_t bad_char = 0;
+
+        for (unsigned long index = 0; index < strlen(lowerCaseName); ++index) {
+            if (isgraph(lowerCaseName[index]) == 0 && lowerCaseName[index] != ' ' && lowerCaseName[index] != '\0') {
+                player->name[index] = '.';
+                bad_char = 1;
+            }
+        }
+
+        if (bad_char) {
+            LOG_WARNING("Player with ID #%hhu name contained unreadable character and has been replaced with .");
+        }
+
         int index = 0;
 
         while (unwantedNames[index] != NULL) {
