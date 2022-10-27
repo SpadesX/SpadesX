@@ -1,6 +1,9 @@
+#include "Util/Types.h"
+
 #include <Server/ParseConvert.h>
 #include <Server/Structs/ServerStruct.h>
 #include <inttypes.h>
+#include <math.h>
 #include <stdio.h>
 
 void copyBits(uint32_t* dst, uint32_t src, uint32_t endPos, uint32_t startPos)
@@ -16,6 +19,13 @@ void copyBits(uint32_t* dst, uint32_t src, uint32_t endPos, uint32_t startPos)
     *dst     = *dst & zeroMask;
     src      = src & onesMask;
     *dst     = *dst | src;
+}
+
+vector3i_t vec3f_to_vec3i(vector3f_t float_vec)
+{
+    // We cannot just type cast them as that does weird things between -1 to 0
+    vector3i_t int_vec = {floor(float_vec.x), floor(float_vec.y), floor(float_vec.z)};
+    return int_vec;
 }
 
 void swapIPStruct(ip_t* ip)

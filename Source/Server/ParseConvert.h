@@ -10,6 +10,7 @@
     (parse_float(argument.argv[offset], dst.x, NULL) && parse_float(argument.argv[offset + 1], dst.y, NULL) && \
      parse_float(argument.argv[offset + 2], dst.z, NULL))
 
+vector3i_t vec3f_to_vec3i(vector3f_t float_vec);
 uint8_t format_str_to_ip(char* src, ip_t* dst);
 void    format_ip_to_str(char* dst, ip_t src);
 void    team_id_to_str(server_t* server, char* dst, int team);

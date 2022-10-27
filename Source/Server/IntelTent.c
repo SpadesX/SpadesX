@@ -1,7 +1,11 @@
+#include "Server/ParseConvert.h"
 #include "Server/Structs/PlayerStruct.h"
+#include "Util/Log.h"
+#include "Util/Types.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Server/Structs/ServerStruct.h>
+#include <math.h>
 #include <time.h>
 
 uint8_t check_under_tent(server_t* server, uint8_t team)
@@ -153,12 +157,14 @@ uint8_t check_player_on_intel(server_t* server, player_t* player, uint8_t team)
     if (player->alive == 0) {
         return ret;
     }
-    vector3f_t playerPos = player->movement.position;
-    vector3f_t intelPos  = server->protocol.gamemode.intel[team];
-    if ((int) playerPos.y == (int) intelPos.y &&
-        ((int) playerPos.z + 3 == (int) intelPos.z ||
-         ((player->crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) intelPos.z)) &&
-        (int) playerPos.x == (int) intelPos.x)
+    vector3f_t player_pos     = player->movement.position;
+    vector3f_t intel_pos      = server->protocol.gamemode.intel[team];
+    vector3i_t player_pos_int = vec3f_to_vec3i(player_pos);
+    vector3i_t intel_pos_int  = vec3f_to_vec3i(intel_pos);
+    if (player_pos_int.y == intel_pos_int.y &&
+        (player_pos_int.z + 3 == intel_pos_int.z ||
+         (player_pos_int.z == server->s_map.map.size_z - 3 && player_pos_int.z + 2 == intel_pos_int.z)) &&
+        player_pos_int.x == intel_pos_int.x)
     {
         ret = 1;
     }
@@ -231,14 +237,10 @@ void handleTentAndIntel(server_t* server, player_t* player)
                 player->timers.since_last_base_enter_restock = time(NULL);
             }
         } else if (player->has_intel) {
-            if (check_player_in_tent(server, player) &&
-                timeNow - player->timers.since_last_base_enter >= 5)
-            {
+            if (check_player_in_tent(server, player) && timeNow - player->timers.since_last_base_enter >= 5) {
                 server->protocol.gamemode.score[player->team]++;
                 uint8_t winning = 0;
-                if (server->protocol.gamemode.score[player->team] >=
-                    server->protocol.gamemode.score_limit)
-                {
+                if (server->protocol.gamemode.score[player->team] >= server->protocol.gamemode.score_limit) {
                     winning = 1;
                 }
                 send_intel_capture(server, player, winning);
@@ -270,7 +272,8 @@ void handleTentAndIntel(server_t* server, player_t* player)
                 }
                 if (winning) {
                     player_t *connected_player, *tmp;
-                    HASH_ITER(hh, server->players, connected_player, tmp) {
+                    HASH_ITER(hh, server->players, connected_player, tmp)
+                    {
                         if (connected_player->state != STATE_DISCONNECTED) {
                             connected_player->state = STATE_STARTING_MAP;
                         }
