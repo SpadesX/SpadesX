@@ -69,7 +69,7 @@ static void _string_nodes_free(string_node_t* root)
 static void* _calculate_physics(void)
 {
     server.global_timers.update_time = get_nanos();
-    if (server.global_timers.update_time - server.global_timers.last_update_time >= (1000000000 / 60)) {
+    if (server.global_timers.update_time - server.global_timers.last_update_time >= (NANO_60TPS)) {
         update_movement_and_grenades(&server);
         server.global_timers.last_update_time = get_nanos();
     }
