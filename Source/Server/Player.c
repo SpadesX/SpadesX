@@ -418,7 +418,8 @@ void for_players(server_t* server)
                         }
                     }
                     if (diff_is_older_then(
-                        timeNow, &player->timers.since_last_weapon_input, NANO_IN_MILLI * milliseconds)) {
+                        timeNow, &player->timers.since_last_weapon_input, NANO_IN_MILLI * milliseconds))
+                    {
                         player->weapon_clip--;
                     }
                 }
@@ -428,7 +429,8 @@ void for_players(server_t* server)
                     case WEAPON_SMG:
                     {
                         if (diff_is_older_then(
-                            timeNow, &player->timers.since_reload_start, NANO_IN_MILLI * (uint64_t) 2500)) {
+                            timeNow, &player->timers.since_reload_start, NANO_IN_MILLI * (uint64_t) 2500))
+                        {
                             uint8_t defaultAmmo = RIFLE_DEFAULT_CLIP;
                             if (player->weapon == WEAPON_SMG) {
                                 defaultAmmo = SMG_DEFAULT_CLIP;
@@ -444,7 +446,8 @@ void for_players(server_t* server)
                     case WEAPON_SHOTGUN:
                     {
                         if (diff_is_older_then(
-                            timeNow, &player->timers.since_reload_start, NANO_IN_MILLI * (uint64_t) 500)) {
+                            timeNow, &player->timers.since_reload_start, NANO_IN_MILLI * (uint64_t) 500))
+                        {
                             if (player->weapon_reserve == 0 || player->weapon_clip == SHOTGUN_DEFAULT_CLIP) {
                                 player->reloading = 0;
                                 break;
@@ -495,7 +498,8 @@ void for_players(server_t* server)
                 LL_DELETE(player->blockBuffer, node);
                 free(node);
             }
-        } else if (player->state == STATE_READY) {
+        }
+        if (player->state == STATE_READY) {
             uint64_t time_now = get_nanos();
             if (diff_is_older_then(time_now, &player->timers.since_last_intel_tent_check, NANO_IN_SECOND) &&
                 server->protocol.current_gamemode != GAME_MODE_ARENA)
