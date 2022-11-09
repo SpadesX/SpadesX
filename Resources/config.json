@@ -13,10 +13,6 @@
 	"team1_color": [255, 0, 0],
 	"team2_color": [0, 0, 255],
 	"gamemode": 0,
-	"capture-limits": {
-		"default": 10,
-		"Border_Hallway": 10
-	},
 	"welcome_messages": [
 		"We stand with Ukraine. Please take a minute and go check out https://helpukrainewin.org",
 		"If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8",
