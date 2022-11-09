@@ -22,5 +22,5 @@
 	],
 	"author": "F176",
 	"description": "A border control with it's sole purpose to allow access beetwen nations to distribuite resources and act as checkpoint, this version made of reinforced concrete and elastic joints capable to absorb vibrations, earthquakes to ensure safety in a terrain otherwise hostile. Part of SpadesX entry maps for hallway",
-	"capture-limit": 10
+	"capture_limit": 10
 }
