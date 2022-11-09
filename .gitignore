@@ -10,5 +10,6 @@
 
 .cache
 .vscode
+.vs
 workspace.code-workspace
 compile_commands.json
