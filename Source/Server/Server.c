@@ -273,6 +273,7 @@ static void _server_update(server_t* server, int timeout)
                     DL_COUNT(player->grenade, elt, counter);
                     if (counter == 0) {
                         HASH_DEL(server->players, player);
+                        HASH_SORT(server->players, player_sort);
                         free(player);
                     }
                 }

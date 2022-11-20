@@ -40,6 +40,19 @@ static uint8_t _on_connect(server_t* server)
     return player_id;
 }
 
+int player_sort(player_t* a, player_t* b)
+{
+    if(a->id < b->id) {
+        return -1;
+    }
+
+    if(a->id > b->id) {
+        return 1;
+    }
+
+    return 0;
+}
+
 void free_all_players(server_t* server)
 {
     player_t *player, *tmp;
@@ -388,6 +401,7 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
     player->periodic_delay_index          = 0;
     player->state                         = STATE_STARTING_MAP;
     HASH_ADD(hh, server->players, id, sizeof(uint8_t), player);
+    HASH_SORT(server->players, player_sort);
 }
 
 void for_players(server_t* server)
