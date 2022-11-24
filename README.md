@@ -26,13 +26,13 @@ Be sure to install the development versions of those:
 Ubuntu 20.04 doesnt have the latest version of json-c and since SpadesX uses some functions that are in later releases you either have to build it on your own or update to 21.04+
 
 > git clone https://github.com/SpadesX/SpadesX
-
+>
 > cd SpadesX
-
+>
 > mkdir build && cd build
- 
+>
 > cmake ..
- 
+>
 > make -jX (Replace X with number of threads you have on your system)
 
 ##### Windows
