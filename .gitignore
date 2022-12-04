@@ -3,6 +3,7 @@
 #
 
 [Bb]uild
+cmake-build-debug/
 
 #
 # Editor
@@ -12,3 +13,4 @@
 .vscode
 workspace.code-workspace
 compile_commands.json
+.idea
