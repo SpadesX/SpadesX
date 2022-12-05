@@ -7,3 +7,6 @@
 [submodule "Extern/libmapvxl"]
 	path = Extern/libmapvxl
 	url = https://github.com/SpadesX/libmapvxl.git
+[submodule "Extern/Maps"]
+	path = Extern/Maps
+	url = https://github.com/SpadesX/Maps.git
