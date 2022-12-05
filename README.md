@@ -1,4 +1,13 @@
+## DEVELOP BRANCH
+### DO NOT USE THIS BRANCH UNLESS YOU ARE A DEVELOPER OR A TESTER!!!
+
+This branch contains untested or outright not buildable source and it is not recommended
+to use this branch on public server as it is nearly sure to contain bugs.
+
+It's use is to provide public with slight sense of what may be in development and to provide developers an branch to push their work and for testers to test it out before it
+hits master(The stablish branch).
 # SpadesX
+This branch
 [![Build Status](
 https://github.com/SpadesX/SpadesX/actions/workflows/cmake.yml/badge.svg)
 ](https://github.com/SpadesX/SpadesX/actions/workflows/cmake.yml)
