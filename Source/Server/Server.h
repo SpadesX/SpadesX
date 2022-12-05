@@ -14,13 +14,10 @@
 #include <Util/Types.h>
 #include <enet/enet.h>
 #include <libmapvxl/libmapvxl.h>
-#include <pthread.h>
 
 #ifndef DEFAULT_SERVER_PORT
     #define DEFAULT_SERVER_PORT 32887
 #endif
-
-extern pthread_mutex_t server_lock;
 
 server_t* get_server(void);
 

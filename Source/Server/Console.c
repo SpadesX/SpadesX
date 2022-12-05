@@ -39,10 +39,10 @@ void* server_console(void* arg)
             ctrlc = 0;
         } else if (strlen(buf) > 0) {
             add_history(buf);
-            pthread_mutex_lock(&server_lock);
+            pthread_mutex_lock(&server->mutex.global_server);
             player_t* player = NULL;
             command_handle(server, player, buf, 1);
-            pthread_mutex_unlock(&server_lock);
+            pthread_mutex_unlock(&server->mutex.global_server);
         }
         free(buf);
     }

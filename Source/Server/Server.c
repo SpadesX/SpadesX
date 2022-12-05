@@ -48,7 +48,6 @@
 #include <unistd.h>
 
 server_t        server;
-pthread_mutex_t server_lock;
 
 server_t* get_server(void)
 {
@@ -313,7 +312,7 @@ void server_start(server_args args)
     }
     atexit(enet_deinitialize);
 
-    if (pthread_mutex_init(&server_lock, NULL) != 0) {
+    if (pthread_mutex_init(&server.mutex.global_server, NULL) != 0) {
         LOG_ERROR("Server mutex failed to initialize");
         exit(EXIT_FAILURE);
     }
@@ -388,12 +387,12 @@ void server_start(server_args args)
     signal(SIGINT, readline_new_line);
 
     while (server.running) {
-        pthread_mutex_lock(&server_lock);
+        pthread_mutex_lock(&server.mutex.global_server);
         _calculate_physics();
         _server_update(&server, 0);
         _world_update();
         for_players(&server);
-        pthread_mutex_unlock(&server_lock);
+        pthread_mutex_unlock(&server.mutex.global_server);
         sleep(0);
     }
     while (server.s_map.compressed_map) {
@@ -411,7 +410,7 @@ void server_start(server_args args)
 
     mapvxl_free(&server.s_map.map);
 
-    pthread_mutex_destroy(&server_lock);
+    pthread_mutex_destroy(&server.mutex.global_server);
 
     printf("\n");
     LOG_STATUS("Exiting");

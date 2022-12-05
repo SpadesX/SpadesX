@@ -2,6 +2,7 @@
 #define SERVERSTRUCT_H
 
 #include <Server/Structs/MasterStruct.h>
+#include <Server/Structs/MutexStruct.h>
 #include <Server/Structs/PacketStruct.h>
 #include <Server/Structs/PlayerStruct.h>
 #include <Server/Structs/ProtocolStruct.h>
@@ -12,6 +13,7 @@
 typedef struct server
 {
     ENetHost*             host;
+    server_mutex_t        mutex;
     player_t*             players;
     protocol_t            protocol;
     master_t              master;
