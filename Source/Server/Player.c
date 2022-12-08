@@ -20,6 +20,7 @@
 #include <enet/enet.h>
 #include <json-c/json_util.h>
 #include <math.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -42,11 +43,11 @@ static uint8_t _on_connect(server_t* server)
 
 int player_sort(player_t* a, player_t* b)
 {
-    if(a->id < b->id) {
+    if (a->id < b->id) {
         return -1;
     }
 
-    if(a->id > b->id) {
+    if (a->id > b->id) {
         return 1;
     }
 
@@ -67,12 +68,14 @@ void update_movement_and_grenades(server_t* server)
 {
     physics_set_globals((server->global_timers.update_time - server->global_timers.time_since_start) / 1000000000.f,
                         (server->global_timers.update_time - server->global_timers.last_update_time) / 1000000000.f);
+    pthread_mutex_lock(&server->mutex.physics);
     player_t *player, *tmp;
     HASH_ITER(hh, server->players, player, tmp)
     {
         if (player->state == STATE_READY) {
             long falldamage = 0;
-            falldamage      = physics_move_player(server, player);
+            falldamage = physics_move_player(server, player);
+
             if (falldamage > 0) {
                 vector3f_t zero = {0, 0, 0};
                 send_set_hp(server, player, player, falldamage, 0, 4, 5, 0, zero);
@@ -80,6 +83,7 @@ void update_movement_and_grenades(server_t* server)
         }
         handle_grenade(server, player);
     }
+    pthread_mutex_unlock(&server->mutex.physics);
 }
 
 uint8_t get_player_unstuck(server_t* server, player_t* player)

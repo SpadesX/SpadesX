@@ -47,7 +47,7 @@
 #include <time.h>
 #include <unistd.h>
 
-server_t        server;
+server_t server;
 
 server_t* get_server(void)
 {
@@ -65,14 +65,18 @@ static void _string_nodes_free(string_node_t* root)
     }
 }
 
-static void* _calculate_physics(void)
+static void* _calculate_physics(void* arg)
 {
-    server.global_timers.update_time = get_nanos();
-    if (server.global_timers.update_time - server.global_timers.last_update_time >= (NANO_60TPS)) {
-        update_movement_and_grenades(&server);
-        server.global_timers.last_update_time = get_nanos();
+    (void) arg;
+    while (1) {
+        server.global_timers.update_time = get_nanos();
+        if (server.global_timers.update_time - server.global_timers.last_update_time >= (NANO_60TPS)) {
+            update_movement_and_grenades(&server);
+            server.global_timers.last_update_time = get_nanos();
+        }
+        sleep(0);
     }
-    return 0;
+    return NULL;
 }
 
 static void _server_init(server_t*   server,
@@ -375,9 +379,13 @@ void server_start(server_args args)
     }
     server.master.time_since_last_send = time(NULL);
 
-    pthread_t masterThread;
-    pthread_create(&masterThread, NULL, master_keep_alive, (void*) &server);
-    pthread_detach(masterThread);
+    pthread_t master_thread;
+    pthread_create(&master_thread, NULL, master_keep_alive, (void*) &server);
+    pthread_detach(master_thread);
+
+    pthread_t physics_thread;
+    pthread_create(&physics_thread, NULL, _calculate_physics, NULL);
+    pthread_detach(physics_thread);
 
     rl_catch_signals = 0;
     pthread_t console;
@@ -388,7 +396,6 @@ void server_start(server_args args)
 
     while (server.running) {
         pthread_mutex_lock(&server.mutex.global_server);
-        _calculate_physics();
         _server_update(&server, 0);
         _world_update();
         for_players(&server);
