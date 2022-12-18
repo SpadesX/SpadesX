@@ -3,6 +3,7 @@
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Log.h>
+#include <pthread.h>
 
 void send_create_player(server_t* server, player_t* receiver, player_t* child)
 {
@@ -33,5 +34,7 @@ void send_respawn(server_t* server, player_t* respawn_player)
             send_create_player(server, player, respawn_player);
         }
     }
+    pthread_mutex_lock(&server->mutex.physics);
     respawn_player->state = STATE_READY;
+    pthread_mutex_unlock(&server->mutex.physics);
 }

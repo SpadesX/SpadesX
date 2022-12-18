@@ -8,6 +8,7 @@
 #include <Util/Notice.h>
 #include <Util/Utlist.h>
 #include <ctype.h>
+#include <pthread.h>
 
 #ifdef _WIN32
     #define strlcat(dst, src, siz) strcat_s(dst, siz, src)
@@ -139,7 +140,9 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
             player->default_reserve = SHOTGUN_DEFAULT_RESERVE;
             break;
     }
+    pthread_mutex_lock(&server->mutex.physics);
     player->state = STATE_SPAWNING;
+    pthread_mutex_unlock(&server->mutex.physics);
     char IP[17];
     format_ip_to_str(IP, player->ip);
     char team[15];

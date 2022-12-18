@@ -137,6 +137,7 @@ void init_player(server_t*  server,
                  vector3f_t strafe,
                  vector3f_t height)
 {
+    pthread_mutex_lock(&server->mutex.physics);
     if (reset == 0) {
         player->state  = STATE_DISCONNECTED;
         player->queues = NULL;
@@ -217,6 +218,7 @@ void init_player(server_t*  server,
     player->deaths       = 0;
     memset(player->name, 0, 17);
     memset(player->os_info, 0, 255);
+    pthread_mutex_unlock(&server->mutex.physics);
 }
 
 void send_joining_data(server_t* server, player_t* player)
@@ -277,7 +279,9 @@ void on_player_update(server_t* server, player_t* player)
         case STATE_WAITING_FOR_RESPAWN:
         {
             if (time(NULL) - player->timers.start_of_respawn_wait >= player->respawn_time) {
+                pthread_mutex_lock(&server->mutex.physics);
                 player->state = STATE_SPAWNING;
+                pthread_mutex_unlock(&server->mutex.physics);
             }
             break;
         }
@@ -404,8 +408,10 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
     player->current_periodic_message      = server->periodic_messages;
     player->periodic_delay_index          = 0;
     player->state                         = STATE_STARTING_MAP;
+    pthread_mutex_lock(&server->mutex.physics);
     HASH_ADD(hh, server->players, id, sizeof(uint8_t), player);
     HASH_SORT(server->players, player_sort);
+    pthread_mutex_unlock(&server->mutex.physics);
 }
 
 void for_players(server_t* server)

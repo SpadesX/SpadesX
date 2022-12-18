@@ -1,6 +1,7 @@
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Log.h>
+#include <pthread.h>
 
 void send_map_chunks(server_t* server, player_t* player)
 {
@@ -9,7 +10,9 @@ void send_map_chunks(server_t* server, player_t* player)
             server->s_map.compressed_map = queue_pop(server->s_map.compressed_map);
         }
         send_version_request(server, player);
+        pthread_mutex_lock(&server->mutex.physics);
         player->state = STATE_JOINING;
+        pthread_mutex_unlock(&server->mutex.physics);
         LOG_INFO("Finished sending map to %s (#%hhu)", player->name, player->id);
     } else {
         ENetPacket* packet = enet_packet_create(NULL, player->queues->length + 1, ENET_PACKET_FLAG_RELIABLE);

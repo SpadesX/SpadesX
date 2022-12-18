@@ -1,4 +1,5 @@
 #include <Server/Server.h>
+#include <pthread.h>
 
 void send_state_data(server_t* server, player_t* player)
 {
@@ -60,7 +61,9 @@ void send_state_data(server_t* server, player_t* player)
     stream_write_vector3f(&stream, server->protocol.gamemode.base[1]);
 
     if (enet_peer_send(player->peer, 0, packet) == 0) {
+        pthread_mutex_lock(&server->mutex.physics);
         player->state = STATE_PICK_SCREEN;
+        pthread_mutex_unlock(&server->mutex.physics);
     } else {
         enet_packet_destroy(packet);
     }

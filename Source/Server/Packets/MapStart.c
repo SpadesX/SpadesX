@@ -1,6 +1,7 @@
 #include <Server/Server.h>
 #include <Util/Compress.h>
 #include <Util/Log.h>
+#include <pthread.h>
 
 void send_map_start(server_t* server, player_t* player)
 {
@@ -13,7 +14,9 @@ void send_map_start(server_t* server, player_t* player)
     stream_write_u8(&stream, PACKET_TYPE_MAP_START);
     stream_write_u32(&stream, server->s_map.compressed_size);
     if (enet_peer_send(player->peer, 0, packet) == 0) {
+        pthread_mutex_lock(&server->mutex.physics);
         player->state = STATE_LOADING_CHUNKS;
+        pthread_mutex_unlock(&server->mutex.physics);
 
         // The biggest possible VXL size given the XYZ size
         uint8_t* map = (uint8_t*) calloc(

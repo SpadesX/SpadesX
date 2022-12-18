@@ -9,6 +9,7 @@
 #include <Util/Notice.h>
 #include <Util/Utlist.h>
 #include <math.h>
+#include <pthread.h>
 
 void send_grenade(server_t* server, player_t* player, float fuse, vector3f_t position, vector3f_t velocity)
 {
@@ -81,7 +82,9 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
             grenade->sent            = 1;
             grenade->time_since_sent = get_nanos();
         }
+        pthread_mutex_lock(&server->mutex.physics);
         DL_APPEND(player->grenade, grenade);
+        pthread_mutex_unlock(&server->mutex.physics);
         player->grenades--;
     }
 }

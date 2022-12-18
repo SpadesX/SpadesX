@@ -6,6 +6,7 @@
 #include <Server/Server.h>
 #include <Server/Structs/ServerStruct.h>
 #include <math.h>
+#include <pthread.h>
 #include <time.h>
 
 uint8_t check_under_tent(server_t* server, uint8_t team)
@@ -70,7 +71,9 @@ uint8_t check_player_in_tent(server_t* server, player_t* player)
     if (player->alive == 0) {
         return ret;
     }
+    pthread_mutex_lock(&server->mutex.physics);
     vector3f_t playerPos = player->movement.position;
+    pthread_mutex_unlock(&server->mutex.physics);
     vector3f_t tentPos   = server->protocol.gamemode.base[player->team];
     if (((int) playerPos.z + 3 == (int) tentPos.z ||
          ((player->crouching || playerPos.z < 0) && (int) playerPos.z + 2 == (int) tentPos.z)) &&
@@ -157,7 +160,9 @@ uint8_t check_player_on_intel(server_t* server, player_t* player, uint8_t team)
     if (player->alive == 0) {
         return ret;
     }
+    pthread_mutex_lock(&server->mutex.physics);
     vector3f_t player_pos     = player->movement.position;
+    pthread_mutex_unlock(&server->mutex.physics);
     vector3f_t intel_pos      = server->protocol.gamemode.intel[team];
     vector3i_t player_pos_int = vec3f_to_vec3i(player_pos);
     vector3i_t intel_pos_int  = vec3f_to_vec3i(intel_pos);
@@ -275,7 +280,9 @@ void handleTentAndIntel(server_t* server, player_t* player)
                     HASH_ITER(hh, server->players, connected_player, tmp)
                     {
                         if (connected_player->state != STATE_DISCONNECTED) {
+                            pthread_mutex_lock(&server->mutex.physics);
                             connected_player->state = STATE_STARTING_MAP;
+                            pthread_mutex_unlock(&server->mutex.physics);
                         }
                     }
                     server_reset(server);

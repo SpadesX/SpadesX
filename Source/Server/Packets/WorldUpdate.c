@@ -3,6 +3,7 @@
 
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
+#include <pthread.h>
 
 void send_world_update(server_t* server, player_t* player)
 {
@@ -14,6 +15,7 @@ void send_world_update(server_t* server, player_t* player)
     stream_write_u8(&stream, PACKET_TYPE_WORLD_UPDATE);
 
     player_t *connected_player;
+    pthread_mutex_lock(&server->mutex.physics);
     for (uint8_t player_id = 0; player_id < server->protocol.max_players; ++player_id)
     {
         HASH_FIND(hh, server->players, &player_id, sizeof(player_id), connected_player);
@@ -31,6 +33,7 @@ void send_world_update(server_t* server, player_t* player)
             stream_write_vector3f(&stream, empty);
         }
     }
+    pthread_mutex_unlock(&server->mutex.physics);
     if (enet_peer_send(player->peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }

@@ -6,6 +6,7 @@
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
+#include <pthread.h>
 #include <stdio.h>
 
 void send_weapon_input(server_t* server, player_t* player, uint8_t wInput)
@@ -39,8 +40,10 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
         received_input = 0; /* Do not return just set it to 0 as we want to send to players that the player is no longer
                     shooting when they start sprinting */
     }
+    pthread_mutex_lock(&server->mutex.physics);
     player->primary_fire   = received_input & mask;
     player->secondary_fire = (received_input >> 1) & mask;
+    pthread_mutex_unlock(&server->mutex.physics);
 
     if (player->secondary_fire && player->item == 1) {
         player->locAtClick = player->movement.position;

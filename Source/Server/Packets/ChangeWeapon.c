@@ -1,6 +1,7 @@
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Log.h>
+#include <pthread.h>
 
 void receive_change_weapon(server_t* server, player_t* player, stream_t* data)
 {
@@ -14,5 +15,7 @@ void receive_change_weapon(server_t* server, player_t* player, stream_t* data)
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in change weapon packet", player->id, received_id);
     }
     send_kill_action_packet(server, player, player, 6, 5, 0);
+    pthread_mutex_lock(&server->mutex.physics);
     player->state = STATE_WAITING_FOR_RESPAWN;
+    pthread_mutex_unlock(&server->mutex.physics);
 }

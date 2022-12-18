@@ -1,6 +1,7 @@
 #include <Server/Server.h>
 #include <Util/Checks/PacketChecks.h>
 #include <Util/Log.h>
+#include <pthread.h>
 
 void send_input_data(server_t* server, player_t* player)
 {
@@ -29,6 +30,7 @@ void receive_input_data(server_t* server, player_t* player, stream_t* data)
         for (int i = 0; i < 8; i++) {
             bits[i] = (player->input >> i) & mask;
         }
+        pthread_mutex_lock(&server->mutex.physics);
         player->move_forward   = bits[0];
         player->move_backwards = bits[1];
         player->move_left      = bits[2];
@@ -37,6 +39,7 @@ void receive_input_data(server_t* server, player_t* player, stream_t* data)
         player->crouching      = bits[5];
         player->sneaking       = bits[6];
         player->sprinting      = bits[7];
+        pthread_mutex_unlock(&server->mutex.physics);
         send_input_data(server, player);
     }
 }

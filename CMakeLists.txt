@@ -34,7 +34,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 add_subdirectory(Extern)
 
 # Add main target
-add_compile_options(-Wall -Wextra -Werror -Wpedantic -Wno-error=unused-but-set-parameter -Wno-error=pedantic -std=gnu11)
+add_compile_options(-Wall -Wextra -Werror -Wpedantic -Wno-error=unused-but-set-parameter -Wno-error=pedantic -fsanitize=thread -std=gnu11)
 add_executable(SpadesX "")
 
 if (enet_FOUND)
@@ -59,6 +59,7 @@ target_link_libraries(SpadesX
         m
         json-c
         readline
+        tsan
         Threads::Threads
 )
 

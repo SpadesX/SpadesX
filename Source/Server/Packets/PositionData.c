@@ -1,5 +1,6 @@
 #include <Server/Server.h>
 #include <Util/Checks/PositionChecks.h>
+#include <pthread.h>
 
 void send_position_packet(server_t* server, player_t* player, float x, float y, float z)
 {
@@ -9,9 +10,11 @@ void send_position_packet(server_t* server, player_t* player, float x, float y, 
     ENetPacket* packet = enet_packet_create(NULL, 13, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_POSITION_DATA);
+    pthread_mutex_lock(&server->mutex.physics);
     stream_write_f(&stream, x);
     stream_write_f(&stream, y);
     stream_write_f(&stream, z);
+    pthread_mutex_unlock(&server->mutex.physics);
     if (enet_peer_send(player->peer, 0, packet) != 0) {
         enet_packet_destroy(packet);
     }
@@ -43,10 +46,12 @@ void receive_position_data(server_t* server, player_t* player, stream_t* data)
               (int) z + 2,
               player->crouching);
 #endif
+    pthread_mutex_lock(&server->mutex.physics);
     player->movement.prev_position = player->movement.position;
     player->movement.position.x    = x;
     player->movement.position.y    = y;
     player->movement.position.z    = z;
+    pthread_mutex_unlock(&server->mutex.physics);
     /*uint8_t resetTime                                = 1;
     if (!diff_is_older_then_dont_update(
         getNanos(), player->timers.duringNoclipPeriod, (uint64_t) NANO_IN_SECOND * 10))

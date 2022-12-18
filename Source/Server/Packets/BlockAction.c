@@ -10,6 +10,7 @@
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Utlist.h>
+#include <pthread.h>
 
 void send_block_action(server_t* server, player_t* player, uint8_t actionType, int X, int Y, int Z)
 {
@@ -80,6 +81,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
     if (player->id != received_id) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet", player->id, received_id);
     }
+    pthread_mutex_lock(&server->mutex.physics);
     if (player->can_build && server->global_ab) {
         uint8_t  actionType = stream_read_u8(data);
         uint32_t X          = stream_read_u32(data);
@@ -226,4 +228,5 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                         actionType);
         }
     }
+    pthread_mutex_unlock(&server->mutex.physics);
 }

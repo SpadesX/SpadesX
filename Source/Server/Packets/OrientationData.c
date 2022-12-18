@@ -2,6 +2,7 @@
 #include <Server/Server.h>
 #include <Util/Physics.h>
 #include <math.h>
+#include <pthread.h>
 
 void receive_orientation_data(server_t* server, player_t* player, stream_t* data)
 {
@@ -13,6 +14,7 @@ void receive_orientation_data(server_t* server, player_t* player, stream_t* data
     float     length      = sqrt((x * x) + (y * y) + (z * z));
     float     norm_legnth = 1 / length;
     // Normalize the vectors if their length > 1
+    pthread_mutex_lock(&server->mutex.physics);
     if (length > 1.f) {
         player->movement.forward_orientation.x = x * norm_legnth;
         player->movement.forward_orientation.y = y * norm_legnth;
@@ -24,4 +26,5 @@ void receive_orientation_data(server_t* server, player_t* player, stream_t* data
     }
 
     physics_reorient_player(player, &player->movement.forward_orientation);
+    pthread_mutex_unlock(&server->mutex.physics);
 }

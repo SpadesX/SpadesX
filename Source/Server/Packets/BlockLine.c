@@ -7,6 +7,7 @@
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Utlist.h>
+#include <pthread.h>
 
 void send_block_line(server_t* server, player_t* player, vector3i_t start, vector3i_t end)
 {
@@ -79,6 +80,7 @@ void receive_block_line(server_t* server, player_t* player, stream_t* data)
     if (player->id != received_id) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", player->id, received_id);
     }
+    pthread_mutex_lock(&server->mutex.physics);
     uint64_t  time_now = get_nanos();
     if (player->blocks > 0 && player->can_build && server->global_ab && player->item == 1 &&
         diff_is_older_then(time_now, &player->timers.since_last_block_plac, BLOCK_DELAY) &&
@@ -115,4 +117,5 @@ void receive_block_line(server_t* server, player_t* player, stream_t* data)
             send_block_line(server, player, start, end);
         }
     }
+    pthread_mutex_unlock(&server->mutex.physics);
 }
