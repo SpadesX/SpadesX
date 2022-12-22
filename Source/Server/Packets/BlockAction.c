@@ -140,7 +140,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                     } else if (player->weapon == 0 &&
                                                diff_is_older_then(timeNow,
                                                                   &player->timers.since_last_block_dest_with_gun,
-                                                                  ((RIFLE_DELAY * 2) - (NANO_IN_MILLI * 10))) == 0)
+                                                                  (RIFLE_DELAY - (NANO_IN_MILLI * 10))) == 0)
                                     {
                                         send_message_to_staff(server,
                                                               "Player %s (#%hhu) probably has rapid shooting hack",
@@ -150,7 +150,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                     } else if (player->weapon == 1 &&
                                                diff_is_older_then(timeNow,
                                                                   &player->timers.since_last_block_dest_with_gun,
-                                                                  ((SMG_DELAY * 3) - (NANO_IN_MILLI * 10))) == 0)
+                                                                  (SMG_DELAY - (NANO_IN_MILLI * 10))) == 0)
                                     {
                                         send_message_to_staff(server,
                                                               "Player %s (#%hhu) probably has rapid shooting hack",
