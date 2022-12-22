@@ -113,6 +113,10 @@ void set_player_respawn_point(server_t* server, player_t* player)
         float dx = spawn->to.x - spawn->from.x;
         float dy = spawn->to.y - spawn->from.y;
 
+        player->movement.velocity.x = 0.f;
+        player->movement.velocity.y = 0.f;
+        player->movement.velocity.z = 0.f;
+
         player->movement.position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
         player->movement.position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
         player->movement.position.z =
