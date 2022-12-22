@@ -1,3 +1,4 @@
+#include "Util/Enums.h"
 #include "Util/Uthash.h"
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
@@ -129,7 +130,8 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                 player->item == 2)
                             {
                                 if (player->item == 2) {
-                                    if (player->weapon_clip <= 0) {
+                                    
+                                    if (player->weapon_clip <= 0 && !diff_is_older_then_dont_update(timeNow, player->timers.since_last_primary_weapon_input, 10*NANO_IN_MILLI)) {
                                         send_message_to_staff(server,
                                                               "Player %s (#%hhu) probably has hack to have more ammo",
                                                               player->name,
