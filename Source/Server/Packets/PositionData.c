@@ -51,7 +51,6 @@ void receive_position_data(server_t* server, player_t* player, stream_t* data)
     player->movement.position.x    = x;
     player->movement.position.y    = y;
     player->movement.position.z    = z;
-    pthread_mutex_unlock(&server->mutex.physics);
     /*uint8_t resetTime                                = 1;
     if (!diff_is_older_then_dont_update(
         getNanos(), player->timers.duringNoclipPeriod, (uint64_t) NANO_IN_SECOND * 10))
@@ -114,4 +113,5 @@ void receive_position_data(server_t* server, player_t* player, stream_t* data)
                            player->movement.prevLegitPos.y,
                            player->movement.prevLegitPos.z);
     }*/
+    pthread_mutex_unlock(&server->mutex.physics);
 }

@@ -42,13 +42,13 @@ void send_kill_action_packet(server_t* server,
         if (killer != player) {
             killer->kills++;
         }
-        pthread_mutex_lock(&server->mutex.physics);
+        //pthread_mutex_lock(&server->mutex.physics);
         player->deaths++;
         player->alive                        = 0;
         player->respawn_time                 = respawnTime;
         player->timers.start_of_respawn_wait = time(NULL);
         player->state                        = STATE_WAITING_FOR_RESPAWN;
-        pthread_mutex_unlock(&server->mutex.physics);
+        //pthread_mutex_unlock(&server->mutex.physics);
         switch (player->weapon) {
             case 0:
                 player->weapon_reserve  = 50;

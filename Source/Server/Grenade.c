@@ -12,6 +12,7 @@
 #include <Util/Physics.h>
 #include <Util/Utlist.h>
 #include <math.h>
+#include <pthread.h>
 
 vector3i_t* getGrenadeNeighbors(vector3i_t pos)
 {
