@@ -441,6 +441,7 @@ void for_players(server_t* server)
                         player->weapon_clip--;
                         if (player->weapon_clip == 0) {
                             player->primary_fire = 0;
+                            send_weapon_input(server, player, 0);
                         }
                     }
                 }

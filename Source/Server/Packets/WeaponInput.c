@@ -28,9 +28,9 @@ void send_weapon_input(server_t* server, player_t* player, uint8_t wInput)
 
 void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
 {
-    uint8_t   mask           = 1;
-    uint8_t   received_id    = stream_read_u8(data);
-    uint8_t   received_input = stream_read_u8(data);
+    uint8_t mask           = 1;
+    uint8_t received_id    = stream_read_u8(data);
+    uint8_t received_input = stream_read_u8(data);
     if (player->id != received_id) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in weapon input packet", player->id, received_id);
     } else if (player->state != STATE_READY) {
@@ -74,6 +74,11 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
         {
             player->timers.since_last_weapon_input = get_nanos();
             player->weapon_clip--;
+            if (player->weapon_clip == 0) {
+                player->primary_fire   = 0;
+                player->secondary_fire = 0;
+                send_weapon_input(server, player, 0);
+            }
             player->reloading = 0;
             if ((player->movement.previous_orientation.x == player->movement.forward_orientation.x) &&
                 (player->movement.previous_orientation.y == player->movement.forward_orientation.y) &&
@@ -81,7 +86,8 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
                 player->item == TOOL_GUN)
             {
                 player_t *connected_player, *tmp;
-                HASH_ITER(hh, server->players, connected_player, tmp) {
+                HASH_ITER(hh, server->players, connected_player, tmp)
+                {
                     if (is_past_join_screen(connected_player) && is_staff(server, connected_player)) {
                         char message[200];
                         snprintf(message, 200, "WARNING. Player %d may be using no recoil", player->id);
