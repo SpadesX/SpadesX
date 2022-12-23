@@ -34,6 +34,7 @@ set(PACKET_SOURCES
     Packets/SetColor.c
     Packets/SetHP.c
     Packets/SetTool.c
+    Packets/ShortPlayerData.c
     Packets/StateData.c
     Packets/VersionRequestResponse.c
     Packets/WeaponInput.c

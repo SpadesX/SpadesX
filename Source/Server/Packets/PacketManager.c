@@ -70,6 +70,7 @@ void init_packets(server_t* server)
                                   {7, &receive_set_tool},
                                   {8, &receive_set_color},
                                   {9, &receive_existing_player},
+                                  {10, &receive_short_player},
                                   {13, &receive_block_action},
                                   {14, &receive_block_line},
                                   {17, &receive_handle_send_message},

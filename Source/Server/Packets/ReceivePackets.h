@@ -10,6 +10,7 @@ void receive_hit_packet(server_t* server, player_t* player, stream_t* data);
 void receive_grenade_packet(server_t* server, player_t* player, stream_t* data);
 void receive_position_data(server_t* server, player_t* player, stream_t* data);
 void receive_existing_player(server_t* server, player_t* player, stream_t* data);
+void receive_short_player(server_t* server, player_t* player, stream_t* data);
 void receive_block_action(server_t* server, player_t* player, stream_t* data);
 void receive_block_line(server_t* server, player_t* player, stream_t* data);
 void receive_set_tool(server_t* server, player_t* player, stream_t* data);
