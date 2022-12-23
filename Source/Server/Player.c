@@ -439,6 +439,9 @@ void for_players(server_t* server)
                         timeNow, &player->timers.since_last_weapon_input, NANO_IN_MILLI * milliseconds))
                     {
                         player->weapon_clip--;
+                        if (player->weapon_clip == 0) {
+                            player->primary_fire = 0;
+                        }
                     }
                 }
             } else if (player->primary_fire == 0 && player->reloading == 1) {
