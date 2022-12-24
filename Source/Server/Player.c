@@ -224,6 +224,7 @@ void init_player(server_t*  server,
     player->timers.since_periodic_message          = time_now;
     player->timers.since_last_intel_tent_check     = time_now;
     player->timers.during_noclip_period            = time_now;
+    player->timers.since_last_water_damage         = time_now;
     player->told_to_master                         = 0;
     player->hp                                     = 100;
     player->blocks                                 = 50;
@@ -301,6 +302,7 @@ void on_player_update(server_t* server, player_t* player)
             player->secondary_fire = 0;
             player->alive          = 1;
             player->reloading      = 0;
+            player->wade           = 0;
             set_player_respawn_point(server, player);
             send_respawn(server, player);
             LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
@@ -451,6 +453,15 @@ void for_players(server_t* server)
     {
         if (is_past_join_screen(player)) {
             uint64_t timeNow = get_nanos();
+            if (player->alive == 1 && player->wade == 1 && server->s_map.options.water_damage != 0 &&
+                diff_is_older_then(timeNow,
+                                   &player->timers.since_last_water_damage,
+                                   NANO_IN_MILLI * server->s_map.options.water_damage_interval))
+            {
+                send_set_hp(
+                server, player, player, server->s_map.options.water_damage, 0, 0, 5, 0, player->movement.position);
+            }
+
             if (player->primary_fire == 1 && player->reloading == 0 && player->item == TOOL_GUN) {
                 if (player->weapon_clip > 0) {
                     if (diff_is_older_then(

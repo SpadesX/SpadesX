@@ -13,6 +13,12 @@ typedef struct string_node
     struct string_node *next, *prev;
 } string_node_t;
 
+typedef struct map_opt
+{
+    int water_damage;
+    int water_damage_interval;
+} map_opt_t;
+
 typedef struct map
 {
     uint8_t        map_count;
@@ -21,6 +27,7 @@ typedef struct map
     size_t         map_size;
     mapvxl_t       map;
     string_node_t* map_list;
+    map_opt_t      options;
 } map_t;
 
 typedef struct map_node

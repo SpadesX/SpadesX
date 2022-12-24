@@ -128,6 +128,8 @@ static void _server_init(server_t*   server,
     int         fog_color[3];
     int         map_size[3];
     const char* author;
+    int         water_damage;
+    int         water_damage_interval;
 
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1_start, team1_start, "team1 start", ((int[]){0, 0}), 2, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1_end, team1_end, "team1 end", ((int[]){10, 10}), 2, 0)
@@ -136,6 +138,8 @@ static void _server_init(server_t*   server,
     READ_INT_ARR_FROM_JSON(parsed_map_json, fog_color, fog_color, "fog color", ((int[]){128, 232, 255}), 3, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, map_size, map_size, "map size", ((int[]){512, 512, 64}), 3, 1)
     READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
+    READ_INT_FROM_JSON(parsed_map_json, water_damage, water_damage, "water damage", 0, 0)
+    READ_INT_FROM_JSON(parsed_map_json, water_damage_interval, water_damage_interval, "water damage interval", 0, 0)
     (void) author;
 
     json_object_put(parsed_map_json);
@@ -166,6 +170,9 @@ static void _server_init(server_t*   server,
             init_player(server, player, reset, 0, empty, forward, strafe, height);
         }
     }
+
+    server->s_map.options.water_damage          = water_damage;
+    server->s_map.options.water_damage_interval = water_damage_interval;
 
     server->global_ab = 1;
     server->global_ak = 1;
