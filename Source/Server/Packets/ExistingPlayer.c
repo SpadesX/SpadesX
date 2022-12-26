@@ -39,6 +39,9 @@ void send_existing_player(server_t* server, player_t* receiver, player_t* existi
 
 void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 {
+    if (player->team != 255) {
+        return;
+    }
     stream_skip(data, 1); // Clients always send a "dumb" ID here since server has not sent them their ID yet
     player->team   = stream_read_u8(data);
     player->weapon = stream_read_u8(data);

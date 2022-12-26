@@ -42,11 +42,11 @@ static uint8_t _on_connect(server_t* server)
 
 int player_sort(player_t* a, player_t* b)
 {
-    if(a->id < b->id) {
+    if (a->id < b->id) {
         return -1;
     }
 
-    if(a->id > b->id) {
+    if (a->id > b->id) {
         return 1;
     }
 
@@ -178,7 +178,7 @@ void init_player(server_t*  server,
     player->allow_killing                        = 1;
     player->allow_team_killing                   = 0;
     player->muted                                = 0;
-    player->told_to_master                       = 0;
+    player->team                                 = 255;
     player->timers.since_last_base_enter         = 0;
     player->timers.since_last_base_enter_restock = 0;
     player->timers.since_last_3block_dest        = 0;
@@ -189,6 +189,7 @@ void init_player(server_t*  server,
     player->timers.time_since_last_wu            = 0;
     player->timers.since_last_weapon_input       = 0;
     player->timers.since_last_intel_tent_check   = 0;
+    player->told_to_master                       = 0;
     player->hp                                   = 100;
     player->blocks                               = 50;
     player->grenades                             = 3;
