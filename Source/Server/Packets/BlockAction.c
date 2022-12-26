@@ -29,7 +29,7 @@ void send_block_action(server_t* server, player_t* player, uint8_t actionType, i
     player_t *check, *tmp;
     HASH_ITER(hh, server->players, check, tmp) {
         if (is_past_state_data(check)) {
-            if (enet_peer_send(player->peer, 0, packet) == 0) {
+            if (enet_peer_send(check->peer, 0, packet) == 0) {
                 sent = 1;
             }
         } else if (player->state == STATE_STARTING_MAP || player->state == STATE_LOADING_CHUNKS) {
