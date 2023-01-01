@@ -1,6 +1,7 @@
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
+#include <time.h>
 
 void send_kill_action_packet(server_t* server,
                              player_t*   killer,
