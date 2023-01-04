@@ -38,7 +38,7 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in grenade packet", player->id, ID);
     }
 
-    if (player->primary_fire && player->item == 1) {
+    if (player->item != 3) {
         send_server_notice(player, 0, "InstaSuicideNade detected. Grenade ineffective");
         send_message_to_staff(server, 0, "Player %s (#%hhu) tried to use InstaSpadeNade", player->name, player->id);
         return;
