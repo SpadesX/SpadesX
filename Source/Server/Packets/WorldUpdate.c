@@ -23,10 +23,7 @@ void send_world_update(server_t* server, player_t* player)
             stream_write_vector3f(&stream, connected_player->movement.position);
             stream_write_vector3f(&stream, connected_player->movement.forward_orientation);
         } else {
-            vector3f_t empty;
-            empty.x = 0;
-            empty.y = 0;
-            empty.z = 0;
+            vector3f_t empty = {0};
             stream_write_vector3f(&stream, empty);
             stream_write_vector3f(&stream, empty);
         }
