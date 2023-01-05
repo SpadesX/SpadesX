@@ -1,3 +1,4 @@
+#include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PacketChecks.h>
 #include <Util/Log.h>
@@ -19,8 +20,8 @@ void send_set_tool(server_t* server, player_t* player, uint8_t tool)
 
 void receive_set_tool(server_t* server, player_t* player, stream_t* data)
 {
-    uint8_t   received_id = stream_read_u8(data);
-    uint8_t   tool        = stream_read_u8(data);
+    uint8_t received_id = stream_read_u8(data);
+    uint8_t tool        = stream_read_u8(data);
     if (player->item == tool) {
         return;
     }
@@ -30,5 +31,6 @@ void receive_set_tool(server_t* server, player_t* player, stream_t* data)
 
     player->item      = tool;
     player->reloading = 0;
+    send_weapon_reload(server, player, 0, 0, 0);
     send_set_tool(server, player, tool);
 }
