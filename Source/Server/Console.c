@@ -7,6 +7,7 @@
 #include <readline/readline.h>
 #include <stdio.h>
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
 #include <unistd.h>
@@ -20,11 +21,7 @@ void readline_new_line(int signal)
 
     ctrlc = 1;
     printf("\n");
-    LOG_INFO_WITHOUT_TIME("Are you sure you want to exit? (Y/n)");
-
-    if (write(STDIN_FILENO, "\n", sizeof("\n")) != sizeof("\n")) {
-        LOG_DEBUG("epic write fail");
-    }
+    LOG_INFO_WITHOUT_TIME("Are you sure you want to exit? (Y/n)\n");
     rl_replace_line("", 0);
     rl_on_new_line();
     rl_redisplay();
@@ -54,7 +51,11 @@ void* server_console(void* arg)
     rl_clear_history();
     stop_server();
 
+#ifdef WIN32
+    Sleep(5000);
+#else
     sleep(5); // wait 5 seconds for the server to stop
+#endif
 
     // if this thread is not dead at this point, then we need to stop the server by force >:)
     LOG_ERROR("Server did not respond for 5 seconds. Killing it with fire...");
