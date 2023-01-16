@@ -1,3 +1,5 @@
+#include "Util/Enums.h"
+
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PacketChecks.h>
@@ -29,8 +31,10 @@ void receive_set_tool(server_t* server, player_t* player, stream_t* data)
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in set tool packet", player->id, received_id);
     }
 
-    player->item      = tool;
-    player->reloading = 0;
-    send_weapon_reload(server, player, 0, 0, 0);
+    if (player->reloading && player->item == TOOL_GUN) {
+        send_weapon_reload(server, player, 0, 0, 0);
+        player->reloading = 0;
+    }
+    player->item = tool;
     send_set_tool(server, player, tool);
 }

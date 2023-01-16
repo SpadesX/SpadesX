@@ -1,3 +1,4 @@
+#include "Util/Enums.h"
 #include <Server/Server.h>
 #include <Server/Staff.h>
 #include <Util/Checks/PacketChecks.h>
@@ -42,13 +43,13 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
     player->primary_fire   = received_input & mask;
     player->secondary_fire = (received_input >> 1) & mask;
 
-    if (player->secondary_fire && player->item == 1) {
+    if (player->secondary_fire && player->item == TOOL_BLOCK) {
         player->locAtClick = player->movement.position;
-    } else if (player->secondary_fire && player->item == 0) {
+    } else if (player->secondary_fire && player->item == TOOL_SPADE) {
         player->timers.since_possible_spade_nade = get_nanos();
     }
 
-    else if (player->weapon_clip > 0)
+    else if (player->weapon_clip > 0 && player->item == TOOL_GUN)
     {
         send_weapon_input(server, player, received_input);
         uint64_t timeDiff = 0;

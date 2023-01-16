@@ -416,7 +416,7 @@ void for_players(server_t* server)
     {
         if (is_past_join_screen(player)) {
             uint64_t timeNow = get_nanos();
-            if (player->primary_fire == 1 && player->reloading == 0) {
+            if (player->primary_fire == 1 && player->reloading == 0 && player->item == TOOL_GUN) {
                 if (player->weapon_clip > 0) {
                     uint64_t milliseconds = 0;
                     switch (player->weapon) {
@@ -446,7 +446,7 @@ void for_players(server_t* server)
                         }
                     }
                 }
-            } else if (player->primary_fire == 0 && player->reloading == 1) {
+            } else if (player->primary_fire == 0 && player->reloading == 1 && player->item == TOOL_GUN) {
                 switch (player->weapon) {
                     case WEAPON_RIFLE:
                     case WEAPON_SMG:
