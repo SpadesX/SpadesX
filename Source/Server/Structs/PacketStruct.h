@@ -1,10 +1,10 @@
 #ifndef PACKETSTRUCT_H
 #define PACKETSTRUCT_H
 
+#include <Server/Structs/PlayerStruct.h>
 #include <Util/DataStream.h>
 #include <Util/Types.h>
 #include <Util/Uthash.h>
-#include <Server/Structs/PlayerStruct.h>
 
 typedef struct server server_t;
 

@@ -1,8 +1,8 @@
-#include "Util/Uthash.h"
 #include <Server/ParseConvert.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Notice.h>
+#include <Util/Uthash.h>
 
 void cmd_kick(void* p_server, command_args_t arguments)
 {

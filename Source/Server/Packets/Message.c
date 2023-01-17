@@ -1,5 +1,3 @@
-#include "Util/Uthash.h"
-
 #include <Server/Commands/Commands.h>
 #include <Server/Server.h>
 #include <Server/Staff.h>
@@ -8,6 +6,7 @@
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
+#include <Util/Uthash.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -66,8 +65,11 @@ void receive_handle_send_message(server_t* server, player_t* player, stream_t* d
 
     for (unsigned long index = 0; index < strlen(message); ++index) {
         if (isgraph(message[index]) == 0 && message[index] != ' ' && message[index] > '\b') {
-            send_server_notice(player, 0, "WARNING: The message you sent contained unreadable characters and thus was ignored");
-            LOG_WARNING("Player %s (#%hhu) tried to send message containing unreadable character. Message ignored", player->name, player->id);
+            send_server_notice(
+            player, 0, "WARNING: The message you sent contained unreadable characters and thus was ignored");
+            LOG_WARNING("Player %s (#%hhu) tried to send message containing unreadable character. Message ignored",
+                        player->name,
+                        player->id);
             return;
         }
     }

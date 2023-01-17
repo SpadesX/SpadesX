@@ -16,8 +16,7 @@ void cmd_ratio(void* p_server, command_args_t arguments)
             return;
         }
         if (is_past_join_screen(player)) {
-            send_server_notice(
-                               arguments.player,
+            send_server_notice(arguments.player,
                                arguments.console,
                                "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
                                player->name,
@@ -28,18 +27,14 @@ void cmd_ratio(void* p_server, command_args_t arguments)
     } else {
         if (arguments.console) {
             send_server_notice(
-                               arguments.player,
-                               arguments.console,
-                               "You cannot use this command from console without argument");
+            arguments.player, arguments.console, "You cannot use this command from console without argument");
             return;
         }
-        send_server_notice(
-                           arguments.player,
+        send_server_notice(arguments.player,
                            arguments.console,
                            "%s has kill to death ratio of: %f (Kills: %d, Deaths: %d)",
                            arguments.player->name,
-                           ((float) arguments.player->kills /
-                            fmaxf(1, (float) arguments.player->deaths)),
+                           ((float) arguments.player->kills / fmaxf(1, (float) arguments.player->deaths)),
                            arguments.player->kills,
                            arguments.player->deaths);
     }

@@ -14,8 +14,9 @@ void cmd_inv(void* p_server, command_args_t arguments)
     if (arguments.player->is_invisible == 1) {
         arguments.player->is_invisible  = 0;
         arguments.player->allow_killing = 1;
-        player_t* connected_player, *tmp;
-        HASH_ITER(hh, server->players, connected_player, tmp) {
+        player_t *connected_player, *tmp;
+        HASH_ITER(hh, server->players, connected_player, tmp)
+        {
             if (is_past_join_screen(connected_player) && connected_player != arguments.player) {
                 send_create_player(server, connected_player, arguments.player);
             }

@@ -1,12 +1,12 @@
-#include "Util/Enums.h"
-#include "Util/Uthash.h"
 #include <Server/IntelTent.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
+#include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
+#include <Util/Uthash.h>
 #include <Util/Utlist.h>
 
 void send_block_line(server_t* server, player_t* player, vector3i_t start, vector3i_t end)
@@ -24,9 +24,10 @@ void send_block_line(server_t* server, player_t* player, vector3i_t start, vecto
     stream_write_u32(&stream, end.x);
     stream_write_u32(&stream, end.y);
     stream_write_u32(&stream, end.z);
-    uint8_t sent = 0;
+    uint8_t   sent = 0;
     player_t *check, *tmp;
-    HASH_ITER(hh, server->players, check, tmp) {
+    HASH_ITER(hh, server->players, check, tmp)
+    {
         if (is_past_state_data(check)) {
             if (enet_peer_send(player->peer, 0, packet) == 0) {
                 sent = 1;
@@ -80,7 +81,7 @@ void receive_block_line(server_t* server, player_t* player, stream_t* data)
     if (player->id != received_id) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", player->id, received_id);
     }
-    uint64_t  time_now = get_nanos();
+    uint64_t time_now = get_nanos();
     if (player->blocks > 0 && player->can_build && server->global_ab && player->item == TOOL_BLOCK &&
         diff_is_older_then(time_now, &player->timers.since_last_block_plac, BLOCK_DELAY) &&
         diff_is_older_then_dont_update(time_now, player->timers.since_last_block_dest, BLOCK_DELAY) &&

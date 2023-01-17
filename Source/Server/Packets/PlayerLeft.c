@@ -6,7 +6,7 @@
 
 void send_player_left(server_t* server, player_t* player)
 {
-    char      ipString[17];
+    char ipString[17];
     format_ip_to_str(ipString, player->ip);
     LOG_INFO("Player %s (%s, #%hhu) disconnected", player->name, ipString, player->id);
 
@@ -16,7 +16,8 @@ void send_player_left(server_t* server, player_t* player)
         return;
     }
     player_t *connected_player, *tmp;
-    HASH_ITER(hh, server->players, connected_player, tmp) {
+    HASH_ITER(hh, server->players, connected_player, tmp)
+    {
         if (connected_player->id != player->id && is_past_state_data(connected_player)) {
             ENetPacket* packet = enet_packet_create(NULL, 2, ENET_PACKET_FLAG_RELIABLE);
             stream_t    stream = {packet->data, packet->dataLength, 0};

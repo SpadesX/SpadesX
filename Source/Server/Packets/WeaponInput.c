@@ -1,9 +1,11 @@
-#include "Util/Enums.h"
+#include "Util/Weapon.h"
+
 #include <Server/Server.h>
 #include <Server/Staff.h>
 #include <Util/Checks/PacketChecks.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/TimeChecks.h>
+#include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
@@ -52,24 +54,7 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
     else if (player->weapon_clip > 0 && player->item == TOOL_GUN)
     {
         send_weapon_input(server, player, received_input);
-        uint64_t timeDiff = 0;
-        switch (player->weapon) {
-            case WEAPON_RIFLE:
-            {
-                timeDiff = NANO_IN_MILLI * 500;
-                break;
-            }
-            case WEAPON_SMG:
-            {
-                timeDiff = NANO_IN_MILLI * 100;
-                break;
-            }
-            case WEAPON_SHOTGUN:
-            {
-                timeDiff = NANO_IN_MILLI * 1000;
-                break;
-            }
-        }
+        uint64_t timeDiff = get_player_weapon_delay_nano(player);
 
         if (player->primary_fire && diff_is_older_then(get_nanos(), &player->timers.since_last_weapon_input, timeDiff))
         {

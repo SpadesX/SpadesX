@@ -1,15 +1,14 @@
-#include "Util/Enums.h"
-#include "Util/Log.h"
-#include "Util/Uthash.h"
-
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Nodes.h>
 #include <Server/Packets/Packets.h>
 #include <Server/Structs/ServerStruct.h>
 #include <Util/Checks/PositionChecks.h>
+#include <Util/Enums.h>
+#include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Physics.h>
+#include <Util/Uthash.h>
 #include <Util/Utlist.h>
 #include <math.h>
 

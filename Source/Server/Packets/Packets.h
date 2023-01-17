@@ -34,7 +34,11 @@ void send_set_color(server_t* server, player_t* player, color_t color);
 void send_set_color_to_player(server_t* server, player_t* player, player_t* receiver, color_t color);
 void send_set_tool(server_t* server, player_t* player, uint8_t tool);
 void send_block_line(server_t* server, player_t* player, vector3i_t start, vector3i_t end);
-void send_block_line_to_player(server_t* server, player_t* player, player_t* receiver, vector3i_t start, vector3i_t end);
+void send_block_line_to_player(server_t*  server,
+                               player_t*  player,
+                               player_t*  receiver,
+                               vector3i_t start,
+                               vector3i_t end);
 void send_block_action(server_t* server, player_t* player, uint8_t actionType, int X, int Y, int Z);
 
 void send_block_action_to_player(server_t* server,

@@ -16,7 +16,7 @@ void send_version_request(server_t* server, player_t* player)
 
 void receive_version_response(server_t* server, player_t* player, stream_t* data)
 {
-    (void)server;
+    (void) server;
     player->client           = stream_read_u8(data);
     player->version_major    = stream_read_u8(data);
     player->version_minor    = stream_read_u8(data);

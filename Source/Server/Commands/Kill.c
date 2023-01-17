@@ -1,4 +1,3 @@
-#include "Util/Uthash.h"
 #include <Server/Commands/Commands.h>
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
@@ -6,6 +5,7 @@
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Log.h>
 #include <Util/Notice.h>
+#include <Util/Uthash.h>
 
 void cmd_kill(void* p_server, command_args_t arguments)
 {
@@ -22,9 +22,10 @@ void cmd_kill(void* p_server, command_args_t arguments)
             return;
         }
         if (strcmp(arguments.argv[1], "all") == 0) { // KILL THEM ALL!!!! >:D
-            int count = 0;
+            int       count = 0;
             player_t *connected_player, *tmp;
-            HASH_ITER(hh, server->players, connected_player, tmp) {
+            HASH_ITER(hh, server->players, connected_player, tmp)
+            {
                 if (is_past_join_screen(connected_player) && connected_player->hp > 0 &&
                     connected_player->team != TEAM_SPECTATOR)
                 {
@@ -45,7 +46,8 @@ void cmd_kill(void* p_server, command_args_t arguments)
             player_t* player;
             HASH_FIND(hh, server->players, &ID, sizeof(ID), player);
             if (player == NULL) {
-                send_server_notice(arguments.player, arguments.console, "Player %hhu does not exist or is already dead", ID);
+                send_server_notice(
+                arguments.player, arguments.console, "Player %hhu does not exist or is already dead", ID);
                 return;
             }
             if (is_past_join_screen(player) && player->team != TEAM_SPECTATOR) {

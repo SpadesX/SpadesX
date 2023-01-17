@@ -15,17 +15,11 @@ void cmd_help(void* p_server, command_args_t arguments)
         if (cmd == NULL) {
             return; // Just for safety
         }
-        if (player_has_permission(arguments.player, arguments.console, cmd->permissions) ||
-            cmd->permissions == 0)
-        {
+        if (player_has_permission(arguments.player, arguments.console, cmd->permissions) || cmd->permissions == 0) {
             send_server_notice(
-                               arguments.player,
-                               arguments.console,
-                               "[Command: %s, Description: %s]",
-                               cmd->id,
-                               cmd->description);
+            arguments.player, arguments.console, "[Command: %s, Description: %s]", cmd->id, cmd->description);
         }
     }
     if (!arguments.console)
-        send_server_notice( arguments.player, arguments.console, "Commands available to you:");
+        send_server_notice(arguments.player, arguments.console, "Commands available to you:");
 }

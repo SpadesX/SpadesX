@@ -4,8 +4,8 @@
 
 void receive_change_weapon(server_t* server, player_t* player, stream_t* data)
 {
-    uint8_t   received_id     = stream_read_u8(data);
-    uint8_t   received_weapon = stream_read_u8(data);
+    uint8_t received_id     = stream_read_u8(data);
+    uint8_t received_weapon = stream_read_u8(data);
     if (player->weapon == received_weapon) {
         return;
     }

@@ -46,9 +46,10 @@ void cmd_generate_ban(server_t* server, command_args_t arguments, float time, ip
     char*               nameString = "Deuce";
     json_object_object_get_ex(root, "Bans", &array);
 
-    uint8_t banned = 0;
+    uint8_t   banned = 0;
     player_t *connected_player, *tmp;
-    HASH_ITER(hh, server->players, connected_player, tmp) {
+    HASH_ITER(hh, server->players, connected_player, tmp)
+    {
         if (connected_player->state != STATE_DISCONNECTED && connected_player->ip.ip32 == ip.ip32) {
             if (banned == 0) {
                 nameString = connected_player->name;
@@ -190,16 +191,14 @@ static uint8_t parse_arguments(command_args_t* arguments, char* message, uint8_t
                         break;
                     case '"':
                         if (quotesCount == 0) {
-                            send_server_notice(
-                                               arguments->player,
+                            send_server_notice(arguments->player,
                                                arguments->console,
                                                "Failed to parse the command: found a stray \" symbol");
                             return 0;
                         }
                         char next = *(end + 1);
                         if (next != ' ' && next != '\t' && next != '\0') {
-                            send_server_notice(
-                                               arguments->player,
+                            send_server_notice(arguments->player,
                                                arguments->console,
                                                "Failed to parse the command: found more symbols after the \" symbol");
                             return 0;
@@ -215,7 +214,8 @@ static uint8_t parse_arguments(command_args_t* arguments, char* message, uint8_t
             end++;
         }
         if (quotesCount == 1) {
-            send_server_notice(arguments->player, arguments->console, "Failed to parse the command: missing a \" symbol");
+            send_server_notice(
+            arguments->player, arguments->console, "Failed to parse the command: missing a \" symbol");
             return 0;
         }
     argparse_loop_exit:
@@ -251,7 +251,7 @@ void command_handle(server_t* server, player_t* player, char* message, uint8_t c
     }
 
     command_args_t arguments;
-    arguments.player   = player;
+    arguments.player      = player;
     arguments.permissions = cmd->permissions;
     arguments.console     = console;
     arguments.argv[0]     = command;

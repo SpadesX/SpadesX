@@ -1,12 +1,12 @@
-#include "Util/Uthash.h"
 #include <Server/ParseConvert.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Notice.h>
+#include <Util/Uthash.h>
 
 void cmd_admin_mute(void* p_server, command_args_t arguments)
 {
-    server_t* server = (server_t*)p_server;
+    server_t* server = (server_t*) p_server;
     uint8_t   ID     = 33;
     if (arguments.argc == 2 && parse_player(arguments.argv[1], &ID, NULL)) {
         player_t* player;
@@ -31,7 +31,7 @@ void cmd_admin_mute(void* p_server, command_args_t arguments)
 
 void cmd_mute(void* p_server, command_args_t arguments)
 {
-    server_t* server = (server_t*)p_server;
+    server_t* server = (server_t*) p_server;
     uint8_t   ID     = 33;
     if (arguments.argc == 2 && parse_player(arguments.argv[1], &ID, NULL)) {
         player_t* player;

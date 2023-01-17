@@ -19,9 +19,9 @@ void send_input_data(server_t* server, player_t* player)
 
 void receive_input_data(server_t* server, player_t* player, stream_t* data)
 {
-    uint8_t   bits[8];
-    uint8_t   mask        = 1;
-    uint8_t   received_id = stream_read_u8(data);
+    uint8_t bits[8];
+    uint8_t mask        = 1;
+    uint8_t received_id = stream_read_u8(data);
     if (player->id != received_id) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in Input packet", player->id, received_id);
     } else if (player->state == STATE_READY) {

@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <zlib.h>
 
-
 static z_stream* g_compressor = NULL;
 
 /**

@@ -20,9 +20,10 @@ void send_weapon_reload(server_t* server, player_t* player, uint8_t startAnimati
         stream_write_u8(&stream, player->weapon_reserve);
     }
     if (startAnimation) {
-        uint8_t sendSucc = 0;
+        uint8_t   sendSucc = 0;
         player_t *connected_player, *tmp;
-        HASH_ITER(hh, server->players, connected_player, tmp) {
+        HASH_ITER(hh, server->players, connected_player, tmp)
+        {
             if (is_past_state_data(connected_player) && connected_player->id != player->id) {
                 if (enet_peer_send(connected_player->peer, 0, packet) == 0) {
                     sendSucc = 1;

@@ -1,7 +1,6 @@
-#include "Util/Types.h"
-
 #include <Server/ParseConvert.h>
 #include <Server/Structs/ServerStruct.h>
+#include <Util/Types.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>

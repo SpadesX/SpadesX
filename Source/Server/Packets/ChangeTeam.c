@@ -4,7 +4,7 @@
 
 void receive_change_team(server_t* server, player_t* player, stream_t* data)
 {
-    uint8_t   received_id = stream_read_u8(data);
+    uint8_t received_id = stream_read_u8(data);
     server->protocol.num_team_users[player->team]--;
     uint8_t team = stream_read_u8(data);
 

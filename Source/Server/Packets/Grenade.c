@@ -1,10 +1,10 @@
-#include "Util/Enums.h"
 #include <Server/Server.h>
 #include <Server/Staff.h>
 #include <Util/Checks/PacketChecks.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
+#include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Notice.h>

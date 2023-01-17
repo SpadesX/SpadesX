@@ -4,9 +4,8 @@
 uint8_t player_to_player_visibile(player_t* player, player_t* player2)
 {
     float distance = 0;
-    distance       = sqrt(
-    fabs(pow((player->movement.position.x - player2->movement.position.x), 2)) +
-    fabs(pow((player->movement.position.y - player2->movement.position.y), 2)));
+    distance       = sqrt(fabs(pow((player->movement.position.x - player2->movement.position.x), 2)) +
+                    fabs(pow((player->movement.position.y - player2->movement.position.y), 2)));
     if (player->team == TEAM_SPECTATOR) {
         return 1;
     } else if (distance >= 132) {

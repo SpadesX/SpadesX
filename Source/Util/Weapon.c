@@ -1,5 +1,6 @@
-#include "Server/Structs/PlayerStruct.h"
-#include "Util/Enums.h"
+#include <Server/Structs/PlayerStruct.h>
+#include <Util/Enums.h>
+#include <Util/Weapon.h>
 
 void set_default_player_ammo(player_t* player)
 {

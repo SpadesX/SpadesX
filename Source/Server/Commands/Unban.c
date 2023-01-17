@@ -7,9 +7,9 @@
 
 void cmd_unban(void* p_server, command_args_t arguments)
 {
-    (void)p_server;
-    ip_t      ip;
-    uint8_t   unbanned = 0;
+    (void) p_server;
+    ip_t    ip;
+    uint8_t unbanned = 0;
     if (arguments.argc == 2 && parse_ip(arguments.argv[1], &ip, NULL)) {
         struct json_object* array;
         struct json_object* root = json_object_from_file("Bans.json");
@@ -39,10 +39,10 @@ void cmd_unban(void* p_server, command_args_t arguments)
 
 void cmd_unban_range(void* p_server, command_args_t arguments)
 {
-    (void)p_server;
-    ip_t      start_range, end_range;
-    char*     end;
-    uint8_t   unbanned = 0;
+    (void) p_server;
+    ip_t    start_range, end_range;
+    char*   end;
+    uint8_t unbanned = 0;
     if (arguments.argc == 2 && parse_ip(arguments.argv[1], &start_range, &end) && parse_ip(end, &end_range, NULL)) {
         struct json_object* array;
         struct json_object* root = json_object_from_file("Bans.json");
@@ -67,10 +67,10 @@ void cmd_unban_range(void* p_server, command_args_t arguments)
             }
         }
         if (unbanned) {
-            send_server_notice(arguments.player, arguments.console, "IP range %s-%s unbanned", start_ip_string, end_ip_string);
-        } else {
             send_server_notice(
-                               arguments.player,
+            arguments.player, arguments.console, "IP range %s-%s unbanned", start_ip_string, end_ip_string);
+        } else {
+            send_server_notice(arguments.player,
                                arguments.console,
                                "IP range %s-%s not found in banned IP ranges",
                                unban_start_range_string,
@@ -83,7 +83,7 @@ void cmd_unban_range(void* p_server, command_args_t arguments)
 
 void cmd_undo_ban(void* p_server, command_args_t arguments)
 {
-    (void)p_server;
+    (void) p_server;
     const char* ip_string;
     const char* start_ip;
     const char* end_ip;

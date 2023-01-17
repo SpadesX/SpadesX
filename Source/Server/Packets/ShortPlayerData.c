@@ -1,8 +1,7 @@
-#include "Util/DataStream.h"
-#include "Util/Enums.h"
-
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
+#include <Util/DataStream.h>
+#include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Uthash.h>
 #include <Util/Weapon.h>

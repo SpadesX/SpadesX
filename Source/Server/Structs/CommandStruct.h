@@ -15,11 +15,11 @@ typedef struct permissions
 
 typedef struct command_args
 {
-    player_t*  player;
-    uint8_t  console;
-    uint32_t permissions;
-    uint32_t argc;
-    char*    argv[32]; // 32 roles commands should be more than enough for anyone
+    player_t* player;
+    uint8_t   console;
+    uint32_t  permissions;
+    uint32_t  argc;
+    char*     argv[32]; // 32 roles commands should be more than enough for anyone
 } command_args_t;
 
 typedef struct command

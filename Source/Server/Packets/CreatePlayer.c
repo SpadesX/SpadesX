@@ -1,8 +1,7 @@
-#include "Util/Uthash.h"
-
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Log.h>
+#include <Util/Uthash.h>
 
 void send_create_player(server_t* server, player_t* receiver, player_t* child)
 {

@@ -1,28 +1,28 @@
-#include "Util/Enums.h"
-#include "Util/Log.h"
-#include "Util/Uthash.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PositionChecks.h>
+#include <Util/Enums.h>
+#include <Util/Log.h>
 #include <Util/Nanos.h>
+#include <Util/Uthash.h>
 
 // player_hit_id is the player that got shot
 // player_id is the player who fired.
 void receive_hit_packet(server_t* server, player_t* player, stream_t* data)
 {
-    uint8_t    hit_player_id = stream_read_u8(data);
-    hit_t      hit_type      = stream_read_u8(data);
+    uint8_t   hit_player_id = stream_read_u8(data);
+    hit_t     hit_type      = stream_read_u8(data);
     player_t* hit_player;
     HASH_FIND(hh, server->players, &hit_player_id, sizeof(hit_player_id), hit_player);
     if (hit_player == NULL) {
         LOG_WARNING("Player %s (#%hhu) hit player who doesn't exist (#%hhu)", player->name, player->id, hit_player_id);
         return;
     }
-    vector3f_t shot_pos      = player->movement.position;
-    vector3f_t shot_eye_pos  = player->movement.eye_pos;
-    vector3f_t hit_pos       = hit_player->movement.position;
-    vector3f_t shot_orien    = player->movement.forward_orientation;
-    float      distance      = distance_in_2d(shot_pos, hit_pos);
+    vector3f_t shot_pos     = player->movement.position;
+    vector3f_t shot_eye_pos = player->movement.eye_pos;
+    vector3f_t hit_pos      = hit_player->movement.position;
+    vector3f_t shot_orien   = player->movement.forward_orientation;
+    float      distance     = distance_in_2d(shot_pos, hit_pos);
     long       x = 0, y = 0, z = 0;
 
     if (player->sprinting || (player->item == TOOL_GUN && player->weapon_clip <= 0)) {

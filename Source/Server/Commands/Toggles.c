@@ -25,12 +25,10 @@ void cmd_toggle_build(void* p_server, command_args_t arguments)
         if (is_past_join_screen(player)) {
             if (player->can_build == 1) {
                 player->can_build = 0;
-                broadcast_server_notice(
-                server, arguments.console, "Building has been disabled for %s", player->name);
+                broadcast_server_notice(server, arguments.console, "Building has been disabled for %s", player->name);
             } else if (player->can_build == 0) {
                 player->can_build = 1;
-                broadcast_server_notice(
-                server, arguments.console, "Building has been enabled for %s", player->name);
+                broadcast_server_notice(server, arguments.console, "Building has been enabled for %s", player->name);
             }
         }
     }
@@ -58,12 +56,10 @@ void cmd_toggle_kill(void* p_server, command_args_t arguments)
         if (is_past_join_screen(player)) {
             if (player->allow_killing == 1) {
                 player->allow_killing = 0;
-                broadcast_server_notice(
-                server, arguments.console, "Killing has been disabled for %s", player->name);
+                broadcast_server_notice(server, arguments.console, "Killing has been disabled for %s", player->name);
             } else if (player->allow_killing == 0) {
                 player->allow_killing = 1;
-                broadcast_server_notice(
-                server, arguments.console, "Killing has been enabled for %s", player->name);
+                broadcast_server_notice(server, arguments.console, "Killing has been enabled for %s", player->name);
             }
         }
     }

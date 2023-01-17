@@ -7,8 +7,8 @@
 
 void cmd_clin(void* p_server, command_args_t arguments)
 {
-    server_t* server = (server_t*) p_server;
-    uint8_t player_id = 33;
+    server_t* server    = (server_t*) p_server;
+    uint8_t   player_id = 33;
     if (arguments.argc > 2) {
         send_server_notice(arguments.player, arguments.console, "Too many arguments");
         return;

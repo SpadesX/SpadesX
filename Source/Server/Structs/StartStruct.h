@@ -1,6 +1,8 @@
 #ifndef STARTSTRUCT_H
 #define STARTSTRUCT_H
 
+#include <Server/Structs/MapStruct.h>
+
 typedef struct server_args
 {
     uint16_t       port;

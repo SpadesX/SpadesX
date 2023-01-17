@@ -1,4 +1,4 @@
-#include "Util/Enums.h"
+#include <Util/Enums.h>
 #include <math.h>
 #include <stddef.h>
 
@@ -303,7 +303,7 @@ static inline void repositionPlayer(player_t* player, vector3f_t* position)
     float f; /* FIXME meaningful name */
 
     player->movement.eye_pos = player->movement.position = *position;
-    f = player->lastclimb - ftotclk; /* FIXME meaningful name */
+    f                                                    = player->lastclimb - ftotclk; /* FIXME meaningful name */
     if (f > -0.25f)
         player->movement.eye_pos.z += (f + 0.25f) / 0.25f;
 }
@@ -321,9 +321,7 @@ static inline void setOrientationVectors(vector3f_t* o, vector3f_t* s, vector3f_
 void physics_reorient_player(player_t* player, vector3f_t* orientation)
 {
     player->movement.forward_orientation = *orientation;
-    setOrientationVectors(orientation,
-                          &player->movement.strafe_orientation,
-                          &player->movement.height_orientation);
+    setOrientationVectors(orientation, &player->movement.strafe_orientation, &player->movement.height_orientation);
 }
 
 int physics_try_uncrouch(server_t* server, player_t* player)
@@ -337,7 +335,7 @@ int physics_try_uncrouch(server_t* server, player_t* player)
 
     // first check if player can lower feet (in midair)
     if (player->airborne && !(clipbox(server, x1, y1, z1) || clipbox(server, x1, y2, z1) ||
-                                                clipbox(server, x2, y1, z1) || clipbox(server, x2, y2, z1)))
+                              clipbox(server, x2, y1, z1) || clipbox(server, x2, y2, z1)))
         return (1);
     // then check if they can raise their head
     else if (!(clipbox(server, x1, y1, z2) || clipbox(server, x1, y2, z2) || clipbox(server, x2, y1, z2) ||
@@ -380,16 +378,14 @@ void physics_box_clip_move(server_t* server, player_t* player)
         z -= 0.9f;
     if (z < -1.36f)
         player->movement.position.x = nx;
-    else if (!player->crouching && player->movement.forward_orientation.z < 0.5f &&
-             !player->sprinting)
-    {
+    else if (!player->crouching && player->movement.forward_orientation.z < 0.5f && !player->sprinting) {
         z = 0.35f;
         while (z >= -2.36f && !clipbox(server, nx + f, player->movement.position.y - 0.45f, nz + z) &&
                !clipbox(server, nx + f, player->movement.position.y + 0.45f, nz + z))
             z -= 0.9f;
         if (z < -2.36f) {
             player->movement.position.x = nx;
-            climb                                         = 1;
+            climb                       = 1;
         } else
             player->movement.velocity.x = 0;
     } else
@@ -405,16 +401,14 @@ void physics_box_clip_move(server_t* server, player_t* player)
         z -= 0.9f;
     if (z < -1.36f)
         player->movement.position.y = ny;
-    else if (!player->crouching && player->movement.forward_orientation.z < 0.5f &&
-             !player->sprinting && !climb)
-    {
+    else if (!player->crouching && player->movement.forward_orientation.z < 0.5f && !player->sprinting && !climb) {
         z = 0.35f;
         while (z >= -2.36f && !clipbox(server, player->movement.position.x - 0.45f, ny + f, nz + z) &&
                !clipbox(server, player->movement.position.x + 0.45f, ny + f, nz + z))
             z -= 0.9f;
         if (z < -2.36f) {
             player->movement.position.y = ny;
-            climb                                         = 1;
+            climb                       = 1;
         } else
             player->movement.velocity.y = 0;
     } else if (!climb)
@@ -434,22 +428,10 @@ void physics_box_clip_move(server_t* server, player_t* player)
 
     player->airborne = 1;
 
-    if (clipbox(server,
-                player->movement.position.x - 0.45f,
-                player->movement.position.y - 0.45f,
-                nz + m) ||
-        clipbox(server,
-                player->movement.position.x - 0.45f,
-                player->movement.position.y + 0.45f,
-                nz + m) ||
-        clipbox(server,
-                player->movement.position.x + 0.45f,
-                player->movement.position.y - 0.45f,
-                nz + m) ||
-        clipbox(server,
-                player->movement.position.x + 0.45f,
-                player->movement.position.y + 0.45f,
-                nz + m))
+    if (clipbox(server, player->movement.position.x - 0.45f, player->movement.position.y - 0.45f, nz + m) ||
+        clipbox(server, player->movement.position.x - 0.45f, player->movement.position.y + 0.45f, nz + m) ||
+        clipbox(server, player->movement.position.x + 0.45f, player->movement.position.y - 0.45f, nz + m) ||
+        clipbox(server, player->movement.position.x + 0.45f, player->movement.position.y + 0.45f, nz + m))
     {
         if (player->movement.velocity.z >= 0) {
             player->wade     = player->movement.position.z > 61;
@@ -477,14 +459,12 @@ long physics_move_player(server_t* server, player_t* player)
         f *= 0.1f;
     else if (player->crouching)
         f *= 0.3f;
-    else if ((player->secondary_fire && player->item == TOOL_GUN) ||
-             player->sneaking)
+    else if ((player->secondary_fire && player->item == TOOL_GUN) || player->sneaking)
         f *= 0.5f;
     else if (player->sprinting)
         f *= 1.3f;
 
-    if ((player->move_forward || player->move_backwards) &&
-        (player->move_left || player->move_right))
+    if ((player->move_forward || player->move_backwards) && (player->move_left || player->move_right))
         f *= SQRT; // if strafe + forward/backwards then limit diagonal velocity
 
     if (player->move_forward) {

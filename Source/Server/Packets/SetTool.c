@@ -1,8 +1,7 @@
-#include "Util/Enums.h"
-
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PacketChecks.h>
+#include <Util/Enums.h>
 #include <Util/Log.h>
 
 void send_set_tool(server_t* server, player_t* player, uint8_t tool)

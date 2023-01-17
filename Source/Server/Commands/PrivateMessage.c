@@ -17,9 +17,9 @@ void cmd_pm(void* p_server, command_args_t arguments)
         }
         if (is_past_join_screen(player)) {
             if (arguments.console) {
-                send_server_notice( player, 0, "PM from Console: %s", PM);
+                send_server_notice(player, 0, "PM from Console: %s", PM);
             } else {
-                send_server_notice( player, 0, "PM from %s: %s", arguments.player->name, PM);
+                send_server_notice(player, 0, "PM from %s: %s", arguments.player->name, PM);
             }
             send_server_notice(arguments.player, arguments.console, "PM sent to %s", arguments.player->name);
         }

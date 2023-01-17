@@ -2,8 +2,8 @@
 #include <Server/Server.h>
 
 void send_set_hp(server_t*  server,
-                 player_t*    player,
-                 player_t*    player_hit,
+                 player_t*  player,
+                 player_t*  player_hit,
                  long       hp_chnage,
                  uint8_t    type_of_damage,
                  uint8_t    kill_reason,

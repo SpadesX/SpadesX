@@ -1,12 +1,12 @@
-#include "Server/ParseConvert.h"
-#include "Server/Structs/PlayerStruct.h"
-#include "Util/Enums.h"
-#include "Util/Log.h"
-#include "Util/Types.h"
-#include "Util/Weapon.h"
 #include <Server/Packets/Packets.h>
+#include <Server/ParseConvert.h>
 #include <Server/Server.h>
+#include <Server/Structs/PlayerStruct.h>
 #include <Server/Structs/ServerStruct.h>
+#include <Util/Enums.h>
+#include <Util/Log.h>
+#include <Util/Types.h>
+#include <Util/Weapon.h>
 #include <math.h>
 #include <time.h>
 

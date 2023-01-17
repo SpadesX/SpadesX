@@ -1,11 +1,11 @@
 // Copyright DarkNeutrino 2021
-#include "Util/Uthash.h"
 #include <Server/Server.h>
 #include <Server/Structs/ServerStruct.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/DataStream.h>
 #include <Util/Log.h>
 #include <Util/Types.h>
+#include <Util/Uthash.h>
 #include <enet/enet.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -17,7 +17,8 @@ void master_update(server_t* server)
 {
     server->protocol.num_users = 0;
     player_t *connected_player, *tmp;
-    HASH_ITER(hh, server->players, connected_player, tmp) {
+    HASH_ITER(hh, server->players, connected_player, tmp)
+    {
         if (is_past_join_screen(connected_player)) {
             server->protocol.num_users++;
         }

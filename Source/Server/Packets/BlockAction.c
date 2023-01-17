@@ -1,5 +1,3 @@
-#include "Util/Enums.h"
-#include "Util/Uthash.h"
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Nodes.h>
@@ -8,8 +6,10 @@
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
+#include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
+#include <Util/Uthash.h>
 #include <Util/Utlist.h>
 
 void send_block_action(server_t* server, player_t* player, uint8_t actionType, int X, int Y, int Z)
@@ -25,9 +25,10 @@ void send_block_action(server_t* server, player_t* player, uint8_t actionType, i
     stream_write_u32(&stream, X);
     stream_write_u32(&stream, Y);
     stream_write_u32(&stream, Z);
-    uint8_t sent = 0;
+    uint8_t   sent = 0;
     player_t *check, *tmp;
-    HASH_ITER(hh, server->players, check, tmp) {
+    HASH_ITER(hh, server->players, check, tmp)
+    {
         if (is_past_state_data(check)) {
             if (enet_peer_send(check->peer, 0, packet) == 0) {
                 sent = 1;
@@ -48,8 +49,8 @@ void send_block_action(server_t* server, player_t* player, uint8_t actionType, i
     }
 }
 void send_block_action_to_player(server_t* server,
-                                 player_t*   player,
-                                 player_t*   receiver,
+                                 player_t* player,
+                                 player_t* receiver,
                                  uint8_t   actionType,
                                  int       X,
                                  int       Y,
@@ -92,8 +93,8 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
         vector3i_t vectorBlock  = {X, Y, Z};
         vector3f_t vectorfBlock = {(float) X, (float) Y, (float) Z};
         vector3f_t playerVector = player->movement.position;
-        if (((player->item == TOOL_SPADE && (actionType == 1 || actionType == 2)) || (player->item == TOOL_BLOCK && actionType == 0) ||
-             (player->item == TOOL_GUN && actionType == 1)))
+        if (((player->item == TOOL_SPADE && (actionType == 1 || actionType == 2)) ||
+             (player->item == TOOL_BLOCK && actionType == 0) || (player->item == TOOL_GUN && actionType == 1)))
         {
             if ((distance_in_3d(vectorfBlock, playerVector) <= 4 || player->item == TOOL_GUN) &&
                 valid_pos_v3i(server, vectorBlock))
@@ -130,8 +131,11 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                 player->item == TOOL_GUN)
                             {
                                 if (player->item == TOOL_GUN) {
-                                    
-                                    if (player->weapon_clip <= 0 && !diff_is_older_then_dont_update(timeNow, player->timers.since_last_primary_weapon_input, 10*NANO_IN_MILLI)) {
+
+                                    if (player->weapon_clip <= 0 &&
+                                        !diff_is_older_then_dont_update(
+                                        timeNow, player->timers.since_last_primary_weapon_input, 10 * NANO_IN_MILLI))
+                                    {
                                         send_message_to_staff(server,
                                                               "Player %s (#%hhu) probably has hack to have more ammo",
                                                               player->name,

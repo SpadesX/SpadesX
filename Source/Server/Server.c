@@ -1,7 +1,4 @@
 // Copyright DarkNeutrino 2021
-#include "Server/Structs/GrenadeStruct.h"
-#include "Util/Uthash.h"
-
 #include <Server/Commands/Commands.h>
 #include <Server/Console.h>
 #include <Server/Gamemodes/Gamemodes.h>
@@ -12,6 +9,7 @@
 #include <Server/Ping.h>
 #include <Server/Player.h>
 #include <Server/Server.h>
+#include <Server/Structs/GrenadeStruct.h>
 #include <Server/Structs/ServerStruct.h>
 #include <Server/Structs/StartStruct.h>
 #include <Util/Checks/PlayerChecks.h>
@@ -26,6 +24,7 @@
 #include <Util/Physics.h>
 #include <Util/Queue.h>
 #include <Util/Types.h>
+#include <Util/Uthash.h>
 #include <Util/Utlist.h>
 #include <libmapvxl/libmapvxl.h>
 #include <stddef.h>

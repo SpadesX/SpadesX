@@ -1,15 +1,15 @@
-#include "Util/Uthash.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Log.h>
+#include <Util/Uthash.h>
 
 void send_intel_drop(server_t* server, player_t* player)
 {
     if (server->protocol.num_players == 0) {
         return;
     }
-    uint8_t   team;
+    uint8_t team;
     if (player->team == 0) {
         team = 1;
     } else {
@@ -55,9 +55,10 @@ void send_intel_drop(server_t* server, player_t* player)
              (int) server->protocol.gamemode.intel[team].x,
              (int) server->protocol.gamemode.intel[team].y,
              (int) server->protocol.gamemode.intel[team].z);
-    uint8_t sent = 0;
+    uint8_t   sent = 0;
     player_t *connected_player, *tmp;
-    HASH_ITER(hh, server->players, connected_player, tmp) {
+    HASH_ITER(hh, server->players, connected_player, tmp)
+    {
         if (is_past_state_data(connected_player)) {
             if (enet_peer_send(connected_player->peer, 0, packet) == 0) {
                 sent = 1;

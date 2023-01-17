@@ -5,7 +5,7 @@
 
 void cmd_login(void* p_server, command_args_t arguments)
 {
-    (void)p_server;
+    (void) p_server;
     if (arguments.console) {
         LOG_INFO("You cannot use this command from console");
         return;
@@ -19,18 +19,14 @@ void cmd_login(void* p_server, command_args_t arguments)
                 level[j] = tolower(level[j]);
             }
             uint8_t failed = 0;
-            for (unsigned long i = 0; i < sizeof(arguments.player->role_list) / sizeof(permissions_t);
-                 ++i)
-            {
+            for (unsigned long i = 0; i < sizeof(arguments.player->role_list) / sizeof(permissions_t); ++i) {
                 if (strcmp(level, arguments.player->role_list[i].access_level) == 0) {
                     if (*arguments.player->role_list[i].access_password[0] !=
                         '\0' // disable the role if no password is set
                         && strcmp(password, *arguments.player->role_list[i].access_password) == 0)
                     {
-                        arguments.player->permissions |=
-                        1 << arguments.player->role_list[i].perm_level_offset;
-                        send_server_notice(
-                                           arguments.player,
+                        arguments.player->permissions |= 1 << arguments.player->role_list[i].perm_level_offset;
+                        send_server_notice(arguments.player,
                                            arguments.console,
                                            "You logged in as %s",
                                            arguments.player->role_list[i].access_level);
@@ -56,7 +52,7 @@ void cmd_login(void* p_server, command_args_t arguments)
 
 void cmd_logout(void* p_server, command_args_t arguments)
 {
-    (void)p_server;
+    (void) p_server;
     if (arguments.console) {
         LOG_INFO("You cannot use this command from console");
         return;

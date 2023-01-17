@@ -7,7 +7,7 @@
 
 uint8_t is_staff(server_t* server, player_t* player)
 {
-    (void)server;
+    (void) server;
     if (player_has_permission(player, 0, 4294967294)) {
         return 1;
     }
@@ -26,7 +26,8 @@ void send_message_to_staff(server_t* server, const char* format, ...)
     send_server_notice(null_player, 1, fMessage);
 
     player_t *connected_player, *tmp;
-    HASH_ITER(hh, server->players, connected_player, tmp) {
+    HASH_ITER(hh, server->players, connected_player, tmp)
+    {
         if (is_past_join_screen(connected_player) && is_staff(server, connected_player)) {
             send_server_notice(connected_player, 0, fMessage);
         }

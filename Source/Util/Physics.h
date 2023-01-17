@@ -43,7 +43,7 @@ long  physics_cast_ray(server_t* server,
                        long*     z);
 
 void physics_reorient_player(player_t* player, vector3f_t* orientation);
-int physics_try_uncrouch(server_t* server, player_t* player);
+int  physics_try_uncrouch(server_t* server, player_t* player);
 void physics_box_clip_move(server_t* server, player_t* player);
 long physics_move_player(server_t* server, player_t* player);
 int  physics_move_grenade(server_t* server, grenade_t* grenade);

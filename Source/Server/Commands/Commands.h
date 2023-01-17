@@ -6,7 +6,7 @@
 #include <libmapvxl/libmapvxl.h>
 
 uint8_t player_has_permission(player_t* player, uint8_t console, uint32_t permission);
-void command_handle(server_t* server, player_t* player, char* message, uint8_t console);
+void    command_handle(server_t* server, player_t* player, char* message, uint8_t console);
 void    command_populate_all(server_t* server);
 void    free_all_commands(server_t* server);
 void    command_create(server_t* server,

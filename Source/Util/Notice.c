@@ -1,7 +1,7 @@
-#include "Util/Uthash.h"
 #include <Server/Structs/ServerStruct.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Log.h>
+#include <Util/Uthash.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -51,8 +51,9 @@ void broadcast_server_notice(server_t* server, uint8_t console, const char* mess
         LOG_INFO("%s", fMessage);
     }
     player_t *player, *tmp;
-    uint8_t sent = 0;
-    HASH_ITER(hh, server->players, player, tmp) {
+    uint8_t   sent = 0;
+    HASH_ITER(hh, server->players, player, tmp)
+    {
         if (is_past_join_screen(player)) {
             if (enet_peer_send(player->peer, 0, packet) == 0) {
                 sent = 1;

@@ -1,7 +1,7 @@
-#include "Util/Uthash.h"
 #include <Server/Server.h>
 #include <Util/Checks/PacketChecks.h>
 #include <Util/Log.h>
+#include <Util/Uthash.h>
 
 void send_set_color(server_t* server, player_t* player, color_t color)
 {

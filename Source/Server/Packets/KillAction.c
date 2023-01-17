@@ -1,12 +1,12 @@
-#include "Util/Enums.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
+#include <Util/Enums.h>
 #include <time.h>
 
 void send_kill_action_packet(server_t* server,
-                             player_t*   killer,
-                             player_t*   player,
+                             player_t* killer,
+                             player_t* player,
                              uint8_t   killReason,
                              uint8_t   respawnTime,
                              uint8_t   makeInvisible)
@@ -20,13 +20,14 @@ void send_kill_action_packet(server_t* server,
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_KILL_ACTION);
-    stream_write_u8(&stream, player->id);   // Player that died.
-    stream_write_u8(&stream, killer->id);    // Player that killed.
+    stream_write_u8(&stream, player->id);  // Player that died.
+    stream_write_u8(&stream, killer->id);  // Player that killed.
     stream_write_u8(&stream, killReason);  // Killing reason (1 is headshot)
     stream_write_u8(&stream, respawnTime); // Time before respawn happens
-    uint8_t sent = 0;
+    uint8_t   sent = 0;
     player_t *connected_player, *tmp;
-    HASH_ITER(hh, server->players, connected_player, tmp) {
+    HASH_ITER(hh, server->players, connected_player, tmp)
+    {
         uint8_t isPast = is_past_state_data(connected_player);
         if ((makeInvisible && connected_player->id != player->id && isPast) || (isPast && !makeInvisible)) {
             if (enet_peer_send(connected_player->peer, 0, packet) == 0) {

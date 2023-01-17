@@ -1,7 +1,7 @@
-#include "Util/Enums.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Packets/ReceivePackets.h>
 #include <Util/Checks/TimeChecks.h>
+#include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Physics.h>
 #include <Util/Uthash.h>
@@ -22,7 +22,8 @@ inline uint8_t allow_shot(server_t*  server,
 {
     uint8_t ret = 0;
     if (player->primary_fire &&
-        ((player->item == TOOL_SPADE && diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
+        ((player->item == TOOL_SPADE &&
+          diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
          (player->item == TOOL_GUN && player->weapon == WEAPON_RIFLE &&
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 500)) ||
          (player->item == TOOL_GUN && player->weapon == WEAPON_SMG &&
