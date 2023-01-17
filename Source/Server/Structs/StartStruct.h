@@ -5,18 +5,9 @@
 
 typedef struct server_args
 {
-    uint16_t       port;
-    uint32_t       connections;
-    uint32_t       channels;
-    uint32_t       in_bandwidth;
-    uint32_t       out_bandwidth;
-    uint8_t        master;
     string_node_t* map_list;
-    uint8_t        map_count;
     string_node_t* welcome_message_list;
-    uint8_t        welcome_message_list_len;
     string_node_t* periodic_message_list;
-    uint8_t        periodic_message_list_len;
     uint8_t*       periodic_delays;
     const char*    manager_password;
     const char*    admin_password;
@@ -28,7 +19,16 @@ typedef struct server_args
     const char*    team2_name;
     uint8_t*       team1_color;
     uint8_t*       team2_color;
-    uint8_t        gamemode;
+    uint32_t       connections;
+    uint32_t       channels;
+    uint32_t       in_bandwidth;
+    uint32_t       out_bandwidth;
+    uint16_t       port;
+    uint8_t master;
+    uint8_t map_count;
+    uint8_t welcome_message_list_len;
+    uint8_t periodic_message_list_len;
+    uint8_t gamemode;
 } server_args;
 
 #endif
