@@ -1,3 +1,4 @@
+#include "Util/Enums.h"
 #include <math.h>
 #include <stddef.h>
 
@@ -476,8 +477,8 @@ long physics_move_player(server_t* server, player_t* player)
         f *= 0.1f;
     else if (player->crouching)
         f *= 0.3f;
-    else if ((player->secondary_fire && player->item == 2) ||
-             player->sneaking) // Replace me later with ITEM_GUN
+    else if ((player->secondary_fire && player->item == TOOL_GUN) ||
+             player->sneaking)
         f *= 0.5f;
     else if (player->sprinting)
         f *= 1.3f;

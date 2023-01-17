@@ -92,10 +92,10 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
         vector3i_t vectorBlock  = {X, Y, Z};
         vector3f_t vectorfBlock = {(float) X, (float) Y, (float) Z};
         vector3f_t playerVector = player->movement.position;
-        if (((player->item == 0 && (actionType == 1 || actionType == 2)) || (player->item == 1 && actionType == 0) ||
-             (player->item == 2 && actionType == 1)))
+        if (((player->item == TOOL_SPADE && (actionType == 1 || actionType == 2)) || (player->item == TOOL_BLOCK && actionType == 0) ||
+             (player->item == TOOL_GUN && actionType == 1)))
         {
-            if ((distance_in_3d(vectorfBlock, playerVector) <= 4 || player->item == 2) &&
+            if ((distance_in_3d(vectorfBlock, playerVector) <= 4 || player->item == TOOL_GUN) &&
                 valid_pos_v3i(server, vectorBlock))
             {
                 switch (actionType) {
@@ -127,9 +127,9 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                  timeNow, player->timers.since_last_3block_dest, SPADE_DELAY) &&
                                  diff_is_older_then_dont_update(
                                  timeNow, player->timers.since_last_block_plac, SPADE_DELAY)) ||
-                                player->item == 2)
+                                player->item == TOOL_GUN)
                             {
-                                if (player->item == 2) {
+                                if (player->item == TOOL_GUN) {
                                     
                                     if (player->weapon_clip <= 0 && !diff_is_older_then_dont_update(timeNow, player->timers.since_last_primary_weapon_input, 10*NANO_IN_MILLI)) {
                                         send_message_to_staff(server,
@@ -178,7 +178,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                         check_node(server, neigh[i]);
                                     }
                                 }
-                                if (player->item != 2) {
+                                if (player->item != TOOL_GUN) {
                                     if (player->blocks < 50) {
                                         player->blocks++;
                                     }

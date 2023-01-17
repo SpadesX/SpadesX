@@ -1,3 +1,4 @@
+#include "Util/Enums.h"
 #include "Util/Log.h"
 #include "Util/Uthash.h"
 #include <Server/Packets/Packets.h>
@@ -24,7 +25,7 @@ void receive_hit_packet(server_t* server, player_t* player, stream_t* data)
     float      distance      = distance_in_2d(shot_pos, hit_pos);
     long       x = 0, y = 0, z = 0;
 
-    if (player->sprinting || (player->item == 2 && player->weapon_clip <= 0)) {
+    if (player->sprinting || (player->item == TOOL_GUN && player->weapon_clip <= 0)) {
         return; // Sprinting and hitting somebody is impossible
     }
 

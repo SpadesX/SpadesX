@@ -1,3 +1,4 @@
+#include "Util/Enums.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Packets/ReceivePackets.h>
 #include <Util/Checks/TimeChecks.h>
@@ -21,12 +22,12 @@ inline uint8_t allow_shot(server_t*  server,
 {
     uint8_t ret = 0;
     if (player->primary_fire &&
-        ((player->item == 0 && diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
-         (player->item == 2 && player->weapon == 0 &&
+        ((player->item == TOOL_SPADE && diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
+         (player->item == TOOL_GUN && player->weapon == 0 &&
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 500)) ||
-         (player->item == 2 && player->weapon == 1 &&
+         (player->item == TOOL_GUN && player->weapon == 1 &&
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
-         (player->item == 2 && player->weapon == 2 &&
+         (player->item == TOOL_GUN && player->weapon == 2 &&
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 1000))) &&
         player->alive && player_hit->alive && (player->team != player_hit->team || player->allow_team_killing) &&
         (player->allow_killing && server->global_ak) && physics_validate_hit(shot_pos, shot_orien, hit_pos, 5) &&
