@@ -1,6 +1,7 @@
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
 #include "Util/DataStream.h"
+#include "Util/Enums.h"
 #include "Util/Log.h"
 #include "Util/Uthash.h"
 
@@ -23,19 +24,19 @@ void receive_short_player(server_t* server, player_t* player, stream_t* data)
     }
 
     switch (player->weapon) {
-        case 0:
+        case WEAPON_RIFLE:
             player->weapon_reserve  = 50;
             player->weapon_clip     = 10;
             player->default_clip    = RIFLE_DEFAULT_CLIP;
             player->default_reserve = RIFLE_DEFAULT_RESERVE;
             break;
-        case 1:
+        case WEAPON_SMG:
             player->weapon_reserve  = 120;
             player->weapon_clip     = 30;
             player->default_clip    = SMG_DEFAULT_CLIP;
             player->default_reserve = SMG_DEFAULT_RESERVE;
             break;
-        case 2:
+        case WEAPON_SHOTGUN:
             player->weapon_reserve  = 48;
             player->weapon_clip     = 6;
             player->default_clip    = SHOTGUN_DEFAULT_CLIP;

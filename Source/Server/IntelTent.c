@@ -1,5 +1,6 @@
 #include "Server/ParseConvert.h"
 #include "Server/Structs/PlayerStruct.h"
+#include "Util/Enums.h"
 #include "Util/Log.h"
 #include "Util/Types.h"
 #include <Server/Packets/Packets.h>
@@ -224,13 +225,13 @@ void handleTentAndIntel(server_t* server, player_t* player)
                 player->grenades = 3;
                 player->blocks   = 50;
                 switch (player->weapon) {
-                    case 0:
+                    case WEAPON_RIFLE:
                         player->weapon_reserve = 50;
                         break;
-                    case 1:
+                    case WEAPON_SMG:
                         player->weapon_reserve = 120;
                         break;
-                    case 2:
+                    case WEAPON_SHOTGUN:
                         player->weapon_reserve = 48;
                         break;
                 }
@@ -248,13 +249,13 @@ void handleTentAndIntel(server_t* server, player_t* player)
                 player->grenades = 3;
                 player->blocks   = 50;
                 switch (player->weapon) {
-                    case 0:
+                    case WEAPON_RIFLE:
                         player->weapon_reserve = 50;
                         break;
-                    case 1:
+                    case WEAPON_SMG:
                         player->weapon_reserve = 120;
                         break;
-                    case 2:
+                    case WEAPON_SHOTGUN:
                         player->weapon_reserve = 48;
                         break;
                 }

@@ -1,3 +1,4 @@
+#include "Util/Enums.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
@@ -47,19 +48,19 @@ void send_kill_action_packet(server_t* server,
         player->timers.start_of_respawn_wait = time(NULL);
         player->state                        = STATE_WAITING_FOR_RESPAWN;
         switch (player->weapon) {
-            case 0:
+            case WEAPON_RIFLE:
                 player->weapon_reserve  = 50;
                 player->weapon_clip     = 10;
                 player->default_clip    = RIFLE_DEFAULT_CLIP;
                 player->default_reserve = RIFLE_DEFAULT_RESERVE;
                 break;
-            case 1:
+            case WEAPON_SMG:
                 player->weapon_reserve  = 120;
                 player->weapon_clip     = 30;
                 player->default_clip    = SMG_DEFAULT_CLIP;
                 player->default_reserve = SMG_DEFAULT_RESERVE;
                 break;
-            case 2:
+            case WEAPON_SHOTGUN:
                 player->weapon_reserve  = 48;
                 player->weapon_clip     = 6;
                 player->default_clip    = SHOTGUN_DEFAULT_CLIP;
