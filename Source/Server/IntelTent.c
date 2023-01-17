@@ -3,6 +3,7 @@
 #include "Util/Enums.h"
 #include "Util/Log.h"
 #include "Util/Types.h"
+#include "Util/Weapon.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Server/Structs/ServerStruct.h>
@@ -224,17 +225,7 @@ void handleTentAndIntel(server_t* server, player_t* player)
                 player->hp       = 100;
                 player->grenades = 3;
                 player->blocks   = 50;
-                switch (player->weapon) {
-                    case WEAPON_RIFLE:
-                        player->weapon_reserve = 50;
-                        break;
-                    case WEAPON_SMG:
-                        player->weapon_reserve = 120;
-                        break;
-                    case WEAPON_SHOTGUN:
-                        player->weapon_reserve = 48;
-                        break;
-                }
+                set_default_player_ammo_reserve(player);
                 player->timers.since_last_base_enter_restock = time(NULL);
             }
         } else if (player->has_intel) {
@@ -248,17 +239,7 @@ void handleTentAndIntel(server_t* server, player_t* player)
                 player->hp       = 100;
                 player->grenades = 3;
                 player->blocks   = 50;
-                switch (player->weapon) {
-                    case WEAPON_RIFLE:
-                        player->weapon_reserve = 50;
-                        break;
-                    case WEAPON_SMG:
-                        player->weapon_reserve = 120;
-                        break;
-                    case WEAPON_SHOTGUN:
-                        player->weapon_reserve = 48;
-                        break;
-                }
+                set_default_player_ammo_reserve(player);
                 send_restock(server, player);
                 player->timers.since_last_base_enter = time(NULL);
                 if (server->protocol.current_gamemode == GAME_MODE_BABEL) {

@@ -17,6 +17,7 @@
 #include <Util/Notice.h>
 #include <Util/Physics.h>
 #include <Util/Utlist.h>
+#include <Util/Weapon.h>
 #include <enet/enet.h>
 #include <json-c/json_util.h>
 #include <math.h>
@@ -252,7 +253,7 @@ void on_player_update(server_t* server, player_t* player)
             player->hp             = 100;
             player->grenades       = 3;
             player->blocks         = 50;
-            player->item           = 2;
+            player->item           = TOOL_GUN;
             player->input          = 0;
             player->move_forward   = 0;
             player->move_backwards = 0;
@@ -418,26 +419,8 @@ void for_players(server_t* server)
             uint64_t timeNow = get_nanos();
             if (player->primary_fire == 1 && player->reloading == 0 && player->item == TOOL_GUN) {
                 if (player->weapon_clip > 0) {
-                    uint64_t milliseconds = 0;
-                    switch (player->weapon) {
-                        case WEAPON_RIFLE:
-                        {
-                            milliseconds = 500;
-                            break;
-                        }
-                        case WEAPON_SMG:
-                        {
-                            milliseconds = 100;
-                            break;
-                        }
-                        case WEAPON_SHOTGUN:
-                        {
-                            milliseconds = 1000;
-                            break;
-                        }
-                    }
                     if (diff_is_older_then(
-                        timeNow, &player->timers.since_last_weapon_input, NANO_IN_MILLI * milliseconds))
+                        timeNow, &player->timers.since_last_weapon_input, get_player_weapon_delay_nano(player)))
                     {
                         player->weapon_clip--;
                         if (player->weapon_clip == 0) {

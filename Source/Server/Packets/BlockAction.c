@@ -137,7 +137,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                                               player->name,
                                                               player->id);
                                         return;
-                                    } else if (player->weapon == 0 &&
+                                    } else if (player->weapon == WEAPON_RIFLE &&
                                                diff_is_older_then(timeNow,
                                                                   &player->timers.since_last_block_dest_with_gun,
                                                                   (RIFLE_DELAY - (NANO_IN_MILLI * 10))) == 0)
@@ -147,7 +147,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                                               player->name,
                                                               player->id);
                                         return;
-                                    } else if (player->weapon == 1 &&
+                                    } else if (player->weapon == WEAPON_SMG &&
                                                diff_is_older_then(timeNow,
                                                                   &player->timers.since_last_block_dest_with_gun,
                                                                   (SMG_DELAY - (NANO_IN_MILLI * 10))) == 0)
@@ -157,7 +157,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                                                               player->name,
                                                               player->id);
                                         return;
-                                    } else if (player->weapon == 2 &&
+                                    } else if (player->weapon == WEAPON_SHOTGUN &&
                                                diff_is_older_then(timeNow,
                                                                   &player->timers.since_last_block_dest_with_gun,
                                                                   (SHOTGUN_DELAY - (NANO_IN_MILLI * 10))) == 0)

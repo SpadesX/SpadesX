@@ -1,13 +1,13 @@
-#include "Util/Enums.h"
-#include "Util/Uthash.h"
-
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
 #include <Server/Server.h>
 #include <Util/Checks/PlayerChecks.h>
+#include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Notice.h>
+#include <Util/Uthash.h>
 #include <Util/Utlist.h>
+#include <Util/Weapon.h>
 #include <ctype.h>
 
 #ifdef _WIN32
@@ -123,26 +123,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
         strlcat(player->name, idChar, 17);
     }
 
-    switch (player->weapon) {
-        case WEAPON_RIFLE:
-            player->weapon_reserve  = 50;
-            player->weapon_clip     = 10;
-            player->default_clip    = RIFLE_DEFAULT_CLIP;
-            player->default_reserve = RIFLE_DEFAULT_RESERVE;
-            break;
-        case WEAPON_SMG:
-            player->weapon_reserve  = 120;
-            player->weapon_clip     = 30;
-            player->default_clip    = SMG_DEFAULT_CLIP;
-            player->default_reserve = SMG_DEFAULT_RESERVE;
-            break;
-        case WEAPON_SHOTGUN:
-            player->weapon_reserve  = 48;
-            player->weapon_clip     = 6;
-            player->default_clip    = SHOTGUN_DEFAULT_CLIP;
-            player->default_reserve = SHOTGUN_DEFAULT_RESERVE;
-            break;
-    }
+    set_default_player_ammo(player);
     player->state = STATE_SPAWNING;
     char IP[17];
     format_ip_to_str(IP, player->ip);
@@ -156,12 +137,12 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
             send_server_notice(player, 0, welcomeMessage->string);
         }
         if (invName) {
-            send_server_notice(
-            player,
-            0,
-            "Your name was either empty, had # in front of it, had unreadable character in it or contained something nasty. Your name "
-            "has been set to %s",
-            player->name);
+            send_server_notice(player,
+                               0,
+                               "Your name was either empty, had # in front of it, had unreadable character in it or "
+                               "contained something nasty. Your name "
+                               "has been set to %s",
+                               player->name);
         }
         player->welcome_sent = 1; // So we dont send the message to the player on each time they spawn.
     }

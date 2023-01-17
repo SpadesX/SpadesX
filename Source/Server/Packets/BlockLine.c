@@ -1,3 +1,4 @@
+#include "Util/Enums.h"
 #include "Util/Uthash.h"
 #include <Server/IntelTent.h>
 #include <Server/Server.h>
@@ -80,7 +81,7 @@ void receive_block_line(server_t* server, player_t* player, stream_t* data)
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", player->id, received_id);
     }
     uint64_t  time_now = get_nanos();
-    if (player->blocks > 0 && player->can_build && server->global_ab && player->item == 1 &&
+    if (player->blocks > 0 && player->can_build && server->global_ab && player->item == TOOL_BLOCK &&
         diff_is_older_then(time_now, &player->timers.since_last_block_plac, BLOCK_DELAY) &&
         diff_is_older_then_dont_update(time_now, player->timers.since_last_block_dest, BLOCK_DELAY) &&
         diff_is_older_then_dont_update(time_now, player->timers.since_last_3block_dest, BLOCK_DELAY))
