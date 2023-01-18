@@ -41,6 +41,24 @@ void set_default_player_ammo_reserve(player_t* player)
     }
 }
 
+inline void set_default_player_pellets(player_t* player)
+{
+    uint8_t pellets = 0;
+    switch (player->weapon) {
+        case WEAPON_RIFLE:
+        case WEAPON_SMG:
+            pellets = 1;
+            break;
+        case WEAPON_SHOTGUN:
+            pellets = 8;
+            break;
+    }
+
+    if(player->weapon_pellets != pellets) {
+        player->weapon_pellets = pellets;
+    }
+}
+
 uint64_t get_player_weapon_delay_nano(player_t* player)
 {
     uint64_t delay = 0;

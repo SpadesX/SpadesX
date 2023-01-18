@@ -34,6 +34,10 @@ void receive_hit_packet(server_t* server, player_t* player, stream_t* data)
     if (allow_shot(
         server, player, hit_player, timeNow, distance, &x, &y, &z, shot_pos, shot_orien, hit_pos, shot_eye_pos))
     {
+        if(player->item == TOOL_GUN && player->weapon_pellets != 0) {
+            player->weapon_pellets--;
+        }
+
         switch (player->weapon) {
             case WEAPON_RIFLE:
             {

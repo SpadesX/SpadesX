@@ -436,6 +436,11 @@ void for_players(server_t* server)
     {
         if (is_past_join_screen(player)) {
             uint64_t timeNow = get_nanos();
+
+            if(diff_is_older_then_dont_update(timeNow, player->timers.since_last_weapon_input, get_player_weapon_delay_nano(player))) {
+                set_default_player_pellets(player);
+            }
+
             if (player->primary_fire == 1 && player->reloading == 0 && player->item == TOOL_GUN) {
                 if (player->weapon_clip > 0) {
                     if (diff_is_older_then(

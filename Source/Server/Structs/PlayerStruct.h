@@ -52,6 +52,7 @@ typedef struct player
     uint8_t                  blocks;
     uint8_t                  weapon_reserve;
     uint8_t                  weapon_clip;
+    uint8_t                  weapon_pellets;
     uint8_t                  alive;
     uint8_t                  input;
     uint8_t                  allow_killing;
