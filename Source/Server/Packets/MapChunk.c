@@ -10,7 +10,7 @@ void send_map_chunks(server_t* server, player_t* player)
         }
         send_version_request(server, player);
         player->state = STATE_JOINING;
-        LOG_INFO("Finished sending map to %s (#%hhu)", player->name, player->id);
+        LOG_INFO("Finished sending map chunks to %s (#%hhu)", player->name, player->id);
     } else {
         ENetPacket* packet = enet_packet_create(NULL, player->queues->length + 1, ENET_PACKET_FLAG_RELIABLE);
         stream_t    stream = {packet->data, packet->dataLength, 0};

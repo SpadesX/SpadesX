@@ -31,5 +31,6 @@ void send_map_start(server_t* server, player_t* player)
         server->s_map.compressed_map = compress_queue(map, server->s_map.map_size, DEFAULT_COMPRESS_CHUNK_SIZE);
         player->queues               = server->s_map.compressed_map;
         free(map);
+        LOG_INFO("Sending map chunks to %s (#%hhu)", player->name, player->id);
     }
 }
