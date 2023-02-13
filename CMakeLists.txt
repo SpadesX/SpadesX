@@ -29,6 +29,8 @@ find_package_handle_standard_args(enet
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+
 
 # Add third party libraries
 add_subdirectory(Extern)
