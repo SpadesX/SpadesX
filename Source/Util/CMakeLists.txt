@@ -34,7 +34,6 @@ set(UTIL_HEADERS
 
 set(UTIL_SOURCES
     ${CHECKS_SOURCES}
-    Queue.c
     Compress.c
     DataStream.c
     Physics.c

@@ -395,8 +395,12 @@ void server_start(server_args args)
         pthread_mutex_unlock(&server_lock);
         sleep(0);
     }
-    while (server.s_map.compressed_map) {
-        server.s_map.compressed_map = queue_pop(server.s_map.compressed_map);
+    queue_t *head, *tmp;
+    DL_FOREACH_SAFE(server.s_map.compressed_map, head, tmp)
+    {
+        free(head->block);
+        DL_DELETE(server.s_map.compressed_map, head);
+        free(head);
     }
     free(server.s_map.compressed_map);
 

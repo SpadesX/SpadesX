@@ -5,6 +5,7 @@
 #include <Util/Log.h>
 #include <Util/Queue.h>
 #include <Util/Types.h>
+#include <Util/Utlist.h>
 #include <errno.h>
 #include <libmapvxl/libmapvxl.h>
 #include <stdio.h>
@@ -18,8 +19,12 @@ uint8_t map_load(server_t* server, const char* path, int map_size[3])
         mapvxl_free(&server->s_map.map);
     }
 
-    while (server->s_map.compressed_map) {
-        server->s_map.compressed_map = queue_pop(server->s_map.compressed_map);
+    queue_t *head, *tmp;
+    DL_FOREACH_SAFE(server->s_map.compressed_map, head, tmp)
+    {
+        free(head->block);
+        DL_DELETE(server->s_map.compressed_map, head);
+        free(head);
     }
 
     FILE* file = fopen(path, "rb");
@@ -88,8 +93,11 @@ uint8_t map_load(server_t* server, const char* path, int map_size[3])
         server->s_map.compressed_size += node->length;
         node = node->next;
     }
-    while (server->s_map.compressed_map) {
-        server->s_map.compressed_map = queue_pop(server->s_map.compressed_map);
+    DL_FOREACH_SAFE(server->s_map.compressed_map, head, tmp)
+    {
+        free(head->block);
+        DL_DELETE(server->s_map.compressed_map, head);
+        free(head);
     }
     return 1;
 }

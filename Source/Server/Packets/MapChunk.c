@@ -1,3 +1,4 @@
+#include "Util/Utlist.h"
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Log.h>
@@ -5,8 +6,11 @@
 void send_map_chunks(server_t* server, player_t* player)
 {
     if (player->queues == NULL) {
-        while (server->s_map.compressed_map) {
-            server->s_map.compressed_map = queue_pop(server->s_map.compressed_map);
+        queue_t *node, *tmp;
+        DL_FOREACH_SAFE(server->s_map.compressed_map, node, tmp) {
+            free(node->block);
+            DL_DELETE(server->s_map.compressed_map, node);
+            free(node);
         }
         send_version_request(server, player);
         player->state = STATE_JOINING;
