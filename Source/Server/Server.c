@@ -91,8 +91,6 @@ static void _server_init(server_t*   server,
         server->protocol.max_players = (connections <= 32) ? connections : 32;
     }
 
-    server->s_map.compressed_map  = NULL;
-    server->s_map.compressed_size = 0;
     server->protocol.input_flags  = 0;
 
     char    vxl_map[64];
@@ -395,14 +393,6 @@ void server_start(server_args args)
         pthread_mutex_unlock(&server_lock);
         sleep(0);
     }
-    queue_t *head, *tmp;
-    DL_FOREACH_SAFE(server.s_map.compressed_map, head, tmp)
-    {
-        free(head->block);
-        DL_DELETE(server.s_map.compressed_map, head);
-        free(head);
-    }
-    free(server.s_map.compressed_map);
 
     free_all_commands(&server);
     free_all_packets(&server);

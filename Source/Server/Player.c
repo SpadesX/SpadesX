@@ -1,3 +1,5 @@
+#include "Util/Queue.h"
+
 #include <Server/Grenade.h>
 #include <Server/IntelTent.h>
 #include <Server/Master.h>
@@ -58,6 +60,16 @@ void free_all_players(server_t* server)
     player_t *player, *tmp;
     HASH_ITER(hh, server->players, player, tmp)
     {
+        if (player->map_queue != NULL) {
+            queue_t *node, *tmp;
+            DL_FOREACH_SAFE(player->map_queue, node, tmp)
+            {
+                free(node->block);
+                DL_DELETE(player->map_queue, node);
+                free(node);
+            }
+            player->map_queue = NULL;
+        }
         HASH_DEL(server->players, player);
         free(player);
     }
@@ -138,8 +150,17 @@ void init_player(server_t*  server,
                  vector3f_t height)
 {
     if (reset == 0) {
-        player->state  = STATE_DISCONNECTED;
-        player->queues = NULL;
+        player->state = STATE_DISCONNECTED;
+    }
+    if (player->map_queue != NULL) {
+        queue_t *node, *tmp;
+        DL_FOREACH_SAFE(player->map_queue, node, tmp)
+        {
+            free(node->block);
+            DL_DELETE(player->map_queue, node);
+            free(node);
+        }
+        player->map_queue = NULL;
     }
     player->ups                          = 60;
     player->timers.time_since_last_wu    = get_nanos();

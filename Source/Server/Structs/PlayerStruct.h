@@ -18,7 +18,7 @@
 typedef struct player
 {
     UT_hash_handle           hh;
-    queue_t*                 queues;
+    queue_t*                 map_queue;
     ENetPeer*                peer;
     grenade_t*               grenade;
     uint64_t                 permissions;

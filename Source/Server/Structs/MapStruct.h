@@ -17,9 +17,6 @@ typedef struct map
 {
     uint8_t        map_count;
     string_node_t* current_map;
-    // compressed map
-    queue_t*       compressed_map;
-    uint32_t       compressed_size;
     vector3i_t     result_line[50];
     size_t         map_size;
     mapvxl_t       map;
