@@ -19,7 +19,7 @@ uint32_t distance_in_2d(vector3f_t vector1, vector3f_t vector2)
 uint8_t collision_3d(vector3f_t vector1, vector3f_t vector2, uint8_t distance)
 {
     if (fabs(vector1.x - vector2.x) < distance && fabs(vector1.y - vector2.y) < distance &&
-        fabs(vector1.x - vector2.x) < distance)
+        fabs(vector1.z - vector2.z) < distance)
     {
         return 0;
     } else {
