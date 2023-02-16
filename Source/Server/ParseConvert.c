@@ -44,10 +44,10 @@ uint8_t octets_in_range(ip_t start, ip_t end, ip_t host)
     swapIPStruct(&end);
     swapIPStruct(&host);
     if (host.ip32 >= start.ip32 && host.ip32 <= end.ip32) {
-        return 1;
         swapIPStruct(&start);
         swapIPStruct(&end);
         swapIPStruct(&host);
+        return 1;
     }
     swapIPStruct(&start);
     swapIPStruct(&end);
@@ -57,7 +57,6 @@ uint8_t octets_in_range(ip_t start, ip_t end, ip_t host)
 
 uint8_t ip_in_range(ip_t host, ip_t banned, ip_t startOfRange, ip_t endOfRange)
 {
-    uint32_t max = UINT32_MAX;
     ip_t     startRange;
     ip_t     endRange;
     startRange.cidr = 24;
@@ -67,6 +66,7 @@ uint8_t ip_in_range(ip_t host, ip_t banned, ip_t startOfRange, ip_t endOfRange)
     startRange.ip32 = startOfRange.ip32;
     endRange.ip32   = endOfRange.ip32;
     if (banned.cidr > 0 && banned.cidr < 32) {
+        uint32_t max = UINT32_MAX;
         uint32_t subMax = 0;
         copyBits(&subMax, max, 31 - banned.cidr, 0);
         swapIPStruct(&banned);
@@ -130,8 +130,7 @@ void team_id_to_str(server_t* server, char* dst, int team)
 
 uint8_t parse_player(char* s, uint8_t* player_id, char** end)
 {
-    uint8_t sLength;
-    if (s[0] != '#' || (sLength = strlen(s)) < 2)
+    if (s[0] != '#' || strlen(s) < 2)
     { // TODO: look up a player by their nickname if the argument doesn't start with #
         return 0;
     }

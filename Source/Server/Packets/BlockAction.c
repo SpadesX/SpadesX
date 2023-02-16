@@ -132,7 +132,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
                             {
                                 if (player->item == TOOL_GUN) {
 
-                                    if (player->weapon_clip <= 0 &&
+                                    if (player->weapon_clip == 0 &&
                                         !diff_is_older_then_dont_update(
                                         timeNow, player->timers.since_last_primary_weapon_input, 10 * NANO_IN_MILLI))
                                     {

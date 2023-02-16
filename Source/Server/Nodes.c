@@ -90,9 +90,9 @@ uint8_t check_node(server_t* server, vector3i_t position)
         const vector3i_t* currentNode = returnCurrentNode();
         position.z                    = currentNode->z;
         if (position.z >= server->s_map.map.size_z - 2) {
-            map_node_t* delNode;
-            map_node_t* tmpNode;
             if (visitedMap != NULL) {
+                map_node_t* delNode;
+                map_node_t* tmpNode;
                 HASH_ITER(hh, visitedMap, delNode, tmpNode)
                 {
                     HASH_DEL(visitedMap, delNode);

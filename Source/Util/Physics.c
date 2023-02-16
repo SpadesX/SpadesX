@@ -106,8 +106,6 @@ static inline long clipworld(server_t* server, long x, long y, long z)
         sz = server->s_map.map.size_z - 2;
     else if (sz >= server->s_map.map.size_z - 1)
         return 1;
-    else if (sz < 0)
-        return 0;
     return mapvxl_is_solid(&server->s_map.map, (int) x, (int) y, sz);
 }
 
@@ -298,7 +296,7 @@ long physics_cast_ray(server_t* server,
 
 // original C code
 
-static inline void repositionPlayer(player_t* player, vector3f_t* position)
+static inline void repositionPlayer(player_t* player, const vector3f_t* position)
 {
     float f; /* FIXME meaningful name */
 

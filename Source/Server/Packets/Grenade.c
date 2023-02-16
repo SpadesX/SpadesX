@@ -70,10 +70,11 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
                                grenade->velocity.z - player->movement.velocity.z};
         float      length   = sqrt((velocity.x * velocity.x) + (velocity.y * velocity.y) + (velocity.z * velocity.z));
         if (length > 2) {
-            float lenghtNorm = 1 / length;
-            velocity.x       = ((velocity.x * lenghtNorm) * 2) + player->movement.velocity.x;
-            velocity.y       = ((velocity.y * lenghtNorm) * 2) + player->movement.velocity.y;
-            velocity.z       = ((velocity.z * lenghtNorm) * 2) + player->movement.velocity.z;
+            float lenghtNorm  = 1 / length;
+            velocity.x        = ((velocity.x * lenghtNorm) * 2) + player->movement.velocity.x;
+            velocity.y        = ((velocity.y * lenghtNorm) * 2) + player->movement.velocity.y;
+            velocity.z        = ((velocity.z * lenghtNorm) * 2) + player->movement.velocity.z;
+            grenade->velocity = velocity;
         }
         if (valid_pos_v3f(server, grenade->position) ||
             (valid_pos_v3f_below_z(server, grenade->position) && player->movement.position.z < 0))

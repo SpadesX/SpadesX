@@ -12,10 +12,10 @@ void cmd_ban_custom(void* p_server, command_args_t arguments)
     server_t* server = (server_t*) p_server;
     ip_t      ip;
     char*     reason;
-    uint8_t   customBan = 0;
     uint8_t   player_id = 33;
     if (arguments.argc == 2) {
-        float time = 0.0f;
+        uint8_t customBan = 0;
+        float   time      = 0.0f;
         if (strcmp(arguments.argv[0], "/pban") == 0) {
             time = 0.0f;
         } else if (strcmp(arguments.argv[0], "/hban") == 0) {

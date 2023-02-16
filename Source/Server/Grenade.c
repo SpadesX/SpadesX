@@ -291,8 +291,8 @@ void handle_grenade(server_t* server, player_t* player)
                                       floor(grenade->position.z));
                     allowToDestroy = 1;
                 }
-                player_t *connected_player, *tmp;
-                HASH_ITER(hh, server->players, connected_player, tmp)
+                player_t *connected_player, *tmp_player;
+                HASH_ITER(hh, server->players, connected_player, tmp_player)
                 {
                     if (connected_player->state == STATE_READY) {
                         uint8_t value = get_grenade_damage(server, connected_player, grenade);

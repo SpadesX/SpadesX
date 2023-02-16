@@ -80,8 +80,8 @@ static void _server_init(server_t*   server,
                          const char* serverName,
                          const char* team1Name,
                          const char* team2Name,
-                         uint8_t*    team1_color,
-                         uint8_t*    team2_color,
+                         const uint8_t*    team1_color,
+                         const uint8_t*    team2_color,
                          uint8_t     gamemode,
                          uint8_t     reset)
 {

@@ -54,7 +54,9 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
         player->team = 255;
     }
 
-    server->protocol.num_team_users[player->team]++;
+    if (player->team != 255) {
+        server->protocol.num_team_users[player->team]++;
+    }
 
     stream_read_color_rgb(data);
     player->ups = 60;
@@ -86,7 +88,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     char* unwantedNames[] = {"igger", "1gger", "igg3r", "1gg3r", NULL};
 
     for (unsigned long index = 0; index < strlen(lowerCaseName); ++index) {
-        if (isgraph(lowerCaseName[index]) == 0 && lowerCaseName[index] != ' ' && lowerCaseName[index] != '\0') {
+        if (isgraph(lowerCaseName[index]) == 0 && lowerCaseName[index] != ' ') {
             snprintf(player->name, strlen("Deuce") + 1, "Deuce");
             invName = 1;
         }
@@ -99,7 +101,6 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
             strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
         {
             snprintf(player->name, strlen("Deuce") + 1, "Deuce");
-            invName = 1;
             free(lowerCaseName);
             return;
         }

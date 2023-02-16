@@ -8,9 +8,9 @@
 void cmd_unban(void* p_server, command_args_t arguments)
 {
     (void) p_server;
-    ip_t    ip;
-    uint8_t unbanned = 0;
+    ip_t ip;
     if (arguments.argc == 2 && parse_ip(arguments.argv[1], &ip, NULL)) {
+        uint8_t             unbanned = 0;
         struct json_object* array;
         struct json_object* root = json_object_from_file("Bans.json");
         json_object_object_get_ex(root, "Bans", &array);
@@ -40,10 +40,10 @@ void cmd_unban(void* p_server, command_args_t arguments)
 void cmd_unban_range(void* p_server, command_args_t arguments)
 {
     (void) p_server;
-    ip_t    start_range, end_range;
-    char*   end;
-    uint8_t unbanned = 0;
+    ip_t  start_range, end_range;
+    char* end;
     if (arguments.argc == 2 && parse_ip(arguments.argv[1], &start_range, &end) && parse_ip(end, &end_range, NULL)) {
+        uint8_t             unbanned = 0;
         struct json_object* array;
         struct json_object* root = json_object_from_file("Bans.json");
         json_object_object_get_ex(root, "Bans", &array);
@@ -84,10 +84,10 @@ void cmd_unban_range(void* p_server, command_args_t arguments)
 void cmd_undo_ban(void* p_server, command_args_t arguments)
 {
     (void) p_server;
-    const char* ip_string;
-    const char* start_ip;
-    const char* end_ip;
     if (arguments.argc == 1) {
+        const char*         ip_string;
+        const char*         start_ip;
+        const char*         end_ip;
         struct json_object* array;
         struct json_object* root = json_object_from_file("Bans.json");
         json_object_object_get_ex(root, "Bans", &array);

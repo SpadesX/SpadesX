@@ -237,7 +237,7 @@ static uint8_t parse_arguments(command_args_t* arguments, char* message, uint8_t
 void command_handle(server_t* server, player_t* player, char* message, uint8_t console)
 {
     char* command = calloc(1000, sizeof(char));
-    sscanf(message, "%s", command);
+    sscanf(message, "%1000s", command);
     uint8_t command_length = strlen(command);
     for (uint8_t i = 1; i < command_length; ++i) {
         message[i] = command[i] = tolower(command[i]);

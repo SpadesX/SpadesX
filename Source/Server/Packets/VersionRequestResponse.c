@@ -22,7 +22,7 @@ void receive_version_response(server_t* server, player_t* player, stream_t* data
     player->version_minor    = stream_read_u8(data);
     player->version_revision = stream_read_u8(data);
     uint32_t length          = stream_left(data);
-    if (length < 256) {
+    if (length < 255) {
         player->os_info[length] = '\0';
         stream_read_array(data, player->os_info, length);
     } else {

@@ -61,8 +61,8 @@ void free_all_players(server_t* server)
     HASH_ITER(hh, server->players, player, tmp)
     {
         if (player->map_queue != NULL) {
-            queue_t *node, *tmp;
-            DL_FOREACH_SAFE(player->map_queue, node, tmp)
+            queue_t *node, *tmp_queue;
+            DL_FOREACH_SAFE(player->map_queue, node, tmp_queue)
             {
                 free(node->block);
                 DL_DELETE(player->map_queue, node);
@@ -502,8 +502,8 @@ void for_players(server_t* server)
                 player->periodic_delay_index = fmin(player->periodic_delay_index + 1, 4);
             }
         } else if (player->state == STATE_PICK_SCREEN) {
-            block_node_t *node, *tmp;
-            LL_FOREACH_SAFE(player->blockBuffer, node, tmp)
+            block_node_t *node, *tmp_queue;
+            LL_FOREACH_SAFE(player->blockBuffer, node, tmp_queue)
             {
                 player_t* sender;
                 HASH_FIND(hh, server->players, &node->sender_id, sizeof(node->sender_id), sender);

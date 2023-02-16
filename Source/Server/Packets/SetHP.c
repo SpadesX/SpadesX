@@ -16,7 +16,7 @@ void send_set_hp(server_t*  server,
     {
         return;
     }
-    if ((player->allow_killing && server->global_ak && player->allow_killing && player->alive) || type_of_damage == 0) {
+    if ((player->allow_killing && server->global_ak && player->alive) || type_of_damage == 0) {
         if (hp_chnage > player_hit->hp) {
             hp_chnage = player_hit->hp;
         }
