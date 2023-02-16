@@ -5,10 +5,10 @@
 void log_print_with_time(const char* format, ...)
 {
     time_t     t  = time(NULL);
-    struct tm* tm = {0};
-    localtime_r(&t, tm);
+    struct tm tm;
+    localtime_r(&t, &tm);
     char       s[64];
-    size_t     ret = strftime(s, sizeof(s), "%d/%m %H:%M:%S", tm);
+    size_t     ret = strftime(s, sizeof(s), "%d/%m %H:%M:%S", &tm);
     if (ret == 0) {
         return;
     }
