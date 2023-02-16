@@ -48,12 +48,10 @@ int master_connect(server_t* server, uint16_t port)
     LOG_STATUS("Connecting to master server");
 
     server->master.peer = enet_host_connect(server->master.client, &address, 2, 31);
-    LOG_STATUS("All works fine here");
     if (server->master.peer == NULL) {
         fprintf(stderr, "ERROR: failed to create client\n");
         return EXIT_FAILURE;
     }
-    LOG_STATUS("We survive here ?");
     while (enet_host_service(server->master.client, &server->master.event, 1000) > 0) {
         LOG_STATUS("Connection success");
         ENetPacket* packet = enet_packet_create(NULL,
