@@ -10,6 +10,9 @@ void receive_orientation_data(server_t* server, player_t* player, stream_t* data
     x                 = stream_read_f(data);
     y                 = stream_read_f(data);
     z                 = stream_read_f(data);
+    if ((x + y + z) == 0) {
+        return;
+    }
     float length      = sqrt((x * x) + (y * y) + (z * z));
     float norm_legnth = 1 / length;
     // Normalize the vectors if their length > 1
