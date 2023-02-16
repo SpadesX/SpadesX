@@ -238,7 +238,6 @@ vector3i_t* getGrenadeNeighbors(vector3i_t pos)
     neighArray[index].x = pos.x - 1;
     neighArray[index].y = pos.y - 1;
     neighArray[index].z = pos.z + 2;
-    index++;
 
     return neighArray;
 }
