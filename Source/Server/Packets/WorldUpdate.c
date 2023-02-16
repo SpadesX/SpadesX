@@ -22,8 +22,9 @@ void send_world_update(server_t* server, player_t* player)
             stream_write_vector3f(&stream, connected_player->movement.forward_orientation);
         } else {
             vector3f_t empty = {0};
+            vector3f_t orientation = {1.0f, 0.0f, 0.0f};
             stream_write_vector3f(&stream, empty);
-            stream_write_vector3f(&stream, empty);
+            stream_write_vector3f(&stream, orientation);
         }
     }
     if (enet_peer_send(player->peer, 0, packet) != 0) {

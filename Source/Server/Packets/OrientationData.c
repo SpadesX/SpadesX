@@ -1,3 +1,4 @@
+#include "Util/Log.h"
 #include <Server/Packets/ReceivePackets.h>
 #include <Server/Server.h>
 #include <Util/Physics.h>
