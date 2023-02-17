@@ -1,6 +1,7 @@
 #ifndef SERVERSTRUCT_H
 #define SERVERSTRUCT_H
 
+#include "Util/MersenneTwister/MT.h"
 #include <Server/Structs/MasterStruct.h>
 #include <Server/Structs/PacketStruct.h>
 #include <Server/Structs/PlayerStruct.h>
@@ -16,6 +17,7 @@ typedef struct server
     protocol_t            protocol;
     master_t              master;
     packet_t*             packets;
+    mt_rand_t                rand;
     uint16_t              port;
     map_t                 s_map;
     global_timers_t       global_timers;

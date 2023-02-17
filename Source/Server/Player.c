@@ -129,8 +129,8 @@ void set_player_respawn_point(server_t* server, player_t* player)
         player->movement.velocity.y = 0.f;
         player->movement.velocity.z = 0.f;
 
-        player->movement.position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
-        player->movement.position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
+        player->movement.position.x = spawn->from.x + dx * gen_rand(&server->rand);
+        player->movement.position.y = spawn->from.y + dy * gen_rand(&server->rand);
         player->movement.position.z =
         mapvxl_find_top_block(&server->s_map.map, player->movement.position.x, player->movement.position.y) - 2.36f;
 

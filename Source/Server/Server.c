@@ -14,6 +14,7 @@
 #include <Server/Structs/StartStruct.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
+#include <Util/MersenneTwister/MT.h>
 #include <Util/Compress.h>
 #include <Util/DataStream.h>
 #include <Util/Enums.h>
@@ -96,9 +97,9 @@ static void _server_init(server_t*   server,
     char    vxl_map[64];
     uint8_t index;
     if (reset == 0) {
-        srand(time(NULL));
+        server->rand = seed_rand(time(NULL));
     }
-    index                     = rand() % server->s_map.map_count;
+    index                     = gen_rand_long(&server->rand) % server->s_map.map_count;
     server->s_map.current_map = server->s_map.map_list;
     for (int i = 0; i <= index; ++i) {
         if (server->s_map.current_map->next != NULL) {

@@ -193,8 +193,8 @@ vector3f_t set_intel_tent_spawn_point(server_t* server, uint8_t team)
     float      dx = spawn->to.x - spawn->from.x;
     float      dy = spawn->to.y - spawn->from.y;
     vector3f_t position;
-    position.x = spawn->from.x + dx * ((float) rand() / (float) RAND_MAX);
-    position.y = spawn->from.y + dy * ((float) rand() / (float) RAND_MAX);
+    position.x = spawn->from.x + dx * gen_rand(&server->rand);
+    position.y = spawn->from.y + dy * gen_rand(&server->rand);
     position.z = mapvxl_find_top_block(&server->s_map.map, position.x, position.y);
     return position;
 }

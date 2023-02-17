@@ -18,8 +18,17 @@ set(CHECKS_SOURCES
     Checks/TimeChecks.c
 )
 
+set(MT_HEADERS
+    MersenneTwister/MT.h
+)
+
+set(MT_SOURCES
+    MersenneTwister/MT.c
+)
+
 set(UTIL_HEADERS
     ${CHECKS_HEADERS}
+    ${MT_HEADERS}
     Queue.h
     Compress.h
     DataStream.h
@@ -34,6 +43,7 @@ set(UTIL_HEADERS
 
 set(UTIL_SOURCES
     ${CHECKS_SOURCES}
+    ${MT_SOURCES}
     Compress.c
     DataStream.c
     Physics.c
