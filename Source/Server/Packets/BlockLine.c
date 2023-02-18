@@ -29,10 +29,10 @@ void send_block_line(server_t* server, player_t* player, vector3i_t start, vecto
     HASH_ITER(hh, server->players, check, tmp)
     {
         if (is_past_state_data(check)) {
-            if (enet_peer_send(player->peer, 0, packet) == 0) {
+            if (enet_peer_send(check->peer, 0, packet) == 0) {
                 sent = 1;
             }
-        } else if (player->state == STATE_STARTING_MAP || player->state == STATE_LOADING_CHUNKS) {
+        } else if (check->state == STATE_STARTING_MAP || check->state == STATE_LOADING_CHUNKS) {
             block_node_t* node   = (block_node_t*) malloc(sizeof(*node));
             node->position.x     = start.x;
             node->position.y     = start.y;
@@ -40,10 +40,10 @@ void send_block_line(server_t* server, player_t* player, vector3i_t start, vecto
             node->position_end.x = end.x;
             node->position_end.y = end.y;
             node->position_end.z = end.z;
-            node->color          = player->color;
+            node->color          = player->tool_color;
             node->type           = 10;
             node->sender_id      = player->id;
-            LL_APPEND(player->blockBuffer, node);
+            LL_APPEND(check->blockBuffer, node);
         }
     }
     if (sent == 0) {
