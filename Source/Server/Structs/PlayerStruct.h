@@ -34,7 +34,6 @@ typedef struct player
     weapon_default_reserve_t default_reserve;
     uint32_t                 kills;
     uint32_t                 deaths;
-    color_t                  color;
     int                      version_minor;
     int                      version_major;
     int                      version_revision;

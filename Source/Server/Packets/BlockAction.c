@@ -38,7 +38,7 @@ void send_block_action(server_t* server, player_t* player, uint8_t actionType, i
             node->position.x   = X;
             node->position.y   = Y;
             node->position.z   = Z;
-            node->color        = player->color;
+            node->color        = player->tool_color;
             node->type         = actionType;
             node->sender_id    = player->id;
             LL_APPEND(player->blockBuffer, node);
