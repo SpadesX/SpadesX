@@ -29,8 +29,9 @@ void send_existing_player(server_t* server, player_t* receiver, player_t* existi
     stream_write_u8(&stream, existing_player->weapon);       // WEAPON
     stream_write_u8(&stream, existing_player->item);         // HELD ITEM
     stream_write_u32(&stream, existing_player->kills);       // KILLS
-    stream_write_color_rgb(&stream, existing_player->color); // COLOR
+    stream_write_color_rgb(&stream, existing_player->tool_color); // COLOR
     stream_write_array(&stream, existing_player->name, 16);  // NAME
+
 
     if (enet_peer_send(receiver->peer, 0, packet) != 0) {
         LOG_WARNING("Failed to send player state");

@@ -513,12 +513,12 @@ void for_players(server_t* server)
                 if (node->type == 10) {
                     send_set_color_to_player(server, sender, player, node->color);
                     send_block_line_to_player(server, sender, player, node->position, node->position_end);
-                    send_set_color_to_player(server, sender, player, player->color);
+                    send_set_color_to_player(server, sender, player, player->tool_color);
                 } else {
                     send_set_color_to_player(server, sender, player, node->color);
                     send_block_action_to_player(
                     server, sender, player, node->type, node->position.x, node->position.y, node->position.z);
-                    send_set_color_to_player(server, sender, player, player->color);
+                    send_set_color_to_player(server, sender, player, player->tool_color);
                 }
             not_found:
                 LL_DELETE(player->blockBuffer, node);
