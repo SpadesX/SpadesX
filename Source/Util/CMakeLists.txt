@@ -5,17 +5,21 @@
 add_library(Util STATIC "")
 
 set(CHECKS_HEADERS
+    Checks/BlockChecks.h
     Checks/PacketChecks.h
     Checks/PlayerChecks.h
     Checks/PositionChecks.h
     Checks/TimeChecks.h
+    Checks/WeaponChecks.h
 )
 
 set(CHECKS_SOURCES
+    Checks/BlockChecks.c
     Checks/PacketChecks.c
     Checks/PlayerChecks.c
     Checks/PositionChecks.c
     Checks/TimeChecks.c
+    Checks/WeaponChecks.c
 )
 
 set(MT_HEADERS

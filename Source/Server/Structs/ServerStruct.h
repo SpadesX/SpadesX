@@ -1,7 +1,7 @@
 #ifndef SERVERSTRUCT_H
 #define SERVERSTRUCT_H
 
-#include "Util/MersenneTwister/MT.h"
+#include <Util/MersenneTwister/MT.h>
 #include <Server/Structs/MasterStruct.h>
 #include <Server/Structs/PacketStruct.h>
 #include <Server/Structs/PlayerStruct.h>

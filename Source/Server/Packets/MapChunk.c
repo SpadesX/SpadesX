@@ -1,8 +1,7 @@
-#include "Util/Utlist.h"
-
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Log.h>
+#include <Util/Utlist.h>
 
 void send_map_chunks(server_t* server, player_t* player)
 {

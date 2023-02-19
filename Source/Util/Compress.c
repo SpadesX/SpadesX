@@ -1,11 +1,12 @@
 // Copyright CircumScriptor and DarkNeutrino 2021
-#include "Util/Utlist.h"
 #include <Util/Compress.h>
 #include <Util/Log.h>
 #include <Util/Queue.h>
+#include <Util/Utlist.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
+
 
 static z_stream* g_compressor = NULL;
 
@@ -65,16 +66,16 @@ queue_t* compress_queue(uint8_t* data, uint32_t length, uint32_t chunkSize)
         return NULL;
     }
 
-    queue_t* parent  = NULL;
+    queue_t* parent = NULL;
     queue_t* node;
 
     g_compressor->next_in  = (uint8_t*) data;
     g_compressor->avail_in = length;
 
     do {
-        node = (queue_t *)malloc(sizeof(*node));
-        node->block = (uint8_t*)malloc(chunkSize);
-        
+        node        = (queue_t*) malloc(sizeof(*node));
+        node->block = (uint8_t*) malloc(chunkSize);
+
         g_compressor->avail_out = chunkSize;
         g_compressor->next_out  = node->block;
         if (deflate(g_compressor, Z_FINISH) < 0) {

@@ -1,8 +1,11 @@
+#include <Server/Block.h>
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Nodes.h>
 #include <Server/Server.h>
 #include <Server/Staff.h>
+#include <Server/Structs/CommandStruct.h>
+#include <Server/Structs/PacketStruct.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
@@ -11,6 +14,7 @@
 #include <Util/Nanos.h>
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
+#include <stdint.h>
 
 void send_block_action(server_t* server, player_t* player, uint8_t actionType, int X, int Y, int Z)
 {
@@ -82,154 +86,26 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
     if (player->id != received_id) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet", player->id, received_id);
     }
-    if (player->can_build && server->global_ab) {
-        uint8_t  actionType = stream_read_u8(data);
-        uint32_t X          = stream_read_u32(data);
-        uint32_t Y          = stream_read_u32(data);
-        uint32_t Z          = stream_read_u32(data);
-        if (player->sprinting) {
-            return;
-        }
-        vector3i_t vectorBlock  = {X, Y, Z};
-        vector3f_t vectorfBlock = {(float) X, (float) Y, (float) Z};
-        vector3f_t playerVector = player->movement.position;
-        if (((player->item == TOOL_SPADE && (actionType == 1 || actionType == 2)) ||
-             (player->item == TOOL_BLOCK && actionType == 0) || (player->item == TOOL_GUN && actionType == 1)))
-        {
-            if ((distance_in_3d(vectorfBlock, playerVector) <= 4 || player->item == TOOL_GUN) &&
-                valid_pos_v3i(server, vectorBlock))
-            {
-                switch (actionType) {
-                    case 0:
-                    {
-                        if (gamemode_block_checks(server, X, Y, Z)) {
-                            uint64_t timeNow = get_nanos();
-                            if (player->blocks > 0 &&
-                                diff_is_older_then(timeNow, &player->timers.since_last_block_plac, BLOCK_DELAY) &&
-                                diff_is_older_then_dont_update(
-                                timeNow, player->timers.since_last_block_dest, BLOCK_DELAY) &&
-                                diff_is_older_then_dont_update(
-                                timeNow, player->timers.since_last_3block_dest, BLOCK_DELAY))
-                            {
-                                mapvxl_set_color(&server->s_map.map, X, Y, Z, player->tool_color.raw);
-                                player->blocks--;
-                                moveIntelAndTentUp(server);
-                                send_block_action(server, player, actionType, X, Y, Z);
-                            }
-                        }
-                    } break;
-
-                    case 1:
-                    {
-                        if (Z < 62 && gamemode_block_checks(server, X, Y, Z)) {
-                            uint64_t timeNow = get_nanos();
-                            if ((diff_is_older_then(timeNow, &player->timers.since_last_block_dest, SPADE_DELAY) &&
-                                 diff_is_older_then_dont_update(
-                                 timeNow, player->timers.since_last_3block_dest, SPADE_DELAY) &&
-                                 diff_is_older_then_dont_update(
-                                 timeNow, player->timers.since_last_block_plac, SPADE_DELAY)) ||
-                                player->item == TOOL_GUN)
-                            {
-                                if (player->item == TOOL_GUN) {
-
-                                    if (player->weapon_clip == 0 &&
-                                        !diff_is_older_then_dont_update(
-                                        timeNow, player->timers.since_last_primary_weapon_input, 10 * NANO_IN_MILLI))
-                                    {
-                                        send_message_to_staff(server,
-                                                              "Player %s (#%hhu) probably has hack to have more ammo",
-                                                              player->name,
-                                                              player->id);
-                                        return;
-                                    } else if (player->weapon == WEAPON_RIFLE &&
-                                               diff_is_older_then(timeNow,
-                                                                  &player->timers.since_last_block_dest_with_gun,
-                                                                  (RIFLE_DELAY - (NANO_IN_MILLI * 10))) == 0)
-                                    {
-                                        send_message_to_staff(server,
-                                                              "Player %s (#%hhu) probably has rapid shooting hack",
-                                                              player->name,
-                                                              player->id);
-                                        return;
-                                    } else if (player->weapon == WEAPON_SMG &&
-                                               diff_is_older_then(timeNow,
-                                                                  &player->timers.since_last_block_dest_with_gun,
-                                                                  (SMG_DELAY - (NANO_IN_MILLI * 10))) == 0)
-                                    {
-                                        send_message_to_staff(server,
-                                                              "Player %s (#%hhu) probably has rapid shooting hack",
-                                                              player->name,
-                                                              player->id);
-                                        return;
-                                    } else if (player->weapon == WEAPON_SHOTGUN &&
-                                               diff_is_older_then(timeNow,
-                                                                  &player->timers.since_last_block_dest_with_gun,
-                                                                  (SHOTGUN_DELAY - (NANO_IN_MILLI * 10))) == 0)
-                                    {
-                                        send_message_to_staff(server,
-                                                              "Player %s (#%hhu) probably has rapid shooting hack",
-                                                              player->name,
-                                                              player->id);
-                                        return;
-                                    }
-                                }
-
-                                vector3i_t  position = {X, Y, Z};
-                                vector3i_t* neigh    = get_neighbours(position);
-                                mapvxl_set_air(&server->s_map.map, position.x, position.y, position.z);
-                                for (int i = 0; i < 6; ++i) {
-                                    if (neigh[i].z < 62) {
-                                        check_node(server, neigh[i]);
-                                    }
-                                }
-                                if (player->item != TOOL_GUN) {
-                                    if (player->blocks < 50) {
-                                        player->blocks++;
-                                    }
-                                }
-                                send_block_action(server, player, actionType, X, Y, Z);
-                            }
-                        }
-                    } break;
-
-                    case 2:
-                    {
-                        if (gamemode_block_checks(server, X, Y, Z) && gamemode_block_checks(server, X, Y, Z + 1) &&
-                            gamemode_block_checks(server, X, Y, Z - 1))
-                        {
-                            uint64_t timeNow = get_nanos();
-                            if (diff_is_older_then(timeNow, &player->timers.since_last_3block_dest, THREEBLOCK_DELAY) &&
-                                diff_is_older_then_dont_update(
-                                timeNow, player->timers.since_last_block_dest, THREEBLOCK_DELAY) &&
-                                diff_is_older_then_dont_update(
-                                timeNow, player->timers.since_last_block_plac, THREEBLOCK_DELAY))
-                            {
-                                for (uint32_t z = Z - 1; z <= Z + 1; z++) {
-                                    if (z < 62) {
-                                        mapvxl_set_air(&server->s_map.map, X, Y, z);
-                                        vector3i_t  position = {X, Y, z};
-                                        vector3i_t* neigh    = get_neighbours(position);
-                                        mapvxl_set_air(&server->s_map.map, position.x, position.y, position.z);
-                                        for (int i = 0; i < 6; ++i) {
-                                            if (neigh[i].z < 62) {
-                                                check_node(server, neigh[i]);
-                                            }
-                                        }
-                                    }
-                                }
-                                send_block_action(server, player, actionType, X, Y, Z);
-                            }
-                        }
-                    } break;
-                }
-                move_intel_and_tent_down(server);
-            }
-        } else {
-            LOG_WARNING("Player %s (#%hhu) may be using BlockExploit with Item: %d and Action: %d",
-                        player->name,
-                        player->id,
-                        player->item,
-                        actionType);
-        }
+    if (!(player->can_build && server->global_ab) || player->sprinting) {
+        return;
     }
+    uint8_t    action_type   = stream_read_u8(data);
+    uint32_t   X             = stream_read_u32(data);
+    uint32_t   Y             = stream_read_u32(data);
+    uint32_t   Z             = stream_read_u32(data);
+    vector3i_t vector_block  = {X, Y, Z};
+    vector3f_t vectorf_block = {(float) X, (float) Y, (float) Z};
+    vector3f_t player_vector = player->movement.position;
+    if (!((player->item == TOOL_SPADE && (action_type == 1 || action_type == 2)) ||
+          (player->item == TOOL_BLOCK && action_type == 0) || (player->item == TOOL_GUN && action_type == 1)))
+    {
+        LOG_WARNING("Player %s (#%hhu) may be using BlockExploit with Item: %d and Action: %d",
+                    player->name,
+                    player->id,
+                    player->item,
+                    action_type);
+        return;
+    }
+    handle_block_action(server, player, action_type, vector_block, vectorf_block, player_vector, X, Y, Z);
+    move_intel_and_tent_down(server);
 }

@@ -91,6 +91,7 @@ set(SERVER_HEADERS
     ${COMMANDS_HEADERS}
     ${PACKET_HEADERS}
     ${STRUCTS_HEADERS}
+    Block.h
     Grenade.h
     IntelTent.h
     Nodes.h
@@ -109,6 +110,7 @@ set(SERVER_HEADERS
 set(SERVER_SOURCES
     ${COMMANDS_SOURCES}
     ${PACKET_SOURCES}
+    Block.c
     Grenade.c
     IntelTent.c
     Nodes.c

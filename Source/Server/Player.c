@@ -1,5 +1,3 @@
-#include "Util/Queue.h"
-
 #include <Server/Grenade.h>
 #include <Server/IntelTent.h>
 #include <Server/Master.h>
@@ -16,6 +14,7 @@
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
 #include <Util/Physics.h>
+#include <Util/Queue.h>
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
 #include <Util/Weapon.h>

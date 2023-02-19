@@ -143,4 +143,11 @@ typedef enum {
     SHOTGUN_DELAY = NANO_IN_MILLI * 1000,
 } gun_delays_t;
 
+typedef enum {
+    BLOCKACTION_BUILD = 0,
+    BLOCKACTION_DESTROY_ONE = 1,
+    BLOCKACTION_DESTROY_THREE = 2,
+    BLOCKACTION_DESTROY_GRENADE = 3,
+} block_action_types_t;
+
 #endif /* ENUMS_H */
