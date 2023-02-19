@@ -1,3 +1,4 @@
+#include "Util/Types.h"
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Nodes.h>
@@ -15,229 +16,26 @@
 vector3i_t* getGrenadeNeighbors(vector3i_t pos)
 {
     static vector3i_t neighArray[54];
-    // This is nasty but fast.
-    uint8_t index = 0;
-    //-z size
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z - 2;
-    index++;
-    //-y side
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y - 2;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    //+y side
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y + 2;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    //-x side
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x - 2;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    //+x side
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z;
-    index++;
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z - 1;
-    index++;
-    neighArray[index].x = pos.x + 2;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z + 1;
-    index++;
-    //+z side
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z + 2;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z + 2;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y;
-    neighArray[index].z = pos.z + 2;
-    index++;
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z + 2;
-    index++;
-    neighArray[index].x = pos.x;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z + 2;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z + 2;
-    index++;
-    neighArray[index].x = pos.x + 1;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z + 2;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y + 1;
-    neighArray[index].z = pos.z + 2;
-    index++;
-    neighArray[index].x = pos.x - 1;
-    neighArray[index].y = pos.y - 1;
-    neighArray[index].z = pos.z + 2;
+
+    // Lookup table for neighbor offsets
+    static const int offsets[54][3] = {
+        {0, 0, -2}, {1, 0, -2}, {-1, 0, -2}, {0, 1, -2}, {0, -1, -2},
+        {1, 1, -2}, {1, -1, -2}, {-1, 1, -2}, {-1, -1, -2},
+        {0, -2, 0}, {1, -2, 0}, {-1, -2, 0}, {0, -2, 1}, {0, -2, -1},
+        {1, -2, 1}, {1, -2, -1}, {-1, -2, 1}, {-1, -2, -1},
+        {0, 2, 0}, {1, 2, 0}, {-1, 2, 0}, {0, 2, 1}, {0, 2, -1},
+        {1, 2, 1}, {1, 2, -1}, {-1, 2, 1}, {-1, 2, -1},
+        {-2, 0, 0}, {-2, 1, 0}, {-2, -1, 0}, {-2, 0, 1}, {-2, 0, -1},
+        {-2, 1, 1}, {-2, 1, -1}, {-2, -1, 1}, {-2, -1, -1},
+        {0, 0, 2}, {1, 0, 2}, {-1, 0, 2}, {0, 1, 2}, {0, -1, 2},
+        {1, 1, 2}, {1, -1, 2}, {-1, 1, 2}, {-1, -1, 2}
+    };
+
+    for (int i = 0; i < 54; i++) {
+        neighArray[i].x = pos.x + offsets[i][0];
+        neighArray[i].y = pos.y + offsets[i][1];
+        neighArray[i].z = pos.z + offsets[i][2];
+    }
 
     return neighArray;
 }
@@ -329,6 +127,7 @@ void handle_grenade(server_t* server, player_t* player)
                         pos.z = grenade->position.z;
 
                         vector3i_t* neigh = getGrenadeNeighbors(pos);
+
                         for (int index = 0; index < 54; ++index) {
                             if (valid_pos_v3i(server, neigh[index])) {
                                 check_node(server, neigh[index]);
