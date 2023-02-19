@@ -83,7 +83,5 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
             }
             player->movement.previous_orientation = player->movement.forward_orientation;
         }
-    } else {
-        // sendKillActionPacket(server, player_id, player_id, 0, 30, 0);
     }
 }
