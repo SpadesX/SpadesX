@@ -148,6 +148,7 @@ void init_player(server_t*  server,
                  vector3f_t strafe,
                  vector3f_t height)
 {
+    uint64_t time_now = get_nanos();
     if (reset == 0) {
         player->state = STATE_DISCONNECTED;
     }
@@ -181,47 +182,61 @@ void init_player(server_t*  server,
         }
         player->grenade = NULL;
     }
-    player->airborne                             = 0;
-    player->wade                                 = 0;
-    player->lastclimb                            = 0;
-    player->move_backwards                       = 0;
-    player->move_forward                         = 0;
-    player->move_left                            = 0;
-    player->move_right                           = 0;
-    player->jumping                              = 0;
-    player->crouching                            = 0;
-    player->sneaking                             = 0;
-    player->sprinting                            = 0;
-    player->primary_fire                         = 0;
-    player->secondary_fire                       = 0;
-    player->can_build                            = 1;
-    player->allow_killing                        = 1;
-    player->allow_team_killing                   = 0;
-    player->muted                                = 0;
-    player->team                                 = 255;
-    player->timers.since_last_base_enter         = 0;
-    player->timers.since_last_base_enter_restock = 0;
-    player->timers.since_last_3block_dest        = 0;
-    player->timers.since_last_block_dest         = 0;
-    player->timers.since_last_block_plac         = 0;
-    player->timers.since_last_grenade_thrown     = 0;
-    player->timers.since_last_shot               = 0;
-    player->timers.time_since_last_wu            = 0;
-    player->timers.since_last_weapon_input       = 0;
-    player->timers.since_last_intel_tent_check   = 0;
-    player->told_to_master                       = 0;
-    player->hp                                   = 100;
-    player->blocks                               = 50;
-    player->grenades                             = 3;
-    player->has_intel                            = 0;
-    player->reloading                            = 0;
-    player->client                               = ' ';
-    player->version_minor                        = 0;
-    player->version_major                        = 0;
-    player->version_revision                     = 0;
-    player->periodic_delay_index                 = 0;
-    player->current_periodic_message             = server->periodic_messages;
-    player->welcome_sent                         = 0;
+    player->airborne                               = 0;
+    player->wade                                   = 0;
+    player->lastclimb                              = 0;
+    player->move_backwards                         = 0;
+    player->move_forward                           = 0;
+    player->move_left                              = 0;
+    player->move_right                             = 0;
+    player->jumping                                = 0;
+    player->crouching                              = 0;
+    player->sneaking                               = 0;
+    player->sprinting                              = 0;
+    player->primary_fire                           = 0;
+    player->secondary_fire                         = 0;
+    player->can_build                              = 1;
+    player->allow_killing                          = 1;
+    player->allow_team_killing                     = 0;
+    player->muted                                  = 0;
+    player->team                                   = 255;
+    player->timers.time_since_last_wu              = time_now;
+    player->timers.since_last_base_enter           = time_now;
+    player->timers.since_last_base_enter_restock   = time_now;
+    player->timers.start_of_respawn_wait           = time_now;
+    player->timers.since_last_shot                 = time_now;
+    player->timers.since_last_block_dest_with_gun  = time_now;
+    player->timers.since_last_block_dest           = time_now;
+    player->timers.since_last_block_plac           = time_now;
+    player->timers.since_last_block_action         = time_now;
+    player->timers.since_last_block_action_weapon  = time_now;
+    player->timers.since_last_3block_dest          = time_now;
+    player->timers.since_last_grenade_thrown       = time_now;
+    player->timers.since_last_weapon_input         = time_now;
+    player->timers.since_last_hit_weapon           = time_now;
+    player->timers.since_last_hit_spade            = time_now;
+    player->timers.since_last_grenade_throw        = time_now;
+    player->timers.since_reload_start              = time_now;
+    player->timers.since_last_primary_weapon_input = time_now;
+    player->timers.since_last_message_from_spam    = time_now;
+    player->timers.since_last_message              = time_now;
+    player->timers.since_possible_spade_nade       = time_now;
+    player->timers.since_periodic_message          = time_now;
+    player->timers.since_last_intel_tent_check     = time_now;
+    player->timers.during_noclip_period            = time_now;
+    player->told_to_master                         = 0;
+    player->hp                                     = 100;
+    player->blocks                                 = 50;
+    player->grenades                               = 3;
+    player->has_intel                              = 0;
+    player->reloading                              = 0;
+    player->client                                 = ' ';
+    player->version_minor                          = 0;
+    player->version_major                          = 0;
+    player->version_revision                       = 0;
+    player->periodic_delay_index                   = 0;
+    player->current_periodic_message               = server->periodic_messages;
+    player->welcome_sent                           = 0;
     if (reset == 0) {
         player->permissions = 0;
     } else if (reset == 1) {

@@ -1,8 +1,10 @@
 #include <Server/IntelTent.h>
 #include <Server/Server.h>
+#include <Util/Checks/BlockChecks.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
+#include <Util/Checks/ToolChecks.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
@@ -82,39 +84,39 @@ void receive_block_line(server_t* server, player_t* player, stream_t* data)
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", player->id, received_id);
     }
     uint64_t time_now = get_nanos();
-    if (player->blocks > 0 && player->can_build && server->global_ab && player->item == TOOL_BLOCK &&
-        diff_is_older_then(time_now, &player->timers.since_last_block_plac, BLOCK_DELAY) &&
-        diff_is_older_then_dont_update(time_now, player->timers.since_last_block_dest, BLOCK_DELAY) &&
-        diff_is_older_then_dont_update(time_now, player->timers.since_last_3block_dest, BLOCK_DELAY))
+    if (!(player->sprinting && player->blocks > 0 && player->can_build && server->global_ab &&
+          player->item == TOOL_BLOCK && block_action_delay_check(player, time_now, (uint8_t) BLOCKACTION_BUILD) &&
+          switch_tool_delay_checks(player, time_now, PACKET_TYPE_BLOCK_LINE)))
     {
-        vector3i_t start;
-        vector3i_t end;
-        start.x = stream_read_u32(data);
-        start.y = stream_read_u32(data);
-        start.z = stream_read_u32(data);
-        end.x   = stream_read_u32(data);
-        end.y   = stream_read_u32(data);
-        end.z   = stream_read_u32(data);
-
-        if (player->sprinting) {
-            return;
-        }
-        vector3f_t startF = {start.x, start.y, start.z};
-        vector3f_t endF   = {end.x, end.y, end.z};
-        if (distance_in_3d(endF, player->movement.position) <= 4 && distance_in_3d(startF, player->locAtClick) <= 4 &&
-            valid_pos_v3f(server, startF) && valid_pos_v3f(server, endF))
-        {
-            int size = line_get_blocks(&start, &end, server->s_map.result_line);
-            player->blocks -= size;
-            for (int i = 0; i < size; i++) {
-                mapvxl_set_color(&server->s_map.map,
-                                 server->s_map.result_line[i].x,
-                                 server->s_map.result_line[i].y,
-                                 server->s_map.result_line[i].z,
-                                 player->tool_color.raw);
-            }
-            moveIntelAndTentUp(server);
-            send_block_line(server, player, start, end);
-        }
+        return;
     }
+
+    vector3i_t start;
+    vector3i_t end;
+    start.x = stream_read_u32(data);
+    start.y = stream_read_u32(data);
+    start.z = stream_read_u32(data);
+    end.x   = stream_read_u32(data);
+    end.y   = stream_read_u32(data);
+    end.z   = stream_read_u32(data);
+
+    vector3f_t startF = {start.x, start.y, start.z};
+    vector3f_t endF   = {end.x, end.y, end.z};
+    if (!(distance_in_3d(endF, player->movement.position) <= 4 && distance_in_3d(startF, player->locAtClick) <= 4 &&
+          valid_pos_v3f(server, startF) && valid_pos_v3f(server, endF)))
+    {
+        return;
+    }
+
+    int size = line_get_blocks(&start, &end, server->s_map.result_line);
+    player->blocks -= size;
+    for (int i = 0; i < size; i++) {
+        mapvxl_set_color(&server->s_map.map,
+                         server->s_map.result_line[i].x,
+                         server->s_map.result_line[i].y,
+                         server->s_map.result_line[i].z,
+                         player->tool_color.raw);
+    }
+    moveIntelAndTentUp(server);
+    send_block_line(server, player, start, end);
 }

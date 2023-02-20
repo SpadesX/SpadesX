@@ -1,4 +1,4 @@
-#include <Util/Weapon.h>
+#include "Util/Checks/ToolChecks.h"
 
 #include <Server/Server.h>
 #include <Server/Staff.h>
@@ -9,6 +9,7 @@
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
+#include <Util/Weapon.h>
 #include <stdio.h>
 
 void send_weapon_input(server_t* server, player_t* player, uint8_t wInput)
@@ -42,6 +43,12 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
         received_input = 0; /* Do not return just set it to 0 as we want to send to players that the player is no longer
                     shooting when they start sprinting */
     }
+
+    uint64_t time_now = get_nanos();
+
+    if (!switch_tool_delay_checks(player, time_now, PACKET_TYPE_WEAPON_INPUT)) {
+        return;
+    }
     player->primary_fire   = received_input & mask;
     player->secondary_fire = (received_input >> 1) & mask;
 
@@ -54,9 +61,10 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
     else if (player->weapon_clip > 0 && player->item == TOOL_GUN)
     {
         send_weapon_input(server, player, received_input);
+        
         uint64_t timeDiff = get_player_weapon_delay_nano(player);
 
-        if (player->primary_fire && diff_is_older_then(get_nanos(), &player->timers.since_last_weapon_input, timeDiff))
+        if (player->primary_fire && diff_is_older_then(time_now, &player->timers.since_last_weapon_input, timeDiff))
         {
             player->timers.since_last_weapon_input = get_nanos();
             player->weapon_clip--;

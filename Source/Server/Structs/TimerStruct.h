@@ -13,9 +13,14 @@ typedef struct timers
     uint64_t since_last_block_dest_with_gun;
     uint64_t since_last_block_dest;
     uint64_t since_last_block_plac;
+    uint64_t since_last_block_action;
+    uint64_t since_last_block_action_weapon;
     uint64_t since_last_3block_dest;
     uint64_t since_last_grenade_thrown;
     uint64_t since_last_weapon_input;
+    uint64_t since_last_hit_weapon;
+    uint64_t since_last_hit_spade;
+    uint64_t since_last_grenade_throw;
     uint64_t since_reload_start;
     uint64_t since_last_primary_weapon_input;
     uint64_t since_last_message_from_spam;
