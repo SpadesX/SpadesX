@@ -28,9 +28,9 @@ find_package_handle_standard_args(enet
     enet_INCLUDE_DIR
 )
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS On)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-
+option(CMAKE_UNITY_BUILD "Enable Unity Build" ON)
 
 # Add third party libraries
 add_subdirectory(Extern)
