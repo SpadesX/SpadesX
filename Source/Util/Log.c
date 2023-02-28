@@ -6,7 +6,11 @@ void log_print_with_time(const char* format, ...)
 {
     time_t     t  = time(NULL);
     struct tm tm;
+    #ifdef WIN32
     localtime_r(&t, &tm);
+    #else
+    localtime_r(&t, &tm);
+    #endif
     char       s[64];
     size_t     ret = strftime(s, sizeof(s), "%d/%m %H:%M:%S", &tm);
     if (ret == 0) {
