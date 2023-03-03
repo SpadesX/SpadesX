@@ -1,7 +1,6 @@
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Util/Checks/PositionChecks.h>
-#include <Util/Checks/ToolChecks.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
@@ -26,16 +25,14 @@ void receive_hit_packet(server_t* server, player_t* player, stream_t* data)
     float      distance     = distance_in_2d(shot_pos, hit_pos);
     long       x = 0, y = 0, z = 0;
 
-    uint64_t time_now = get_nanos();
-
-    if (player->sprinting || (player->item == TOOL_GUN && player->weapon_clip == 0 &&
-                              switch_tool_delay_checks(player, time_now, PACKET_TYPE_HIT_PACKET)))
-    {
+    if (player->sprinting || (player->item == TOOL_GUN && player->weapon_clip == 0)) {
         return; // Sprinting and hitting somebody is impossible
     }
 
+    uint64_t timeNow = get_nanos();
+
     if (allow_shot(
-        server, player, hit_player, time_now, distance, &x, &y, &z, shot_pos, shot_orien, hit_pos, shot_eye_pos))
+        server, player, hit_player, timeNow, distance, &x, &y, &z, shot_pos, shot_orien, hit_pos, shot_eye_pos))
     {
         switch (player->weapon) {
             case WEAPON_RIFLE:

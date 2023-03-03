@@ -10,7 +10,6 @@ set(CHECKS_HEADERS
     Checks/PlayerChecks.h
     Checks/PositionChecks.h
     Checks/TimeChecks.h
-    Checks/ToolChecks.h
     Checks/WeaponChecks.h
 )
 
@@ -20,7 +19,6 @@ set(CHECKS_SOURCES
     Checks/PlayerChecks.c
     Checks/PositionChecks.c
     Checks/TimeChecks.c
-    Checks/ToolChecks.c
     Checks/WeaponChecks.c
 )
 

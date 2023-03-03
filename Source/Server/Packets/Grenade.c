@@ -4,7 +4,6 @@
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
-#include <Util/Checks/ToolChecks.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
@@ -46,11 +45,9 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
         return;
     }
 
-    uint64_t time_now = get_nanos();
-    if ((!diff_is_older_then(time_now, &player->timers.since_last_grenade_thrown, NANO_IN_MILLI * 500) ||
-         !diff_is_older_then_dont_update(
-         time_now, player->timers.since_possible_spade_nade, (long) NANO_IN_MILLI * 1000)) &&
-        switch_tool_delay_checks(player, time_now, PACKET_TYPE_GRENADE_PACKET))
+    uint64_t timeNow = get_nanos();
+    if (!diff_is_older_then(timeNow, &player->timers.since_last_grenade_thrown, NANO_IN_MILLI * 500) ||
+        !diff_is_older_then_dont_update(timeNow, player->timers.since_possible_spade_nade, (long) NANO_IN_MILLI * 1000))
     {
         return;
     }

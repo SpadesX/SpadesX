@@ -9,7 +9,6 @@
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
-#include <Util/Checks/ToolChecks.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
@@ -87,10 +86,7 @@ void receive_block_action(server_t* server, player_t* player, stream_t* data)
     if (player->id != received_id) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in block action packet", player->id, received_id);
     }
-    if (!(player->can_build && server->global_ab &&
-          switch_tool_delay_checks(player, get_nanos(), PACKET_TYPE_BLOCK_ACTION)) ||
-        player->sprinting)
-    {
+    if (!(player->can_build && server->global_ab) || player->sprinting) {
         return;
     }
     uint8_t    action_type   = stream_read_u8(data);

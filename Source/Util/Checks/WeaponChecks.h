@@ -1,6 +1,7 @@
 #ifndef WEAPONCHECKS_H
 #define WEAPONCHECKS_H
 
+#include <Server/Structs/CommandStruct.h>
 #include <Server/Structs/ServerStruct.h>
 #include <stdint.h>
 

@@ -1,5 +1,5 @@
 #include <Server/Staff.h>
-#include <Server/Structs/ServerStruct.h>
+#include <Server/Structs/CommandStruct.h>
 #include <Server/Structs/PlayerStruct.h>
 #include <Util/Checks/TimeChecks.h>
 #include <Util/Checks/WeaponChecks.h>
