@@ -16,10 +16,6 @@
 #define FALL_DAMAGE_VELOCITY 0.58f
 #define FALL_DAMAGE_SCALAR   4096
 
-// globals to make porting easier
-float ftotclk;
-float fsynctics;
-
 static inline void getOrientation(orientation_t* o, float orientation_x, float orientation_y, float orientation_z)
 {
     float f;
@@ -296,12 +292,12 @@ long physics_cast_ray(server_t* server,
 
 // original C code
 
-static inline void repositionPlayer(player_t* player, const vector3f_t* position)
+static inline void repositionPlayer(player_t* player, const vector3f_t* position, physics_t* physics)
 {
     float f; /* FIXME meaningful name */
 
     player->movement.eye_pos = player->movement.position = *position;
-    f                                                    = player->lastclimb - ftotclk; /* FIXME meaningful name */
+    f                                                    = player->lastclimb - physics->ftotclk; /* FIXME meaningful name */
     if (f > -0.25f)
         player->movement.eye_pos.z += (f + 0.25f) / 0.25f;
 }
@@ -347,12 +343,12 @@ int physics_try_uncrouch(server_t* server, player_t* player)
 }
 
 // player movement with autoclimb
-void physics_box_clip_move(server_t* server, player_t* player)
+void physics_box_clip_move(server_t* server, player_t* player, physics_t* physics)
 {
     float offset, m, f, nx, ny, nz, z;
     long  climb = 0;
 
-    f  = fsynctics * 32.f;
+    f  = physics->fsynctics * 32.f;
     nx = f * player->movement.velocity.x + player->movement.position.x;
     ny = f * player->movement.velocity.y + player->movement.position.y;
 
@@ -415,13 +411,13 @@ void physics_box_clip_move(server_t* server, player_t* player)
     if (climb) {
         player->movement.velocity.x *= 0.5f;
         player->movement.velocity.y *= 0.5f;
-        player->lastclimb = ftotclk;
+        player->lastclimb = physics->ftotclk;
         nz--;
         m = -1.35f;
     } else {
         if (player->movement.velocity.z < 0)
             m = -m;
-        nz += player->movement.velocity.z * fsynctics * 32.f;
+        nz += player->movement.velocity.z * physics->fsynctics * 32.f;
     }
 
     player->airborne = 1;
@@ -439,10 +435,10 @@ void physics_box_clip_move(server_t* server, player_t* player)
     } else
         player->movement.position.z = nz - offset;
 
-    repositionPlayer(player, &player->movement.position);
+    repositionPlayer(player, &player->movement.position, physics);
 }
 
-long physics_move_player(server_t* server, player_t* player)
+long physics_move_player(server_t* server, player_t* player, physics_t* physics)
 {
     float f, f2;
 
@@ -452,7 +448,7 @@ long physics_move_player(server_t* server, player_t* player)
         player->movement.velocity.z = -0.36f;
     }
 
-    f = fsynctics; // player acceleration scalar
+    f = physics->fsynctics; // player acceleration scalar
     if (player->airborne)
         f *= 0.1f;
     else if (player->crouching)
@@ -480,17 +476,17 @@ long physics_move_player(server_t* server, player_t* player)
         player->movement.velocity.y += player->movement.strafe_orientation.y * f;
     }
 
-    f = fsynctics + 1;
-    player->movement.velocity.z += fsynctics;
+    f = physics->fsynctics + 1;
+    player->movement.velocity.z += physics->fsynctics;
     player->movement.velocity.z /= f; // air friction
     if (player->wade)
-        f = fsynctics * 6.f + 1; // water friction
+        f = physics->fsynctics * 6.f + 1; // water friction
     else if (!player->airborne)
-        f = fsynctics * 4.f + 1; // ground friction
+        f = physics->fsynctics * 4.f + 1; // ground friction
     player->movement.velocity.x /= f;
     player->movement.velocity.y /= f;
     f2 = player->movement.velocity.z;
-    physics_box_clip_move(server, player);
+    physics_box_clip_move(server, player, physics);
     // hit ground... check if hurt
     if (!player->movement.velocity.z && (f2 > FALL_SLOW_DOWN)) {
         // slow down on landing
@@ -509,12 +505,12 @@ long physics_move_player(server_t* server, player_t* player)
     return (0); // no fall damage
 }
 
-int physics_move_grenade(server_t* server, grenade_t* grenade)
+int physics_move_grenade(server_t* server, grenade_t* grenade, physics_t* physics)
 {
     vector3f_t fpos = grenade->position; // old position
     // do velocity & gravity (friction is negligible)
-    float f = fsynctics * 32;
-    grenade->velocity.z += fsynctics;
+    float f = physics->fsynctics * 32;
+    grenade->velocity.z += physics->fsynctics;
     grenade->position.x += grenade->velocity.x * f;
     grenade->position.y += grenade->velocity.y * f;
     grenade->position.z += grenade->velocity.z * f;
@@ -556,11 +552,4 @@ int physics_move_grenade(server_t* server, grenade_t* grenade)
         grenade->velocity.z *= 0.36f;
         return ret;
     }
-}
-// C interface
-
-void physics_set_globals(float time, float dt)
-{
-    ftotclk   = time;
-    fsynctics = dt;
 }

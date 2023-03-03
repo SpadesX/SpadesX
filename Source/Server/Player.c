@@ -76,14 +76,14 @@ void free_all_players(server_t* server)
 
 void update_movement_and_grenades(server_t* server)
 {
-    physics_set_globals((server->global_timers.update_time - server->global_timers.time_since_start) / 1000000000.f,
-                        (server->global_timers.update_time - server->global_timers.last_update_time) / 1000000000.f);
+    server->physics.ftotclk = (server->global_timers.update_time - server->global_timers.time_since_start) / 1000000000.f;
+    server->physics.fsynctics = (server->global_timers.update_time - server->global_timers.last_update_time) / 1000000000.f;
     player_t *player, *tmp;
     HASH_ITER(hh, server->players, player, tmp)
     {
         if (player->state == STATE_READY) {
             long falldamage = 0;
-            falldamage      = physics_move_player(server, player);
+            falldamage      = physics_move_player(server, player, &server->physics);
             if (falldamage > 0) {
                 vector3f_t zero = {0, 0, 0};
                 send_set_hp(server, player, player, falldamage, 0, 4, 5, 0, zero);

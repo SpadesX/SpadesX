@@ -1,12 +1,13 @@
 #ifndef SERVERSTRUCT_H
 #define SERVERSTRUCT_H
 
-#include <Util/MersenneTwister/MT.h>
 #include <Server/Structs/MasterStruct.h>
 #include <Server/Structs/PacketStruct.h>
+#include <Server/Structs/PhysicsStruct.h>
 #include <Server/Structs/PlayerStruct.h>
 #include <Server/Structs/ProtocolStruct.h>
 #include <Server/Structs/TimerStruct.h>
+#include <Util/MersenneTwister/MT.h>
 #include <Util/Types.h>
 #include <signal.h>
 
@@ -17,7 +18,8 @@ typedef struct server
     protocol_t            protocol;
     master_t              master;
     packet_t*             packets;
-    mt_rand_t                rand;
+    physics_t             physics;
+    mt_rand_t             rand;
     uint16_t              port;
     map_t                 s_map;
     global_timers_t       global_timers;
