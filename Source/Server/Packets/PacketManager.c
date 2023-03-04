@@ -28,8 +28,7 @@ inline uint8_t allow_shot(server_t*  server,
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 500)) ||
          (player->item == TOOL_GUN && player->weapon == WEAPON_SMG &&
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
-         (player->item == TOOL_GUN && player->weapon == WEAPON_SHOTGUN &&
-          diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 1000))) &&
+         (player->item == TOOL_GUN && player->weapon == WEAPON_SHOTGUN)) &&
         player->alive && player_hit->alive && (player->team != player_hit->team || player->allow_team_killing) &&
         (player->allow_killing && server->global_ak) && physics_validate_hit(shot_pos, shot_orien, hit_pos, 5) &&
         (physics_cast_ray(server,
