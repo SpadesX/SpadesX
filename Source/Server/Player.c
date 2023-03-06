@@ -222,6 +222,7 @@ void init_player(server_t*  server,
     player->periodic_delay_index                 = 0;
     player->current_periodic_message             = server->periodic_messages;
     player->welcome_sent                         = 0;
+    player->next_shot_invalid                    = 0;
     if (reset == 0) {
         player->permissions = 0;
     } else if (reset == 1) {

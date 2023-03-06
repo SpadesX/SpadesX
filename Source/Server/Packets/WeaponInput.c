@@ -2,6 +2,7 @@
 
 #include <Server/Server.h>
 #include <Server/Staff.h>
+#include <Server/Packets/Packets.h>
 #include <Util/Checks/PacketChecks.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/TimeChecks.h>
@@ -46,9 +47,12 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
     player->primary_fire   = received_input & mask;
     player->secondary_fire = (received_input >> 1) & mask;
 
+    // If the player by some magic decides to shoot
     if (player->reloading && player->primary_fire) {
         player->reloading = 0;
+        player->next_shot_invalid = 1;
         player->primary_fire = 0;
+        send_weapon_reload(server, player, 0, 0, 0);
         return;
     }
 
