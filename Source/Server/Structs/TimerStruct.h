@@ -10,6 +10,7 @@ typedef struct timers
     uint64_t since_last_base_enter_restock;
     uint64_t start_of_respawn_wait;
     uint64_t since_last_shot;
+    uint64_t since_previous_shot;
     uint64_t since_last_block_dest_with_gun;
     uint64_t since_last_block_dest;
     uint64_t since_last_block_plac;

@@ -76,8 +76,10 @@ void free_all_players(server_t* server)
 
 void update_movement_and_grenades(server_t* server)
 {
-    server->physics.ftotclk = (server->global_timers.update_time - server->global_timers.time_since_start) / 1000000000.f;
-    server->physics.fsynctics = (server->global_timers.update_time - server->global_timers.last_update_time) / 1000000000.f;
+    server->physics.ftotclk =
+    (server->global_timers.update_time - server->global_timers.time_since_start) / 1000000000.f;
+    server->physics.fsynctics =
+    (server->global_timers.update_time - server->global_timers.last_update_time) / 1000000000.f;
     player_t *player, *tmp;
     HASH_ITER(hh, server->players, player, tmp)
     {
@@ -438,7 +440,22 @@ void for_players(server_t* server)
         if (is_past_join_screen(player)) {
             uint64_t timeNow = get_nanos();
 
-            if(diff_is_older_then_dont_update(timeNow, player->timers.since_last_weapon_input, get_player_weapon_delay_nano(player))) {
+            player->timers.since_previous_shot = player->timers.since_last_shot;
+            uint64_t previous_shot_delay = timeNow - player->timers.since_previous_shot;
+            uint64_t original_weapon_delay     = get_player_weapon_delay_nano(player);
+            /*This may seem complicated. It slightly is but its just 2 combined ternary expressions.
+            If we have a previous shot that is smaller then official delay we just set it to official timer - 3ms. If it
+            aint we know we will need to use the official delay - 3ms - the difference between previous and current time
+            or if previous time was bigger then twice the official delay we set it so weapon_delay is equal to 1.
+            Thus allowing any shot if the previous delay shot was this big*/
+            uint64_t weapon_delay = (previous_shot_delay <= original_weapon_delay)
+                                  ? (original_weapon_delay - 3000000)
+                                  : (original_weapon_delay - 3000000 -
+                                     (previous_shot_delay < (original_weapon_delay * 2)
+                                      ? (previous_shot_delay - original_weapon_delay)
+                                      : original_weapon_delay - 3000001));
+
+            if (diff_is_older_then_dont_update(timeNow, player->timers.since_last_weapon_input, weapon_delay)) {
                 set_default_player_pellets(player);
             }
 

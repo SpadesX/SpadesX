@@ -6,10 +6,14 @@
 #include <Util/Nanos.h>
 #include <Util/Uthash.h>
 
+uint64_t lasthit = 0;
+
 // player_hit_id is the player that got shot
 // player_id is the player who fired.
 void receive_hit_packet(server_t* server, player_t* player, stream_t* data)
 {
+    LOG_DEBUG("lasthit = %.2f", (get_nanos() - lasthit) / 1e+6);
+    lasthit = get_nanos();
     uint8_t   hit_player_id = stream_read_u8(data);
     hit_t     hit_type      = stream_read_u8(data);
     player_t* hit_player;

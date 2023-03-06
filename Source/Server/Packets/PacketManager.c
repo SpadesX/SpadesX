@@ -3,6 +3,7 @@
 #include <Util/Checks/TimeChecks.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
+#include <Util/Nanos.h>
 #include <Util/Physics.h>
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
@@ -21,14 +22,15 @@ inline uint8_t allow_shot(server_t*  server,
                           vector3f_t shot_eye_pos)
 {
     uint8_t ret = 0;
+
     if (player->next_shot_invalid) {
         player->next_shot_invalid = 0;
         return ret;
     }
+
     if (player->primary_fire && player->reloading == 0 &&
-        ((player->item == TOOL_SPADE &&
-          diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
-          (player->item == TOOL_GUN && player->weapon_pellets != 0)) &&
+        ((player->item == TOOL_SPADE && diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
+         (player->item == TOOL_GUN && player->weapon_pellets != 0)) &&
         player->alive && player_hit->alive && (player->team != player_hit->team || player->allow_team_killing) &&
         (player->allow_killing && server->global_ak) && physics_validate_hit(shot_pos, shot_orien, hit_pos, 5) &&
         (physics_cast_ray(server,
