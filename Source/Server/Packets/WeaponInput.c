@@ -42,8 +42,15 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
         received_input = 0; /* Do not return just set it to 0 as we want to send to players that the player is no longer
                     shooting when they start sprinting */
     }
+
     player->primary_fire   = received_input & mask;
     player->secondary_fire = (received_input >> 1) & mask;
+
+    if (player->reloading && player->primary_fire) {
+        player->reloading = 0;
+        player->primary_fire = 0;
+        return;
+    }
 
     if (player->secondary_fire && player->item == TOOL_BLOCK) {
         player->locAtClick = player->movement.position;
