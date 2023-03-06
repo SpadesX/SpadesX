@@ -21,7 +21,7 @@ inline uint8_t allow_shot(server_t*  server,
                           vector3f_t shot_eye_pos)
 {
     uint8_t ret = 0;
-    if (player->primary_fire &&
+    if (player->primary_fire && player->reloading == 0 &&
         ((player->item == TOOL_SPADE &&
           diff_is_older_then(time_now, &player->timers.since_last_shot, NANO_IN_MILLI * 100)) ||
           (player->item == TOOL_GUN && player->weapon_pellets != 0)) &&
