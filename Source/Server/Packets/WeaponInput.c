@@ -1,8 +1,6 @@
-#include <Util/Weapon.h>
-
+#include <Server/Packets/Packets.h>
 #include <Server/Server.h>
 #include <Server/Staff.h>
-#include <Server/Packets/Packets.h>
 #include <Util/Checks/PacketChecks.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/TimeChecks.h>
@@ -10,6 +8,7 @@
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
+#include <Util/Weapon.h>
 #include <stdio.h>
 
 void send_weapon_input(server_t* server, player_t* player, uint8_t wInput)
@@ -48,12 +47,14 @@ void receive_weapon_input(server_t* server, player_t* player, stream_t* data)
     player->secondary_fire = (received_input >> 1) & mask;
 
     // If the player by some magic decides to shoot
-    if (player->reloading && player->primary_fire) {
+    if (player->reloading) {
         player->reloading = 0;
-        player->next_shot_invalid = 1;
-        player->primary_fire = 0;
-        send_weapon_reload(server, player, 0, 0, 0);
-        return;
+        if (player->weapon != WEAPON_SHOTGUN) {
+            player->next_shot_invalid = 1;
+            player->primary_fire      = 0;
+            send_weapon_reload(server, player, 0, 0, 0);
+            return;
+        }
     }
 
     if (player->secondary_fire && player->item == TOOL_BLOCK) {
