@@ -26,7 +26,7 @@ void send_server_notice(player_t* player, uint8_t console, const char* message, 
     stream_write_u8(&stream, PACKET_TYPE_CHAT_MESSAGE);
     stream_write_u8(&stream, player->id);
     stream_write_u8(&stream, 2);
-    if(utf8) {
+    if (utf8) {
         stream_write_u8(&stream, 0xFF);
     }
 
@@ -66,13 +66,14 @@ void broadcast_server_notice(server_t* server, uint8_t console, const char* mess
         LOG_INFO("%s", fMessage);
     }
     player_t *player, *tmp;
-    uint8_t   sent = 0;
+    uint8_t   sent      = 0;
+    uint8_t   sent_utf8 = 0;
     HASH_ITER(hh, server->players, player, tmp)
     {
         if (is_past_join_screen(player)) {
-            if(player->client == 'o') {
+            if (player->client == 'o') {
                 if (enet_peer_send(player->peer, 0, packet_utf8) == 0) {
-                    sent = 1;
+                    sent_utf8 = 1;
                 }
             } else {
                 if (enet_peer_send(player->peer, 0, packet) == 0) {
@@ -83,5 +84,8 @@ void broadcast_server_notice(server_t* server, uint8_t console, const char* mess
     }
     if (sent == 0) {
         enet_packet_destroy(packet);
+    }
+    if (sent_utf8 == 0) {
+        enet_packet_destroy(packet_utf8);
     }
 }
