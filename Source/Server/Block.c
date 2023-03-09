@@ -1,3 +1,4 @@
+#include "Util/Log.h"
 #include <Server/Block.h>
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
@@ -31,7 +32,7 @@ static void
 block_action_destroy_one(server_t* server, player_t* player, uint8_t action_type, uint32_t X, uint32_t Y, uint32_t Z)
 {
     uint64_t time_now = get_nanos();
-    if (!(Z < 62 && gamemode_block_checks(server, X, Y, Z)) &&
+    if (!(Z <= 62 && gamemode_block_checks(server, X, Y, Z)) &&
         !(block_action_delay_check(player, time_now, action_type) ||
           (player->item == TOOL_GUN && block_action_weapon_checks(server, player, time_now))))
     {
