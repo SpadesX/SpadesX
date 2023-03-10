@@ -19,7 +19,7 @@ block_action_build(server_t* server, player_t* player, uint8_t action_type, uint
 {
     uint64_t time_now = get_nanos();
     if (!(gamemode_block_checks(server, X, Y, Z) && player->blocks > 0 &&
-        block_action_delay_check(player, time_now, action_type)))
+        block_action_delay_check(server, player, time_now, action_type, 1)))
     {
         return;
     }
@@ -34,7 +34,7 @@ block_action_destroy_one(server_t* server, player_t* player, uint8_t action_type
 {
     uint64_t time_now = get_nanos();
     if (!((Z < 62 && gamemode_block_checks(server, X, Y, Z)) &&
-          ((player->item == TOOL_SPADE && block_action_delay_check(player, time_now, action_type)) ||
+          ((player->item == TOOL_SPADE && block_action_delay_check(server, player, time_now, action_type, 0)) ||
           (player->item == TOOL_GUN && block_action_weapon_checks(server, player, time_now)))))
     {
         return;
@@ -61,7 +61,7 @@ block_action_destroy_three(server_t* server, player_t* player, uint8_t action_ty
 {
     uint64_t time_now = get_nanos();
     if (!(gamemode_block_checks(server, X, Y, Z) && gamemode_block_checks(server, X, Y, Z + 1) &&
-        gamemode_block_checks(server, X, Y, Z - 1) && block_action_delay_check(player, time_now, action_type)) || player->item == TOOL_GUN)
+        gamemode_block_checks(server, X, Y, Z - 1) && block_action_delay_check(server, player, time_now, action_type, 1)) || player->item == TOOL_GUN)
     {
         return;
     }
