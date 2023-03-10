@@ -19,94 +19,19 @@ void send_position_packet(server_t* server, player_t* player, float x, float y, 
 
 void receive_position_data(server_t* server, player_t* player, stream_t* data)
 {
-    float x, y, z;
-    x = stream_read_f(data);
-    y = stream_read_f(data);
-    z = stream_read_f(data);
+    vector3f_t position = {stream_read_f(data), stream_read_f(data), stream_read_f(data)};
 
-#ifdef DEBUG
-    LOG_DEBUG("Player: %d, Our X: %f, Y: %f, Z: %f Actual X: %f, Y: %f, Z: %f",
-              player_id,
-              player->movement.position.x,
-              player->movement.position.y,
-              player->movement.position.z,
-              x,
-              y,
-              z);
-    LOG_DEBUG("Player: %d, Z solid: %d, Z+1 solid: %d, Z+2 solid: %d, Z: %d, Z+1: %d, Z+2: %d, Crouching: %d",
-              player_id,
-              mapvxl_is_solid(&server->s_map.map, (int) x, (int) y, (int) z),
-              mapvxl_is_solid(&server->s_map.map, (int) x, (int) y, (int) z + 1),
-              mapvxl_is_solid(&server->s_map.map, (int) x, (int) y, (int) z + 2),
-              (int) z,
-              (int) z + 1,
-              (int) z + 2,
-              player->crouching);
-#endif
-    player->movement.prev_position = player->movement.position;
-    player->movement.position.x    = x;
-    player->movement.position.y    = y;
-    player->movement.position.z    = z;
-    /*uint8_t resetTime                                = 1;
-    if (!diff_is_older_then_dont_update(
-        getNanos(), player->timers.duringNoclipPeriod, (uint64_t) NANO_IN_SECOND * 10))
-    {
-        resetTime = 0;
-        if (validPlayerPos(server, player_id, x, y, z) == 0) {
-            player->invalidPosCount++;
-            if (player->invalidPosCount == 5) {
-                sendMessageToStaff(server, "Player %s (#%hhu) is most likely trying to avoid noclip detection");
-            }
-        }
+    if (distance_in_3d(player->movement.position, position) >= 3) {
+        send_position_packet(
+        server, player, player->movement.position.x, player->movement.position.y, player->movement.position.z);
     }
-    if (resetTime) {
-        player->timers.duringNoclipPeriod = getNanos();
-        player->invalidPosCount           = 0;
-    }*/
 
-    if (valid_player_pos(server, player, x, y, z)) {
+    player->movement.prev_position = player->movement.position;
+    player->movement.position.x    = position.x;
+    player->movement.position.y    = position.y;
+    player->movement.position.z    = position.z;
+
+    if (valid_player_pos(server, player, position.x, position.y, position.z)) {
         player->movement.prev_legit_pos = player->movement.position;
-    } /*else if (validPlayerPos(server,
-                              player_id,
-                              player->movement.position.x,
-                              player->movement.position.y,
-                              player->movement.position.z) == 0 &&
-               validPlayerPos(server,
-                              player_id,
-                              player->movement.prevPosition.x,
-                              player->movement.prevPosition.y,
-                              player->movement.prevPosition.z) == 0)
-    {
-        LOG_WARNING("Player %s (#%hhu) may be noclipping!", player->name, player_id);
-        sendMessageToStaff(server, "Player %s (#%d) may be noclipping!", player->name, player_id);
-        if (validPlayerPos(server,
-                           player_id,
-                           player->movement.prevLegitPos.x,
-                           player->movement.prevLegitPos.y,
-                           player->movement.prevLegitPos.z) == 0)
-        {
-            if (getPlayerUnstuck(server, player_id) == 0) {
-                SetPlayerRespawnPoint(server, player_id);
-                sendServerNotice(
-                server, player_id, 0, "Server could not find a free position to get you unstuck. Reseting to spawn");
-                LOG_WARNING(
-                "Could not find legit position for player %s (#%d) to get them unstuck. Resetting to spawn. "
-                "Go check them!",
-                player->name,
-                player_id);
-                sendMessageToStaff(
-                server,
-                "Could not find legit position for player %s (#%d) to get them unstuck. Resetting to spawn. "
-                "Go check them!",
-                player->name,
-                player_id);
-                player->movement.prevLegitPos = player->movement.position;
-            }
-        }
-        SendPositionPacket(server,
-                           player_id,
-                           player->movement.prevLegitPos.x,
-                           player->movement.prevLegitPos.y,
-                           player->movement.prevLegitPos.z);
-    }*/
+    }
 }
