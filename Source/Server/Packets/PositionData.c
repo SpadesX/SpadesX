@@ -66,12 +66,6 @@ void receive_position_data(server_t* server, player_t* player, stream_t* data)
 
     if (valid_player_pos(server, player, x, y, z)) {
         player->movement.prev_legit_pos = player->movement.position;
-    } else {
-        send_position_packet(server,
-                             player,
-                             player->movement.prev_legit_pos.x,
-                             player->movement.prev_legit_pos.y,
-                             player->movement.prev_legit_pos.z);
     } /*else if (validPlayerPos(server,
                               player_id,
                               player->movement.position.x,
