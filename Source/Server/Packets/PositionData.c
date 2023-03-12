@@ -24,6 +24,7 @@ void receive_position_data(server_t* server, player_t* player, stream_t* data)
     if (distance_in_3d(player->movement.position, position) >= 3) {
         send_position_packet(
         server, player, player->movement.position.x, player->movement.position.y, player->movement.position.z);
+        return;
     }
 
     player->movement.prev_position = player->movement.position;
