@@ -8,7 +8,7 @@
 void cmd_clin(void* p_server, command_args_t arguments)
 {
     server_t* server    = (server_t*) p_server;
-    uint8_t   player_id = 33;
+    uint8_t   player_id = arguments.console ? 33 : arguments.player->id;
     if (arguments.argc > 2) {
         send_server_notice(arguments.player, arguments.console, "Too many arguments");
         return;
@@ -20,24 +20,30 @@ void cmd_clin(void* p_server, command_args_t arguments)
         return;
     }
 
-    if (arguments.player->id < server->protocol.max_players && is_past_join_screen(arguments.player)) {
+    player_t* player;
+    if (player_id < server->protocol.max_players) {
+        HASH_FIND(hh, server->players, &player_id, sizeof(player_id), player);
+    }
+
+    if (player != NULL && is_past_join_screen(player)) {
         char client[15];
-        if (arguments.player->client == 'o') {
+        if (player->client == 'o') {
             snprintf(client, 12, "OpenSpades");
-        } else if (arguments.player->client == 'B') {
+        } else if (player->client == 'B') {
             snprintf(client, 13, "BetterSpades");
         } else {
             snprintf(client, 7, "Voxlap");
         }
+
         send_server_notice(arguments.player,
                            arguments.console,
                            "Player %s is running %s version %d.%d.%d on %s",
-                           arguments.player->name,
+                           player->name,
                            client,
-                           arguments.player->version_major,
-                           arguments.player->version_minor,
-                           arguments.player->version_revision,
-                           arguments.player->os_info);
+                           player->version_major,
+                           player->version_minor,
+                           player->version_revision,
+                           player->os_info);
     } else {
         send_server_notice(arguments.player, arguments.console, "Invalid ID. Player doesnt exist");
     }
