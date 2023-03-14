@@ -92,7 +92,7 @@ void handle_block_action(server_t*  server,
                          uint32_t   Y,
                          uint32_t   Z)
 {
-    if (!(distance_in_3d(vectorf_block, player_vector) <= 4 || player->item == TOOL_GUN) &&
+    if ((distance_in_3d(vectorf_block, player_vector) > 4 && player->item != TOOL_GUN) ||
         !valid_pos_v3i(server, vector_block))
     {
         return;
