@@ -4,29 +4,22 @@
 vector3i_t* get_neighbours(vector3i_t pos)
 {
     static vector3i_t neighArray[6];
-    neighArray[0].x = pos.x;
-    neighArray[0].y = pos.y;
-    neighArray[0].z = pos.z - 1;
 
-    neighArray[1].x = pos.x;
-    neighArray[1].y = pos.y - 1;
-    neighArray[1].z = pos.z;
+    static const vector3i_t offsets[6] = {
+        {0, 0, -1},
+        {0, -1, 0},
+        {0, 1, 0},
+        {-1, 0, 0},
+        {1, 0, 0},
+        {0, 0, 1}
+    };
 
-    neighArray[2].x = pos.x;
-    neighArray[2].y = pos.y + 1;
-    neighArray[2].z = pos.z;
-
-    neighArray[3].x = pos.x - 1;
-    neighArray[3].y = pos.y;
-    neighArray[3].z = pos.z;
-
-    neighArray[4].x = pos.x + 1;
-    neighArray[4].y = pos.y;
-    neighArray[4].z = pos.z;
-
-    neighArray[5].x = pos.x;
-    neighArray[5].y = pos.y;
-    neighArray[5].z = pos.z + 1;
+    for (int i = 0; i < 6; i++)
+    {
+        neighArray[i].x = pos.x + offsets[i].x;
+        neighArray[i].y = pos.y + offsets[i].y;
+        neighArray[i].z = pos.z + offsets[i].z;
+    }
 
     return neighArray;
 }
