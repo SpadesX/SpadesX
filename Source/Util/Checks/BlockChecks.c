@@ -1,3 +1,5 @@
+#include <libmapvxl/libmapvxl.h>
+
 #include <Server/Staff.h>
 #include <Server/Structs/CommandStruct.h>
 #include <Server/Structs/PlayerStruct.h>
@@ -8,6 +10,24 @@
 #include <stdint.h>
 
 #define MICRO_ALLOWANCE NANO_IN_MILLI * 5
+
+uint8_t is_block_placable(server_t* server, vector3i_t pos)
+{
+    static vector3i_t neighbour;
+
+    static const vector3i_t offsets[6] = {{0, 0, -1}, {0, -1, 0}, {0, 1, 0}, {-1, 0, 0}, {1, 0, 0}, {0, 0, 1}};
+
+    for (int i = 0; i < 6; i++) {
+        neighbour.x = pos.x + offsets[i].x;
+        neighbour.y = pos.y + offsets[i].y;
+        neighbour.z = pos.z + offsets[i].z;
+        if (mapvxl_is_solid(&server->s_map.map, neighbour.x, neighbour.y, neighbour.z)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
 
 uint8_t block_action_delay_check(server_t* server,
                                  player_t* player,

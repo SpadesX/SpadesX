@@ -18,8 +18,9 @@ static void
 block_action_build(server_t* server, player_t* player, uint8_t action_type, uint32_t X, uint32_t Y, uint32_t Z)
 {
     uint64_t time_now = get_nanos();
+    vector3i_t position = {X, Y, Z};
     if (!(gamemode_block_checks(server, X, Y, Z) && player->blocks > 0 &&
-        block_action_delay_check(server, player, time_now, action_type, 1)))
+        block_action_delay_check(server, player, time_now, action_type, 1) && is_block_placable(server, position)))
     {
         return;
     }
