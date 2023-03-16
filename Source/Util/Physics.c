@@ -297,7 +297,7 @@ static inline void repositionPlayer(player_t* player, const vector3f_t* position
     float f; /* FIXME meaningful name */
 
     player->movement.eye_pos = player->movement.position = *position;
-    f                                                    = player->lastclimb - physics->ftotclk; /* FIXME meaningful name */
+    f = player->lastclimb - physics->ftotclk; /* FIXME meaningful name */
     if (f > -0.25f)
         player->movement.eye_pos.z += (f + 0.25f) / 0.25f;
 }
@@ -305,11 +305,14 @@ static inline void repositionPlayer(player_t* player, const vector3f_t* position
 static inline void setOrientationVectors(vector3f_t* o, vector3f_t* s, vector3f_t* h)
 {
     float f = sqrtf(o->x * o->x + o->y * o->y);
-    s->x    = -o->y / f;
-    s->y    = o->x / f;
-    h->x    = -o->z * s->y;
-    h->y    = o->z * s->x;
-    h->z    = o->x * s->y - o->y * s->x;
+    if (f == 0) {
+        return;
+    }
+    s->x = -o->y / f;
+    s->y = o->x / f;
+    h->x = -o->z * s->y;
+    h->y = o->z * s->x;
+    h->z = o->x * s->y - o->y * s->x;
 }
 
 void physics_reorient_player(player_t* player, vector3f_t* orientation)
