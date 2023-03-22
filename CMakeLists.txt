@@ -36,7 +36,7 @@ option(CMAKE_UNITY_BUILD "Enable Unity Build" ON)
 add_subdirectory(Extern)
 
 # Add main target
-add_compile_options(-Wall -Wextra -Werror -Wpedantic -Wno-error=unused-but-set-parameter -Wno-error=pedantic -std=gnu11)
+add_compile_options(-Wall -Wextra -Werror -Wpedantic -Wno-error=unused-but-set-parameter -Wno-error=pedantic -std=gnu11 -fstack-protector-strong)
 add_executable(SpadesX "")
 
 if (enet_FOUND)
