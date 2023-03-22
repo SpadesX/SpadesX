@@ -28,7 +28,7 @@ void cmd_unban(void* p_server, command_args_t arguments)
             }
         }
         if (unbanned) {
-            send_server_notice(arguments.player, arguments.console, "IP %s unbanned", IPString);
+            send_server_notice(arguments.player, arguments.console, "IP %s unbanned", unbanIPString);
         } else {
             send_server_notice(arguments.player, arguments.console, "IP %s not found in banned IP list", unbanIPString);
         }
