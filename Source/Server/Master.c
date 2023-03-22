@@ -74,20 +74,19 @@ void* master_keep_alive(void* p_server)
     server_t* server = p_server;
     while (server->running) {
         if (server->master.enable_master_connection == 1) {
+            pthread_mutex_lock(&server_lock);
             if (time(NULL) - server->master.time_since_last_send >= 1) {
                 if (enet_host_service(server->master.client, &server->master.event, 0) < 0) {
-                    pthread_mutex_lock(&server_lock);
                     LOG_WARNING("Connection to master server lost. Waiting 30 seconds to reconnect...");
                     sleep(30);
                     master_connect(server, server->port);
-                    pthread_mutex_unlock(&server_lock);
                 }
                 server->master.time_since_last_send = time(NULL);
             }
+            pthread_mutex_unlock(&server_lock);
         }
         sleep(0);
     }
-    enet_host_destroy(server->master.client);
     pthread_exit(0);
 
     return NULL;
