@@ -1,3 +1,4 @@
+#include "Util/Checks/PositionChecks.h"
 #include <libmapvxl/libmapvxl.h>
 
 #include <Server/Staff.h>
@@ -21,7 +22,7 @@ uint8_t is_block_placable(server_t* server, vector3i_t pos)
         neighbour.x = pos.x + offsets[i].x;
         neighbour.y = pos.y + offsets[i].y;
         neighbour.z = pos.z + offsets[i].z;
-        if (mapvxl_is_solid(&server->s_map.map, neighbour.x, neighbour.y, neighbour.z)) {
+        if (valid_pos_3i(server, neighbour.x, neighbour.y, neighbour.z) && mapvxl_is_solid(&server->s_map.map, neighbour.x, neighbour.y, neighbour.z)) {
             return 1;
         }
     }
