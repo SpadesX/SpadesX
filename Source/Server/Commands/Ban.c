@@ -121,12 +121,12 @@ void cmd_ban_range(void* p_server, command_args_t arguments)
             }
             json_object_array_add(array, ban);
             json_object_to_file("Bans.json", root);
-            json_object_put(root);
             send_server_notice(arguments.player,
                                arguments.console,
                                "IP range %s-%s has been permanently banned",
                                ipStringStart,
                                ipStringEnd);
+            json_object_put(root);
         } else {
             send_server_notice(arguments.player, arguments.console, "Invalid IP format");
         }

@@ -32,6 +32,7 @@ void cmd_unban(void* p_server, command_args_t arguments)
         } else {
             send_server_notice(arguments.player, arguments.console, "IP %s not found in banned IP list", unbanIPString);
         }
+        json_object_put(root);
     } else {
         send_server_notice(arguments.player, arguments.console, "Incorrect amount of arguments or invalid IP");
     }
@@ -67,8 +68,11 @@ void cmd_unban_range(void* p_server, command_args_t arguments)
             }
         }
         if (unbanned) {
-            send_server_notice(
-            arguments.player, arguments.console, "IP range %s-%s unbanned", start_ip_string, end_ip_string);
+            send_server_notice(arguments.player,
+                               arguments.console,
+                               "IP range %s-%s unbanned",
+                               unban_start_range_string,
+                               unban_end_range_string);
         } else {
             send_server_notice(arguments.player,
                                arguments.console,
@@ -76,6 +80,7 @@ void cmd_unban_range(void* p_server, command_args_t arguments)
                                unban_start_range_string,
                                unban_end_range_string);
         }
+        json_object_put(root);
     } else {
         send_server_notice(arguments.player, arguments.console, "Incorrect amount of arguments or invalid IP");
     }
@@ -97,14 +102,15 @@ void cmd_undo_ban(void* p_server, command_args_t arguments)
         if (ip_string[0] == '0') {
             READ_STR_FROM_JSON(objectAtIndex, start_ip, start_of_range, "start of range", "0.0.0.0", 0);
             READ_STR_FROM_JSON(objectAtIndex, end_ip, end_of_range, "end of range", "0.0.0.0", 0);
-            json_object_array_del_idx(array, count - 1, 1);
-            json_object_to_file("Bans.json", root);
             send_server_notice(arguments.player, arguments.console, "IP range %s-%s unbanned", start_ip, end_ip);
-        } else {
             json_object_array_del_idx(array, count - 1, 1);
             json_object_to_file("Bans.json", root);
+        } else {
             send_server_notice(arguments.player, arguments.console, "IP %s unbanned", ip_string);
+            json_object_array_del_idx(array, count - 1, 1);
+            json_object_to_file("Bans.json", root);
         }
+        json_object_put(root);
     } else {
         send_server_notice(arguments.player, arguments.console, "Too many arguments given to command");
     }
