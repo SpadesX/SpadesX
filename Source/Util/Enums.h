@@ -81,7 +81,7 @@ typedef enum {
 typedef enum {
     TEAM_A         = 0,
     TEAM_B         = 1,
-    TEAM_SPECTATOR = 255,
+    TEAM_SPECTATOR = 2,
 } team_t;
 
 typedef enum {

@@ -200,7 +200,7 @@ void init_player(server_t*  server,
     player->allow_killing                        = 1;
     player->allow_team_killing                   = 0;
     player->muted                                = 0;
-    player->team                                 = 255;
+    player->team                                 = 2;
     player->timers.since_last_base_enter         = 0;
     player->timers.since_last_base_enter_restock = 0;
     player->timers.since_last_3block_dest        = 0;

@@ -41,7 +41,7 @@ void send_existing_player(server_t* server, player_t* receiver, player_t* existi
 
 void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 {
-    if (player->team != 255) {
+    if (player->team != 2) {
         return;
     }
     stream_skip(data, 1); // Clients always send a "dumb" ID here since server has not sent them their ID yet
@@ -50,12 +50,16 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     player->item   = stream_read_u8(data);
     player->kills  = stream_read_u32(data);
 
-    if (player->team != 0 && player->team != 1 && player->team != 255) {
-        LOG_WARNING("Player %s (#%hhu) sent invalid team. Switching them to Spectator", player->name, player->id);
-        player->team = 255;
+    if (player->team == 255) {
+        player->team = 2;
     }
 
-    if (player->team != 255) {
+    if (player->team != 0 && player->team != 1 && player->team != 2) {
+        LOG_WARNING("Player %s (#%hhu) sent invalid team. Switching them to Spectator", player->name, player->id);
+        player->team = 2;
+    }
+
+    if (player->team != 2) {
         server->protocol.num_team_users[player->team]++;
     }
 

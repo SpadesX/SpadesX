@@ -8,9 +8,13 @@ void receive_change_team(server_t* server, player_t* player, stream_t* data)
     server->protocol.num_team_users[player->team]--;
     uint8_t team = stream_read_u8(data);
 
-    if (team != 0 && team != 1 && team != 255) {
+    if (team == 255) {
+        team = 2;
+    }
+
+    if (team != 0 && team != 1 && team != 2) {
         LOG_WARNING("Player %s (#%hhu) sent invalid team. Switching them to Spectator", player->name, player->id);
-        team = 255;
+        team = 2;
     }
 
     player->team = team;
