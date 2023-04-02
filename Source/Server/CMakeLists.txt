@@ -133,4 +133,4 @@ target_sources(Server
         ${SERVER_HEADERS}
 )
 
-target_link_libraries(Server PRIVATE SpadesXCommon Util enet)
+target_link_libraries(Server PRIVATE SpadesXCommon Util)
