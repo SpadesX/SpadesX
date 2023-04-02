@@ -6,28 +6,6 @@ project(SpadesX)
 # Find pthread
 find_package(Threads REQUIRED)
 
-find_package(PkgConfig)
-pkg_check_modules(PC_enet QUIET enet)
-
-find_path(enet_INCLUDE_DIR
-  NAMES enet/enet.h
-  PATHS ${PC_enet_INCLUDE_DIRS} ../../deps
-  PATH_SUFFIXES enet
-)
-
-find_library(enet_LIBRARY
-  NAMES enet
-  PATHS ${PC_enet_LIBRARY_DIRS} ../../deps
-)
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(enet
-  FOUND_VAR enet_FOUND
-  REQUIRED_VARS
-    enet_LIBRARY
-    enet_INCLUDE_DIR
-)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 option(CMAKE_UNITY_BUILD "Enable Unity Build" ON)
@@ -36,32 +14,21 @@ option(CMAKE_UNITY_BUILD "Enable Unity Build" ON)
 add_subdirectory(Extern)
 
 # Add main target
-add_compile_options(-Wall -Wextra -Werror -Wpedantic -Wno-error=unused-but-set-parameter -Wno-error=pedantic -std=gnu11 -fstack-protector-strong)
+add_compile_options(-Wall -Wextra -Werror -Wpedantic -Wno-error=unused-but-set-parameter -Wno-error=pedantic -std=gnu11 -fstack-protector-strong -fsanitize=undefined -fsanitize=address)
 add_executable(SpadesX "")
-
-if (enet_FOUND)
-  add_library(enet::enet STATIC IMPORTED)
-  set_target_properties(enet::enet PROPERTIES
-    IMPORTED_LOCATION ${enet_LIBRARY}
-    INTERFACE_INCLUDE_DIRECTORIES ${enet_INCLUDE_DIR}
-  )
-  if (WIN32)
-    set_target_properties(enet::enet PROPERTIES
-      INTERFACE_LINK_LIBRARIES "ws2_32;winmm"
-    )
-  endif (WIN32)
-endif (enet_FOUND)
 
 target_link_libraries(SpadesX
     PRIVATE
         Server
         Util
-        enet::enet
+        enet
         mapvxl
         m
         json-c
         readline
         Threads::Threads
+        -fsanitize=undefined
+        -fsanitize=address
 )
 
 if (UNIX)

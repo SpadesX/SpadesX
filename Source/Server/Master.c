@@ -31,7 +31,7 @@ void master_update(server_t* server)
 
 int master_connect(server_t* server, uint16_t port)
 {
-    server->master.client = enet_host_create(NULL, 1, 1, 0, 0);
+    server->master.client = enet_host_create(ENET_ADDRESS_TYPE_IPV4, NULL, 1, 1, 0, 0);
 
     enet_host_compress_with_range_coder(server->master.client);
 
@@ -42,7 +42,7 @@ int master_connect(server_t* server, uint16_t port)
 
     ENetAddress address;
 
-    enet_address_set_host(&address, "67.205.183.163");
+    enet_address_set_host(&address, ENET_ADDRESS_TYPE_IPV4, "67.205.183.163");
     address.port = 32886;
 
     LOG_STATUS("Connecting to master server");

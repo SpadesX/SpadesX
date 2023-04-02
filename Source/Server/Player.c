@@ -344,7 +344,10 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
     }
     ip_t hostIP;
     hostIP.cidr = 24;
-    hostIP.ip32 = event->peer->address.host;
+    hostIP.ip[0] = event->peer->address.host.v4[0];
+    hostIP.ip[1] = event->peer->address.host.v4[1];
+    hostIP.ip[2] = event->peer->address.host.v4[2];
+    hostIP.ip[3] = event->peer->address.host.v4[3];
     struct json_object* array;
     json_object_object_get_ex(root, "Bans", &array);
     int count = json_object_array_length(array);
@@ -416,7 +419,10 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
     player->peer      = event->peer;
     event->peer->data = (void*) ((size_t) player_id);
     player->hp        = 100;
-    player->ip.ip32   = event->peer->address.host;
+    player->ip.ip[0] = event->peer->address.host.v4[0];
+    player->ip.ip[1] = event->peer->address.host.v4[1];
+    player->ip.ip[2] = event->peer->address.host.v4[2];
+    player->ip.ip[3] = event->peer->address.host.v4[3];
 
     format_ip_to_str(player->name, player->ip);
     snprintf(player->name, 6, "Limbo");

@@ -20,7 +20,7 @@ void cmd_clin(void* p_server, command_args_t arguments)
         return;
     }
 
-    player_t* player;
+    player_t* player = NULL;
     if (player_id < server->protocol.max_players) {
         HASH_FIND(hh, server->players, &player_id, sizeof(player_id), player);
     }
