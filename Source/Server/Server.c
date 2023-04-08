@@ -317,12 +317,12 @@ void server_start(server_args args)
     }
 
     ENetAddress address;
-    enet_address_build_any(&address, ENET_ADDRESS_TYPE_IPV6);
+    enet_address_build_any(&address, ENET_ADDRESS_TYPE_IPV4);
     address.port = args.port;
 
     LOG_STATUS("Creating server at port %d", args.port);
 
-    server.host = enet_host_create(ENET_ADDRESS_TYPE_ANY, &address, args.connections, args.channels, args.in_bandwidth, args.out_bandwidth);
+    server.host = enet_host_create(ENET_ADDRESS_TYPE_IPV4, &address, args.connections, args.channels, args.in_bandwidth, args.out_bandwidth);
     if (server.host == NULL) {
         LOG_ERROR("Failed to create server");
         exit(EXIT_FAILURE);
