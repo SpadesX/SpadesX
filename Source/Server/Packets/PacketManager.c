@@ -84,6 +84,11 @@ void init_packets(server_t* server)
                                   {34, &receive_version_response}};
     for (unsigned long i = 0; i < sizeof(packets) / sizeof(packet_manager_t); i++) {
         packet_t* packet = malloc(sizeof(packet_t));
+        if (packet == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            server->running = 0;
+            return;
+        }
         packet->id       = packets[i].id;
         packet->packet   = packets[i].packet;
         HASH_ADD_INT(server->packets, id, packet);

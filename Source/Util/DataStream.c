@@ -1,11 +1,18 @@
 // Copyright CircumScriptor and DarkNeutrino 2021
+#include <Server/Structs/PacketStruct.h>
 #include <Util/DataStream.h>
+#include <Util/Log.h>
 #include <stdlib.h>
 #include <string.h>
 
+
 void stream_create(stream_t* stream, uint32_t length)
 {
-    stream->data   = malloc(length);
+    stream->data = malloc(length);
+    if (stream->data == NULL) {
+        LOG_ERROR("Allocation of memory failed. EXITING");
+        return;
+    }
     stream->length = length;
     stream->pos    = 0;
 }

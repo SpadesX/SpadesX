@@ -9,6 +9,7 @@
 #include <json-c/json.h>
 #include <json-c/json_object.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int main(void)
@@ -71,6 +72,10 @@ int main(void)
         uint8_t        string_len = json_object_get_string_len(temp);
         string_node_t* map_name   = malloc(sizeof(string_node_t));
         char*          map        = malloc(sizeof(char) * string_len + 1);
+        if (map_name == NULL || map == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            exit(EXIT_FAILURE);
+        }
         memcpy(map, json_object_get_string(temp), string_len + 1);
         map_name->string = map;
         DL_APPEND(map_list, map_name);
@@ -89,6 +94,10 @@ int main(void)
         }
         string_node_t* welcome_message        = malloc(sizeof(string_node_t));
         char*          welcome_message_string = malloc(sizeof(char) * stringLen + 1);
+        if (welcome_message == NULL || welcome_message_string == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            exit(EXIT_FAILURE);
+        }
         memcpy(welcome_message_string, json_object_get_string(temp), stringLen + 1);
         welcome_message->string = welcome_message_string;
         DL_APPEND(welcome_message_list, welcome_message);
@@ -107,6 +116,10 @@ int main(void)
         }
         string_node_t* periodic_message        = malloc(sizeof(string_node_t));
         char*          periodic_message_string = malloc(sizeof(char) * string_len + 1);
+        if (periodic_message == NULL || periodic_message_string == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            exit(EXIT_FAILURE);
+        }
         memcpy(periodic_message_string, json_object_get_string(temp), string_len + 1);
         periodic_message->string = periodic_message_string;
         DL_APPEND(periodic_message_list, periodic_message);

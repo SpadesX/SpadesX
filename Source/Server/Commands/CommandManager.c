@@ -82,6 +82,11 @@ void command_create(server_t* server,
                     uint32_t permissions)
 {
     command_t* cmd   = malloc(sizeof(command_t));
+    if (cmd == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            server->running = 0;
+            return;
+        }
     cmd->execute     = command;
     cmd->parse_args  = parse_args;
     cmd->permissions = permissions;
@@ -224,7 +229,12 @@ static uint8_t parse_arguments(command_args_t* arguments, char* message, uint8_t
             argument_length--; // don't need that last quote mark
         }
         if (argument_length) {
-            char* argument            = malloc(argument_length + 1); // Don't forget about the null terminator!
+            char* argument            = malloc(argument_length + 1);
+            if (argument == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            arguments->server->running = 0;
+            return 0;
+        } // Don't forget about the null terminator!
             argument[argument_length] = '\0';
             memcpy(argument, p, argument_length);
             arguments->argv[arguments->argc++] = argument;
@@ -261,6 +271,7 @@ void command_handle(server_t* server, player_t* player, char* message, uint8_t c
     arguments.console     = console;
     arguments.argv[0]     = command;
     arguments.argc        = 1;
+    arguments.server = server;
 
     uint8_t message_length;
     if (cmd->parse_args) {

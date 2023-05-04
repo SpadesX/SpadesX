@@ -24,14 +24,13 @@ void send_existing_player(server_t* server, player_t* receiver, player_t* existi
     ENetPacket* packet = enet_packet_create(NULL, 28, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_EXISTING_PLAYER);
-    stream_write_u8(&stream, existing_player->id);           // ID
-    stream_write_u8(&stream, existing_player->team);         // TEAM
-    stream_write_u8(&stream, existing_player->weapon);       // WEAPON
-    stream_write_u8(&stream, existing_player->item);         // HELD ITEM
-    stream_write_u32(&stream, existing_player->kills);       // KILLS
+    stream_write_u8(&stream, existing_player->id);                // ID
+    stream_write_u8(&stream, existing_player->team);              // TEAM
+    stream_write_u8(&stream, existing_player->weapon);            // WEAPON
+    stream_write_u8(&stream, existing_player->item);              // HELD ITEM
+    stream_write_u32(&stream, existing_player->kills);            // KILLS
     stream_write_color_rgb(&stream, existing_player->tool_color); // COLOR
-    stream_write_array(&stream, existing_player->name, 16);  // NAME
-
+    stream_write_array(&stream, existing_player->name, 16);       // NAME
 
     if (enet_peer_send(receiver->peer, 0, packet) != 0) {
         LOG_WARNING("Failed to send player state");
@@ -85,6 +84,11 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     }
 
     char* lowerCaseName = malloc((strlen(player->name) + 1) * sizeof(char));
+    if (lowerCaseName == NULL) {
+        LOG_ERROR("Allocation of memory failed. EXITING");
+        server->running = 0;
+        return;
+    }
     snprintf(lowerCaseName, strlen(player->name), "%s", player->name);
 
     for (uint32_t i = 0; i < strlen(player->name); ++i)

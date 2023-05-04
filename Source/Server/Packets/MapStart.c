@@ -22,7 +22,7 @@ void send_map_start(server_t* server, player_t* player)
         return;
     }
     map               = old_map;
-    player->map_queue = compress_queue(map, server->s_map.map_size, DEFAULT_COMPRESS_CHUNK_SIZE);
+    player->map_queue = compress_queue(server, map, server->s_map.map_size, DEFAULT_COMPRESS_CHUNK_SIZE);
     free(map);
 
     uint32_t compressed_map_size = 0;

@@ -34,6 +34,11 @@ void send_block_line(server_t* server, player_t* player, vector3i_t start, vecto
             }
         } else if (check->state == STATE_STARTING_MAP || check->state == STATE_LOADING_CHUNKS) {
             block_node_t* node   = (block_node_t*) malloc(sizeof(*node));
+            if (node == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            server->running = 0;
+            return;
+        }
             node->position.x     = start.x;
             node->position.y     = start.y;
             node->position.z     = start.z;

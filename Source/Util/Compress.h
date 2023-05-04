@@ -2,6 +2,7 @@
 #ifndef COMPRESS_H
 #define COMPRESS_H
 
+#include <Server/Structs/ServerStruct.h>
 #include <Util/Queue.h>
 #include <Util/Types.h>
 
@@ -17,6 +18,6 @@
  * @param chunkSize Size of one block of compressed data
  * @return Blocks of compressed data (queue) or null
  */
-queue_t* compress_queue(uint8_t* data, uint32_t length, uint32_t chunkSize);
+queue_t* compress_queue(server_t* server, uint8_t* data, uint32_t length, uint32_t chunkSize);
 
 #endif // COMPRESS_H

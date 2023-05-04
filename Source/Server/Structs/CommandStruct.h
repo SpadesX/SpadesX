@@ -5,6 +5,7 @@
 #include <Util/Uthash.h>
 
 typedef struct player player_t;
+typedef struct server server_t;
 
 typedef struct permissions
 {
@@ -16,6 +17,7 @@ typedef struct permissions
 typedef struct command_args
 {
     player_t* player;
+    server_t* server;
     uint8_t   console;
     uint32_t  permissions;
     uint32_t  argc;

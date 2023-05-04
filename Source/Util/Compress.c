@@ -1,4 +1,5 @@
 // Copyright CircumScriptor and DarkNeutrino 2021
+#include <Server/Structs/ServerStruct.h>
 #include <Util/Compress.h>
 #include <Util/Log.h>
 #include <Util/Queue.h>
@@ -6,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
-
 
 static z_stream* g_compressor = NULL;
 
@@ -16,13 +16,18 @@ static z_stream* g_compressor = NULL;
  * @param level Level of compression
  * @return 0 on success
  */
-static int _compress_init(int level)
+static int _compress_init(server_t* server, int level)
 {
     if (g_compressor != NULL) {
         LOG_ERROR("Compressor is already initialized");
         return 1;
     } else {
         g_compressor = (z_stream*) malloc(sizeof(z_stream));
+        if (g_compressor == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            server->running = 0;
+            return 0;
+        }
     }
 
     g_compressor->zalloc = Z_NULL;
@@ -58,9 +63,9 @@ static int _compress_close(void)
     return 0;
 }
 
-queue_t* compress_queue(uint8_t* data, uint32_t length, uint32_t chunkSize)
+queue_t* compress_queue(server_t* server, uint8_t* data, uint32_t length, uint32_t chunkSize)
 {
-    _compress_init(5);
+    _compress_init(server, 5);
     if (g_compressor == NULL) {
         LOG_ERROR("Compressor is not initialized");
         return NULL;
@@ -75,7 +80,11 @@ queue_t* compress_queue(uint8_t* data, uint32_t length, uint32_t chunkSize)
     do {
         node        = (queue_t*) malloc(sizeof(*node));
         node->block = (uint8_t*) malloc(chunkSize);
-
+        if (node == NULL || node->block == NULL) {
+            LOG_ERROR("Allocation of memory failed. EXITING");
+            server->running = 0;
+            return 0;
+        }
         g_compressor->avail_out = chunkSize;
         g_compressor->next_out  = node->block;
         if (deflate(g_compressor, Z_FINISH) < 0) {
