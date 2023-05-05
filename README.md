@@ -18,7 +18,6 @@ We just one day decided to brainstorm the name and ended up on something that so
 Be sure to install the development versions of those:
 * [zlib](https://github.com/madler/zlib)
 * [json-c](https://github.com/json-c/json-c)
-* [enet](https://github.com/lsalzman/enet)
 * [libreadline](https://tracker.debian.org/pkg/readline)
 * [libbsd](https://tracker.debian.org/pkg/libbsd) (Only on some systems)
 
