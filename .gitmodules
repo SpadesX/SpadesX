@@ -7,6 +7,3 @@
 [submodule "Extern/spadesx_enet"]
 	path = Extern/spadesx_enet
 	url = https://github.com/SpadesX/enet
-[submodule "Extern/zlib-ng"]
-	path = Extern/zlib-ng
-	url = https://github.com/zlib-ng/zlib-ng.git
