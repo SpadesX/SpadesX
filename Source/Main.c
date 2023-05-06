@@ -17,6 +17,7 @@ int main(void)
     uint16_t    port;
     uint8_t     master;
     uint8_t     gamemode;
+    uint8_t     capture_limit;
     const char* manager_passwd;
     const char* admin_passwd;
     const char* mod_passwd;
@@ -38,6 +39,7 @@ int main(void)
     READ_INT_FROM_JSON(parsed_json, port, port, "port number", DEFAULT_SERVER_PORT, 0)
     READ_INT_FROM_JSON(parsed_json, master, master, "master variable", 1, 0)
     READ_INT_FROM_JSON(parsed_json, gamemode, gamemode, "gamemode", 0, 0)
+    READ_INT_FROM_JSON(parsed_json, capture_limit, capture_limit, "capture limit", 10, 0)
     if (json_object_object_get_ex(parsed_json, "map", &map_in_config) == 0) {
         LOG_ERROR("Failed to find map name in config");
         return -1;
@@ -148,7 +150,8 @@ int main(void)
                         .team2_name                = team2_name,
                         .team1_color               = team1_color,
                         .team2_color               = team2_color,
-                        .gamemode                  = gamemode};
+                        .gamemode                  = gamemode,
+                        .capture_limit             = capture_limit};
 
     server_start(args);
 
