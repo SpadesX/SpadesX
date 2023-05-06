@@ -118,6 +118,13 @@ uint8_t get_player_unstuck(server_t* server, player_t* player)
     return 0;
 }
 
+static uint8_t is_valid_spawn_point(server_t* server, uint16_t x, uint16_t y, uint16_t z) {
+    return   mapvxl_is_solid(&server->s_map.map, x, y, z + 1) &&
+            !mapvxl_is_solid(&server->s_map.map, x, y, z)     &&
+            !mapvxl_is_solid(&server->s_map.map, x, y, z - 1) &&
+            !mapvxl_is_solid(&server->s_map.map, x, y, z - 2);
+}
+
 void set_player_respawn_point(server_t* server, player_t* player)
 {
     if (player->team != TEAM_SPECTATOR) {
@@ -125,19 +132,33 @@ void set_player_respawn_point(server_t* server, player_t* player)
 
         float dx = spawn->to.x - spawn->from.x;
         float dy = spawn->to.y - spawn->from.y;
+        float dz = spawn->to.z - spawn->from.z;
 
         player->movement.velocity.x = 0.f;
         player->movement.velocity.y = 0.f;
         player->movement.velocity.z = 0.f;
 
-        player->movement.position.x = spawn->from.x + dx * gen_rand(&server->rand);
-        player->movement.position.y = spawn->from.y + dy * gen_rand(&server->rand);
-        player->movement.position.z =
-        mapvxl_find_top_block(&server->s_map.map, player->movement.position.x, player->movement.position.y) - 2.36f;
+        player->movement.position.x = spawn->from.x + dx * gen_rand(&server->rand) + 0.5F;
+        player->movement.position.y = spawn->from.y + dy * gen_rand(&server->rand) + 0.5F;
+        player->movement.position.z = spawn->from.z + dz * gen_rand(&server->rand);
 
         player->movement.forward_orientation.x = 0.f;
         player->movement.forward_orientation.y = 0.f;
         player->movement.forward_orientation.z = 0.f;
+
+        for(uint16_t z = player->movement.position.z; z < server->s_map.map.size_z; z++) {
+            if(is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
+                player->movement.position.z = z;
+                return;
+            }
+        }
+
+        for(uint16_t z = player->movement.position.z; z > 0; z--) {
+            if(is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
+                player->movement.position.z = z;
+                return;
+            }
+        }
     }
 }
 

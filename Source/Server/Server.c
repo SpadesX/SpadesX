@@ -121,18 +121,18 @@ static void _server_init(server_t*   server,
     struct json_object* parsed_map_json;
     parsed_map_json = json_object_from_file(mapConfig);
 
-    int         team1_start[2];
-    int         team2_start[2];
-    int         team1_end[2];
-    int         team2_end[2];
+    int         team1_start[3];
+    int         team2_start[3];
+    int         team1_end[3];
+    int         team2_end[3];
     int         fog_color[3];
     int         map_size[3];
     const char* author;
 
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1_start, team1_start, "team1 start", ((int[]){0, 0}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1_end, team1_end, "team1 end", ((int[]){10, 10}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2_start, team2_start, "team2 start", ((int[]){20, 20}), 2, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2_end, team2_end, "team2 end", ((int[]){30, 30}), 2, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1_start, team1_start, "team1 start", ((int[]){0, 0, 0}), 3, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team1_end, team1_end, "team1 end", ((int[]){10, 10, 0}), 3, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2_start, team2_start, "team2 start", ((int[]){20, 20, 0}), 3, 0)
+    READ_INT_ARR_FROM_JSON(parsed_map_json, team2_end, team2_end, "team2 end", ((int[]){30, 30, 0}), 3, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, fog_color, fog_color, "fog color", ((int[]){128, 232, 255}), 3, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, map_size, map_size, "map size", ((int[]){512, 512, 64}), 3, 1)
     READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
@@ -172,13 +172,17 @@ static void _server_init(server_t*   server,
 
     server->protocol.spawns[0].from.x = team1_start[0];
     server->protocol.spawns[0].from.y = team1_start[1];
+    server->protocol.spawns[0].from.z = team1_start[2];
     server->protocol.spawns[0].to.x   = team1_end[0];
     server->protocol.spawns[0].to.y   = team1_end[1];
+    server->protocol.spawns[0].to.z   = team1_end[2];
 
     server->protocol.spawns[1].from.x = team2_start[0];
     server->protocol.spawns[1].from.y = team2_start[1];
+    server->protocol.spawns[1].from.z = team2_start[2];
     server->protocol.spawns[1].to.x   = team2_end[0];
     server->protocol.spawns[1].to.y   = team2_end[1];
+    server->protocol.spawns[1].to.z   = team2_end[2];
 
     server->protocol.color_fog.r = fog_color[0];
     server->protocol.color_fog.g = fog_color[1];
