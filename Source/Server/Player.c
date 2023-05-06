@@ -118,6 +118,7 @@ uint8_t get_player_unstuck(server_t* server, player_t* player)
     return 0;
 }
 
+// Find a surface with 3 blocks free and a block under
 static uint8_t is_valid_spawn_point(server_t* server, uint16_t x, uint16_t y, uint16_t z) {
     return   mapvxl_is_solid(&server->s_map.map, x, y, z + 1) &&
             !mapvxl_is_solid(&server->s_map.map, x, y, z)     &&
@@ -146,6 +147,7 @@ void set_player_respawn_point(server_t* server, player_t* player)
         player->movement.forward_orientation.y = 0.f;
         player->movement.forward_orientation.z = 0.f;
 
+        // Find nearest spawn point
         for(uint16_t z = player->movement.position.z; z < server->s_map.map.size_z; z++) {
             if(is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
                 player->movement.position.z = z;
@@ -160,6 +162,7 @@ void set_player_respawn_point(server_t* server, player_t* player)
             }
         }
 
+        // Couldn't find any spawn point, switch player to top of map
         player->movement.position.z = -2.f;
     }
 }
