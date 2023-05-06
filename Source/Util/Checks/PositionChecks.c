@@ -93,17 +93,21 @@ uint8_t valid_player_pos(server_t* server, player_t* player, float X, float Y, f
         z = (int) Z + 2;
     }
 
+    uint8_t solid_z = z < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, x, y, z);
+    uint8_t solid_zm1 = z - 1 < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, x, y, z - 1);
+    uint8_t solid_zm2 = z - 2 < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, x, y, z - 2);
+
     if (x < server->s_map.map.size_x && x >= 0 && y < server->s_map.map.size_y && y >= 0 &&
-        (z < server->s_map.map.size_z || (z == 64 && player->crouching)) &&
+        (z < server->s_map.map.size_z || (z == server->s_map.map.size_z && player->crouching)) &&
         (z >= 0 || ((z == -1) || (z == -2 && player->jumping))))
     {
         if ((
-            !mapvxl_is_solid(&server->s_map.map, x, y, z) ||
-            (z == 63 || z == -1 || (z == -2 && player->jumping) || (z == 64 && player->crouching) || player->jumping) ||
-            (mapvxl_is_solid(&server->s_map.map, x, y, z) && player->crouching)) &&
-            (!mapvxl_is_solid(&server->s_map.map, x, y, z - 1) ||
-             ((z <= 1 && z > -2) || (z == -2 && player->jumping)) || (z - 1 == 63 && player->crouching)) &&
-            (!mapvxl_is_solid(&server->s_map.map, x, y, z - 2) || ((z <= 2 && z > -2) || (z == -2 && player->jumping))))
+            !solid_z ||
+            (z == server->s_map.map.size_z - 1 || z == -1 || (z == -2 && player->jumping) || (z == server->s_map.map.size_z && player->crouching) || player->jumping) ||
+            (solid_z && player->crouching)) &&
+            (!solid_zm1 ||
+             ((z <= 1 && z > -2) || (z == -2 && player->jumping)) || (z - 1 == server->s_map.map.size_z - 1 && player->crouching)) &&
+            (!solid_zm2 || ((z <= 2 && z > -2) || (z == -2 && player->jumping))))
         /* Dont even think about this
         This is what happens when map doesnt account for full height of
         freaking player and I have to check for out of bounds checks on map...
