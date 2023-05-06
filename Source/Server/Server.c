@@ -128,6 +128,7 @@ static void _server_init(server_t*   server,
     int         fog_color[3];
     int         map_size[3];
     const char* author;
+    uint8_t     capture_limit;
 
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1_start, team1_start, "team1 start", ((int[]){0, 0, 0}), 3, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, team1_end, team1_end, "team1 end", ((int[]){10, 10, 0}), 3, 0)
@@ -136,6 +137,7 @@ static void _server_init(server_t*   server,
     READ_INT_ARR_FROM_JSON(parsed_map_json, fog_color, fog_color, "fog color", ((int[]){128, 232, 255}), 3, 0)
     READ_INT_ARR_FROM_JSON(parsed_map_json, map_size, map_size, "map size", ((int[]){512, 512, 64}), 3, 1)
     READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
+    READ_INT_FROM_JSON(parsed_map_json, capture_limit, capture_limit, "map capture limit", server->capture_limit, 1)
     (void) author;
 
     json_object_put(parsed_map_json);
@@ -200,6 +202,7 @@ static void _server_init(server_t*   server,
     memcpy(server->protocol.name_team[1], team2Name, strlen(team2Name));
     server->protocol.name_team[0][strlen(team1Name)] = '\0';
     server->protocol.name_team[1][strlen(team2Name)] = '\0';
+    server->protocol.gamemode.score_limit = capture_limit;
 
     memcpy(server->server_name, serverName, strlen(serverName));
     server->server_name[strlen(serverName)] = '\0';
@@ -350,6 +353,7 @@ void server_start(server_args args)
     server.periodic_messages      = args.periodic_message_list;
     server.periodic_message_count = args.periodic_message_list_len;
     server.periodic_delays        = args.periodic_delays;
+    server.capture_limit          = args.capture_limit;
     _server_init(&server,
                  args.connections,
                  args.server_name,

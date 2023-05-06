@@ -29,6 +29,7 @@ typedef struct server_args
     uint8_t welcome_message_list_len;
     uint8_t periodic_message_list_len;
     uint8_t gamemode;
+    uint8_t capture_limit;
 } server_args;
 
 #endif

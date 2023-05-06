@@ -32,6 +32,7 @@ typedef struct server
     uint8_t*              periodic_delays;
     uint8_t               global_ak;
     uint8_t               global_ab;
+    uint8_t               capture_limit;
     const char*           manager_passwd;
     const char*           admin_passwd;
     const char*           mod_passwd;
