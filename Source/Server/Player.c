@@ -159,6 +159,8 @@ void set_player_respawn_point(server_t* server, player_t* player)
                 return;
             }
         }
+
+        player->movement.position.z = -2.f;
     }
 }
 
