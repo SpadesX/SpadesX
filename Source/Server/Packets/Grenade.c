@@ -4,6 +4,7 @@
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
+#include <Util/Checks/VectorChecks.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
@@ -45,12 +46,17 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
         return;
     }
 
+    if (player->sprinting) {
+        return;
+    }
+
     uint64_t timeNow = get_nanos();
     if (!diff_is_older_then(timeNow, &player->timers.since_last_grenade_thrown, NANO_IN_MILLI * 500) ||
         !diff_is_older_then_dont_update(timeNow, player->timers.since_possible_spade_nade, (long) NANO_IN_MILLI * 1000))
     {
         return;
     }
+
     if (player->grenades > 0) {
         grenade_t* grenade  = malloc(sizeof(grenade_t));
         if (grenade == NULL) {
@@ -58,18 +64,33 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
             server->running = 0;
             return;
         }
-        grenade->fuse       = fminf(3.0f, stream_read_f(data));
-        grenade->position.x = stream_read_f(data);
-        grenade->position.y = stream_read_f(data);
-        grenade->position.z = stream_read_f(data);
-        float velX = stream_read_f(data), velY = stream_read_f(data), velZ = stream_read_f(data);
-        if (player->sprinting) {
+
+        float fuse = stream_read_f(data);
+        if (isnan(fuse) || isinf(fuse)) {
             free(grenade);
             return;
         }
+
+        grenade->fuse       = fminf(3.0f, fuse);
+        grenade->position.x = stream_read_f(data);
+        grenade->position.y = stream_read_f(data);
+        grenade->position.z = stream_read_f(data);
+
+        if (!valid_vec3f(grenade->position)) {
+            free(grenade);
+            return;
+        }
+
+        float velX = stream_read_f(data), velY = stream_read_f(data), velZ = stream_read_f(data);
         grenade->velocity.x = velX;
         grenade->velocity.y = velY;
         grenade->velocity.z = velZ;
+
+        if (!valid_vec3f(grenade->velocity)) {
+            free(grenade);
+            return;
+        }
+
         vector3f_t velocity = {grenade->velocity.x - player->movement.velocity.x,
                                grenade->velocity.y - player->movement.velocity.y,
                                grenade->velocity.z - player->movement.velocity.z};
