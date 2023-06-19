@@ -11,6 +11,7 @@ set(CHECKS_HEADERS
     Checks/PositionChecks.h
     Checks/TimeChecks.h
     Checks/WeaponChecks.h
+    Checks/VectorChecks.h
 )
 
 set(CHECKS_SOURCES
@@ -20,6 +21,7 @@ set(CHECKS_SOURCES
     Checks/PositionChecks.c
     Checks/TimeChecks.c
     Checks/WeaponChecks.c
+    Checks/VectorChecks.c
 )
 
 set(MT_HEADERS

@@ -1,5 +1,6 @@
 #include <Server/Server.h>
 #include <Util/Checks/PositionChecks.h>
+#include <Util/Checks/VectorChecks.h>
 
 void send_position_packet(server_t* server, player_t* player, float x, float y, float z)
 {
@@ -20,6 +21,10 @@ void send_position_packet(server_t* server, player_t* player, float x, float y, 
 void receive_position_data(server_t* server, player_t* player, stream_t* data)
 {
     vector3f_t position = {stream_read_f(data), stream_read_f(data), stream_read_f(data)};
+
+    if(!valid_vec3f(position)) {
+        return;
+    }
 
     if (distance_in_3d(player->movement.position, position) >= 3) {
         send_position_packet(
