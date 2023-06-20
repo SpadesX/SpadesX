@@ -3,6 +3,7 @@
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
+#include <Util/Checks/BlockChecks.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
@@ -86,6 +87,11 @@ void receive_block_line(server_t* server, player_t* player, stream_t* data)
     if (player->id != received_id) {
         LOG_WARNING("Assigned ID: %d doesnt match sent ID: %d in blockline packet", player->id, received_id);
     }
+
+    if (player->sprinting) {
+        return;
+    }
+
     uint64_t time_now = get_nanos();
     if (player->blocks > 0 && player->can_build && server->global_ab && player->item == TOOL_BLOCK &&
         diff_is_older_then(time_now, &player->timers.since_last_block_plac, BLOCK_DELAY) &&
@@ -101,9 +107,10 @@ void receive_block_line(server_t* server, player_t* player, stream_t* data)
         end.y   = stream_read_u32(data);
         end.z   = stream_read_u32(data);
 
-        if (player->sprinting) {
+        if (!is_block_placable(server, start) || !is_block_placable(server, end)) {
             return;
         }
+
         vector3f_t startF = {start.x, start.y, start.z};
         vector3f_t endF   = {end.x, end.y, end.z};
         if (distance_in_3d(endF, player->movement.position) <= 4 && distance_in_3d(startF, player->locAtClick) <= 4 &&
