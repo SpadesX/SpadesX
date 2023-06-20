@@ -4,6 +4,7 @@
 #include <Util/Log.h>
 #include <Util/Queue.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
@@ -18,16 +19,13 @@ static z_stream* g_compressor = NULL;
  */
 static int _compress_init(server_t* server, int level)
 {
+    (void) server;
+
     if (g_compressor != NULL) {
         LOG_ERROR("Compressor is already initialized");
         return 1;
     } else {
-        g_compressor = (z_stream*) malloc(sizeof(z_stream));
-        if (g_compressor == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return 0;
-        }
+        g_compressor = (z_stream*) spadesx_malloc(sizeof(z_stream));
     }
 
     g_compressor->zalloc = Z_NULL;
@@ -78,13 +76,8 @@ queue_t* compress_queue(server_t* server, uint8_t* data, uint32_t length, uint32
     g_compressor->avail_in = length;
 
     do {
-        node        = (queue_t*) malloc(sizeof(*node));
-        node->block = (uint8_t*) malloc(chunkSize);
-        if (node == NULL || node->block == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return 0;
-        }
+        node        = (queue_t*) spadesx_malloc(sizeof(*node));
+        node->block = (uint8_t*) spadesx_malloc(chunkSize);
         g_compressor->avail_out = chunkSize;
         g_compressor->next_out  = node->block;
         if (deflate(g_compressor, Z_FINISH) < 0) {

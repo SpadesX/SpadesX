@@ -1,6 +1,7 @@
 #include <Util/Utlist.h>
 #include <Server/Server.h>
 #include <Util/Compress.h>
+#include <Util/Alloc.h>
 #include <Util/Log.h>
 
 void send_map_start(server_t* server, player_t* player)
@@ -10,7 +11,7 @@ void send_map_start(server_t* server, player_t* player)
     }
 
     // The biggest possible VXL size given the XYZ size
-    uint8_t* map = (uint8_t*) calloc(
+    uint8_t* map = (uint8_t*) spadesx_calloc(
     server->s_map.map.size_x * server->s_map.map.size_y * (server->s_map.map.size_z / 2), sizeof(uint8_t));
     // Write map to out
     server->s_map.map_size = mapvxl_write(&server->s_map.map, map);

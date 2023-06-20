@@ -6,6 +6,7 @@
 #include <Util/Log.h>
 #include <Util/Types.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 #include <json-c/json.h>
 #include <json-c/json_object.h>
 #include <stdio.h>
@@ -72,12 +73,8 @@ int main(void)
     for (int i = 0; i < map_list_len; ++i) {
         json_object*   temp       = json_object_array_get_idx(map_in_config, i);
         uint8_t        string_len = json_object_get_string_len(temp);
-        string_node_t* map_name   = malloc(sizeof(string_node_t));
-        char*          map        = malloc(sizeof(char) * string_len + 1);
-        if (map_name == NULL || map == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            exit(EXIT_FAILURE);
-        }
+        string_node_t* map_name   = spadesx_malloc(sizeof(string_node_t));
+        char*          map        = spadesx_malloc(sizeof(char) * string_len + 1);
         memcpy(map, json_object_get_string(temp), string_len + 1);
         map_name->string = map;
         DL_APPEND(map_list, map_name);
@@ -94,12 +91,8 @@ int main(void)
             "Welcome message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
             continue;
         }
-        string_node_t* welcome_message        = malloc(sizeof(string_node_t));
-        char*          welcome_message_string = malloc(sizeof(char) * stringLen + 1);
-        if (welcome_message == NULL || welcome_message_string == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            exit(EXIT_FAILURE);
-        }
+        string_node_t* welcome_message        = spadesx_malloc(sizeof(string_node_t));
+        char*          welcome_message_string = spadesx_malloc(sizeof(char) * stringLen + 1);
         memcpy(welcome_message_string, json_object_get_string(temp), stringLen + 1);
         welcome_message->string = welcome_message_string;
         DL_APPEND(welcome_message_list, welcome_message);
@@ -116,12 +109,8 @@ int main(void)
             "Periodic message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
             continue;
         }
-        string_node_t* periodic_message        = malloc(sizeof(string_node_t));
-        char*          periodic_message_string = malloc(sizeof(char) * string_len + 1);
-        if (periodic_message == NULL || periodic_message_string == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            exit(EXIT_FAILURE);
-        }
+        string_node_t* periodic_message        = spadesx_malloc(sizeof(string_node_t));
+        char*          periodic_message_string = spadesx_malloc(sizeof(char) * string_len + 1);
         memcpy(periodic_message_string, json_object_get_string(temp), string_len + 1);
         periodic_message->string = periodic_message_string;
         DL_APPEND(periodic_message_list, periodic_message);

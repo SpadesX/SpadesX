@@ -1,10 +1,11 @@
-// Copyright SpadesX team 2022
+// Copyright SpadesX team 2023
 #ifndef EVENTS_H
 #define EVENTS_H
 
 #include <Server/Structs/PlayerStruct.h>
 #include <Util/Log.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -63,11 +64,7 @@ enum { EVENT_FIRST, EVENT_LAST };
     void event##_subscribe(event##Callback callback, int position)      \
     {                                                                   \
         struct event##Listener* el;                                     \
-        el = malloc(sizeof *el);                                        \
-        if (!el) {                                                      \
-            LOG_ERROR("Out of memory. Oh well.");                       \
-            return;                                                     \
-        }                                                               \
+        el           = spadesx_malloc(sizeof *el);                      \
         el->callback = callback;                                        \
         if (position == EVENT_LAST)                                     \
             LL_APPEND(g_##event##Listeners, el);                        \

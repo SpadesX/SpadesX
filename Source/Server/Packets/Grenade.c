@@ -10,6 +10,7 @@
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 #include <math.h>
 
 void send_grenade(server_t* server, player_t* player, float fuse, vector3f_t position, vector3f_t velocity)
@@ -58,12 +59,7 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
     }
 
     if (player->grenades > 0) {
-        grenade_t* grenade  = malloc(sizeof(grenade_t));
-        if (grenade == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return;
-        }
+        grenade_t* grenade  = spadesx_malloc(sizeof(grenade_t));
 
         float fuse = stream_read_f(data);
         if (isnan(fuse) || isinf(fuse)) {

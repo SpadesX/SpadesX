@@ -14,6 +14,7 @@
 #include <Util/Nanos.h>
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 #include <stdint.h>
 
 void send_block_action(server_t* server, player_t* player, uint8_t actionType, int X, int Y, int Z)
@@ -38,12 +39,7 @@ void send_block_action(server_t* server, player_t* player, uint8_t actionType, i
                 sent = 1;
             }
         } else if (player->state == STATE_STARTING_MAP || player->state == STATE_LOADING_CHUNKS) {
-            block_node_t* node = (block_node_t*) malloc(sizeof(*node));
-            if (node == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return;
-        }
+            block_node_t* node = (block_node_t*) spadesx_malloc(sizeof(*node));
             node->position.x   = X;
             node->position.y   = Y;
             node->position.z   = Z;
