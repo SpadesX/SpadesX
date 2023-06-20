@@ -14,6 +14,10 @@
 
 uint8_t is_block_placable(server_t* server, vector3i_t pos)
 {
+    if (pos.z >= server->s_map.map.size_z - 2) {
+        return 0;
+    }
+
     static vector3i_t neighbour;
 
     static const vector3i_t offsets[6] = {{0, 0, -1}, {0, -1, 0}, {0, 1, 0}, {-1, 0, 0}, {1, 0, 0}, {0, 0, 1}};
