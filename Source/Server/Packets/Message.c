@@ -7,6 +7,7 @@
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
 #include <Util/Uthash.h>
+#include <Util/Alloc.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -22,8 +23,8 @@ void receive_handle_send_message(server_t* server, player_t* player, stream_t* d
     if (length > 2048) {
         length = 2048; // Lets limit messages to 2048 characters
     }
-    char* message =
-    calloc(length + 1, sizeof(char)); // Allocated 1 more byte in the case that client sent us non null ending string
+    char* message = spadesx_calloc(
+    length + 1, sizeof(char)); // Allocated 1 more byte in the case that client sent us non null ending string
     stream_read_array(data, message, length);
     if (message[length - 1] != '\0') {
         message[length] = '\0';

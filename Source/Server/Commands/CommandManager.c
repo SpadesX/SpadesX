@@ -12,6 +12,7 @@
 #include <Util/Types.h>
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 #include <ctype.h>
 #include <enet/enet.h>
 #include <json-c/json.h>
@@ -81,12 +82,7 @@ void command_create(server_t* server,
                     char     description[1024],
                     uint32_t permissions)
 {
-    command_t* cmd   = malloc(sizeof(command_t));
-    if (cmd == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return;
-        }
+    command_t* cmd   = spadesx_malloc(sizeof(command_t));
     cmd->execute     = command;
     cmd->parse_args  = parse_args;
     cmd->permissions = permissions;
@@ -229,12 +225,8 @@ static uint8_t parse_arguments(command_args_t* arguments, char* message, uint8_t
             argument_length--; // don't need that last quote mark
         }
         if (argument_length) {
-            char* argument            = malloc(argument_length + 1);
-            if (argument == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            arguments->server->running = 0;
-            return 0;
-        } // Don't forget about the null terminator!
+            char* argument            = spadesx_malloc(argument_length + 1);
+            // Don't forget about the null terminator!
             argument[argument_length] = '\0';
             memcpy(argument, p, argument_length);
             arguments->argv[arguments->argc++] = argument;
@@ -251,7 +243,7 @@ void command_handle(server_t* server, player_t* player, char* message, uint8_t c
         send_server_notice(player, console, "This command is longer then the 1000 character limit. Thus it has been ignored");
         return;
     }
-    char* command = calloc(1000, sizeof(char));
+    char* command = spadesx_calloc(1000, sizeof(char));
     sscanf(message, "%s", command);
     uint8_t command_length = strlen(command);
     for (uint8_t i = 1; i < command_length; ++i) {
@@ -280,7 +272,7 @@ void command_handle(server_t* server, player_t* player, char* message, uint8_t c
         }
     } else if ((message_length = strlen(message)) - command_length > 1)
     { // if we have something other than the command itself
-        char* argument = calloc(message_length - command_length, sizeof(message[0]));
+        char* argument = spadesx_calloc(message_length - command_length, sizeof(message[0]));
         strcpy(argument, message + command_length + 1);
         arguments.argv[arguments.argc++] = argument;
     }

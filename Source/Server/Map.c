@@ -6,6 +6,7 @@
 #include <Util/Queue.h>
 #include <Util/Types.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 #include <errno.h>
 #include <libmapvxl/libmapvxl.h>
 #include <stdio.h>
@@ -47,7 +48,7 @@ uint8_t map_load(server_t* server, const char* path, int map_size[3])
         return 0;
     }
 
-    uint8_t* buffer = (uint8_t*) calloc(server->s_map.map_size, sizeof(uint8_t));
+    uint8_t* buffer = (uint8_t*) spadesx_calloc(server->s_map.map_size, sizeof(uint8_t));
 
     if (fread(buffer, server->s_map.map_size, 1, file) < server->s_map.map_size) {
         LOG_STATUS("Finished loading map");

@@ -7,6 +7,7 @@
 #include <Util/Physics.h>
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 
 inline uint8_t allow_shot(server_t*  server,
                           player_t*  player,
@@ -83,12 +84,7 @@ void init_packets(server_t* server)
                                   {30, &receive_change_weapon},
                                   {34, &receive_version_response}};
     for (unsigned long i = 0; i < sizeof(packets) / sizeof(packet_manager_t); i++) {
-        packet_t* packet = malloc(sizeof(packet_t));
-        if (packet == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return;
-        }
+        packet_t* packet = spadesx_malloc(sizeof(packet_t));
         packet->id       = packets[i].id;
         packet->packet   = packets[i].packet;
         HASH_ADD_INT(server->packets, id, packet);

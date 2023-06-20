@@ -9,6 +9,7 @@
 #include <Util/Nanos.h>
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
+#include <Util/Alloc.h>
 
 void send_block_line(server_t* server, player_t* player, vector3i_t start, vector3i_t end)
 {
@@ -34,12 +35,7 @@ void send_block_line(server_t* server, player_t* player, vector3i_t start, vecto
                 sent = 1;
             }
         } else if (check->state == STATE_STARTING_MAP || check->state == STATE_LOADING_CHUNKS) {
-            block_node_t* node   = (block_node_t*) malloc(sizeof(*node));
-            if (node == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return;
-        }
+            block_node_t* node   = (block_node_t*) spadesx_malloc(sizeof(*node));
             node->position.x     = start.x;
             node->position.y     = start.y;
             node->position.z     = start.z;

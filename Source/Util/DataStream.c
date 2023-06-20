@@ -2,17 +2,13 @@
 #include <Server/Structs/PacketStruct.h>
 #include <Util/DataStream.h>
 #include <Util/Log.h>
+#include <Util/Alloc.h>
 #include <stdlib.h>
 #include <string.h>
 
-
 void stream_create(stream_t* stream, uint32_t length)
 {
-    stream->data = malloc(length);
-    if (stream->data == NULL) {
-        LOG_ERROR("Allocation of memory failed. EXITING");
-        return;
-    }
+    stream->data = spadesx_malloc(length);
     stream->length = length;
     stream->pos    = 0;
 }

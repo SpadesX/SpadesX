@@ -45,6 +45,7 @@ set(UTIL_HEADERS
     Nanos.h
     Notice.h
     Weapon.h
+    Alloc.h
 )
 
 set(UTIL_SOURCES
@@ -58,6 +59,7 @@ set(UTIL_SOURCES
     Nanos.c
     Notice.c
     Weapon.c
+    Alloc.c
 )
 
 target_sources(Util

@@ -18,6 +18,7 @@
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
 #include <Util/Weapon.h>
+#include <Util/Alloc.h>
 #include <enet/enet.h>
 #include <json-c/json_util.h>
 #include <math.h>
@@ -435,7 +436,7 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
         LOG_WARNING("Server full. Kicking player");
         return;
     }
-    player_t*  player  = calloc(1, sizeof(player_t));
+    player_t*  player  = spadesx_calloc(1, sizeof(player_t));
     vector3f_t empty   = {0, 0, 0};
     vector3f_t forward = {1, 0, 0};
     vector3f_t height  = {0, 0, 1};

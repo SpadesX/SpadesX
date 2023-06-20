@@ -1,6 +1,7 @@
 #include <Server/Structs/ServerStruct.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Log.h>
+#include <Util/Alloc.h>
 
 vector3i_t* get_neighbours(vector3i_t pos)
 {
@@ -54,12 +55,7 @@ uint8_t check_node(server_t* server, vector3i_t position)
         return 1;
     }
     if (nodes == NULL) {
-        nodes = (vector3i_t*) malloc(sizeof(vector3i_t) * NODE_RESERVE_SIZE);
-        if (nodes == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return 0;
-        }
+        nodes = (vector3i_t*) spadesx_malloc(sizeof(vector3i_t) * NODE_RESERVE_SIZE);
         nodesSize = NODE_RESERVE_SIZE;
     }
     nodePos    = 0;
@@ -103,12 +99,7 @@ uint8_t check_node(server_t* server, vector3i_t position)
                  position.y * server->s_map.map.size_z + position.z;
         HASH_FIND_INT(visitedMap, &id, node);
         if (node == NULL) {
-            node          = (map_node_t*) malloc(sizeof *node);
-            if (node == NULL) {
-            LOG_ERROR("Allocation of memory failed. EXITING");
-            server->running = 0;
-            return 0;
-        }
+            node          = (map_node_t*) spadesx_malloc(sizeof *node);
             node->pos     = position;
             node->visited = 1;
             node->id      = id;

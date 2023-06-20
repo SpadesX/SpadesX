@@ -8,6 +8,7 @@
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
 #include <Util/Weapon.h>
+#include <Util/Alloc.h>
 #include <ctype.h>
 
 #ifdef _WIN32
@@ -83,12 +84,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
         invName = 1;
     }
 
-    char* lowerCaseName = malloc((strlen(player->name) + 1) * sizeof(char));
-    if (lowerCaseName == NULL) {
-        LOG_ERROR("Allocation of memory failed. EXITING");
-        server->running = 0;
-        return;
-    }
+    char* lowerCaseName = spadesx_malloc((strlen(player->name) + 1) * sizeof(char));
     snprintf(lowerCaseName, strlen(player->name), "%s", player->name);
 
     for (uint32_t i = 0; i < strlen(player->name); ++i)
