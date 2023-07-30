@@ -403,6 +403,13 @@ void server_start(server_args args)
         sleep(0);
     }
 
+    // Server is shutting down, kick all players
+    player_t *player, *tmp;
+    HASH_ITER(hh, server.players, player, tmp)
+    {
+        enet_peer_disconnect_now(player->peer, REASON_KICKED);
+    }
+
     free_all_commands(&server);
     free_all_packets(&server);
     free_all_players(&server);
