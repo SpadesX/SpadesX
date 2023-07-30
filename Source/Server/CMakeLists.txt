@@ -69,6 +69,7 @@ set(COMMANDS_SOURCES
     Commands/Toggles.c
     Commands/Unban.c
     Commands/Ups.c
+    Commands/Shutdown.c
 )
 
 set(STRUCTS_HEADERS

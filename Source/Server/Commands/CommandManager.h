@@ -33,5 +33,6 @@ void cmd_unban(void* p_server, command_args_t arguments);
 void cmd_unban_range(void* p_server, command_args_t arguments);
 void cmd_undo_ban(void* p_server, command_args_t arguments);
 void cmd_ups(void* p_server, command_args_t arguments);
+void cmd_shutdown(void* p_server, command_args_t arguments);
 
 #endif
