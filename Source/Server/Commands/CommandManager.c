@@ -131,7 +131,8 @@ void command_populate_all(server_t* server)
     {"/unbanrange", 0, &cmd_unban_range, 30, "Unbans specified IP range"},
     {"/undoban", 0, &cmd_undo_ban, 30, "Reverts the last ban"},
     {"/ups", 1, &cmd_ups, 0, "Sets UPS of player to requested ammount. Range: 1-300"},
-    {"/wban", 0, &cmd_ban_custom, 30, "Bans specified player for a week"}};
+    {"/wban", 0, &cmd_ban_custom, 30, "Bans specified player for a week"},
+    {"/shutdown", 0, &cmd_shutdown, 16, "Shutdown the server"}};
     for (unsigned long i = 0; i < sizeof(commands) / sizeof(command_manager_t); i++) {
         command_create(server,
                        commands[i].parse_args,
