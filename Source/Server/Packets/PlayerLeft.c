@@ -10,7 +10,7 @@ void send_player_left(server_t* server, player_t* player)
     format_ip_to_str(ipString, player->ip);
     LOG_INFO("Player %s (%s, #%hhu) disconnected", player->name, ipString, player->id);
 
-    player_disconnect_run(player);
+    on_player_disconnect_run(server, player);
 
     if (server->protocol.num_players == 0) {
         return;

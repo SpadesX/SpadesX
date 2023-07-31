@@ -1,6 +1,7 @@
 #ifndef SERVERSTRUCT_H
 #define SERVERSTRUCT_H
 
+#include <Server/Structs/EventStruct.h>
 #include <Server/Structs/MasterStruct.h>
 #include <Server/Structs/PacketStruct.h>
 #include <Server/Structs/PhysicsStruct.h>
@@ -42,6 +43,8 @@ typedef struct server
     char                  server_name[31];
     char                  gamemode_name[7];
     volatile sig_atomic_t running; // volatile keyword is required to have an access to this variable in any thread
+
+    event_handlers_t event_handlers;
 } server_t;
 
 #endif

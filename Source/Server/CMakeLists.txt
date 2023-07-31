@@ -75,6 +75,7 @@ set(COMMANDS_SOURCES
 set(STRUCTS_HEADERS
     Structs/BlockStruct.h
     Structs/CommandStruct.h
+    Structs/EventStruct.h
     Structs/GamemodeStruct.h
     Structs/GrenadeStruct.h
     Structs/IPStruct.h
