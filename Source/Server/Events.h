@@ -3,9 +3,9 @@
 #define EVENTS_H
 
 #include <Server/Structs/PlayerStruct.h>
+#include <Util/Alloc.h>
 #include <Util/Log.h>
 #include <Util/Utlist.h>
-#include <Util/Alloc.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -38,19 +38,17 @@ enum { EVENT_FIRST, EVENT_LAST };
 // - void [event]_unsubscribe([event]Callback callback) - find given callback in the list and remove it if it's present
 // - void [event]_run(...) - called when the event had occured. Calls every callback until either callback returns
 // EVENT_BREAK or there will be no more callbacks in the list
-#define EVENT(event, ...)                                           \
-    typedef int (*event##Callback)(__VA_ARGS__);                    \
-    typedef struct event##Listener                                  \
-    {                                                               \
-        int (*callback)(__VA_ARGS__);                               \
-        struct event##Listener* next;                               \
-    } event##Listener;                                              \
-                                                                    \
-    extern struct event##Listener* g_##event##Listeners;            \
-                                                                    \
-    void event##_subscribe(event##Callback callback, int position); \
-    void event##_unsubscribe(event##Callback callback);             \
-    void event##_run(__VA_ARGS__);
+#define EVENT(event, ...)                                                                  \
+    typedef int (*event##Callback)(server_t * server, __VA_ARGS__);                        \
+    typedef struct event##Listener_t                                                       \
+    {                                                                                      \
+        event##Callback           callback;                                                \
+        struct event##Listener_t* next;                                                    \
+    } event##Listener_t;                                                                   \
+                                                                                           \
+    void on_##event##_subscribe(server_t* server, event##Callback callback, int position); \
+    void on_##event##_unsubscribe(server_t* server, event##Callback callback);             \
+    void on_##event##_run(server_t* server, __VA_ARGS__);
 
 // This macro defines the functions and a global list of callbacks and should be calleed in a source file.
 // Arguments:
@@ -58,36 +56,34 @@ enum { EVENT_FIRST, EVENT_LAST };
 // - argumentNames - same as ... in EVENT but in brackets and without the type names, pointer signs etc (example: (Name,
 // Number, Data))
 // - ... - same as EVENT
-#define EVENT_DEFINITION(event, argumentNames, ...)                     \
-    struct event##Listener* g_##event##Listeners = NULL;                \
-                                                                        \
-    void event##_subscribe(event##Callback callback, int position)      \
-    {                                                                   \
-        struct event##Listener* el;                                     \
-        el           = spadesx_malloc(sizeof *el);                      \
-        el->callback = callback;                                        \
-        if (position == EVENT_LAST)                                     \
-            LL_APPEND(g_##event##Listeners, el);                        \
-        else                                                            \
-            LL_PREPEND(g_##event##Listeners, el);                       \
-    }                                                                   \
-                                                                        \
-    void event##_unsubscribe(event##Callback callback)                  \
-    {                                                                   \
-        struct event##Listener* el;                                     \
-        LL_SEARCH_SCALAR(g_##event##Listeners, el, callback, callback); \
-        if (!el)                                                        \
-            return;                                                     \
-        LL_DELETE(g_##event##Listeners, el);                            \
-        free(el);                                                       \
-    }                                                                   \
-                                                                        \
-    void event##_run(__VA_ARGS__)                                       \
-    {                                                                   \
-        struct event##Listener* el;                                     \
-        el = g_##event##Listeners;                                      \
-        while (el && el->callback argumentNames != EVENT_BREAK)         \
-            el = el->next;                                              \
+#define EVENT_DEFINITION(event, argumentNames, ...)                                       \
+    void on_##event##_subscribe(server_t* server, event##Callback callback, int position) \
+    {                                                                                     \
+        event##Listener_t* el;                                                            \
+        el           = spadesx_malloc(sizeof *el);                                        \
+        el->callback = callback;                                                          \
+        if (position == EVENT_LAST)                                                       \
+            LL_APPEND(server->event_handlers.event, el);                                  \
+        else                                                                              \
+            LL_PREPEND(server->event_handlers.event, el);                                 \
+    }                                                                                     \
+                                                                                          \
+    void on_##event##_unsubscribe(server_t* server, event##Callback callback)             \
+    {                                                                                     \
+        event##Listener_t* el;                                                            \
+        LL_SEARCH_SCALAR(server->event_handlers.event, el, callback, callback);           \
+        if (!el)                                                                          \
+            return;                                                                       \
+        LL_DELETE(server->event_handlers.event, el);                                      \
+        free(el);                                                                         \
+    }                                                                                     \
+                                                                                          \
+    void on_##event##_run(server_t* server, __VA_ARGS__)                                  \
+    {                                                                                     \
+        event##Listener_t* el;                                                            \
+        el = server->event_handlers.event;                                                \
+        while (el && el->callback argumentNames != EVENT_BREAK)                           \
+            el = el->next;                                                                \
     }
 
 // Happens when a player disconnects.
