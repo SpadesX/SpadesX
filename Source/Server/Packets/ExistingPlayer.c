@@ -68,9 +68,9 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 
     uint32_t length  = stream_left(data);
     uint8_t  invName = 0;
-    if (length > 16) {
+    if (length > 15) {
         LOG_WARNING("Name of player %d is too long. Cutting", player->id);
-        length = 16;
+        length = 15;
     } else {
         player->name[length] = '\0';
     }
