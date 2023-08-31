@@ -6,6 +6,9 @@ project(SpadesX)
 # Find pthread
 find_package(Threads REQUIRED)
 
+# Find lua
+find_package(Lua REQUIRED)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 option(CMAKE_UNITY_BUILD "Enable Unity Build" ON)
@@ -19,6 +22,7 @@ add_executable(SpadesX "")
 
 target_link_libraries(SpadesX
     PRIVATE
+        lua5.4
         Server
         Util
         enet
@@ -42,6 +46,10 @@ set_target_properties(SpadesX Util Server
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/config.json)
 configure_file(${PROJECT_SOURCE_DIR}/Resources/config.json ${CMAKE_BINARY_DIR}/config.json COPYONLY)
+endif()
+
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/level.lua)
+configure_file(${PROJECT_SOURCE_DIR}/Resources/level.lua ${CMAKE_BINARY_DIR}/level.lua COPYONLY)
 endif()
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/Border_Hallway.vxl)

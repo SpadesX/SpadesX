@@ -23,6 +23,7 @@ target_include_directories(SpadesXCommon
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/Extern
         ${PROJECT_SOURCE_DIR}/Extern/spadesx_enet/include
+        ${LUA_INCLUDE_DIR}
 )
 
 add_subdirectory(Util)
@@ -30,6 +31,7 @@ add_subdirectory(Server)
 
 target_link_libraries(Server
     PRIVATE
+        lua5.4
         SpadesXCommon
         Util
         mapvxl
