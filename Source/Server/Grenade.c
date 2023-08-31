@@ -74,7 +74,7 @@ void handle_grenade(server_t* server, player_t* player)
             physics_move_grenade(server, grenade, &server->physics);
             if ((get_nanos() - grenade->time_since_sent) / 1000000000.f >= grenade->fuse) {
                 uint8_t allowToDestroy = 0;
-                if (grenadeGamemodeCheck(server, grenade->position)) {
+                if (grenadeGamemodeCheck(server,player, grenade->position)) {
                     send_block_action(server,
                                       player,
                                       3,

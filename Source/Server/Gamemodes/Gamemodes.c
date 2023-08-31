@@ -9,27 +9,27 @@
 #include <stdio.h>
 #include <string.h>
 
-uint8_t grenadeGamemodeCheck(server_t* server, vector3f_t pos)
+uint8_t grenadeGamemodeCheck(server_t* server, player_t* player, vector3f_t pos)
 {
-    if (gamemode_block_checks(server, pos.x + 1, pos.y + 1, pos.z + 1) &&
-        gamemode_block_checks(server, pos.x + 1, pos.y + 1, pos.z - 1) &&
-        gamemode_block_checks(server, pos.x + 1, pos.y + 1, pos.z) &&
-        gamemode_block_checks(server, pos.x + 1, pos.y - 1, pos.z + 1) &&
-        gamemode_block_checks(server, pos.x + 1, pos.y - 1, pos.z - 1) &&
-        gamemode_block_checks(server, pos.x + 1, pos.y - 1, pos.z) &&
-        gamemode_block_checks(server, pos.x - 1, pos.y + 1, pos.z + 1) &&
-        gamemode_block_checks(server, pos.x - 1, pos.y + 1, pos.z - 1) &&
-        gamemode_block_checks(server, pos.x - 1, pos.y + 1, pos.z) &&
-        gamemode_block_checks(server, pos.x - 1, pos.y - 1, pos.z + 1) &&
-        gamemode_block_checks(server, pos.x - 1, pos.y - 1, pos.z - 1) &&
-        gamemode_block_checks(server, pos.x - 1, pos.y - 1, pos.z))
+    if (gamemode_block_checks(server,player, pos.x + 1, pos.y + 1, pos.z + 1) &&
+        gamemode_block_checks(server,player, pos.x + 1, pos.y + 1, pos.z - 1) &&
+        gamemode_block_checks(server,player, pos.x + 1, pos.y + 1, pos.z) &&
+        gamemode_block_checks(server,player, pos.x + 1, pos.y - 1, pos.z + 1) &&
+        gamemode_block_checks(server,player, pos.x + 1, pos.y - 1, pos.z - 1) &&
+        gamemode_block_checks(server,player, pos.x + 1, pos.y - 1, pos.z) &&
+        gamemode_block_checks(server,player, pos.x - 1, pos.y + 1, pos.z + 1) &&
+        gamemode_block_checks(server,player, pos.x - 1, pos.y + 1, pos.z - 1) &&
+        gamemode_block_checks(server,player, pos.x - 1, pos.y + 1, pos.z) &&
+        gamemode_block_checks(server,player, pos.x - 1, pos.y - 1, pos.z + 1) &&
+        gamemode_block_checks(server,player, pos.x - 1, pos.y - 1, pos.z - 1) &&
+        gamemode_block_checks(server,player, pos.x - 1, pos.y - 1, pos.z))
     {
         return 1;
     }
     return 0;
 }
 
-uint8_t gamemode_block_checks(server_t* server, int x, int y, int z)
+uint8_t gamemode_block_checks(server_t* server, player_t* player, int x, int y, int z)
 {
     if (((((x >= 206 && x <= 306) && (y >= 240 && y <= 272) && (z == 2 || z == 0)) ||
           ((x >= 205 && x <= 307) && (y >= 239 && y <= 273) && (z == 1))) &&
