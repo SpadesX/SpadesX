@@ -15,6 +15,32 @@
 lua_State* LuaLevel;
 int        lua_script = 0;
 
+// LUA utils... Should be moved later.
+// Set table on top of the stack as read-only.
+// It does NOT pop it at the end.
+// The table on the top of the stack at the end is NOT the one that was there at the begining.
+// It is replaced by another one. So do not store refs to the first one.
+static inline int l_read_only(lua_State *L)
+{
+    lua_settop(L, 0);
+    printf("Error: attempted to edit a readonly table.\n");
+    return 0;
+}
+static inline void set_table_as_readonly(lua_State *L)
+{
+    int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    lua_newtable(L);
+    lua_newtable(L);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+    lua_setfield(L, -2, "__index");
+    lua_pushcfunction(L, l_read_only);
+    lua_setfield(L, -2, "__newindex");
+    lua_pushstring(L, "Read only table. Metatable hidden.");
+    lua_setfield(L, -2, "__metatable");
+    lua_setmetatable(L, -2);
+    luaL_unref(L, LUA_REGISTRYINDEX, ref);
+}
+
 // Methods to be used in the init function.
 
 int lua_init_find_top_block(lua_State* L)
@@ -145,7 +171,8 @@ uint8_t gamemode_block_checks(server_t* server, player_t* player, int x, int y, 
             lua_settable(LuaLevel, -3);
             lua_settable(LuaLevel, -3);
             
-            // Add player team to the table
+            // The player table is readonly. I you want to set something, use a method (not implemented yet) and maybe a fech method to refresh fields.
+            set_table_as_readonly(LuaLevel);
 
 
             lua_pushinteger(LuaLevel, x); // Argument x
@@ -298,6 +325,9 @@ static int _init_lua(server_t* server)
 
     lua_pushcfunction(LuaLevel, lua_init_set_base_position);
     lua_setfield(LuaLevel, -2, "set_base_position");
+
+    // Now the api table is on top. Let's make it readonly to avoid misuse.
+    set_table_as_readonly(LuaLevel);
 
     // The call gamemode_init(api) function:
     lua_getglobal(LuaLevel, "gamemode_init");
