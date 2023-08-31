@@ -4,21 +4,22 @@
 #include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Types.h>
+#include <lauxlib.h>
 #include <libmapvxl/libmapvxl.h>
+#include <lua.h>
+#include <lualib.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <lauxlib.h>
-#include <lua.h>
-#include <lualib.h>
 
-lua_State *LuaLevel;
-int lua_script = 0;
+lua_State* LuaLevel;
+int        lua_script = 0;
 
 // Methods to be used in the init function.
 
-int lua_init_find_top_block(lua_State * L){
-    server_t * server = get_server();
+int lua_init_find_top_block(lua_State* L)
+{
+    server_t* server = get_server();
     // Check if two arguments (x and y) are provided
     int x = luaL_checkinteger(L, 1);
     int y = luaL_checkinteger(L, 2);
@@ -32,12 +33,13 @@ int lua_init_find_top_block(lua_State * L){
     return 1;
 }
 // To be used in the init API. Does not trigger any notification sent to players.
-int lua_init_add_colored_block(lua_State * L){
-    server_t * server = get_server();
+int lua_init_add_colored_block(lua_State* L)
+{
+    server_t* server = get_server();
     // Check if four arguments (x, y, z, color) are provided
-    int x = luaL_checkinteger(L, 1);
-    int y = luaL_checkinteger(L, 2);
-    int z = luaL_checkinteger(L, 3);
+    int      x     = luaL_checkinteger(L, 1);
+    int      y     = luaL_checkinteger(L, 2);
+    int      z     = luaL_checkinteger(L, 3);
     uint32_t color = (uint32_t) luaL_checkinteger(L, 4);
 
     color_t platformColor;
@@ -47,20 +49,22 @@ int lua_init_add_colored_block(lua_State * L){
 }
 
 // To be used in the init API. Does not trigger any notification sent to players.
-int lua_init_set_intel_position(lua_State * L){
+int lua_init_set_intel_position(lua_State* L)
+{
     // Check if four arguments (x, y, z, team) are provided
-    int x = luaL_checkinteger(L, 1);
-    int y = luaL_checkinteger(L, 2);
-    int z = luaL_checkinteger(L, 3);
+    int x    = luaL_checkinteger(L, 1);
+    int y    = luaL_checkinteger(L, 2);
+    int z    = luaL_checkinteger(L, 3);
     int team = luaL_checkinteger(L, 4);
     // Check if the team value is within the valid range of 0-1
     if (team < 0 || team > 1) {
         return luaL_error(L, "Invalid team value: %d (should be between 0 and 1)", team);
     }
 
-    server_t * server = get_server();
+    server_t* server = get_server();
     // As we are in the init context... Maybe the flag cannot be held at the beginning?
-    // Or maybe later so we can implement a gamemode where tent is in the ennemy spawnpoint and a random player get the flag?
+    // Or maybe later so we can implement a gamemode where tent is in the ennemy spawnpoint and a random player get the
+    // flag?
     server->protocol.gamemode.intel_held[0] = 0;
     server->protocol.gamemode.intel[team].x = x;
     server->protocol.gamemode.intel[team].x = y;
@@ -68,18 +72,19 @@ int lua_init_set_intel_position(lua_State * L){
     return 0;
 }
 // To be used in the init API. Does not trigger any notification sent to players.
-int lua_init_set_base_position(lua_State * L){
+int lua_init_set_base_position(lua_State* L)
+{
     // Check if four arguments (x, y, z, team) are provided
-    int x = luaL_checkinteger(L, 1);
-    int y = luaL_checkinteger(L, 2);
-    int z = luaL_checkinteger(L, 3);
+    int x    = luaL_checkinteger(L, 1);
+    int y    = luaL_checkinteger(L, 2);
+    int z    = luaL_checkinteger(L, 3);
     int team = luaL_checkinteger(L, 4);
     // Check if the team value is within the valid range of 0-1
     if (team < 0 || team > 1) {
         return luaL_error(L, "Invalid team value: %d (should be between 0 and 1)", team);
     }
 
-    server_t * server = get_server();
+    server_t* server = get_server();
 
     server->protocol.gamemode.base[team].x = x;
     server->protocol.gamemode.base[team].x = y;
@@ -87,21 +92,20 @@ int lua_init_set_base_position(lua_State * L){
     return 0;
 }
 
-
 uint8_t grenadeGamemodeCheck(server_t* server, player_t* player, vector3f_t pos)
 {
-    if (gamemode_block_checks(server,player, pos.x + 1, pos.y + 1, pos.z + 1) &&
-        gamemode_block_checks(server,player, pos.x + 1, pos.y + 1, pos.z - 1) &&
-        gamemode_block_checks(server,player, pos.x + 1, pos.y + 1, pos.z) &&
-        gamemode_block_checks(server,player, pos.x + 1, pos.y - 1, pos.z + 1) &&
-        gamemode_block_checks(server,player, pos.x + 1, pos.y - 1, pos.z - 1) &&
-        gamemode_block_checks(server,player, pos.x + 1, pos.y - 1, pos.z) &&
-        gamemode_block_checks(server,player, pos.x - 1, pos.y + 1, pos.z + 1) &&
-        gamemode_block_checks(server,player, pos.x - 1, pos.y + 1, pos.z - 1) &&
-        gamemode_block_checks(server,player, pos.x - 1, pos.y + 1, pos.z) &&
-        gamemode_block_checks(server,player, pos.x - 1, pos.y - 1, pos.z + 1) &&
-        gamemode_block_checks(server,player, pos.x - 1, pos.y - 1, pos.z - 1) &&
-        gamemode_block_checks(server,player, pos.x - 1, pos.y - 1, pos.z))
+    if (gamemode_block_checks(server, player, pos.x + 1, pos.y + 1, pos.z + 1) &&
+        gamemode_block_checks(server, player, pos.x + 1, pos.y + 1, pos.z - 1) &&
+        gamemode_block_checks(server, player, pos.x + 1, pos.y + 1, pos.z) &&
+        gamemode_block_checks(server, player, pos.x + 1, pos.y - 1, pos.z + 1) &&
+        gamemode_block_checks(server, player, pos.x + 1, pos.y - 1, pos.z - 1) &&
+        gamemode_block_checks(server, player, pos.x + 1, pos.y - 1, pos.z) &&
+        gamemode_block_checks(server, player, pos.x - 1, pos.y + 1, pos.z + 1) &&
+        gamemode_block_checks(server, player, pos.x - 1, pos.y + 1, pos.z - 1) &&
+        gamemode_block_checks(server, player, pos.x - 1, pos.y + 1, pos.z) &&
+        gamemode_block_checks(server, player, pos.x - 1, pos.y - 1, pos.z + 1) &&
+        gamemode_block_checks(server, player, pos.x - 1, pos.y - 1, pos.z - 1) &&
+        gamemode_block_checks(server, player, pos.x - 1, pos.y - 1, pos.z))
     {
         return 1;
     }
@@ -111,10 +115,33 @@ uint8_t grenadeGamemodeCheck(server_t* server, player_t* player, vector3f_t pos)
 uint8_t gamemode_block_checks(server_t* server, player_t* player, int x, int y, int z)
 {
     if (lua_script == 1) {
-
         lua_getglobal(LuaLevel, "gamemode_block_checks");
         if (lua_isfunction(LuaLevel, -1)) {
-            lua_pushinteger(LuaLevel, player->team); // Argument team
+            // Push the player table first
+            lua_newtable(LuaLevel);
+                // Add player name to the table
+                lua_pushstring(LuaLevel, "name");
+                lua_pushstring(LuaLevel, player->name);
+                lua_settable(LuaLevel, -3);
+
+                // Add player id to the table
+                lua_pushstring(LuaLevel, "id");
+                lua_pushinteger(LuaLevel, player->id);
+                lua_settable(LuaLevel, -3);
+
+                lua_pushstring(LuaLevel, "position");
+                lua_newtable(LuaLevel); // Create the sub-table
+                lua_pushstring(LuaLevel, "x");
+                lua_pushinteger(LuaLevel, 0); // Replace with the actual value
+                lua_settable(LuaLevel, -3);
+                lua_pushstring(LuaLevel, "y");
+                lua_pushinteger(LuaLevel, 0); // Replace with the actual value
+                lua_settable(LuaLevel, -3);
+                lua_settable(LuaLevel, -3);
+            
+            // Add player team to the table
+
+
             lua_pushinteger(LuaLevel, x); // Argument x
             lua_pushinteger(LuaLevel, y); // Argument y
             lua_pushinteger(LuaLevel, z); // Argument z
@@ -135,7 +162,6 @@ uint8_t gamemode_block_checks(server_t* server, player_t* player, int x, int y, 
             LOG_ERROR("Error: call for gamemode_block_checks failed.");
         }
         return 1;
-
     }
 
     if (((((x >= 206 && x <= 306) && (y >= 240 && y <= 272) && (z == 2 || z == 0)) ||
@@ -247,12 +273,10 @@ static int _init_lua(server_t* server)
     server->protocol.gamemode.base[1].x = floorf(server->protocol.gamemode.base[1].x);
     server->protocol.gamemode.base[1].y = floorf(server->protocol.gamemode.base[1].y);
 
-
-
     // I want to call the gamemode_init function from the lua file.
     // gamemode_init() will receive as an argument a table containing the api for level initialisation.
     // Achtung: creating blocks won't send an event to players. Do not attempt to use it outside the init function.
-    
+
     // So First, let's push the api table.
     lua_newtable(LuaLevel);
 
@@ -272,11 +296,10 @@ static int _init_lua(server_t* server)
     // The call gamemode_init(api) function:
     lua_getglobal(LuaLevel, "gamemode_init");
     lua_pushvalue(LuaLevel, -2); // Push the table onto the stack as an argument
-    lua_call(LuaLevel, 1, 0); // Call the init function
-
+    lua_call(LuaLevel, 1, 0);    // Call the init function
 
     memcpy(server->gamemode_name, "lua", strlen("lua") + 1);
-    
+
     LOG_WARNING("Running Lua Mode");
     return 1;
 }
@@ -306,7 +329,7 @@ void gamemode_init(server_t* server, uint8_t gamemode)
             LOG_ERROR("Error loading Lua file: %s\n", lua_tostring(LuaLevel, -1));
             server->running = 0;
         }
-        lua_script = 1;
+        lua_script      = 1;
         server->running = _init_lua(server);
     };
 }
