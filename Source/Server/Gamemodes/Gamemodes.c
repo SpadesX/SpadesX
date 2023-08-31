@@ -119,25 +119,31 @@ uint8_t gamemode_block_checks(server_t* server, player_t* player, int x, int y, 
         if (lua_isfunction(LuaLevel, -1)) {
             // Push the player table first
             lua_newtable(LuaLevel);
-                // Add player name to the table
-                lua_pushstring(LuaLevel, "name");
-                lua_pushstring(LuaLevel, player->name);
-                lua_settable(LuaLevel, -3);
+            // Add player name to the table
+            lua_pushstring(LuaLevel, "name");
+            lua_pushstring(LuaLevel, player->name);
+            lua_settable(LuaLevel, -3);
 
-                // Add player id to the table
-                lua_pushstring(LuaLevel, "id");
-                lua_pushinteger(LuaLevel, player->id);
-                lua_settable(LuaLevel, -3);
+            // Add player id to the table
+            lua_pushstring(LuaLevel, "id");
+            lua_pushinteger(LuaLevel, player->id);
+            lua_settable(LuaLevel, -3);
 
-                lua_pushstring(LuaLevel, "position");
-                lua_newtable(LuaLevel); // Create the sub-table
-                lua_pushstring(LuaLevel, "x");
-                lua_pushinteger(LuaLevel, 0); // Replace with the actual value
-                lua_settable(LuaLevel, -3);
-                lua_pushstring(LuaLevel, "y");
-                lua_pushinteger(LuaLevel, 0); // Replace with the actual value
-                lua_settable(LuaLevel, -3);
-                lua_settable(LuaLevel, -3);
+            // Add player id to the table
+            lua_pushstring(LuaLevel, "team");
+            lua_pushinteger(LuaLevel, player->team);
+            lua_settable(LuaLevel, -3);
+
+
+            lua_pushstring(LuaLevel, "position");
+            lua_newtable(LuaLevel); // Create the sub-table
+            lua_pushstring(LuaLevel, "x");
+            lua_pushinteger(LuaLevel, player->movement.position.x); // Replace with the actual value
+            lua_settable(LuaLevel, -3);
+            lua_pushstring(LuaLevel, "y");
+            lua_pushinteger(LuaLevel, player->movement.position.y); // Replace with the actual value
+            lua_settable(LuaLevel, -3);
+            lua_settable(LuaLevel, -3);
             
             // Add player team to the table
 
