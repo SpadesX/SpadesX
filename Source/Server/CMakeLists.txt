@@ -104,6 +104,7 @@ set(SERVER_HEADERS
     Server.h
     Map.h
     Gamemodes/Gamemodes.h
+    Gamemodes/GamemodeLua.h
     Ping.h
     ParseConvert.h
     Player.h
@@ -123,6 +124,7 @@ set(SERVER_SOURCES
     Master.c
     Map.c
     Gamemodes/Gamemodes.c
+    Gamemodes/GamemodeLua/luaInitAPI.c
     Ping.c
     ParseConvert.c
     Player.c
