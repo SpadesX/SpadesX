@@ -16,4 +16,5 @@
 #include <string.h>
 
 void push_init_api(lua_State * L);
+void register_notice_module(lua_State * L);
 #endif

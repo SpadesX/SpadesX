@@ -6,14 +6,15 @@ function gamemode_block_checks(player, x, y, z)
     if (((((x >= 206 and x <= 306) and (y >= 240 and y <= 272) and (z == 2 or z == 0)) or
           ((x >= 205 and x <= 307) and (y >= 239 and y <= 273) and (z == 1)))))
     then
+        notice.send_to(player.id, "You should try to destroy the ennemy's tower... Not the platform!")
         return 0
     end
     -- Prevent players from destroying their own tower.
-    if player.team == 1 and x > 200  then
-        return 0
-    elseif player.team == 0 and x < 512-200 then
+    if (player.team == 1 and x > 512-220) or ( player.team == 0 and x < 220)  then
+        notice.send_to(player.id, "You should try to destroy the ennemy's tower... It is not on this side of the map!")
         return 0
     end
+
     return 1
 end
 

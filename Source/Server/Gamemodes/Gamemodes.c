@@ -210,7 +210,6 @@ static int _init_lua(server_t* server)
 {
 
     // Server initialisation. Might be overriden by lua.
-
     memcpy(server->gamemode_name, "Lua", strlen("Lua") + 1);
     // Init CTF
     server->protocol.gamemode.score[0]    = 0;
@@ -266,11 +265,13 @@ void gamemode_init(server_t* server, uint8_t gamemode)
     if (access("level.lua", F_OK) == 0) {
         LuaLevel = luaL_newstate();
         luaL_openlibs(LuaLevel);
+        register_notice_module(LuaLevel);
         if (luaL_dofile(LuaLevel, "level.lua") != LUA_OK) {
             LOG_ERROR("Error loading Lua file: %s\n", lua_tostring(LuaLevel, -1));
             server->running = 0;
         }
         lua_script      = 1;
+
         server->running = _init_lua(server);
     };
 }
