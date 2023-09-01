@@ -118,7 +118,7 @@ int lua_init_set_base_position(lua_State* L)
     return 0;
 }
 
-uint8_t grenadeGamemodeCheck(server_t* server, player_t* player, vector3f_t pos)
+uint8_t grenade_gamemode_check(server_t* server, player_t* player, vector3f_t pos)
 {
     if (gamemode_block_checks(server, player, pos.x + 1, pos.y + 1, pos.z + 1) &&
         gamemode_block_checks(server, player, pos.x + 1, pos.y + 1, pos.z - 1) &&
