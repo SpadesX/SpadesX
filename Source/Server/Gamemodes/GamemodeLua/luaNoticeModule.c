@@ -57,8 +57,18 @@ static const luaL_Reg l_notice[] =
     { NULL, NULL }
 };
 
-
-void register_notice_module(lua_State * L){
+int push_module(lua_State * L){
+    const char *name = luaL_checkstring(L, 1);
+    printf("Loading %s\n", name);
+    // Enregistre les fonctions du module dans la table du module
     luaL_newlib(L, l_notice);
-    lua_setglobal(L, "notice");
+    //luaL_setfuncs(L, l_notice, 0);
+    return 1;
+}
+
+int register_notice_module(lua_State * L){
+
+    // Enregistre le module "mathext" en tant que module global
+    luaL_requiref(L, "notice", push_module, 1);
+    return 1;
 }

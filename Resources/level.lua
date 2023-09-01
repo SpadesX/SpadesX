@@ -1,5 +1,7 @@
 -- level.lua: A simple lua script showcasing SapdesX's scripting capabilities.
 
+notice = require('notice')
+
 -- Babel: Prevent players from destroying top platform.
 -- Also prevent people from same team to destroy their own tower.
 function gamemode_block_checks(player, x, y, z)
