@@ -38,6 +38,10 @@ end
 -- Does nothing, allow block creation. Only here for showcase purpose.
 -- Could be deleted as it will fallback on a C function doing the same.
 function spadesx.block.check_creation(player, x, y, z)
+    -- Force players to build in red.
+    player:set_color(0xFF0000)
+    player:create_block(x,y,z - 3)
+    player:create_block(x,y,z - 4)
     return 1
 end
 
@@ -49,7 +53,7 @@ function spadesx.init(init_api)
     for x = 0,450, 1
     do 
         for y = 0,450, 1
-        do 
+        do
             init_api.add_colored_block(x,y,init_api.find_top_block(x,y), 0xffffff)
         end
     end
