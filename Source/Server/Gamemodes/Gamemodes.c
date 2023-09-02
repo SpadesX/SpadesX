@@ -1,3 +1,4 @@
+#include <Server/Gamemodes/GamemodeLua.h>
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Structs/ServerStruct.h>
@@ -11,24 +12,23 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <Server/Gamemodes/GamemodeLua.h>
 
 lua_State* LuaLevel;
 int        lua_script = 0;
-int ref;
+int        ref;
 
 // LUA utils... Should be moved later.
 // Set table on top of the stack as read-only.
 // It does NOT pop it at the end.
 // The table on the top of the stack at the end is NOT the one that was there at the begining.
 // It is replaced by another one. So do not store refs to the first one.
-static inline int l_read_only(lua_State *L)
+static inline int l_read_only(lua_State* L)
 {
     lua_settop(L, 0);
     printf("Error: attempted to edit a readonly table.\n");
     return 0;
 }
-static inline void set_table_as_readonly(lua_State *L)
+static inline void set_table_as_readonly(lua_State* L)
 {
     int ref = luaL_ref(L, LUA_REGISTRYINDEX);
     lua_newtable(L);
@@ -142,7 +142,6 @@ uint8_t gamemode_block_checks(server_t* _server, player_t* player, int x, int y,
                 LOG_ERROR("Type of the returned value: %s\n", lua_typename(LuaLevel, returnType));
                 LOG_ERROR("Returned value is not an integer.\n");
             }
-
         }
         LOG_ERROR("Error: call for gamemode_block_checks failed.");
     }
@@ -261,7 +260,7 @@ static int _init_lua(server_t* server)
     if (!lua_isfunction(LuaLevel, -1)) {
         LOG_ERROR("The spadesx table does not contain a member init().\n");
         lua_pop(LuaLevel, 2); // Pop the function and the table
-        return 0; // Handle the error appropriately
+        return 0;             // Handle the error appropriately
     }
 
     // Push any arguments for the function here
@@ -272,7 +271,7 @@ static int _init_lua(server_t* server)
     if (lua_pcall(LuaLevel, 1, 0, 0) != LUA_OK) {
         LOG_ERROR("Error calling Lua function: %s\n", lua_tostring(LuaLevel, -1));
         lua_pop(LuaLevel, 2); // Pop the error message and the table
-        return 0; // Handle the error appropriately
+        return 0;             // Handle the error appropriately
     }
 
     // Pop the table (and any return values if needed)
@@ -308,9 +307,13 @@ void gamemode_init(server_t* server, uint8_t gamemode)
             LOG_ERROR("Error loading Lua file: %s\n", lua_tostring(LuaLevel, -1));
             server->running = 0;
         }
-        ref = luaL_ref(LuaLevel, LUA_REGISTRYINDEX);
-        lua_script      = 1;
+        ref        = luaL_ref(LuaLevel, LUA_REGISTRYINDEX);
+        lua_script = 1;
 
         server->running = _init_lua(server);
     };
+}
+void gamemode_reset()
+{
+    luaL_unref(LuaLevel, LUA_REGISTRYINDEX, ref);
 }

@@ -211,6 +211,7 @@ static void _server_init(server_t*   server,
 
 void server_reset(server_t* server)
 {
+    gamemode_reset();
     _server_init(server,
                  server->protocol.max_players,
                  server->server_name,
