@@ -7,38 +7,6 @@
 // This file will register a module called 'spadesx'
 // It is accessed by using require('spadesx')
 
-// Send a notice to a player.
-// First argument is the player id.
-// Second is the message.
-static int send_notice_to(lua_State *L) {
-    server_t* server = get_server();
-
-    // Check the number of arguments
-    int numArgs = lua_gettop(L);
-    if (numArgs != 2) {
-        return luaL_error(L, "notice.send_to() expects exactly 2 arguments: id (integer) and message (string)");
-    }
-
-    // Get the ID (integer) argument
-    uint8_t id = (uint8_t) luaL_checkinteger(L, 1);
-
-    // Get the message (string) argument
-    const char *message = luaL_checkstring(L, 2);
-
-    // Now you have the ID and message, you can implement your logic here
-    // For example, you can send the notice to the specified ID with the given message
-
-    player_t* player;
-    HASH_FIND(hh, server->players, &id, sizeof(uint8_t), player);
-    if (player == NULL) {
-        LOG_ERROR("Could not find player with ID %hhu", id);
-        return 0;
-    }
-    send_server_notice(player, 0, message);
-
-    return 0; // Return the number of values pushed onto the Lua stack (in this case, none)
-}
-
 // Same as previously, but only take a string as argument.
 static int send_notice_broadcast(lua_State * L){
     // Check the number of arguments
@@ -99,7 +67,6 @@ static int init(lua_State * L){
 
 static const luaL_Reg l_notice[] =
 {
-    { "send_to", send_notice_to},
     { "send_broadcast", send_notice_broadcast},
     { NULL, NULL }
 };

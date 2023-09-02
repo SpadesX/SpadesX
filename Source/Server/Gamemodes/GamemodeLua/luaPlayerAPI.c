@@ -2,6 +2,46 @@
 #include <Server/Gamemodes/GamemodeLua.h>
 #include <Server/Packets/Packets.h>
 #include <Server/Server.h>
+#include <Util/Notice.h>
+
+
+// Send a notice to the player.
+// First argument is the player table.
+// Second is the message.
+static int send_notice(lua_State *L) {
+    server_t* server = get_server();
+
+    // Check the number of arguments
+    int numArgs = lua_gettop(L);
+    if (numArgs < 2) {
+        luaL_error(L,
+                   "Insufficient arguments. Usage: player:create_block(color) or  player.create_block(player,color)");
+        return 0;
+    }
+
+    // Retrieve the player table from the first argument
+    luaL_checktype(L, 1, LUA_TTABLE);
+    // Assuming the player table has an "id" field, retrieve the player's ID
+    lua_getfield(L, 1, "id");
+
+    uint8_t id = luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+
+    const char *message = luaL_checkstring(L, 2);
+
+    // Now you have the ID and message, you can implement your logic here
+    // For example, you can send the notice to the specified ID with the given message
+
+    player_t* player;
+    HASH_FIND(hh, server->players, &id, sizeof(uint8_t), player);
+    if (player == NULL) {
+        LOG_ERROR("Could not find player with ID %hhu", id);
+        return 0;
+    }
+    send_server_notice(player, 0, message);
+
+    return 0; // Return the number of values pushed onto the Lua stack (in this case, none)
+}
 
 // C function for the Lua create_block function
 static int create_block_function(lua_State* L)
@@ -37,7 +77,6 @@ static int create_block_function(lua_State* L)
     moveIntelAndTentUp(server);
     send_block_action(server, player, BLOCKACTION_BUILD, x, y, z);
     send_block_action_to_player(server, player, player, BLOCKACTION_BUILD, x, y, z);
-
     return 0;
 }
 
@@ -93,6 +132,11 @@ void push_player_api(lua_State* L, player_t* player)
     lua_pushinteger(L, player->id);
     lua_settable(L, -3);
 
+    // Add player color to the table
+    lua_pushstring(L, "color");
+    lua_pushinteger(L, get_server()->protocol.color_team[player->team].raw);
+    lua_settable(L, -3);
+
     // Add player team to the table
     lua_pushstring(L, "team");
     lua_pushinteger(L, player->team);
@@ -120,5 +164,10 @@ void push_player_api(lua_State* L, player_t* player)
     // Add set_color function to the table
     lua_pushstring(L, "set_color");
     lua_pushcfunction(L, set_color_function); // Replace with your implementation
+    lua_settable(L, -3);
+
+    // Add send_notice function to the table
+    lua_pushstring(L, "send_notice");
+    lua_pushcfunction(L, send_notice); // Replace with your implementation
     lua_settable(L, -3);
 }
