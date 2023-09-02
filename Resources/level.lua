@@ -17,6 +17,8 @@ end
 
 -- Babel: Prevent players from destroying top platform.
 -- Also prevent people from same team to destroy their own tower.
+-- return 1: allow deletion.
+-- return 0: abort deletion.
 function spadesx.block.check_deletion(player, x, y, z)
     if (((((x >= 206 and x <= 306) and (y >= 240 and y <= 272) and (z == 2 or z == 0)) or
           ((x >= 205 and x <= 307) and (y >= 239 and y <= 273) and (z == 1)))))
@@ -29,10 +31,12 @@ function spadesx.block.check_deletion(player, x, y, z)
         spadesx.notice.send_to(player.id, "You should try to destroy the ennemy's tower... It is not on this side of the map!")
         return 0
     end
-
     return 1
 end
 
+-- Init the level.
+-- Receive a specific init_api with functions to manipulate the level BEFORE players are joining.
+-- This api won't trigger any event nor send players any packet.
 function spadesx.init(init_api)
     -- Let's add some snow to the map:
     for x = 0,450, 1
