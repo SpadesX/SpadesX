@@ -1,6 +1,6 @@
 -- level.lua: A simple lua script showcasing SapdesX's scripting capabilities.
 
-notice = require('notice')
+spadesx = require('spadesx')
 
 -- Babel: Prevent players from destroying top platform.
 -- Also prevent people from same team to destroy their own tower.
@@ -8,12 +8,12 @@ function gamemode_block_checks(player, x, y, z)
     if (((((x >= 206 and x <= 306) and (y >= 240 and y <= 272) and (z == 2 or z == 0)) or
           ((x >= 205 and x <= 307) and (y >= 239 and y <= 273) and (z == 1)))))
     then
-        notice.send_to(player.id, "You should try to destroy the ennemy's tower... Not the platform!")
+        spadesx.notice.send_to(player.id, "You should try to destroy the ennemy's tower... Not the platform!")
         return 0
     end
     -- Prevent players from destroying their own tower.
     if (player.team == 1 and x > 512-220) or ( player.team == 0 and x < 220)  then
-        notice.send_to(player.id, "You should try to destroy the ennemy's tower... It is not on this side of the map!")
+        spadesx.notice.send_to(player.id, "You should try to destroy the ennemy's tower... It is not on this side of the map!")
         return 0
     end
 
@@ -36,3 +36,5 @@ function gamemode_init(api)
         end
     end
 end
+
+return spadesx

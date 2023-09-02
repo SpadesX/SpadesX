@@ -7,7 +7,7 @@
 // This file will push a module to lua called "notice".
 // It is accessed by using require('notice')
 
-int send_notice_to(lua_State *L) {
+static int send_notice_to(lua_State *L) {
     server_t* server = get_server();
 
     // Check the number of arguments
@@ -36,7 +36,7 @@ int send_notice_to(lua_State *L) {
 
     return 0; // Return the number of values pushed onto the Lua stack (in this case, none)
 }
-int send_notice_broadcast(lua_State * L){
+static int send_notice_broadcast(lua_State * L){
     // Check the number of arguments
     int numArgs = lua_gettop(L);
     if (numArgs != 1) {
@@ -44,7 +44,8 @@ int send_notice_broadcast(lua_State * L){
     }
     // Get the message (string) argument
     const char *message = luaL_checkstring(L, 1);
-    printf("Send broadcast: %s\n", message);
+    server_t* server = get_server();
+    broadcast_server_notice(server, 0, message);
     // Now you have the ID and message, you can implement your logic here
     // For example, you can send the notice to the specified ID with the given message
 
@@ -57,11 +58,13 @@ static const luaL_Reg l_notice[] =
     { NULL, NULL }
 };
 
-int push_module(lua_State * L){
+static int push_module(lua_State * L){
     const char *name = luaL_checkstring(L, 1);
-    printf("Loading %s\n", name);
+    printf("Registered %s\n", name);
     // Enregistre les fonctions du module dans la table du module
+    lua_newtable(L);
     luaL_newlib(L, l_notice);
+    lua_setfield(L, -2, "notice");
     //luaL_setfuncs(L, l_notice, 0);
     return 1;
 }
@@ -69,6 +72,6 @@ int push_module(lua_State * L){
 int register_notice_module(lua_State * L){
 
     // Enregistre le module "mathext" en tant que module global
-    luaL_requiref(L, "notice", push_module, 1);
+    luaL_requiref(L, "spadesx", push_module, 1);
     return 1;
 }
