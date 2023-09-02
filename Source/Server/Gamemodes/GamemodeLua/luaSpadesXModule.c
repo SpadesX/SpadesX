@@ -4,9 +4,12 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-// This file will push a module to lua called "notice".
-// It is accessed by using require('notice')
+// This file will register a module called 'spadesx'
+// It is accessed by using require('spadesx')
 
+// Send a notice to a player.
+// First argument is the player id.
+// Second is the message.
 static int send_notice_to(lua_State *L) {
     server_t* server = get_server();
 
@@ -32,15 +35,16 @@ static int send_notice_to(lua_State *L) {
         return 0;
     }
     send_server_notice(player, 0, message);
-    //void broadcast_server_notice(server_t* server, uint8_t console, const char* message, ...);
 
     return 0; // Return the number of values pushed onto the Lua stack (in this case, none)
 }
+
+// Same as previously, but only take a string as argument.
 static int send_notice_broadcast(lua_State * L){
     // Check the number of arguments
     int numArgs = lua_gettop(L);
     if (numArgs != 1) {
-        return luaL_error(L, "notice.send_broadcast() expects exactly 1 arguments: id (integer) and message (string)");
+        return luaL_error(L, "notice.send_broadcast() expects exactly 1 arguments: message (string)");
     }
     // Get the message (string) argument
     const char *message = luaL_checkstring(L, 1);
@@ -52,24 +56,17 @@ static int send_notice_broadcast(lua_State * L){
     return 0; // Return the number of values pushed onto the Lua stack (in this case, none)
 }
 
-static int check_block_deletion(lua_State * L){
-    // Get the number of arguments on the stack
+// Function pushed where we need an empty func to be overriden that return 1 by default.
+static int return_1_to_be_overriden(lua_State * L){
+    // Get the number of arguments on the stack then pop all of them.
     int numArgs = lua_gettop(L);
-    // Pop all arguments from the stack
     lua_pop(L, numArgs);
-    // Now return 1 to allow the action:
+    // Now return 1:
     lua_pushinteger(L, 1);
+    // Return 1 because returning 1 argument.
     return 1;
 }
-static int check_block_creation(lua_State * L){
-    // Get the number of arguments on the stack
-    int numArgs = lua_gettop(L);
-    // Pop all arguments from the stack
-    lua_pop(L, numArgs);
-    // Now return 1 to allow the action:
-    lua_pushinteger(L, 1);
-    return 1;
-}
+
 // The default initialisation function.
 static int init(lua_State * L){
     // Get the number of arguments on the stack
@@ -108,8 +105,8 @@ static const luaL_Reg l_notice[] =
 };
 static const luaL_Reg l_block[] =
 {
-    { "check_deletion", check_block_deletion},
-    { "check_creation", check_block_creation},
+    { "check_deletion", return_1_to_be_overriden},
+    { "check_creation", return_1_to_be_overriden},
     { NULL, NULL }
 };
 static const luaL_Reg l_spadesx[] =
