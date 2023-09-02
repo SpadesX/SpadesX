@@ -63,70 +63,88 @@ uint8_t grenade_gamemode_check(server_t* server, player_t* player, vector3f_t po
     return 0;
 }
 
-uint8_t gamemode_block_checks(server_t* server, player_t* player, int x, int y, int z)
+uint8_t gamemode_block_checks(server_t* _server, player_t* player, int x, int y, int z)
 {
+    printf("%d\n", _server->port);
     if (lua_script == 1) {
-        lua_getglobal(LuaLevel, "gamemode_block_checks");
-        if (lua_isfunction(LuaLevel, -1)) {
-            // Push the player table first
-            lua_newtable(LuaLevel);
-            // Add player name to the table
-            lua_pushstring(LuaLevel, "name");
-            lua_pushstring(LuaLevel, player->name);
-            lua_settable(LuaLevel, -3);
-
-            // Add player id to the table
-            lua_pushstring(LuaLevel, "id");
-            lua_pushinteger(LuaLevel, player->id);
-            lua_settable(LuaLevel, -3);
-
-            // Add player id to the table
-            lua_pushstring(LuaLevel, "team");
-            lua_pushinteger(LuaLevel, player->team);
-            lua_settable(LuaLevel, -3);
-
-
-            lua_pushstring(LuaLevel, "position");
-            lua_newtable(LuaLevel); // Create the sub-table
-            lua_pushstring(LuaLevel, "x");
-            lua_pushinteger(LuaLevel, player->movement.position.x); // Replace with the actual value
-            lua_settable(LuaLevel, -3);
-            lua_pushstring(LuaLevel, "y");
-            lua_pushinteger(LuaLevel, player->movement.position.y); // Replace with the actual value
-            lua_settable(LuaLevel, -3);
-            lua_settable(LuaLevel, -3);
-            
-            // The player table is readonly. I you want to set something, use a method (not implemented yet) and maybe a fech method to refresh fields.
-            set_table_as_readonly(LuaLevel);
-
-
-            lua_pushinteger(LuaLevel, x); // Argument x
-            lua_pushinteger(LuaLevel, y); // Argument y
-            lua_pushinteger(LuaLevel, z); // Argument z
-            // Call the function
-            if (lua_pcall(LuaLevel, 4, 1, 0) != LUA_OK) {
-                LOG_ERROR("Error calling Lua function: %s\n", lua_tostring(LuaLevel, -1));
-            } else {
-                // Check if the returned value is an integer
-                if (lua_isinteger(LuaLevel, -1)) {
-                    lua_Integer result = lua_tointeger(LuaLevel, -1);
-                    return ((uint8_t) result);
-                } else {
-                    int returnType = lua_type(LuaLevel, -1);
-                    LOG_ERROR("Type of the returned value: %s\n", lua_typename(LuaLevel, returnType));
-                    LOG_ERROR("Returned value is not an integer.\n");
-                }
-            }
-            LOG_ERROR("Error: call for gamemode_block_checks failed.");
+        // Get the spadesx table returned by the script.
+        lua_rawgeti(LuaLevel, LUA_REGISTRYINDEX, ref);
+        // Check if the value is a table
+        if (!lua_istable(LuaLevel, -1)) {
+            LOG_ERROR("Referenced value is not a table.\n");
+            lua_pop(LuaLevel, 1);
+            return 0; // Handle the error appropriately
         }
-        return 1;
-    }
+        lua_getfield(LuaLevel, -1, "block");
+        if (!lua_istable(LuaLevel, -1)) {
+            LOG_ERROR("The spadesx.block is not a table.\n");
+            lua_pop(LuaLevel, 2); // Pop the function, "block" subtable, and the table
+            return 0;             // Handle the error appropriately
+        }
+        // Push the member function onto the stack (replace "functionName" with your function name)
+        lua_getfield(LuaLevel, -1, "check_deletion");
+        // Check if the value is a function
+        if (!lua_isfunction(LuaLevel, -1)) {
+            LOG_ERROR("The spadesx table does not contain a member block.check_deletion().\n");
+            lua_pop(LuaLevel, 3); // Pop the function and the table
+            return 0;             // Handle the error appropriately
+        }
+        // Push the player table first
+        lua_newtable(LuaLevel);
+        // Add player name to the table
+        lua_pushstring(LuaLevel, "name");
+        lua_pushstring(LuaLevel, player->name);
+        lua_settable(LuaLevel, -3);
 
-    if (((((x >= 206 && x <= 306) && (y >= 240 && y <= 272) && (z == 2 || z == 0)) ||
-          ((x >= 205 && x <= 307) && (y >= 239 && y <= 273) && (z == 1))) &&
-         server->protocol.current_gamemode == GAME_MODE_BABEL))
-    {
-        return 0;
+        // Add player id to the table
+        lua_pushstring(LuaLevel, "id");
+        lua_pushinteger(LuaLevel, player->id);
+        lua_settable(LuaLevel, -3);
+
+        // Add player id to the table
+        lua_pushstring(LuaLevel, "team");
+        lua_pushinteger(LuaLevel, player->team);
+        lua_settable(LuaLevel, -3);
+
+        lua_pushstring(LuaLevel, "position");
+        lua_newtable(LuaLevel); // Create the sub-table
+        lua_pushstring(LuaLevel, "x");
+        lua_pushinteger(LuaLevel, player->movement.position.x); // Replace with the actual value
+        lua_settable(LuaLevel, -3);
+        lua_pushstring(LuaLevel, "y");
+        lua_pushinteger(LuaLevel, player->movement.position.y); // Replace with the actual value
+        lua_settable(LuaLevel, -3);
+        lua_settable(LuaLevel, -3);
+
+        // The player table is readonly. I you want to set something, use a method (not implemented yet) and maybe a
+        // fech method to refresh fields.
+        set_table_as_readonly(LuaLevel);
+
+        lua_pushinteger(LuaLevel, x); // Argument x
+        lua_pushinteger(LuaLevel, y); // Argument y
+        lua_pushinteger(LuaLevel, z); // Argument z
+
+        // Call the function with the appropriate number of arguments and return values
+        if (lua_pcall(LuaLevel, 4, 1, 0) != LUA_OK) {
+            LOG_ERROR("Error calling Lua function: %s\n", lua_tostring(LuaLevel, -1));
+            lua_pop(LuaLevel, 4); // Pop the error message and the table
+            return 0;             // Handle the error appropriately
+        } else {
+            // Check if the returned value is an integer
+            if (lua_isinteger(LuaLevel, -1)) {
+                lua_Integer result = lua_tointeger(LuaLevel, -1);
+
+                // Pop the table (and any return values if needed)
+                lua_pop(LuaLevel, 1);
+                return ((uint8_t) result);
+            } else {
+                int returnType = lua_type(LuaLevel, -1);
+                LOG_ERROR("Type of the returned value: %s\n", lua_typename(LuaLevel, returnType));
+                LOG_ERROR("Returned value is not an integer.\n");
+            }
+
+        }
+        LOG_ERROR("Error: call for gamemode_block_checks failed.");
     }
     return 1;
 }
