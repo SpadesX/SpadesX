@@ -1,5 +1,6 @@
 #include <Server/IntelTent.h>
 #include <Server/Server.h>
+#include <Server/Gamemodes/Gamemodes.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
@@ -114,6 +115,12 @@ void receive_block_line(server_t* server, player_t* player, stream_t* data)
         {
             int size = line_get_blocks(&start, &end, server->s_map.result_line);
             player->blocks -= size;
+            // FIXME: Maybe a dedicated gamemode_blockline_creation_checks() would be better in perfs.
+            for (int i = 0; i < size; i++) {
+                if (!gamemode_block_creation_checks(player,server->s_map.result_line[i].x,server->s_map.result_line[i].y,server->s_map.result_line[i].z )){
+                    return;
+                }
+            }
             for (int i = 0; i < size; i++) {
                 mapvxl_set_color(&server->s_map.map,
                                  server->s_map.result_line[i].x,

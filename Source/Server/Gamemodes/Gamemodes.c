@@ -42,30 +42,33 @@ static inline void set_table_as_readonly(lua_State* L)
     lua_setmetatable(L, -2);
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
 }
+uint8_t gamemode_block_creation_checks(player_t * from, int x, int y, int z){
+    printf("Player %d asked to place a block here: %d %d %d\n", from->id, x, y, z);
+    return 1;
+}
 
-uint8_t grenade_gamemode_check(server_t* server, player_t* player, vector3f_t pos)
+uint8_t grenade_gamemode_check(player_t* player, vector3f_t pos)
 {
-    if (gamemode_block_checks(server, player, pos.x + 1, pos.y + 1, pos.z + 1) &&
-        gamemode_block_checks(server, player, pos.x + 1, pos.y + 1, pos.z - 1) &&
-        gamemode_block_checks(server, player, pos.x + 1, pos.y + 1, pos.z) &&
-        gamemode_block_checks(server, player, pos.x + 1, pos.y - 1, pos.z + 1) &&
-        gamemode_block_checks(server, player, pos.x + 1, pos.y - 1, pos.z - 1) &&
-        gamemode_block_checks(server, player, pos.x + 1, pos.y - 1, pos.z) &&
-        gamemode_block_checks(server, player, pos.x - 1, pos.y + 1, pos.z + 1) &&
-        gamemode_block_checks(server, player, pos.x - 1, pos.y + 1, pos.z - 1) &&
-        gamemode_block_checks(server, player, pos.x - 1, pos.y + 1, pos.z) &&
-        gamemode_block_checks(server, player, pos.x - 1, pos.y - 1, pos.z + 1) &&
-        gamemode_block_checks(server, player, pos.x - 1, pos.y - 1, pos.z - 1) &&
-        gamemode_block_checks(server, player, pos.x - 1, pos.y - 1, pos.z))
+    if (gamemode_block_deletion_checks(player, pos.x + 1, pos.y + 1, pos.z + 1) &&
+        gamemode_block_deletion_checks(player, pos.x + 1, pos.y + 1, pos.z - 1) &&
+        gamemode_block_deletion_checks(player, pos.x + 1, pos.y + 1, pos.z) &&
+        gamemode_block_deletion_checks(player, pos.x + 1, pos.y - 1, pos.z + 1) &&
+        gamemode_block_deletion_checks(player, pos.x + 1, pos.y - 1, pos.z - 1) &&
+        gamemode_block_deletion_checks(player, pos.x + 1, pos.y - 1, pos.z) &&
+        gamemode_block_deletion_checks(player, pos.x - 1, pos.y + 1, pos.z + 1) &&
+        gamemode_block_deletion_checks(player, pos.x - 1, pos.y + 1, pos.z - 1) &&
+        gamemode_block_deletion_checks(player, pos.x - 1, pos.y + 1, pos.z) &&
+        gamemode_block_deletion_checks(player, pos.x - 1, pos.y - 1, pos.z + 1) &&
+        gamemode_block_deletion_checks(player, pos.x - 1, pos.y - 1, pos.z - 1) &&
+        gamemode_block_deletion_checks(player, pos.x - 1, pos.y - 1, pos.z))
     {
         return 1;
     }
     return 0;
 }
 
-uint8_t gamemode_block_checks(server_t* _server, player_t* player, int x, int y, int z)
+uint8_t gamemode_block_deletion_checks(player_t* player, int x, int y, int z)
 {
-    printf("%d\n", _server->port);
     if (lua_script == 1) {
         // Get the spadesx table returned by the script.
         lua_rawgeti(LuaLevel, LUA_REGISTRYINDEX, ref);
