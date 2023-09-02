@@ -2,6 +2,19 @@
 
 spadesx = require('spadesx')
 
+function printTable(table, indent)
+    indent = indent or 0
+    
+    for key, value in pairs(table) do
+        if type(value) == "table" then
+            print(string.rep("  ", indent) .. key .. ":")
+            printTable(value, indent + 1)
+        else
+            print(string.rep("  ", indent) .. key .. ": " .. tostring(value))
+        end
+    end
+end
+
 -- Babel: Prevent players from destroying top platform.
 -- Also prevent people from same team to destroy their own tower.
 function gamemode_block_checks(player, x, y, z)
@@ -20,7 +33,7 @@ function gamemode_block_checks(player, x, y, z)
     return 1
 end
 
-function gamemode_init(api)
+function spadesx.init(api)
     -- Let's add some snow to the map:
     for x = 0,450, 1
     do 
@@ -37,4 +50,5 @@ function gamemode_init(api)
     end
 end
 
+printTable(spadesx)
 return spadesx
