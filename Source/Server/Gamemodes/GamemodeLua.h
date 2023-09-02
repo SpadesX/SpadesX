@@ -16,6 +16,7 @@
 #include <string.h>
 
 void push_init_api(lua_State * L);
+void push_player_api(lua_State * L, player_t * player);
 int register_spadesx_module(lua_State * L);
 
 #endif

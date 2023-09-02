@@ -170,32 +170,7 @@ uint8_t gamemode_block_deletion_checks(player_t* player, int x, int y, int z)
             lua_pop(LuaLevel, 3); // Pop the function and the table
             return 0;             // Handle the error appropriately
         }
-        // Push the player table first
-        lua_newtable(LuaLevel);
-        // Add player name to the table
-        lua_pushstring(LuaLevel, "name");
-        lua_pushstring(LuaLevel, player->name);
-        lua_settable(LuaLevel, -3);
-
-        // Add player id to the table
-        lua_pushstring(LuaLevel, "id");
-        lua_pushinteger(LuaLevel, player->id);
-        lua_settable(LuaLevel, -3);
-
-        // Add player id to the table
-        lua_pushstring(LuaLevel, "team");
-        lua_pushinteger(LuaLevel, player->team);
-        lua_settable(LuaLevel, -3);
-
-        lua_pushstring(LuaLevel, "position");
-        lua_newtable(LuaLevel); // Create the sub-table
-        lua_pushstring(LuaLevel, "x");
-        lua_pushinteger(LuaLevel, player->movement.position.x); // Replace with the actual value
-        lua_settable(LuaLevel, -3);
-        lua_pushstring(LuaLevel, "y");
-        lua_pushinteger(LuaLevel, player->movement.position.y); // Replace with the actual value
-        lua_settable(LuaLevel, -3);
-        lua_settable(LuaLevel, -3);
+        push_player_api(LuaLevel, player);
 
         // The player table is readonly. I you want to set something, use a method (not implemented yet) and maybe a
         // fech method to refresh fields.

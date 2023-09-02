@@ -129,9 +129,8 @@ static int push_module(lua_State * L){
     return 1;
 }
 
+// Register spadesx as a lua module.
 int register_spadesx_module(lua_State * L){
-
-    // Enregistre le module "mathext" en tant que module global
     luaL_requiref(L, "spadesx", push_module, 1);
     return 1;
 }
