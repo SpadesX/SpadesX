@@ -61,7 +61,7 @@ static int check_block_deletion(lua_State * L){
     lua_pushinteger(L, 1);
     return 1;
 }
-static int check_block_construction(lua_State * L){
+static int check_block_creation(lua_State * L){
     // Get the number of arguments on the stack
     int numArgs = lua_gettop(L);
     // Pop all arguments from the stack
@@ -109,7 +109,7 @@ static const luaL_Reg l_notice[] =
 static const luaL_Reg l_block[] =
 {
     { "check_deletion", check_block_deletion},
-    { "check_construction", check_block_construction},
+    { "check_creation", check_block_creation},
     { NULL, NULL }
 };
 static const luaL_Reg l_spadesx[] =
