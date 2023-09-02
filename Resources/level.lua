@@ -2,6 +2,7 @@
 
 spadesx = require('spadesx')
 
+-- Function useful to check tables pushed from the C API.
 function printTable(table, indent)
     indent = indent or 0
     
@@ -31,6 +32,12 @@ function spadesx.block.check_deletion(player, x, y, z)
         spadesx.notice.send_to(player.id, "You should try to destroy the ennemy's tower... It is not on this side of the map!")
         return 0
     end
+    return 1
+end
+
+-- Does nothing, allow block creation. Only here for showcase purpose.
+-- Could be deleted as it will fallback on a C function doing the same.
+function spadesx.block.check_creation(player, x, y, z)
     return 1
 end
 

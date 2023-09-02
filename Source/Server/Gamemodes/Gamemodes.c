@@ -397,4 +397,5 @@ void gamemode_init(server_t* server, uint8_t gamemode)
 void gamemode_reset()
 {
     luaL_unref(LuaLevel, LUA_REGISTRYINDEX, ref);
+    lua_close(LuaLevel);
 }
