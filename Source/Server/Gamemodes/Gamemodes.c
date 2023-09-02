@@ -15,6 +15,7 @@
 
 lua_State* LuaLevel;
 int        lua_script = 0;
+int ref;
 
 // LUA utils... Should be moved later.
 // Set table on top of the stack as read-only.
@@ -229,16 +230,35 @@ static int _init_lua(server_t* server)
     server->protocol.gamemode.base[1].x = floorf(server->protocol.gamemode.base[1].x);
     server->protocol.gamemode.base[1].y = floorf(server->protocol.gamemode.base[1].y);
 
+    // Get the spadesx table returned by the script.
+    lua_rawgeti(LuaLevel, LUA_REGISTRYINDEX, ref);
+    // Check if the value is a table
+    if (!lua_istable(LuaLevel, -1)) {
+        LOG_ERROR("Referenced value is not a table.\n");
+        return 0; // Handle the error appropriately
+    }
+    // Push the member function onto the stack (replace "functionName" with your function name)
+    lua_getfield(LuaLevel, -1, "init");
+    // Check if the value is a function
+    if (!lua_isfunction(LuaLevel, -1)) {
+        LOG_ERROR("The spadesx table does not contain a member init().\n");
+        lua_pop(LuaLevel, 2); // Pop the function and the table
+        return 0; // Handle the error appropriately
+    }
+
+    // Push any arguments for the function here
     push_init_api(LuaLevel);
     // Now the api table is on top. Let's make it readonly to avoid misuse.
     set_table_as_readonly(LuaLevel);
+    // Call the function with the appropriate number of arguments and return values
+    if (lua_pcall(LuaLevel, 1, 0, 0) != LUA_OK) {
+        LOG_ERROR("Error calling Lua function: %s\n", lua_tostring(LuaLevel, -1));
+        lua_pop(LuaLevel, 2); // Pop the error message and the table
+        return 0; // Handle the error appropriately
+    }
 
-    // The call gamemode_init(api) function:
-    lua_getglobal(LuaLevel, "gamemode_init");
-    lua_pushvalue(LuaLevel, -2); // Push the table onto the stack as an argument
-    lua_call(LuaLevel, 1, 0);    // Call the init function
-
-    memcpy(server->gamemode_name, "lua", strlen("lua") + 1);
+    // Pop the table (and any return values if needed)
+    lua_pop(LuaLevel, 1);
 
     LOG_WARNING("Running Lua Mode");
     return 1;
@@ -265,11 +285,12 @@ void gamemode_init(server_t* server, uint8_t gamemode)
     if (access("level.lua", F_OK) == 0) {
         LuaLevel = luaL_newstate();
         luaL_openlibs(LuaLevel);
-        register_notice_module(LuaLevel);
+        register_spadesx_module(LuaLevel);
         if (luaL_dofile(LuaLevel, "level.lua") != LUA_OK) {
             LOG_ERROR("Error loading Lua file: %s\n", lua_tostring(LuaLevel, -1));
             server->running = 0;
         }
+        ref = luaL_ref(LuaLevel, LUA_REGISTRYINDEX);
         lua_script      = 1;
 
         server->running = _init_lua(server);

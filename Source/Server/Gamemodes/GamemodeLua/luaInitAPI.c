@@ -3,7 +3,7 @@
 
 
 
-int lua_init_find_top_block(lua_State* L)
+static int lua_init_find_top_block(lua_State* L)
 {
     server_t* server = get_server();
     // Check if two arguments (x and y) are provided
@@ -19,7 +19,7 @@ int lua_init_find_top_block(lua_State* L)
     return 1;
 }
 // To be used in the init API. Does not trigger any notification sent to players.
-int lua_init_add_colored_block(lua_State* L)
+static int lua_init_add_colored_block(lua_State* L)
 {
     server_t* server = get_server();
     // Check if four arguments (x, y, z, color) are provided
@@ -35,7 +35,7 @@ int lua_init_add_colored_block(lua_State* L)
 }
 
 // To be used in the init API. Does not trigger any notification sent to players.
-int lua_init_set_intel_position(lua_State* L)
+static int lua_init_set_intel_position(lua_State* L)
 {
     // Check if four arguments (x, y, z, team) are provided
     int x    = luaL_checkinteger(L, 1);
@@ -58,7 +58,7 @@ int lua_init_set_intel_position(lua_State* L)
     return 0;
 }
 // To be used in the init API. Does not trigger any notification sent to players.
-int lua_init_set_base_position(lua_State* L)
+static int lua_init_set_base_position(lua_State* L)
 {
     // Check if four arguments (x, y, z, team) are provided
     int x    = luaL_checkinteger(L, 1);
