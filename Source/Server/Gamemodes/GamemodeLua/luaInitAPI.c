@@ -78,6 +78,31 @@ static int lua_init_set_base_position(lua_State* L)
     return 0;
 }
 
+// To be used in the init API. Does not trigger any notification sent to players.
+static int lua_init_set_team_spawn(lua_State* L)
+{
+    // Check if 7 arguments (team, x1, y1, z1, x2, y2, z2) are provided
+    int team = luaL_checkinteger(L, 4);
+    int x1    = luaL_checkinteger(L, 1);
+    int y1    = luaL_checkinteger(L, 2);
+    int z1    = luaL_checkinteger(L, 3);
+    int x2    = luaL_checkinteger(L, 1);
+    int y2    = luaL_checkinteger(L, 2);
+    int z2    = luaL_checkinteger(L, 3);
+    // Check if the team value is within the valid range of 0-1
+    if (team < 0 || team > 1) {
+        return luaL_error(L, "Invalid team value: %d (should be between 0 and 1)", team);
+    }
+
+    server_t* server = get_server();
+    server->protocol.spawns[1].from.x = x1;
+    server->protocol.spawns[1].from.y = y1;
+    server->protocol.spawns[1].from.z = z1;
+    server->protocol.spawns[1].to.x   = x2;
+    server->protocol.spawns[1].to.y   = y2;
+    server->protocol.spawns[1].to.z   = z2;
+    return 0;
+}
 
 
 void push_init_api(lua_State * L){
@@ -100,4 +125,7 @@ void push_init_api(lua_State * L){
 
     lua_pushcfunction(L, lua_init_set_base_position);
     lua_setfield(L, -2, "set_base_position");
+
+    lua_pushcfunction(L, lua_init_set_team_spawn);
+    lua_setfield(L, -2, "set_team_spawn");
 }
