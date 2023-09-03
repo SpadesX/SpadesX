@@ -1,3 +1,4 @@
+#include "Server/Packets/Packets.h"
 #include <Server/Server.h>
 #include <Util/Checks/PacketChecks.h>
 #include <Util/Log.h>
@@ -42,6 +43,11 @@ void receive_input_data(server_t* server, player_t* player, stream_t* data)
         player->crouching = bits[5];
         player->sneaking  = bits[6];
         player->sprinting = bits[7];
+        if (player->sprinting && player->secondary_fire) {
+            //Some game clients dont care to send that they exited scope mode upon sprint start
+            player->secondary_fire = 0;
+            send_weapon_input(server, player, 0);
+        }
         send_input_data(server, player);
     }
 }
