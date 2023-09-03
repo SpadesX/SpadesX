@@ -1,3 +1,4 @@
+#include "Util/Log.h"
 #include <Server/Server.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/VectorChecks.h>
@@ -26,7 +27,7 @@ void receive_position_data(server_t* server, player_t* player, stream_t* data)
         return;
     }
 
-    if (distance_in_3d(player->movement.position, position) >= 5) {
+    if (distance_in_3d(player->movement.position, position) >= 6) {
         send_position_packet(
         server, player, player->movement.position.x, player->movement.position.y, player->movement.position.z);
         return;

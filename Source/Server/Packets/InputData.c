@@ -34,7 +34,7 @@ void receive_input_data(server_t* server, player_t* player, stream_t* data)
         player->move_backwards = bits[1];
         player->move_left      = bits[2];
         player->move_right     = bits[3];
-        if (player->movement.velocity.z == 0.0f) {
+        if (!player->airborne) {
             player->jumping = bits[4];
         } else {
             player->jumping = 0;
