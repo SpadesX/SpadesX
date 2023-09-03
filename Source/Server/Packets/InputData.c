@@ -33,10 +33,16 @@ void receive_input_data(server_t* server, player_t* player, stream_t* data)
         player->move_backwards = bits[1];
         player->move_left      = bits[2];
         player->move_right     = bits[3];
-        player->jumping        = bits[4];
-        player->crouching      = bits[5];
-        player->sneaking       = bits[6];
-        player->sprinting      = bits[7];
+        if (player->movement.velocity.z == 0.0f) {
+            player->jumping = bits[4];
+        }
+        else {
+            player->jumping = 0;
+        }
+        player->crouching = bits[5];
+        player->sneaking  = bits[6];
+        player->sprinting = bits[7];
+        LOG_STATUS("velocity Z = %f and bit is %d", player->movement.velocity.z, bits[4]);
         send_input_data(server, player);
     }
 }
