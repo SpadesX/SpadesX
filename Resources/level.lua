@@ -24,12 +24,12 @@ function spadesx.block.check_deletion(player, x, y, z)
     if (((((x >= 206 and x <= 306) and (y >= 240 and y <= 272) and (z == 2 or z == 0)) or
           ((x >= 205 and x <= 307) and (y >= 239 and y <= 273) and (z == 1)))))
     then
-        spadesx.notice.send_to(player.id, "You should try to destroy the ennemy's tower... Not the platform!")
+        player:send_notice("You should try to destroy the ennemy's tower... Not the platform!")
         return 0
     end
     -- Prevent players from destroying their own tower.
     if (player.team == 1 and x > 512-220) or ( player.team == 0 and x < 220)  then
-        spadesx.notice.send_to(player.id, "You should try to destroy the ennemy's tower... It is not on this side of the map!")
+        player:send_notice("You should try to destroy the ennemy's tower... It is not on this side of the map!")
         return 0
     end
     return 1
@@ -38,10 +38,12 @@ end
 -- Does nothing, allow block creation. Only here for showcase purpose.
 -- Could be deleted as it will fallback on a C function doing the same.
 function spadesx.block.check_creation(player, x, y, z)
-    -- Force players to build in red.
-    player:set_color(0xFF0000)
-    player:create_block(x,y,z - 3)
-    player:create_block(x,y,z - 4)
+    -- Force players to build int their own color.
+    player:set_color(player.color)
+    -- Auto restock players.
+    if player.blocks < 10 then
+        player:restock()
+    end
     return 1
 end
 
@@ -63,6 +65,9 @@ function spadesx.init(init_api)
             init_api.add_colored_block(x, y, 1, 0xFF00FFFF)
         end
     end
+    -- Babel: set intels on top of the platform:
+    init_api.set_intel_position(0, 255, 255, init_api.find_top_block(255,255))
+    init_api.set_intel_position(1, 255, 255, init_api.find_top_block(255,255))
 end
 
 printTable(spadesx)

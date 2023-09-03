@@ -29,9 +29,8 @@ static int send_notice(lua_State *L) {
 
     const char *message = luaL_checkstring(L, 2);
 
-    // Now you have the ID and message, you can implement your logic here
-    // For example, you can send the notice to the specified ID with the given message
-
+    
+    // Get the the player * from the id.
     player_t* player;
     HASH_FIND(hh, server->players, &id, sizeof(uint8_t), player);
     if (player == NULL) {
@@ -39,8 +38,39 @@ static int send_notice(lua_State *L) {
         return 0;
     }
     send_server_notice(player, 0, message);
-
     return 0; // Return the number of values pushed onto the Lua stack (in this case, none)
+}
+
+// Restock the player.
+static int restock(lua_State* L){
+    server_t* server = get_server();
+
+    // Check the number of arguments
+    int numArgs = lua_gettop(L);
+    if (numArgs < 1) {
+        luaL_error(L,
+                   "Insufficient arguments. Usage: player:create_block() or  player.create_block(player)");
+        return 0;
+    }
+
+    // Retrieve the player table from the first argument
+    luaL_checktype(L, 1, LUA_TTABLE);
+    // Assuming the player table has an "id" field, retrieve the player's ID
+    lua_getfield(L, 1, "id");
+
+    uint8_t id = luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+
+    // Get the the player * from the id.
+    player_t* player;
+    HASH_FIND(hh, server->players, &id, sizeof(uint8_t), player);
+    if (player == NULL) {
+        LOG_ERROR("Could not find player with ID %hhu", id);
+        return 0;
+    }
+    player->blocks = 50;
+    send_restock(server, player);
+    return 0;
 }
 
 // C function for the Lua create_block function
@@ -77,6 +107,7 @@ static int create_block_function(lua_State* L)
     moveIntelAndTentUp(server);
     send_block_action(server, player, BLOCKACTION_BUILD, x, y, z);
     send_block_action_to_player(server, player, player, BLOCKACTION_BUILD, x, y, z);
+    player->blocks--;
     return 0;
 }
 
@@ -142,6 +173,26 @@ void push_player_api(lua_State* L, player_t* player)
     lua_pushinteger(L, player->team);
     lua_settable(L, -3);
 
+    // Add player team to the table
+    lua_pushstring(L, "health");
+    lua_pushinteger(L, player->hp);
+    lua_settable(L, -3);
+
+    // Add player team to the table
+    lua_pushstring(L, "blocks");
+    lua_pushinteger(L, player->blocks);
+    lua_settable(L, -3);
+
+    // Add player team to the table
+    lua_pushstring(L, "weapon_pellet");
+    lua_pushinteger(L, player->weapon_pellets);
+    lua_settable(L, -3);
+
+    // Add player team to the table
+    lua_pushstring(L, "weapon_clip");
+    lua_pushinteger(L, player->weapon_pellets);
+    lua_settable(L, -3);
+
     // Add player position to the table
     lua_pushstring(L, "position");
     lua_newtable(L); // Create the sub-table
@@ -167,7 +218,15 @@ void push_player_api(lua_State* L, player_t* player)
     lua_settable(L, -3);
 
     // Add send_notice function to the table
+    lua_pushstring(L, "restock");
+    lua_pushcfunction(L, restock); // Replace with your implementation
+    lua_settable(L, -3);
+
+    // Add send_notice function to the table
     lua_pushstring(L, "send_notice");
     lua_pushcfunction(L, send_notice); // Replace with your implementation
     lua_settable(L, -3);
+
+    // The pushed table is readonly. So you cannot change id, position... as it could break some stuff.
+    set_table_as_readonly(L);
 }

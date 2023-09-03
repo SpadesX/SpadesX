@@ -38,10 +38,10 @@ static int lua_init_add_colored_block(lua_State* L)
 static int lua_init_set_intel_position(lua_State* L)
 {
     // Check if four arguments (x, y, z, team) are provided
-    int x    = luaL_checkinteger(L, 1);
-    int y    = luaL_checkinteger(L, 2);
-    int z    = luaL_checkinteger(L, 3);
-    int team = luaL_checkinteger(L, 4);
+    int team = luaL_checkinteger(L, 1);
+    int x    = luaL_checkinteger(L, 2);
+    int y    = luaL_checkinteger(L, 3);
+    int z    = luaL_checkinteger(L, 4);
     // Check if the team value is within the valid range of 0-1
     if (team < 0 || team > 1) {
         return luaL_error(L, "Invalid team value: %d (should be between 0 and 1)", team);
@@ -53,18 +53,18 @@ static int lua_init_set_intel_position(lua_State* L)
     // flag?
     server->protocol.gamemode.intel_held[0] = 0;
     server->protocol.gamemode.intel[team].x = x;
-    server->protocol.gamemode.intel[team].x = y;
-    server->protocol.gamemode.intel[team].x = z;
+    server->protocol.gamemode.intel[team].y = y;
+    server->protocol.gamemode.intel[team].z = z;
     return 0;
 }
 // To be used in the init API. Does not trigger any notification sent to players.
 static int lua_init_set_base_position(lua_State* L)
 {
     // Check if four arguments (x, y, z, team) are provided
-    int x    = luaL_checkinteger(L, 1);
-    int y    = luaL_checkinteger(L, 2);
-    int z    = luaL_checkinteger(L, 3);
-    int team = luaL_checkinteger(L, 4);
+    int team = luaL_checkinteger(L, 1);
+    int x    = luaL_checkinteger(L, 2);
+    int y    = luaL_checkinteger(L, 3);
+    int z    = luaL_checkinteger(L, 4);
     // Check if the team value is within the valid range of 0-1
     if (team < 0 || team > 1) {
         return luaL_error(L, "Invalid team value: %d (should be between 0 and 1)", team);
@@ -73,8 +73,8 @@ static int lua_init_set_base_position(lua_State* L)
     server_t* server = get_server();
 
     server->protocol.gamemode.base[team].x = x;
-    server->protocol.gamemode.base[team].x = y;
-    server->protocol.gamemode.base[team].x = z;
+    server->protocol.gamemode.base[team].y = y;
+    server->protocol.gamemode.base[team].z = z;
     return 0;
 }
 
@@ -128,4 +128,6 @@ void push_init_api(lua_State * L){
 
     lua_pushcfunction(L, lua_init_set_team_spawn);
     lua_setfield(L, -2, "set_team_spawn");
+
+    set_table_as_readonly(L);
 }

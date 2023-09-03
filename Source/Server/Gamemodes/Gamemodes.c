@@ -17,31 +17,6 @@ lua_State* LuaLevel;
 int        lua_script = 0;
 int        ref;
 
-// LUA utils... Should be moved later.
-// Set table on top of the stack as read-only.
-// It does NOT pop it at the end.
-// The table on the top of the stack at the end is NOT the one that was there at the begining.
-// It is replaced by another one. So do not store refs to the first one.
-static inline int l_read_only(lua_State* L)
-{
-    lua_settop(L, 0);
-    printf("Error: attempted to edit a readonly table.\n");
-    return 0;
-}
-static inline void set_table_as_readonly(lua_State* L)
-{
-    int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-    lua_newtable(L);
-    lua_newtable(L);
-    lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
-    lua_setfield(L, -2, "__index");
-    lua_pushcfunction(L, l_read_only);
-    lua_setfield(L, -2, "__newindex");
-    lua_pushstring(L, "Read only table. Metatable hidden.");
-    lua_setfield(L, -2, "__metatable");
-    lua_setmetatable(L, -2);
-    luaL_unref(L, LUA_REGISTRYINDEX, ref);
-}
 uint8_t gamemode_block_creation_checks(player_t * from, int x, int y, int z){
     if (lua_script == 1) {
         // Get the spadesx table returned by the script.
@@ -67,10 +42,6 @@ uint8_t gamemode_block_creation_checks(player_t * from, int x, int y, int z){
             return 0;             // Handle the error appropriately
         }
         push_player_api(LuaLevel, from);
-
-        // The player table is readonly. I you want to set something, use a method (not implemented yet) and maybe a
-        // fech method to refresh fields.
-        set_table_as_readonly(LuaLevel);
 
         lua_pushinteger(LuaLevel, x); // Argument x
         lua_pushinteger(LuaLevel, y); // Argument y
@@ -146,10 +117,6 @@ uint8_t gamemode_block_deletion_checks(player_t* player, int x, int y, int z)
             return 0;             // Handle the error appropriately
         }
         push_player_api(LuaLevel, player);
-
-        // The player table is readonly. I you want to set something, use a method (not implemented yet) and maybe a
-        // fech method to refresh fields.
-        set_table_as_readonly(LuaLevel);
 
         lua_pushinteger(LuaLevel, x); // Argument x
         lua_pushinteger(LuaLevel, y); // Argument y
@@ -294,10 +261,8 @@ static int _init_lua(server_t* server)
         return 0;             // Handle the error appropriately
     }
 
-    // Push any arguments for the function here
+    // Give a table to the init function with needed API.
     push_init_api(LuaLevel);
-    // Now the api table is on top. Let's make it readonly to avoid misuse.
-    set_table_as_readonly(LuaLevel);
     // Call the function with the appropriate number of arguments and return values
     if (lua_pcall(LuaLevel, 1, 0, 0) != LUA_OK) {
         LOG_ERROR("Error calling Lua function: %s\n", lua_tostring(LuaLevel, -1));
