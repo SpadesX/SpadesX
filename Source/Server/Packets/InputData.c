@@ -42,7 +42,6 @@ void receive_input_data(server_t* server, player_t* player, stream_t* data)
         player->crouching = bits[5];
         player->sneaking  = bits[6];
         player->sprinting = bits[7];
-        LOG_STATUS("velocity Z = %f and bit is %d", player->movement.velocity.z, bits[4]);
         send_input_data(server, player);
     }
 }
