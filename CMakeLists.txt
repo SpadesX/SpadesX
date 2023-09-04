@@ -48,8 +48,8 @@ if (NOT EXISTS ${CMAKE_BINARY_DIR}/config.json)
 configure_file(${PROJECT_SOURCE_DIR}/Resources/config.json ${CMAKE_BINARY_DIR}/config.json COPYONLY)
 endif()
 
-if (NOT EXISTS ${CMAKE_BINARY_DIR}/level.lua)
-configure_file(${PROJECT_SOURCE_DIR}/Resources/level.lua ${CMAKE_BINARY_DIR}/level.lua COPYONLY)
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/GameMode.lua)
+configure_file(${PROJECT_SOURCE_DIR}/Resources/GameMode.lua ${CMAKE_BINARY_DIR}/GameMode.lua COPYONLY)
 endif()
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/Border_Hallway.vxl)

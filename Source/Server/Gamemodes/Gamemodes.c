@@ -295,12 +295,12 @@ void gamemode_init(server_t* server, uint8_t gamemode)
         server->running = 0;
     }
     // If a lua file called [level.lua] is provided, it might override some of the functions.
-    if (access("level.lua", F_OK) == 0) {
+    if (access("GameMode.lua", F_OK) == 0) {
         LuaLevel = luaL_newstate();
         luaL_openlibs(LuaLevel);
         register_spadesx_module(LuaLevel);
-        if (luaL_dofile(LuaLevel, "level.lua") != LUA_OK) {
-            LOG_ERROR("Error loading Lua file: %s\n", lua_tostring(LuaLevel, -1));
+        if (luaL_dofile(LuaLevel, "GameMode.lua") != LUA_OK) {
+            LOG_ERROR("Error loading GameMode.lua file: %s\n", lua_tostring(LuaLevel, -1));
             server->running = 0;
         }
         ref        = luaL_ref(LuaLevel, LUA_REGISTRYINDEX);
