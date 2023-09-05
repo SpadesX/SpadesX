@@ -57,6 +57,7 @@ inline uint8_t valid_pos_3f(server_t* server, float x, float y, float z)
 
 uint8_t valid_player_pos(server_t* server, player_t* player, float X, float Y, float Z)
 {
+    uint8_t solid_z = Z < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z);
     uint8_t solid_zp1 = Z + 1 < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z + 1);
     uint8_t solid_zp2 = Z + 2 < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z + 2);
 
@@ -68,7 +69,8 @@ uint8_t valid_player_pos(server_t* server, player_t* player, float X, float Y, f
     if ((X < server->s_map.map.size_x && X >= 0) && (Y < server->s_map.map.size_y && Y >= 0) &&
         (Z <= server->s_map.map.size_z && Z >= -4) &&
         (!solid_zp2 || Z == server->s_map.map.size_z - 3 || player->crouching) &&
-        (!solid_zp1 || (Z == server->s_map.map.size_z - 2 && player->crouching)))
+        (!solid_zp1 || (Z == server->s_map.map.size_z - 2 && player->crouching)) &&
+        (!solid_z))
     {
         return 1;
     }
