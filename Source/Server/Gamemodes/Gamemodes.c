@@ -27,17 +27,17 @@ uint8_t gamemode_block_creation_checks(player_t * from, int x, int y, int z){
             lua_pop(LuaLevel, 1);
             return 0; // Handle the error appropriately
         }
-        lua_getfield(LuaLevel, -1, "block");
+        lua_getfield(LuaLevel, -1, "checks");
         if (!lua_istable(LuaLevel, -1)) {
-            LOG_ERROR("The spadesx.block is not a table.\n");
+            LOG_ERROR("The spadesx.checks is not a table.\n");
             lua_pop(LuaLevel, 2); // Pop the function, "block" subtable, and the table
             return 0;             // Handle the error appropriately
         }
         // Push the member function onto the stack (replace "functionName" with your function name)
-        lua_getfield(LuaLevel, -1, "check_creation");
+        lua_getfield(LuaLevel, -1, "block_placement");
         // Check if the value is a function
         if (!lua_isfunction(LuaLevel, -1)) {
-            LOG_ERROR("The spadesx table does not contain a member block.check_creation().\n");
+            LOG_ERROR("The spadesx table does not contain a member block.block_placement().\n");
             lua_pop(LuaLevel, 3); // Pop the function and the table
             return 0;             // Handle the error appropriately
         }
@@ -102,17 +102,17 @@ uint8_t gamemode_block_deletion_checks(player_t* player, int x, int y, int z)
             lua_pop(LuaLevel, 1);
             return 0; // Handle the error appropriately
         }
-        lua_getfield(LuaLevel, -1, "block");
+        lua_getfield(LuaLevel, -1, "checks");
         if (!lua_istable(LuaLevel, -1)) {
-            LOG_ERROR("The spadesx.block is not a table.\n");
+            LOG_ERROR("The spadesx.checks is not a table.\n");
             lua_pop(LuaLevel, 2); // Pop the function, "block" subtable, and the table
             return 0;             // Handle the error appropriately
         }
         // Push the member function onto the stack (replace "functionName" with your function name)
-        lua_getfield(LuaLevel, -1, "check_deletion");
+        lua_getfield(LuaLevel, -1, "block_destruction");
         // Check if the value is a function
         if (!lua_isfunction(LuaLevel, -1)) {
-            LOG_ERROR("The spadesx table does not contain a member block.check_deletion().\n");
+            LOG_ERROR("The spadesx table does not contain a member block.block_destruction().\n");
             lua_pop(LuaLevel, 3); // Pop the function and the table
             return 0;             // Handle the error appropriately
         }

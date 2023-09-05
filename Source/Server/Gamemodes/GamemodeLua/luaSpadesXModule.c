@@ -72,8 +72,11 @@ static const luaL_Reg l_notice[] =
 };
 static const luaL_Reg l_block[] =
 {
-    { "check_deletion", return_1_to_be_overriden},
-    { "check_creation", return_1_to_be_overriden},
+    { "block_destruction", return_1_to_be_overriden},
+    { "grenade_destruction", return_1_to_be_overriden},
+    { "spade_destruction", return_1_to_be_overriden},
+    { "block_placement", return_1_to_be_overriden},
+    { "line_placement", return_1_to_be_overriden},
     { NULL, NULL }
 };
 static const luaL_Reg l_spadesx[] =
@@ -90,9 +93,9 @@ static int push_module(lua_State * L){
     luaL_newlib(L, l_spadesx);
     // Now adding sub tables:
     luaL_newlib(L, l_notice);
-    lua_setfield(L, -2, "notice");
+    lua_setfield(L, -2, "notices");
     luaL_newlib(L, l_block);
-    lua_setfield(L, -2, "block");
+    lua_setfield(L, -2, "checks");
     return 1;
 }
 

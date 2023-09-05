@@ -20,7 +20,7 @@ end
 -- Also prevent people from same team to destroy their own tower.
 -- return 1: allow deletion.
 -- return 0: abort deletion.
-function spadesx.block.check_deletion(player, x, y, z)
+function spadesx.checks.block_destruction(player, x, y, z)
     if (((((x >= 206 and x <= 306) and (y >= 240 and y <= 272) and (z == 2 or z == 0)) or
           ((x >= 205 and x <= 307) and (y >= 239 and y <= 273) and (z == 1)))))
     then
@@ -37,7 +37,7 @@ end
 
 -- Does nothing, allow block creation. Only here for showcase purpose.
 -- Could be deleted as it will fallback on a C function doing the same.
-function spadesx.block.check_creation(player, x, y, z)
+function spadesx.checks.block_placement(player, x, y, z)
     -- Force players to build int their own color.
     player:set_color(player.color)
     -- Auto restock players.
