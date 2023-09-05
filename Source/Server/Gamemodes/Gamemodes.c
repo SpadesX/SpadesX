@@ -2,6 +2,7 @@
 #include <Server/Gamemodes/Gamemodes.h>
 #include <Server/IntelTent.h>
 #include <Server/Structs/ServerStruct.h>
+#include <Server/Server.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
 #include <Util/Types.h>
@@ -53,13 +54,10 @@ static inline int push_check_func_safely(lua_State* L, const char* func_name)
         if (push_check_func_safely(LuaLevel, "block_placement")) {
             
             push_player_api(LuaLevel, from);
-
-            lua_pushinteger(LuaLevel, x); // Argument x
-            lua_pushinteger(LuaLevel, y); // Argument y
-            lua_pushinteger(LuaLevel, z); // Argument z
+            push_block(LuaLevel, x, y, z, (color_t) mapvxl_get_color(&get_server()->s_map.map, x, y, z));
 
             // Call the function with the appropriate number of arguments and return values
-            if (lua_pcall(LuaLevel, 4, 1, 0) != LUA_OK) {
+            if (lua_pcall(LuaLevel, 2, 1, 0) != LUA_OK) {
                 LOG_ERROR("Error calling Lua function: %s\n", lua_tostring(LuaLevel, -1));
                 lua_pop(LuaLevel, 4); // Pop the error message and the table
                 return 0;             // Handle the error appropriately
@@ -107,12 +105,10 @@ static inline int push_check_func_safely(lua_State* L, const char* func_name)
         if (push_check_func_safely(LuaLevel, "block_destruction")) {
             push_player_api(LuaLevel, player);
 
-            lua_pushinteger(LuaLevel, x); // Argument x
-            lua_pushinteger(LuaLevel, y); // Argument y
-            lua_pushinteger(LuaLevel, z); // Argument z
+            push_block(LuaLevel, x, y, z, (color_t) mapvxl_get_color(&get_server()->s_map.map, x, y, z));
 
             // Call the function with the appropriate number of arguments and return values
-            if (lua_pcall(LuaLevel, 4, 1, 0) != LUA_OK) {
+            if (lua_pcall(LuaLevel, 2, 1, 0) != LUA_OK) {
                 LOG_ERROR("Error calling Lua function: %s\n", lua_tostring(LuaLevel, -1));
                 lua_pop(LuaLevel, 4); // Pop the error message and the table
                 return 0;             // Handle the error appropriately

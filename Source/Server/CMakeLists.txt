@@ -124,6 +124,7 @@ set(SERVER_SOURCES
     Master.c
     Map.c
     Gamemodes/Gamemodes.c
+    Gamemodes/GamemodeLua/luaBlock.c
     Gamemodes/GamemodeLua/luaInitAPI.c
     Gamemodes/GamemodeLua/luaPlayerAPI.c
     Gamemodes/GamemodeLua/luaSpadesXModule.c
