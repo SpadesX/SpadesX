@@ -73,10 +73,7 @@ static const luaL_Reg l_notice[] =
 static const luaL_Reg l_block[] =
 {
     { "block_destruction", return_1_to_be_overriden},
-    { "grenade_destruction", return_1_to_be_overriden},
-    { "spade_destruction", return_1_to_be_overriden},
     { "block_placement", return_1_to_be_overriden},
-    { "line_placement", return_1_to_be_overriden},
     { NULL, NULL }
 };
 static const luaL_Reg l_spadesx[] =

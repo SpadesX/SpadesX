@@ -46,6 +46,6 @@ static inline void set_table_as_readonly(lua_State* L)
 void push_init_api(lua_State * L);
 void push_player_api(lua_State * L, player_t * player);
 int register_spadesx_module(lua_State * L);
-void push_block(lua_State * L, int x, int y, int z, color_t color);
+void push_block(lua_State * L, int x, int y, int z, uint32_t color);
 
 #endif
