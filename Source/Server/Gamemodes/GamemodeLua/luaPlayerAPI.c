@@ -151,6 +151,7 @@ static int set_color_function(lua_State* L)
 
 void push_player_api(lua_State* L, player_t* player)
 {
+    server_t * server = get_server();
     // Push the player table first
     lua_newtable(L);
     // Add player name to the table
@@ -163,14 +164,15 @@ void push_player_api(lua_State* L, player_t* player)
     lua_pushinteger(L, player->id);
     lua_settable(L, -3);
 
-    // Add player color to the table
-    lua_pushstring(L, "color");
-    lua_pushinteger(L, get_server()->protocol.color_team[player->team].raw);
-    lua_settable(L, -3);
-
-    // Add player team to the table
+    // Add player's team to the table
     lua_pushstring(L, "team");
-    lua_pushinteger(L, player->team);
+    lua_newtable(L); // Create the sub-table containing color and id.
+    lua_pushstring(L, "color");
+    lua_pushinteger(L, server->protocol.color_team[player->team].raw);
+    lua_settable(L, -3);
+    lua_pushstring(L, "id");
+    lua_pushinteger(L,player->team);
+    lua_settable(L, -3);
     lua_settable(L, -3);
 
     // Add player team to the table
@@ -197,34 +199,34 @@ void push_player_api(lua_State* L, player_t* player)
     lua_pushstring(L, "position");
     lua_newtable(L); // Create the sub-table
     lua_pushstring(L, "z");
-    lua_pushinteger(L, player->movement.position.z); // Replace with the actual value
+    lua_pushinteger(L, player->movement.position.x);
     lua_settable(L, -3);
     lua_pushstring(L, "y");
-    lua_pushinteger(L, player->movement.position.y); // Replace with the actual value
+    lua_pushinteger(L, player->movement.position.y);
     lua_settable(L, -3);
     lua_pushstring(L, "x");
-    lua_pushinteger(L, player->movement.position.x); // Replace with the actual value for z
+    lua_pushinteger(L, player->movement.position.z);
     lua_settable(L, -3);
     lua_settable(L, -3);
 
     // Add create_block function to the table
     lua_pushstring(L, "create_block");
-    lua_pushcfunction(L, create_block_function); // Replace with your implementation
+    lua_pushcfunction(L, create_block_function);
     lua_settable(L, -3);
 
     // Add set_color function to the table
     lua_pushstring(L, "set_color");
-    lua_pushcfunction(L, set_color_function); // Replace with your implementation
+    lua_pushcfunction(L, set_color_function);
     lua_settable(L, -3);
 
     // Add send_notice function to the table
     lua_pushstring(L, "restock");
-    lua_pushcfunction(L, restock); // Replace with your implementation
+    lua_pushcfunction(L, restock);
     lua_settable(L, -3);
 
     // Add send_notice function to the table
     lua_pushstring(L, "send_notice");
-    lua_pushcfunction(L, send_notice); // Replace with your implementation
+    lua_pushcfunction(L, send_notice);
     lua_settable(L, -3);
 
     // The pushed table is readonly. So you cannot change id, position... as it could break some stuff.

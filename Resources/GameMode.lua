@@ -20,15 +20,15 @@ end
 -- Also prevent people from same team to destroy their own tower.
 -- return 1: allow deletion.
 -- return 0: abort deletion.
-function spadesx.checks.block_destruction(player, x, y, z)
-    if (((((x >= 206 and x <= 306) and (y >= 240 and y <= 272) and (z == 2 or z == 0)) or
-          ((x >= 205 and x <= 307) and (y >= 239 and y <= 273) and (z == 1)))))
+function spadesx.checks.block_destruction(player, block)
+    if (((((block.x >= 206 and block.x <= 306) and (block.y >= 240 and block.y <= 272) and (block.z == 2 or block.z == 0)) or
+          ((block.x >= 205 and block.x <= 307) and (block.y >= 239 and block.y <= 273) and (block.z == 1)))))
     then
         player:send_notice("You should try to destroy the ennemy's tower... Not the platform!")
         return 0
     end
     -- Prevent players from destroying their own tower.
-    if (player.team == 1 and x > 512-220) or ( player.team == 0 and x < 220)  then
+    if (player.team.id == 1 and block.x > 512-220) or ( player.team.id == 0 and block.x < 220)  then
         player:send_notice("You should try to destroy the ennemy's tower... It is not on this side of the map!")
         return 0
     end
@@ -37,9 +37,11 @@ end
 
 -- Does nothing, allow block creation. Only here for showcase purpose.
 -- Could be deleted as it will fallback on a C function doing the same.
-function spadesx.checks.block_placement(player, x, y, z)
+function spadesx.checks.block_placement(player, block)
     -- Force players to build int their own color.
-    player:set_color(player.color)
+    if block.color ~= player.team.color then
+        player:set_color(player.team.color)
+    end
     -- Auto restock players.
     if player.blocks < 10 then
         player:restock()
