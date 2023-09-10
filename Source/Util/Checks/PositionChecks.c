@@ -57,22 +57,22 @@ inline uint8_t valid_pos_3f(server_t* server, float x, float y, float z)
 
 uint8_t valid_player_pos(server_t* server, player_t* player, float X, float Y, float Z)
 {
-    uint8_t solid_z = Z < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z);
-    uint8_t solid_zp1 = Z + 1 < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z + 1);
-    uint8_t solid_zp2 = Z + 2 < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z + 2);
-
     /*Player walking on top of the roof has Z value of -2 and when jumping this can go to -4.
       Player crouching will have their feet (solid_zp2) inside an solid block.
       And also water acts as solid block.
       And lastly player crouching inside water will have their middle of the body
       inside water thus its solid (Feet wont be inside a solid block)*/
     if ((X < server->s_map.map.size_x && X >= 0) && (Y < server->s_map.map.size_y && Y >= 0) &&
-        (Z <= server->s_map.map.size_z && Z >= -4) &&
-        (!solid_zp2 || Z == server->s_map.map.size_z - 3 || player->crouching) &&
-        (!solid_zp1 || (Z == server->s_map.map.size_z - 2 && player->crouching)) &&
-        (!solid_z))
+        (Z <= server->s_map.map.size_z && Z >= -4))
     {
-        return 1;
+        uint8_t solid_z   = Z < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z);
+        uint8_t solid_zp1 = Z + 1 < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z + 1);
+        uint8_t solid_zp2 = Z + 2 < 0 ? 0 : mapvxl_is_solid(&server->s_map.map, X, Y, Z + 2);
+        if ((!solid_zp2 || Z == server->s_map.map.size_z - 3 || player->crouching) &&
+            (!solid_zp1 || (Z == server->s_map.map.size_z - 2 && player->crouching)) && (!solid_z))
+        {
+            return 1;
+        }
     }
     return 0;
 }
