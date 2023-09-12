@@ -49,10 +49,10 @@ static inline int push_check_func_safely(lua_State* L, const char* func_name)
     return 1;
 }
 
-static inline int gamemode_block_check_destruction(player_t* from, const char* how, uint16_t x, uint16_t y, uint16_t z){
+static inline int gamemode_block_check_destruction(player_t* from, uint8_t tool, uint16_t x, uint16_t y, uint16_t z){
     if (push_check_func_safely(LuaLevel, "block_destruction")) {
         push_player_api(LuaLevel, from);
-        lua_pushstring(LuaLevel, how);
+        lua_pushinteger(LuaLevel, tool);
         push_block(LuaLevel, x, y, z, mapvxl_get_color(&get_server()->s_map.map, x, y, z));
 
         // Call the function with the appropriate number of arguments and return values
@@ -112,18 +112,18 @@ uint8_t gamemode_block_creation_checks(player_t* from, uint16_t x, uint16_t y, u
 
 uint8_t gamemode_grenade_destruction_checks(player_t* player, vector3f_t pos)
 {
-    if (gamemode_block_check_destruction(player,"GRENADE", pos.x + 1, pos.y + 1, pos.z + 1) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x + 1, pos.y + 1, pos.z - 1) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x + 1, pos.y + 1, pos.z) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x + 1, pos.y - 1, pos.z + 1) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x + 1, pos.y - 1, pos.z - 1) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x + 1, pos.y - 1, pos.z) &&
-        gamemode_block_check_destruction(player,"GRENADE",pos.x - 1, pos.y + 1, pos.z + 1) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x - 1, pos.y + 1, pos.z - 1) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x - 1, pos.y + 1, pos.z) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x - 1, pos.y - 1, pos.z + 1) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x - 1, pos.y - 1, pos.z - 1) &&
-        gamemode_block_check_destruction(player, "GRENADE",pos.x - 1, pos.y - 1, pos.z))
+    if (gamemode_block_check_destruction(player,TOOL_GRENADE, pos.x + 1, pos.y + 1, pos.z + 1) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x + 1, pos.y + 1, pos.z - 1) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x + 1, pos.y + 1, pos.z) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x + 1, pos.y - 1, pos.z + 1) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x + 1, pos.y - 1, pos.z - 1) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x + 1, pos.y - 1, pos.z) &&
+        gamemode_block_check_destruction(player,TOOL_GRENADE,pos.x - 1, pos.y + 1, pos.z + 1) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x - 1, pos.y + 1, pos.z - 1) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x - 1, pos.y + 1, pos.z) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x - 1, pos.y - 1, pos.z + 1) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x - 1, pos.y - 1, pos.z - 1) &&
+        gamemode_block_check_destruction(player, TOOL_GRENADE,pos.x - 1, pos.y - 1, pos.z))
     {
         return 1;
     }
@@ -132,12 +132,12 @@ uint8_t gamemode_grenade_destruction_checks(player_t* player, vector3f_t pos)
 
 uint8_t gamemode_hand_destruction_checks(player_t* from, uint16_t x, uint16_t y, uint16_t z)
 {
-    return gamemode_block_check_destruction(from, "HAND", x, y, z);
+    return gamemode_block_check_destruction(from, TOOL_SPADE, x, y, z);
 }
 
 uint8_t gamemode_gun_destruction_checks(player_t* from, uint16_t x, uint16_t y, uint16_t z)
 {
-    return gamemode_block_check_destruction(from, "GUN", x, y, z);
+    return gamemode_block_check_destruction(from, TOOL_GUN, x, y, z);
 }
 
 static void _init_ctf(server_t* server)

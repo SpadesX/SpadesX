@@ -93,6 +93,20 @@ static int push_module(lua_State * L){
     lua_setfield(L, -2, "notices");
     luaL_newlib(L, l_block);
     lua_setfield(L, -2, "checks");
+
+    // Pushing consts.
+    lua_pushstring(L, "TOOL_SPADE");
+    lua_pushinteger(L, TOOL_SPADE);
+    lua_settable(L, -3);
+    lua_pushstring(L, "TOOL_BLOCK");
+    lua_pushinteger(L,TOOL_BLOCK);
+    lua_settable(L, -3);
+    lua_pushstring(L, "TOOL_GUN");
+    lua_pushinteger(L,TOOL_GUN);
+    lua_settable(L, -3);
+    lua_pushstring(L, "TOOL_GRENADE");
+    lua_pushinteger(L,TOOL_GRENADE);
+    lua_settable(L, -3);
     return 1;
 }
 

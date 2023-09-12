@@ -20,7 +20,7 @@ end
 -- Also prevent people from same team to destroy their own tower.
 -- return 1: allow deletion.
 -- return 0: abort deletion.
-function spadesx.checks.block_destruction(player,how, block)
+function spadesx.checks.block_destruction(player,tool, block)
     if (((((block.x >= 206 and block.x <= 306) and (block.y >= 240 and block.y <= 272) and (block.z == 2 or block.z == 0)) or
           ((block.x >= 205 and block.x <= 307) and (block.y >= 239 and block.y <= 273) and (block.z == 1)))))
     then
@@ -28,8 +28,8 @@ function spadesx.checks.block_destruction(player,how, block)
         return 0
     end
     -- For showcasing purpose only!
-    -- Prevent players from destroying their own tower.
-    if how == 'GRENADE' or how == 'HAND' then
+    -- Prevent players from destroying their own tower except by spade.
+    if tool == spadesx.TOOL_SPADE then
         return 1
     end
     if (player.team.id == 1 and block.x > 512-220) or ( player.team.id == 0 and block.x < 220)  then
