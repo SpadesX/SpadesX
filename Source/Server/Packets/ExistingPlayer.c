@@ -126,7 +126,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     if (count > 0) {
         char idChar[4];
         snprintf(idChar, 4, "%d", player->id);
-        strlcat(player->name, idChar, 17);
+        strlcat(player->name, idChar, 16);
     }
 
     set_default_player_ammo(player);
