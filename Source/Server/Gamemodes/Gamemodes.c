@@ -73,12 +73,34 @@ void gamemode_on_player_join(player_t* player) {
     }
 
     // Pop the temporary values
-    lua_pop(LuaLevel, 3);
+    lua_pop(LuaLevel, 2);
 }
 
 void gamemode_on_player_left(player_t* player){
-    player++;
+    // Retrieve the table from the Lua registry
+    lua_rawgeti(LuaLevel, LUA_REGISTRYINDEX, ref);
+    // Check if 'players' is a table
+    lua_pushstring(LuaLevel, "players");
+    lua_gettable(LuaLevel, -2);
+    if (lua_istable(LuaLevel, -1)) {
+        // Push the numeric index
+        lua_pushinteger(LuaLevel, player->id+1);        
+        // Push the value onto the stack
+        lua_pushnil(LuaLevel);
+
+
+
+        // Set the value at the specified index in the 'players' table
+        lua_settable(LuaLevel, -3);
+    } else {
+        // Handle the case where 'players' is not a table
+        printf("Error: 'players' is not a table.\n");
+    }
+
+    // Pop the temporary values
+    lua_pop(LuaLevel, 2);
 }
+
 
 static inline int gamemode_block_check_destruction(player_t* from, uint8_t tool, uint16_t x, uint16_t y, uint16_t z){
     if (push_check_func_safely(LuaLevel, "block_destruction")) {

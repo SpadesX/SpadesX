@@ -264,6 +264,7 @@ static void _server_update(server_t* server, int timeout)
                     }
                     send_intel_drop(server, player);
                     send_player_left(server, player);
+                    gamemode_on_player_left(player);
                     vector3f_t empty   = {0, 0, 0};
                     vector3f_t forward = {1, 0, 0};
                     vector3f_t height  = {0, 0, 1};

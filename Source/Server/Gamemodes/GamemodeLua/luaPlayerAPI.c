@@ -110,7 +110,7 @@ static int get_team(lua_State* L) {
     player_t** playerUserData = (player_t**) lua_touserdata(L, -1);
     player_t* player = *playerUserData;
 
-    // Create a sub-table containing color and id.
+    // Create a the returned table containing color and id.
     lua_newtable(L);
     lua_pushstring(L, "color");
     lua_pushinteger(L, get_server()->protocol.color_team[player->team].raw);
@@ -149,6 +149,28 @@ static int get_position(lua_State* L) {
     lua_pushstring(L, "x");
     lua_pushinteger(L, player->movement.position.z);
     lua_settable(L, -3);
+
+    return 1;
+}
+
+static int get_blocks(lua_State* L) {
+    // Check the number of arguments
+    int numArgs = lua_gettop(L);
+    if (numArgs < 1) {
+        luaL_error(L, "Insufficient arguments. Usage: player:get_team() or  player.get_team(player)");
+        return 0;
+    }
+
+    // Retrieve the player table from the first argument
+    luaL_checktype(L, 1, LUA_TTABLE);
+    // Assuming the player table has an "address" field, retrieve the player's C struct's address
+    lua_getfield(L, 1, "address");
+    // Check if the value is a userdata
+    player_t** playerUserData = (player_t**) lua_touserdata(L, -1);
+    player_t* player = *playerUserData;
+
+    /* Return the position of the player. */
+    lua_pushinteger(L, player->blocks);
 
     return 1;
 }
@@ -228,14 +250,16 @@ void push_player_api(lua_State* L, player_t* player)
     lua_pushstring(L, "send_notice");
     lua_pushcfunction(L, send_notice);
     lua_settable(L, -3);
-
-    // Add send_notice function to the table
+    
     lua_pushstring(L, "get_team");
     lua_pushcfunction(L, get_team);
     lua_settable(L, -3);
 
-    // Add send_notice function to the table
     lua_pushstring(L, "get_position");
     lua_pushcfunction(L, get_position);
+    lua_settable(L, -3);
+
+    lua_pushstring(L, "get_blocks");
+    lua_pushcfunction(L, get_blocks);
     lua_settable(L, -3);
 }
