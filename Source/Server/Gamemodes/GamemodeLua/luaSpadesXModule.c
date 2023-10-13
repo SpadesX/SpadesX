@@ -107,6 +107,11 @@ static int push_module(lua_State * L){
     lua_pushstring(L, "TOOL_GRENADE");
     lua_pushinteger(L,TOOL_GRENADE);
     lua_settable(L, -3);
+
+    // Create an empty table
+    lua_newtable(L);
+    // Add the empty table to 'myObject' with the key "players"
+    lua_setfield(L, -2, "players");
     return 1;
 }
 
