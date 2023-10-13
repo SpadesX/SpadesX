@@ -87,8 +87,11 @@ static int create_block_function(lua_State* L)
     // Retrieve the player table from the first argument
     luaL_checktype(L, 1, LUA_TTABLE);
     // Assuming the player table has an "id" field, retrieve the player's ID
-    lua_getfield(L, 1, "id");
-    uint8_t id = luaL_checkinteger(L, -1);
+    lua_getfield(L, 1, "address");
+// Check if the value is a userdata
+    player_t **playerUserData = (player_t **)lua_touserdata(L, -1);
+    player_t* player;
+    player = *playerUserData;
     lua_pop(L, 1);
 
     // Retrieve x, y, and z arguments
@@ -97,12 +100,6 @@ static int create_block_function(lua_State* L)
     int z = luaL_checkinteger(L, 4);
 
     server_t* server = get_server();
-    player_t* player;
-    HASH_FIND(hh, server->players, &id, sizeof(uint8_t), player);
-    if (player == NULL) {
-        LOG_ERROR("Could not find player with ID %hhu", id);
-        return 0;
-    }
     mapvxl_set_color(&server->s_map.map, x, y, z, player->tool_color.raw);
     moveIntelAndTentUp(server);
     send_block_action(server, player, BLOCKACTION_BUILD, x, y, z);
@@ -162,6 +159,12 @@ void push_player_api(lua_State* L, player_t* player)
     // Add player id to the table
     lua_pushstring(L, "id");
     lua_pushinteger(L, player->id);
+    lua_settable(L, -3);
+
+    lua_pushstring(L, "address");
+    //lua_pushinteger(L, (int) (void*) player);
+    player_t** playerUserData = (player_t**)lua_newuserdata(L, sizeof(player_t*));
+    *playerUserData = player;
     lua_settable(L, -3);
 
     // Add player's team to the table
