@@ -58,7 +58,7 @@ void gamemode_on_player_join(player_t* player) {
     lua_gettable(LuaLevel, -2);
     if (lua_istable(LuaLevel, -1)) {
         // Push the numeric index
-        lua_pushinteger(LuaLevel, player->id);        
+        lua_pushinteger(LuaLevel, player->id+1);        
         // Push the value onto the stack
         //lua_pushstring(LuaLevel, "value");
         push_player_api(LuaLevel, player);
@@ -82,7 +82,7 @@ void gamemode_on_player_left(player_t* player){
 
 static inline int gamemode_block_check_destruction(player_t* from, uint8_t tool, uint16_t x, uint16_t y, uint16_t z){
     if (push_check_func_safely(LuaLevel, "block_destruction")) {
-        push_player_api(LuaLevel, from);
+        lua_pushinteger(LuaLevel, from->id+1);
         lua_pushinteger(LuaLevel, tool);
         push_block(LuaLevel, x, y, z, mapvxl_get_color(&get_server()->s_map.map, x, y, z));
 
@@ -114,7 +114,7 @@ uint8_t gamemode_block_creation_checks(player_t* from, uint16_t x, uint16_t y, u
 {
     if (push_check_func_safely(LuaLevel, "block_placement")) {
 
-        push_player_api(LuaLevel, from);
+        lua_pushinteger(LuaLevel, from->id+1);
         push_block(LuaLevel, x, y, z, mapvxl_get_color(&get_server()->s_map.map, x, y, z));
 
         // Call the function with the appropriate number of arguments and return values
