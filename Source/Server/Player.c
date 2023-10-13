@@ -463,6 +463,7 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
     player->state                         = STATE_STARTING_MAP;
     HASH_ADD(hh, server->players, id, sizeof(uint8_t), player);
     HASH_SORT(server->players, player_sort);
+    gamemode_on_player_join(player);
 }
 
 void for_players(server_t* server)
