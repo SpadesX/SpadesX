@@ -231,7 +231,4 @@ void push_player_api(lua_State* L, player_t* player)
     lua_pushstring(L, "send_notice");
     lua_pushcfunction(L, send_notice);
     lua_settable(L, -3);
-
-    // The pushed table is readonly. So you cannot change id, position... as it could break some stuff.
-    set_table_as_readonly(L);
 }
