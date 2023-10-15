@@ -5,7 +5,7 @@
 #include <Util/Notice.h>
 
 // Send a notice to the player.
-// First argument is the player table.
+// First argument is the player's table.
 // Second is the message.
 static int send_notice(lua_State* L)
 {
@@ -14,7 +14,7 @@ static int send_notice(lua_State* L)
     int numArgs = lua_gettop(L);
     if (numArgs < 2) {
         luaL_error(L,
-                   "Insufficient arguments. Usage: player:create_block(color) or  player.create_block(player,color)");
+                   "Insufficient arguments. Usage: player:send_notice(notice) or  player.send_notice(player,notice)");
         return 0;
     }
 
@@ -41,7 +41,7 @@ static int restock(lua_State* L)
     // Check the number of arguments
     int numArgs = lua_gettop(L);
     if (numArgs < 1) {
-        luaL_error(L, "Insufficient arguments. Usage: player:create_block() or  player.create_block(player)");
+        luaL_error(L, "Insufficient arguments. Usage: player:restock() or  player.restock(player)");
         return 0;
     }
 
@@ -126,7 +126,7 @@ static int get_position(lua_State* L) {
     // Check the number of arguments
     int numArgs = lua_gettop(L);
     if (numArgs < 1) {
-        luaL_error(L, "Insufficient arguments. Usage: player:get_team() or  player.get_team(player)");
+        luaL_error(L, "Insufficient arguments. Usage: player:get_position() or  player.get_position(player)");
         return 0;
     }
 
@@ -157,7 +157,7 @@ static int get_blocks(lua_State* L) {
     // Check the number of arguments
     int numArgs = lua_gettop(L);
     if (numArgs < 1) {
-        luaL_error(L, "Insufficient arguments. Usage: player:get_team() or  player.get_team(player)");
+        luaL_error(L, "Insufficient arguments. Usage: player:get_blocks() or  player.get_blocks(player)");
         return 0;
     }
 
@@ -215,38 +215,38 @@ void push_player_api(lua_State* L, player_t* player)
 {
     // Push the player table first
     lua_newtable(L);
-    // Add player name to the table
+
+    // Let's push a few consts:
     lua_pushstring(L, "name");
     lua_pushstring(L, player->name);
     lua_settable(L, -3);
 
-    // Add player id to the table
     lua_pushstring(L, "id");
     lua_pushinteger(L, player->id + 1);
     lua_settable(L, -3);
 
+    // Let's push a userdata named address (kinda a C pointer) pointing to the player's struct.
     lua_pushstring(L, "address");
-    // lua_pushinteger(L, (int) (void*) player);
     player_t** playerUserData = (player_t**) lua_newuserdata(L, sizeof(player_t*));
     *playerUserData           = player;
     lua_settable(L, -3);
 
-    // Add create_block function to the table
+    // Here are pushed all player's methods.
+    // Used as player:myfunc()
+
+    // Sould be renamed "place_block" ?
     lua_pushstring(L, "create_block");
     lua_pushcfunction(L, create_block_function);
     lua_settable(L, -3);
 
-    // Add set_color function to the table
     lua_pushstring(L, "set_color");
     lua_pushcfunction(L, set_color_function);
     lua_settable(L, -3);
 
-    // Add send_notice function to the table
     lua_pushstring(L, "restock");
     lua_pushcfunction(L, restock);
     lua_settable(L, -3);
 
-    // Add send_notice function to the table
     lua_pushstring(L, "send_notice");
     lua_pushcfunction(L, send_notice);
     lua_settable(L, -3);

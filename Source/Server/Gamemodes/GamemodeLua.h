@@ -43,9 +43,13 @@ static inline void set_table_as_readonly(lua_State* L)
 }
 
 // Funcs used to push stuff on the stack.
+// Push the init API. Usable only during init stage.
 void push_init_api(lua_State * L);
+// Push a player struct with its getters and setters.
 void push_player_api(lua_State * L, player_t * player);
-int register_spadesx_module(lua_State * L);
+// Push a block to lua.
 void push_block(lua_State * L, int x, int y, int z, uint32_t color);
+// Register the spadesx module into lua space.
+int register_spadesx_module(lua_State * L);
 
 #endif
