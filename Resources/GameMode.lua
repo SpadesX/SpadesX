@@ -40,6 +40,21 @@ function spadesx.checks.block_destruction(player_id,tool, block)
     return 1
 end
 
+-- Handles commands not handled by the server.
+-- Could be deleted as it will fallback on a C function doing nothing.
+function spadesx.checks.command(player_id, command)
+    print(player_id, command)
+    if (command == '/restock') then
+        local player = spadesx.players[player_id]
+        player:restock()
+        -- The command was right.
+        return 1
+    else
+        -- The command could not be handled.
+        return 0
+    end
+end
+
 -- Does nothing, allow block creation. Only here for showcase purpose.
 -- Could be deleted as it will fallback on a C function doing the same.
 function spadesx.checks.block_placement(player_id, block)

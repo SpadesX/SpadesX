@@ -15,5 +15,7 @@ uint8_t gamemode_gun_destruction_checks(player_t* from, uint16_t x, uint16_t y, 
 uint8_t gamemode_block_creation_checks(player_t* from, uint16_t x, uint16_t y, uint16_t z);
 // Function called before destroying blocks with a grenade.
 uint8_t gamemode_grenade_destruction_checks(player_t* from, vector3f_t pos);
+// Function called when a command is received by the server but not handled.
+uint8_t gamemode_command_check(player_t* player, char* command);
 
 #endif

@@ -1,5 +1,6 @@
 #include <Server/Commands/CommandManager.h>
 #include <Server/Commands/Commands.h>
+#include <Server/Gamemodes/Gamemodes.h>
 #include <Server/Master.h>
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
@@ -254,6 +255,9 @@ void command_handle(server_t* server, player_t* player, char* message, uint8_t c
     command_t* cmd;
     HASH_FIND_STR(server->cmds_map, command, cmd);
     if (cmd == NULL) {
+        if(!gamemode_command_check(player, message)){
+            send_server_notice(player, 0, "Error: Unknown command.");
+        }
         free(command);
         return;
     }

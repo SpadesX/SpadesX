@@ -324,6 +324,36 @@ static int _init_lua(server_t* server)
     return 1;
 }
 
+uint8_t gamemode_command_check(player_t* player, char* command){
+    if (push_check_func_safely(LuaLevel, "command")) {
+
+        lua_pushinteger(LuaLevel, player->id+1);
+        lua_pushstring(LuaLevel, command);
+
+        // Call the function with the appropriate number of arguments and return values
+        if (lua_pcall(LuaLevel, 2, 1, 0) != LUA_OK) {
+            LOG_ERROR("Error calling Lua function: %s\n", lua_tostring(LuaLevel, -1));
+            lua_pop(LuaLevel, 4); // Pop the error message and the table
+            return 0;             // Handle the error appropriately
+        } else {
+            // Check if the returned value is an integer
+            if (lua_isinteger(LuaLevel, -1)) {
+                lua_Integer result = lua_tointeger(LuaLevel, -1);
+
+                // Pop the table (and any return values if needed)
+                lua_pop(LuaLevel, 1);
+                return ((uint8_t) result);
+            } else {
+                int returnType = lua_type(LuaLevel, -1);
+                LOG_ERROR("Type of the returned value: %s\n", lua_typename(LuaLevel, returnType));
+                LOG_ERROR("Returned value is not an integer.\n");
+            }
+        }
+        LOG_ERROR("Error: call for gamemode_command_check failed.");
+    }
+    return 1;
+}
+
 void gamemode_init(server_t* server, uint8_t gamemode)
 {
     server->protocol.current_gamemode = gamemode;
