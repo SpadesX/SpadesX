@@ -49,7 +49,7 @@ function spadesx.checks.block_placement(player_id, block)
         player:set_color(player:get_team().color)
     end
     -- Auto restock players.
-    if player.get_blocks() < 10 then
+    if player:get_blocks() < 10 then
         player:restock()
     end
     return 1
