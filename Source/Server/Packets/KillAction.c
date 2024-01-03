@@ -17,6 +17,11 @@ void send_kill_action_packet(server_t* server,
     if (player->alive == 0) {
         return; // Cant kill player if they are dead
     }
+
+    if (player->has_intel) {
+        send_intel_drop(server, player);
+    }
+
     ENetPacket* packet = enet_packet_create(NULL, 5, ENET_PACKET_FLAG_RELIABLE);
     stream_t    stream = {packet->data, packet->dataLength, 0};
     stream_write_u8(&stream, PACKET_TYPE_KILL_ACTION);
@@ -68,8 +73,5 @@ void send_kill_action_packet(server_t* server,
                 player->default_reserve = SHOTGUN_DEFAULT_RESERVE;
                 break;
         }
-    }
-    if (player->has_intel) {
-        send_intel_drop(server, player);
     }
 }

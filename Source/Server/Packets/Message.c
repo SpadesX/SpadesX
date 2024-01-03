@@ -1,13 +1,13 @@
 #include <Server/Commands/Commands.h>
 #include <Server/Server.h>
 #include <Server/Staff.h>
+#include <Util/Alloc.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/TimeChecks.h>
 #include <Util/Log.h>
 #include <Util/Nanos.h>
 #include <Util/Notice.h>
 #include <Util/Uthash.h>
-#include <Util/Alloc.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -104,7 +104,7 @@ void receive_handle_send_message(server_t* server, player_t* player, stream_t* d
             HASH_ITER(hh, server->players, connected_player, tmp)
             {
                 if (is_past_join_screen(connected_player) && !player->muted &&
-                    ((connected_player->team == player->team && meant_for == 1) || meant_for == 0))
+                    ((connected_player->team == player->team && meant_for == TEAM_B) || meant_for == TEAM_A))
                 {
                     if (enet_peer_send(connected_player->peer, 0, packet) == 0) {
                         sent = 1;

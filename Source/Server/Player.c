@@ -5,6 +5,7 @@
 #include <Server/ParseConvert.h>
 #include <Server/Structs/PlayerStruct.h>
 #include <Server/Structs/ServerStruct.h>
+#include <Util/Alloc.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Checks/PositionChecks.h>
 #include <Util/Checks/TimeChecks.h>
@@ -18,7 +19,6 @@
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
 #include <Util/Weapon.h>
-#include <Util/Alloc.h>
 #include <enet/enet.h>
 #include <json-c/json_util.h>
 #include <math.h>
@@ -149,15 +149,15 @@ void set_player_respawn_point(server_t* server, player_t* player)
         player->movement.forward_orientation.z = 0.f;
 
         // Find nearest spawn point
-        for(uint16_t z = player->movement.position.z; z < server->s_map.map.size_z; z++) {
-            if(is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
+        for (uint16_t z = player->movement.position.z; z < server->s_map.map.size_z; z++) {
+            if (is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
                 player->movement.position.z = z;
                 return;
             }
         }
 
-        for(uint16_t z = player->movement.position.z; z > 0; z--) {
-            if(is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
+        for (uint16_t z = player->movement.position.z; z > 0; z--) {
+            if (is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
                 player->movement.position.z = z;
                 return;
             }
@@ -227,7 +227,7 @@ void init_player(server_t*  server,
     player->allow_killing                        = 1;
     player->allow_team_killing                   = 0;
     player->muted                                = 0;
-    player->team                                 = 2;
+    player->team                                 = TEAM_SPECTATOR;
     player->timers.since_last_base_enter         = 0;
     player->timers.since_last_base_enter_restock = 0;
     player->timers.since_last_3block_dest        = 0;
@@ -299,23 +299,25 @@ void on_player_update(server_t* server, player_t* player)
             send_joining_data(server, player);
             break;
         case STATE_SPAWNING:
-            player->hp             = 100;
-            player->grenades       = 3;
-            player->blocks         = 50;
-            player->item           = TOOL_GUN;
-            player->input          = 0;
-            player->move_forward   = 0;
-            player->move_backwards = 0;
-            player->move_left      = 0;
-            player->move_right     = 0;
-            player->jumping        = 0;
-            player->crouching      = 0;
-            player->sneaking       = 0;
-            player->sprinting      = 0;
-            player->primary_fire   = 0;
-            player->secondary_fire = 0;
-            player->alive          = 1;
-            player->reloading      = 0;
+            if (player->team != TEAM_SPECTATOR) {
+                player->hp             = 100;
+                player->grenades       = 3;
+                player->blocks         = 50;
+                player->item           = TOOL_GUN;
+                player->input          = 0;
+                player->move_forward   = 0;
+                player->move_backwards = 0;
+                player->move_left      = 0;
+                player->move_right     = 0;
+                player->jumping        = 0;
+                player->crouching      = 0;
+                player->sneaking       = 0;
+                player->sprinting      = 0;
+                player->primary_fire   = 0;
+                player->secondary_fire = 0;
+                player->alive          = 1;
+                player->reloading      = 0;
+            }
             set_player_respawn_point(server, player);
             send_respawn(server, player);
             LOG_INFO("Player %s (#%hhu) spawning at: %f %f %f",
@@ -370,7 +372,7 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
         json_object_to_file("Bans.json", root);
     }
     ip_t hostIP;
-    hostIP.cidr = 24;
+    hostIP.cidr  = 24;
     hostIP.ip[0] = event->peer->address.host.v4[0];
     hostIP.ip[1] = event->peer->address.host.v4[1];
     hostIP.ip[2] = event->peer->address.host.v4[2];
@@ -446,10 +448,10 @@ void on_new_player_connection(server_t* server, ENetEvent* event)
     player->peer      = event->peer;
     event->peer->data = (void*) ((size_t) player_id);
     player->hp        = 100;
-    player->ip.ip[0] = event->peer->address.host.v4[0];
-    player->ip.ip[1] = event->peer->address.host.v4[1];
-    player->ip.ip[2] = event->peer->address.host.v4[2];
-    player->ip.ip[3] = event->peer->address.host.v4[3];
+    player->ip.ip[0]  = event->peer->address.host.v4[0];
+    player->ip.ip[1]  = event->peer->address.host.v4[1];
+    player->ip.ip[2]  = event->peer->address.host.v4[2];
+    player->ip.ip[3]  = event->peer->address.host.v4[3];
 
     format_ip_to_str(player->name, player->ip);
     snprintf(player->name, 6, "Limbo");
@@ -474,7 +476,7 @@ void for_players(server_t* server)
             uint64_t timeNow = get_nanos();
 
             player->timers.since_previous_shot = player->timers.since_last_shot;
-            uint64_t previous_shot_delay = timeNow - player->timers.since_previous_shot;
+            uint64_t previous_shot_delay       = timeNow - player->timers.since_previous_shot;
             uint64_t original_weapon_delay     = get_player_weapon_delay_nano(player);
             /*This may seem complicated. It slightly is but its just 2 combined ternary expressions.
             If we have a previous shot that is smaller then official delay we just set it to official timer - 3ms. If it

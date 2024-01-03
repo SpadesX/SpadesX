@@ -81,7 +81,7 @@ typedef enum {
 typedef enum {
     TEAM_A         = 0,
     TEAM_B         = 1,
-    TEAM_SPECTATOR = 2,
+    TEAM_SPECTATOR = 255,
 } team_t;
 
 typedef enum {
@@ -144,9 +144,9 @@ typedef enum {
 } gun_delays_t;
 
 typedef enum {
-    BLOCKACTION_BUILD = 0,
-    BLOCKACTION_DESTROY_ONE = 1,
-    BLOCKACTION_DESTROY_THREE = 2,
+    BLOCKACTION_BUILD           = 0,
+    BLOCKACTION_DESTROY_ONE     = 1,
+    BLOCKACTION_DESTROY_THREE   = 2,
     BLOCKACTION_DESTROY_GRENADE = 3,
 } block_action_types_t;
 

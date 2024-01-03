@@ -11,16 +11,16 @@
 
 void receive_short_player(server_t* server, player_t* player, stream_t* data)
 {
-    if (player->team != 2) {
+    if (player->team != TEAM_SPECTATOR) {
         return;
     }
     stream_skip(data, 1); // Sender has to match the player we are getting info of.
     player->team   = stream_read_u8(data);
     player->weapon = stream_read_u8(data);
 
-    if (player->team != 0 && player->team != 1 && player->team != 2) {
+    if (player->team != TEAM_A && player->team != TEAM_B && player->team != TEAM_SPECTATOR) {
         LOG_WARNING("Player %s (#%hhu) sent invalid team. Switching them to Spectator", player->name, player->id);
-        player->team = 2;
+        player->team = TEAM_SPECTATOR;
     }
 
     set_default_player_ammo(player);

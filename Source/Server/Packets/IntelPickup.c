@@ -7,10 +7,10 @@ void send_intel_pickup(server_t* server, player_t* player)
         return;
     }
     uint8_t team;
-    if (player->team == 0) {
-        team = 1;
+    if (player->team == TEAM_A) {
+        team = TEAM_B;
     } else {
-        team = 0;
+        team = TEAM_A;
     }
     if (player->has_intel == 1 || server->protocol.gamemode.intel_held[team] == 1) {
         return;

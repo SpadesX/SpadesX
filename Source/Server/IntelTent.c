@@ -202,10 +202,10 @@ vector3f_t set_intel_tent_spawn_point(server_t* server, uint8_t team)
 void handleTentAndIntel(server_t* server, player_t* player)
 {
     uint8_t team;
-    if (player->team == 0) {
-        team = 1;
+    if (player->team == TEAM_A) {
+        team = TEAM_B;
     } else {
-        team = 0;
+        team = TEAM_A;
     }
     if (player->team != TEAM_SPECTATOR) {
         uint64_t timeNow = time(NULL);
