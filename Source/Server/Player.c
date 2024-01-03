@@ -151,20 +151,20 @@ void set_player_respawn_point(server_t* server, player_t* player)
         // Find nearest spawn point
         for (uint16_t z = player->movement.position.z; z < server->s_map.map.size_z; z++) {
             if (is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
-                player->movement.position.z = z;
+                player->movement.position.z = z - 2.4F;
                 return;
             }
         }
 
         for (uint16_t z = player->movement.position.z; z > 0; z--) {
             if (is_valid_spawn_point(server, player->movement.position.x, player->movement.position.y, z)) {
-                player->movement.position.z = z;
+                player->movement.position.z = z - 2.4F;
                 return;
             }
         }
 
         // Couldn't find any spawn point, switch player to top of map
-        player->movement.position.z = -2.f;
+        player->movement.position.z = -2.4f;
     }
 }
 
