@@ -10,10 +10,10 @@ void send_intel_drop(server_t* server, player_t* player)
         return;
     }
     uint8_t team;
-    if (player->team == 0) {
-        team = 1;
+    if (player->team == TEAM_A) {
+        team = TEAM_B;
     } else {
-        team = 0;
+        team = TEAM_A;
     }
     if (player->has_intel == 0 || server->protocol.gamemode.intel_held[team] == 0) {
         return;

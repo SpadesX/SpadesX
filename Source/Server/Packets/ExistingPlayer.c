@@ -1,6 +1,7 @@
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
 #include <Server/Server.h>
+#include <Util/Alloc.h>
 #include <Util/Checks/PlayerChecks.h>
 #include <Util/Enums.h>
 #include <Util/Log.h>
@@ -8,7 +9,6 @@
 #include <Util/Uthash.h>
 #include <Util/Utlist.h>
 #include <Util/Weapon.h>
-#include <Util/Alloc.h>
 #include <ctype.h>
 
 #ifdef _WIN32
@@ -41,7 +41,7 @@ void send_existing_player(server_t* server, player_t* receiver, player_t* existi
 
 void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 {
-    if (player->team != 2) {
+    if (player->team != TEAM_SPECTATOR) {
         return;
     }
     stream_skip(data, 1); // Clients always send a "dumb" ID here since server has not sent them their ID yet
@@ -50,16 +50,12 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     player->item   = stream_read_u8(data);
     player->kills  = stream_read_u32(data);
 
-    if (player->team == 255) {
-        player->team = 2;
-    }
-
-    if (player->team != 0 && player->team != 1 && player->team != 2) {
+    if (player->team != TEAM_A && player->team != TEAM_B && player->team != TEAM_SPECTATOR) {
         LOG_WARNING("Player %s (#%hhu) sent invalid team. Switching them to Spectator", player->name, player->id);
-        player->team = 2;
+        player->team = TEAM_SPECTATOR;
     }
 
-    if (player->team != 2) {
+    if (player->team != TEAM_SPECTATOR) {
         server->protocol.num_team_users[player->team]++;
     }
 
