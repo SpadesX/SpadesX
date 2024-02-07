@@ -104,4 +104,13 @@
 #define TOMLH_GET_BOOL(table, out, name, fallback, optional) \
     TOMLH_GET_VAR(bool, table, out, name, (int) out##_datum.u.b, fallback, optional);
 
+#define TOMLH_GET_RGB_COLOR(table, out, name, fallback, optional)                 \
+    {                                                                             \
+        uint8_t out##_array_tmp[3];                                               \
+        TOMLH_GET_INT_ARRAY(table, out##_array_tmp, name, 3, fallback, optional); \
+        out.r = out##_array_tmp[0];                                               \
+        out.g = out##_array_tmp[1];                                               \
+        out.b = out##_array_tmp[2];                                               \
+    }
+
 #endif
