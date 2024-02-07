@@ -17,8 +17,8 @@ typedef struct server_args
     const char*    server_name;
     const char*    team1_name;
     const char*    team2_name;
-    uint8_t*       team1_color;
-    uint8_t*       team2_color;
+    color_t        team1_color;
+    color_t        team2_color;
     uint32_t       connections;
     uint32_t       channels;
     uint32_t       in_bandwidth;

@@ -370,8 +370,8 @@ void server_start(server_args args)
                  args.server_name,
                  args.team1_name,
                  args.team2_name,
-                 args.team1_color,
-                 args.team2_color,
+                 args.team1_color.arr,
+                 args.team2_color.arr,
                  args.gamemode,
                  0);
 

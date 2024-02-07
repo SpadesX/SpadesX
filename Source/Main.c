@@ -27,8 +27,8 @@ int main(void)
     const char* server_name;
     const char* team1_name;
     const char* team2_name;
-    uint8_t     team1_color[3];
-    uint8_t     team2_color[3];
+    color_t     team1_color;
+    color_t     team2_color;
     uint8_t     periodic_delays[5];
 
     string_node_t* map_list              = NULL;
@@ -69,11 +69,11 @@ int main(void)
 
     TOMLH_GET_TABLE(teams_table, team1_table, "team1");
     TOMLH_GET_STRING(team1_table, team1_name, "name", "Blue Team", 0);
-    TOMLH_GET_INT_ARRAY(team1_table, team1_color, "color", 3, ((uint8_t[]){0, 0, 255}), 0);
+    TOMLH_GET_RGB_COLOR(team1_table, team1_color, "color", ((uint8_t[]){0, 0, 255}), 0);
 
     TOMLH_GET_TABLE(teams_table, team2_table, "team2");
     TOMLH_GET_STRING(team2_table, team2_name, "name", "Red Team", 0);
-    TOMLH_GET_INT_ARRAY(team2_table, team2_color, "color", 3, ((uint8_t[]){255, 0, 0}), 0);
+    TOMLH_GET_RGB_COLOR(team2_table, team2_color, "color", ((uint8_t[]){255, 0, 0}), 0);
 
     /* [passwords] */
     toml_table_t* passwords_table;
