@@ -124,9 +124,9 @@ typedef enum {
 } weapon_default_reserve_t;
 
 typedef enum {
-    B_CHANNEL = 0,
+    R_CHANNEL = 0,
     G_CHANNEL = 1,
-    R_CHANNEL = 2,
+    B_CHANNEL = 2,
     A_CHANNEL = 3,
 } color_channels_t;
 

@@ -22,6 +22,7 @@ target_include_directories(SpadesXCommon
     INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/Extern
+        ${PROJECT_SOURCE_DIR}/Extern/tomlc99
         ${PROJECT_SOURCE_DIR}/Extern/spadesx_enet/include
 )
 

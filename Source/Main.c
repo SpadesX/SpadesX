@@ -3,15 +3,15 @@
 #include <Server/Structs/ServerStruct.h>
 #include <Server/Structs/StartStruct.h>
 #include <Util/JSONHelpers.h>
+#include <Util/TOMLHelpers.h>
 #include <Util/Log.h>
 #include <Util/Types.h>
 #include <Util/Utlist.h>
 #include <Util/Alloc.h>
-#include <json-c/json.h>
-#include <json-c/json_object.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tomlc99/toml.h>
 
 int main(void)
 {
@@ -31,90 +31,58 @@ int main(void)
     uint8_t     team2_color[3];
     uint8_t     periodic_delays[5];
 
-    struct json_object* parsed_json;
-    struct json_object* map_in_config;
-    struct json_object* welcome_message_in_config;
-    struct json_object* periodic_message_in_config;
+    string_node_t* map_list              = NULL;
+    string_node_t* welcome_message_list  = NULL;
+    string_node_t* periodic_message_list = NULL;
 
-    parsed_json = json_object_from_file("config.json");
-    READ_INT_FROM_JSON(parsed_json, port, port, "port number", DEFAULT_SERVER_PORT, 0)
-    READ_INT_FROM_JSON(parsed_json, master, master, "master variable", 1, 0)
-    READ_INT_FROM_JSON(parsed_json, gamemode, gamemode, "gamemode", 0, 0)
-    READ_INT_FROM_JSON(parsed_json, capture_limit, capture_limit, "capture limit", 10, 0)
-    if (json_object_object_get_ex(parsed_json, "map", &map_in_config) == 0) {
-        LOG_ERROR("Failed to find map name in config");
-        return -1;
-    }
-    if (json_object_object_get_ex(parsed_json, "welcome_messages", &welcome_message_in_config) == 0) {
-        LOG_ERROR("Failed to find welcome messages in config");
-        return -1;
-    }
-    if (json_object_object_get_ex(parsed_json, "periodic_messages", &periodic_message_in_config) == 0) {
-        LOG_ERROR("Failed to find periodic messages in config");
-        return -1;
-    }
-    READ_STR_FROM_JSON(parsed_json, manager_passwd, manager_password, "manager password", "", 0);
-    READ_STR_FROM_JSON(parsed_json, admin_passwd, admin_password, "admin password", "", 0);
-    READ_STR_FROM_JSON(parsed_json, mod_passwd, moderator_password, "moderator password", "", 0);
-    READ_STR_FROM_JSON(parsed_json, guard_passwd, guard_password, "guard password", "", 0);
-    READ_STR_FROM_JSON(parsed_json, trusted_passwd, trusted_password, "trusted password", "", 0);
-    READ_STR_FROM_JSON(parsed_json, server_name, server_name, "server name", "SpadesX Server", 0);
-    READ_STR_FROM_JSON(parsed_json, team1_name, team1_name, "team1 name", "Blue", 0);
-    READ_STR_FROM_JSON(parsed_json, team2_name, team2_name, "team2 name", "Red", 0);
-    // array requires additional pair of parentheses because of how macros work in C
-    READ_INT_ARR_FROM_JSON(parsed_json, team1_color, team1_color, "team1 color", ((uint8_t[]){255, 0, 0}), 3, 0);
-    READ_INT_ARR_FROM_JSON(parsed_json, team2_color, team2_color, "team2 color", ((uint8_t[]){0, 0, 255}), 3, 0);
-    READ_INT_ARR_FROM_JSON(
-    parsed_json, periodic_delays, periodic_delays, "periodic delays", ((uint8_t[]){1, 5, 10, 30, 60}), 5, 1);
+    size_t map_list_len;
+    size_t welcome_message_list_len;
+    size_t periodic_message_list_len;
 
-    uint8_t        map_list_len = json_object_array_length(map_in_config);
-    string_node_t* map_list     = NULL;
+    toml_table_t* parsed;
+    toml_table_t* server_table;
+    TOMLH_READ_FROM_FILE(parsed, "config.toml");
+    TOMLH_GET_TABLE(parsed, server_table, "server");
 
-    for (int i = 0; i < map_list_len; ++i) {
-        json_object*   temp       = json_object_array_get_idx(map_in_config, i);
-        uint8_t        string_len = json_object_get_string_len(temp);
-        string_node_t* map_name   = spadesx_malloc(sizeof(string_node_t));
-        char*          map        = spadesx_malloc(sizeof(char) * string_len + 1);
-        memcpy(map, json_object_get_string(temp), string_len + 1);
-        map_name->string = map;
-        DL_APPEND(map_list, map_name);
+    /* [server] */
+    TOMLH_GET_STRING(server_table, server_name, "name", "SpadesX server", 0);
+    TOMLH_GET_INT(server_table, port, "port", DEFAULT_SERVER_PORT, 0);
+    TOMLH_GET_BOOL(server_table, master, "master", 1, 0);
+    TOMLH_GET_INT(server_table, gamemode, "gamemode", 0, 0);
+    TOMLH_GET_INT(server_table, capture_limit, "capture_limit", 10, 0);
+
+    TOMLH_GET_STRING_ARRAY_AS_DL(server_table, map_list, map_list_len, "maps", 1);
+    TOMLH_GET_INT_ARRAY(server_table, periodic_delays, "periodic_delays", 5, ((uint8_t[]){1, 5, 10, 30, 60}), 1);
+    TOMLH_GET_STRING_ARRAY_AS_DL(server_table, welcome_message_list, welcome_message_list_len, "welcome_messages", 1);
+    TOMLH_GET_STRING_ARRAY_AS_DL(server_table, periodic_message_list, periodic_message_list_len, "periodic_messages", 1);
+
+    if (map_list_len == 0) {
+        LOG_ERROR("At least one map must be specified");
+        exit(EXIT_FAILURE);
     }
 
-    uint8_t        welcome_message_list_len = json_object_array_length(welcome_message_in_config);
-    string_node_t* welcome_message_list     = NULL;
+    /* [teams] */
+    toml_table_t* teams_table;
+    toml_table_t* team1_table;
+    toml_table_t* team2_table;
+    TOMLH_GET_TABLE(parsed, teams_table, "teams");
 
-    for (int i = 0; i < welcome_message_list_len; ++i) {
-        json_object* temp      = json_object_array_get_idx(welcome_message_in_config, i);
-        uint8_t      stringLen = json_object_get_string_len(temp);
-        if (stringLen > 128) {
-            LOG_WARNING(
-            "Welcome message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
-            continue;
-        }
-        string_node_t* welcome_message        = spadesx_malloc(sizeof(string_node_t));
-        char*          welcome_message_string = spadesx_malloc(sizeof(char) * stringLen + 1);
-        memcpy(welcome_message_string, json_object_get_string(temp), stringLen + 1);
-        welcome_message->string = welcome_message_string;
-        DL_APPEND(welcome_message_list, welcome_message);
-    }
+    TOMLH_GET_TABLE(teams_table, team1_table, "team1");
+    TOMLH_GET_STRING(team1_table, team1_name, "name", "Blue Team", 0);
+    TOMLH_GET_INT_ARRAY(team1_table, team1_color, "color", 3, ((uint8_t[]){0, 0, 255}), 0);
 
-    uint8_t        periodic_message_list_len = json_object_array_length(periodic_message_in_config);
-    string_node_t* periodic_message_list     = NULL;
+    TOMLH_GET_TABLE(teams_table, team2_table, "team2");
+    TOMLH_GET_STRING(team2_table, team2_name, "name", "Red Team", 0);
+    TOMLH_GET_INT_ARRAY(team2_table, team2_color, "color", 3, ((uint8_t[]){255, 0, 0}), 0);
 
-    for (int i = 0; i < periodic_message_list_len; ++i) {
-        json_object* temp       = json_object_array_get_idx(periodic_message_in_config, i);
-        uint8_t      string_len = json_object_get_string_len(temp);
-        if (string_len > 128) {
-            LOG_WARNING(
-            "Periodic message in config with index %d exceeds 128 characters. Please use shorter message. IGNORING", i);
-            continue;
-        }
-        string_node_t* periodic_message        = spadesx_malloc(sizeof(string_node_t));
-        char*          periodic_message_string = spadesx_malloc(sizeof(char) * string_len + 1);
-        memcpy(periodic_message_string, json_object_get_string(temp), string_len + 1);
-        periodic_message->string = periodic_message_string;
-        DL_APPEND(periodic_message_list, periodic_message);
-    }
+    /* [passwords] */
+    toml_table_t* passwords_table;
+    TOMLH_GET_TABLE(parsed, passwords_table, "passwords");
+    TOMLH_GET_STRING(passwords_table, manager_passwd, "manager", "", 0);
+    TOMLH_GET_STRING(passwords_table, admin_passwd, "admin", "", 0);
+    TOMLH_GET_STRING(passwords_table, mod_passwd, "moderator", "", 0);
+    TOMLH_GET_STRING(passwords_table, guard_passwd, "guard", "", 0);
+    TOMLH_GET_STRING(passwords_table, trusted_passwd, "trusted", "", 0);
 
     server_args args = {.port                      = port,
                         .connections               = 64,
@@ -144,9 +112,15 @@ int main(void)
 
     server_start(args);
 
-    while (json_object_put(parsed_json) != 1) {
-        // Free the memory from the JSON object
-    }
+    free((char*) server_name);
+    free((char*) manager_passwd);
+    free((char*) admin_passwd);
+    free((char*) mod_passwd);
+    free((char*) guard_passwd);
+    free((char*) trusted_passwd);
+    free((char*) team1_name);
+    free((char*) team2_name);
+    toml_free(parsed);
 
     return 0;
 }

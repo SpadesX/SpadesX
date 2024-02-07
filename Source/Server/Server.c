@@ -46,6 +46,8 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <tomlc99/toml.h>
+#include <Util/TOMLHelpers.h>
 
 server_t        server;
 pthread_mutex_t server_lock;
@@ -115,11 +117,8 @@ static void _server_init(server_t*   server,
     snprintf(vxl_map, 64, "%s.vxl", server->s_map.current_map->string);
 
     LOG_STATUS("Loading spawn ranges from map file");
-    char mapConfig[64];
-    snprintf(mapConfig, 64, "%s.json", server->s_map.current_map->string);
-
-    struct json_object* parsed_map_json;
-    parsed_map_json = json_object_from_file(mapConfig);
+    char map_config_path[64];
+    snprintf(map_config_path, 64, "%s.toml", server->s_map.current_map->string);
 
     int         team1_start[3];
     int         team2_start[3];
@@ -127,20 +126,31 @@ static void _server_init(server_t*   server,
     int         team2_end[3];
     int         fog_color[3];
     int         map_size[3];
-    const char* author;
     uint8_t     capture_limit;
 
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1_start, team1_start, "team1 start", ((int[]){0, 0, 0}), 3, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team1_end, team1_end, "team1 end", ((int[]){10, 10, 0}), 3, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2_start, team2_start, "team2 start", ((int[]){20, 20, 0}), 3, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, team2_end, team2_end, "team2 end", ((int[]){30, 30, 0}), 3, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, fog_color, fog_color, "fog color", ((int[]){128, 232, 255}), 3, 0)
-    READ_INT_ARR_FROM_JSON(parsed_map_json, map_size, map_size, "map size", ((int[]){512, 512, 64}), 3, 1)
-    READ_STR_FROM_JSON(parsed_map_json, author, author, "author", "Unknown", 0)
-    READ_INT_FROM_JSON(parsed_map_json, capture_limit, capture_limit, "map capture limit", server->capture_limit, 1)
-    (void) author;
+    toml_table_t* parsed;
+    toml_table_t* map_table;
+    TOMLH_READ_FROM_FILE(parsed, map_config_path);
+    TOMLH_GET_TABLE(parsed, map_table, "map");
 
-    json_object_put(parsed_map_json);
+    /* [map] */
+    TOMLH_GET_INT_ARRAY(map_table, fog_color, "fog_color", 3, ((int[]){128, 232, 255}), 1);
+    TOMLH_GET_INT_ARRAY(map_table, map_size, "map_size", 3, ((int[]){512, 512, 64}), 1);
+    TOMLH_GET_INT(map_table, capture_limit, "capture_limit", server->capture_limit, 1);
+
+    /* [spawnpoints] */
+    toml_table_t* spawnpoints_table;
+    toml_table_t* team1_spawnpoints_table;
+    toml_table_t* team2_spawnpoints_table;
+    TOMLH_GET_TABLE(parsed, spawnpoints_table, "spawnpoints");
+
+    TOMLH_GET_TABLE(spawnpoints_table, team1_spawnpoints_table, "team1");
+    TOMLH_GET_INT_ARRAY(team1_spawnpoints_table, team1_start, "start", 3, ((int[]){0, 0, 0}), 0);
+    TOMLH_GET_INT_ARRAY(team1_spawnpoints_table, team1_end, "end", 3, ((int[]){10, 10, 0}), 0);
+
+    TOMLH_GET_TABLE(spawnpoints_table, team2_spawnpoints_table, "team2");
+    TOMLH_GET_INT_ARRAY(team2_spawnpoints_table, team2_start, "start", 3, ((int[]){0, 0, 0}), 0);
+    TOMLH_GET_INT_ARRAY(team2_spawnpoints_table, team2_end, "end", 3, ((int[]){10, 10, 0}), 0);
 
     if (map_load(server, vxl_map, map_size) == 0) {
         return;
@@ -190,13 +200,13 @@ static void _server_init(server_t*   server,
     server->protocol.color_fog.g = fog_color[1];
     server->protocol.color_fog.b = fog_color[2];
 
-    server->protocol.color_team[0].b = team1_color[B_CHANNEL];
-    server->protocol.color_team[0].g = team1_color[G_CHANNEL];
     server->protocol.color_team[0].r = team1_color[R_CHANNEL];
+    server->protocol.color_team[0].g = team1_color[G_CHANNEL];
+    server->protocol.color_team[0].b = team1_color[B_CHANNEL];
 
-    server->protocol.color_team[1].b = team2_color[B_CHANNEL];
-    server->protocol.color_team[1].g = team2_color[G_CHANNEL];
     server->protocol.color_team[1].r = team2_color[R_CHANNEL];
+    server->protocol.color_team[1].g = team2_color[G_CHANNEL];
+    server->protocol.color_team[1].b = team2_color[B_CHANNEL];
 
     memcpy(server->protocol.name_team[0], team1Name, strlen(team1Name));
     memcpy(server->protocol.name_team[1], team2Name, strlen(team2Name));
@@ -206,6 +216,7 @@ static void _server_init(server_t*   server,
 
     memcpy(server->server_name, serverName, strlen(serverName));
     server->server_name[strlen(serverName)] = '\0';
+    toml_free(parsed);
     gamemode_init(server, gamemode);
 }
 
