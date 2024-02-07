@@ -7,3 +7,6 @@
 [submodule "Extern/spadesx_enet"]
 	path = Extern/spadesx_enet
 	url = https://github.com/SpadesX/enet
+[submodule "Extern/tomlc99/tomlc99"]
+	path = Extern/tomlc99/tomlc99
+	url = https://github.com/cktan/tomlc99

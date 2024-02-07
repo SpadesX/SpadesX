@@ -1,0 +1,51 @@
+[server]
+# The server's name. This is shown on the server list
+name = "SpadesX Server"
+
+# Port for the server to listen on
+port = 32887
+
+# Gamemode to use
+# 0 = ctf
+# 2 = babel
+gamemode = 0
+
+# Max flag captures
+capture_limit = 10
+
+# Enable this if you want your server to show up on the server list
+master = false
+
+# Map rotation
+maps = [
+    "Border_Hallway"
+]
+
+# Messages to send upon joining
+welcome_messages = [
+    "We stand with Ukraine. Please take a minute and go check out https://helpukrainewin.org",
+    "If you find any please contact us on our discord: https://discord.gg/3mqEpQJgY8",
+    "SpadesX is still in development and thus bugs are expected",
+    "Welcome to SpadesX Server"
+]
+
+# Messages to send periodically
+periodic_messages = [
+    "This server is powered by SpadesX"
+]
+
+
+# Team configuration
+[teams]
+team1 = { name = "Blue Team", color = [0, 0, 255] }
+team2 = { name = "Red Team",  color = [255, 0, 0] }
+
+
+# User passwords
+# /login [role] [password]
+[passwords]
+manager   = "changeme1"
+admin     = "changeme2"
+moderator = "changeme3"
+guard     = "changeme4"
+trusted   = "changeme5"

@@ -8,3 +8,4 @@ endif()
 
 add_subdirectory(libmapvxl)
 add_subdirectory(spadesx_enet)
+add_subdirectory(tomlc99)

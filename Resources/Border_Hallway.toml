@@ -1,0 +1,14 @@
+[map]
+author = "F176"
+description = """
+A border control with it's sole purpose to allow access between nations to distribuite
+resources and act as checkpoint, this version made of reinforced concrete and elastic
+joints capable to absorb vibrations, earthquakes to ensure safety in a terrain otherwise
+hostile. Part of SpadesX entry maps for hallway
+"""
+
+fog_color = [128, 232, 255]
+
+[spawnpoints]
+team1 = { start = [64, 233,  59], end = [118, 287, 59] }
+team2 = { start = [393, 225, 59], end = [447, 278, 59] }

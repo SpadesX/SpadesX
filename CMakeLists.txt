@@ -22,6 +22,7 @@ target_link_libraries(SpadesX
         Server
         Util
         enet
+        tomlc99
         mapvxl
         m
         json-c
@@ -40,14 +41,14 @@ set_target_properties(SpadesX Util Server
     INTERPROCEDURAL_OPTIMIZATION true
 )
 
-if (NOT EXISTS ${CMAKE_BINARY_DIR}/config.json)
-configure_file(${PROJECT_SOURCE_DIR}/Resources/config.json ${CMAKE_BINARY_DIR}/config.json COPYONLY)
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/config.toml)
+configure_file(${PROJECT_SOURCE_DIR}/Resources/config.toml ${CMAKE_BINARY_DIR}/config.toml COPYONLY)
 endif()
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/Border_Hallway.vxl)
 configure_file(${PROJECT_SOURCE_DIR}/Resources/Border_Hallway.vxl ${CMAKE_BINARY_DIR}/Border_Hallway.vxl COPYONLY)
 endif()
 
-if (NOT EXISTS ${CMAKE_BINARY_DIR}/Border_Hallway.json)
-configure_file(${PROJECT_SOURCE_DIR}/Resources/Border_Hallway.json ${CMAKE_BINARY_DIR}/Border_Hallway.json COPYONLY)
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/Border_Hallway.toml)
+configure_file(${PROJECT_SOURCE_DIR}/Resources/Border_Hallway.toml ${CMAKE_BINARY_DIR}/Border_Hallway.toml COPYONLY)
 endif()
