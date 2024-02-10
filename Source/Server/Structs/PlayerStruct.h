@@ -81,7 +81,7 @@ typedef struct player
     uint8_t                  airborne;
     uint8_t                  wade;
     uint8_t                  next_shot_invalid;
-    char                     name[16];
+    char                     name[17];
     char                     os_info[255];
 } player_t;
 
