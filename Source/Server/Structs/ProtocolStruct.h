@@ -7,7 +7,7 @@
 typedef struct protocol
 {
     uint8_t num_users;
-    uint8_t num_team_users[3];
+    uint8_t num_team_users[256];
     //
     uint8_t num_players;
     uint8_t max_players;
