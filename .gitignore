@@ -12,3 +12,5 @@
 .vscode
 workspace.code-workspace
 compile_commands.json
+.idea
+cmake-build-debug
