@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  spadesx:
+    volumes: 
+      - server:/server
+    ports:
+      - "32887:32887"
+
+volumes:
+  server: # TODO
