@@ -36,6 +36,8 @@ FROM        scratch AS runtime
 
 COPY        --from=build /app /app
 
+VOLUME      [ "/app" ]
+
 EXPOSE      32887/udp
 
 CMD         [ "/app/SpadesX" ]

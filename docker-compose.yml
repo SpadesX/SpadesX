@@ -3,9 +3,6 @@ version: "3.8"
 services:
   spadesx:
     volumes: 
-      - server:/server
+      - app:/app
     ports:
       - "32887:32887"
-
-volumes:
-  server: # TODO
