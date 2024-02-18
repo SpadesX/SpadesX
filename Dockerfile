@@ -1,26 +1,41 @@
-FROM        debian:bookworm
+###################################
+# Stage 1: Build-Time Environment #
+###################################
 
-VOLUME      ["/server"]
+FROM        alpine:latest AS build
 
-WORKDIR     /usr/src/SpadesX
+RUN         apk add --no-cache \
+            make \
+            cmake \
+            zlib-dev \
+            json-c-dev \
+            readline-dev \
+            libbsd-dev
 
-RUN         set -ex; \
-            apt -y update; \
-            apt -y upgrade; \
-            apt install build-essential make cmake zlib1g-dev libjson-c-dev libreadline-dev libbsd-dev git; \
-            git clone https://github.com/SpadesX/SpadesX.git; \
-            cd SpadesX; \
-            mkdir build; \
-            cd build; \
-            cmake ..; \
-            make; \
-            cd ..; \
-            mkdir /server; \
-            cp build/SpadesX /server; \
-            cp -a Resources/. /server
+COPY        . /usr/src/spadesx
 
-WORKDIR     /server
+WORKDIR     /usr/src/spadesx
 
-EXPOSE      32887
+# utf-4096:
+# enet only uses C, but since it doesn't specify "LANGUAGES C" then cmake checks for a
+# C++ compiler.. so let's patch that out
+RUN         sed -i 's/project(enet)/project(enet LANGUAGES C)/g' Extern/enet6/CMakeLists.txt
 
-ENTRYPOINT  [ "/server/SpadesX" ]
+WORKDIR     /usr/src/spadesx/build
+
+RUN         cmake ..; \
+            make -j`nproc`; \
+            mkdir /app; \
+            cp SpadesX /app/SpadesX
+
+################################
+# Stage 2: Runtime Environment #
+################################
+
+FROM        scratch AS runtime
+
+COPY        --from=build /app /app
+
+EXPOSE      32887/udp
+
+CMD         [ "/app/SpadesX" ]
