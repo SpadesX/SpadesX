@@ -16,11 +16,6 @@ COPY        . /usr/src/spadesx
 
 WORKDIR     /usr/src/spadesx
 
-# utf-4096:
-# enet only uses C, but since it doesn't specify "LANGUAGES C" then cmake checks for a
-# C++ compiler.. so let's patch that out
-RUN         sed -i 's/project(enet)/project(enet LANGUAGES C)/g' Extern/enet6/CMakeLists.txt
-
 WORKDIR     /usr/src/spadesx/build
 
 RUN         cmake ..; \
