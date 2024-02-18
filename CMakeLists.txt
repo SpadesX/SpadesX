@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # SpadesX
-project(SpadesX)
+project(SpadesX LANGUAGES C)
 
 # Find pthread
 find_package(Threads REQUIRED)
