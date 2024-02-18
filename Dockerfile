@@ -4,13 +4,15 @@
 
 FROM        alpine:latest AS build
 
-RUN         apk add --no-cache \
-            make \
+RUN         set -ex; \
+            apk add --no-cache \
+            build-base \
             cmake \
             zlib-dev \
             json-c-dev \
             readline-dev \
-            libbsd-dev
+            libbsd-dev \
+            git
 
 COPY        . /usr/src/spadesx
 
