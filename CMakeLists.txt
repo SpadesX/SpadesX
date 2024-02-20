@@ -10,6 +10,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 option(CMAKE_UNITY_BUILD "Enable Unity Build" ON)
 
+option(GIT_SUBMODULES_FETCH "Fetch the required Git submodules" ON)
+
 # Add third party libraries
 add_subdirectory(Extern)
 
