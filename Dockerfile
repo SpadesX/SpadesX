@@ -2,28 +2,26 @@
 # Stage 1: Build-Time Environment #
 ###################################
 
-FROM        alpine:latest AS build
+FROM        debian:testing AS build
 
-RUN         set -ex; \
-            apk add --no-cache \
-            build-base \
-            cmake \
-            zlib-dev \
-            json-c-dev \
-            readline-dev \
+RUN         apt-get -y update; \
+            apt-get -y install \
             libbsd-dev \
+            build-essential \
+            cmake \
+            zlib1g-dev \
+            libjson-c-dev \
+            libreadline-dev \
             git
 
 COPY        . /usr/src/spadesx
-
-WORKDIR     /usr/src/spadesx
 
 WORKDIR     /usr/src/spadesx/build
 
 RUN         cmake ..; \
             make -j`nproc`; \
             mkdir /app; \
-            cp SpadesX /app/SpadesX
+            cp SpadesX /app/
 
 ################################
 # Stage 2: Runtime Environment #
