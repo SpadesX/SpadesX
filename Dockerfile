@@ -1,38 +1,51 @@
-###################################
-# Stage 1: Build-Time Environment #
-###################################
+# Build SpadesX in separate image 'build'
+FROM    alpine:edge AS build
 
-FROM        debian:testing AS build
+# Install packages for building;
+# create output dir;
+# <sys/cdefs.h> is deprecated, this is a workaround until it gets fixed
+RUN     apk add --no-cache \
+        gcc \
+        cmake \
+        make \
+        musl-dev \
+        libc-dev \
+        json-c-dev \
+        readline-dev \
+        readline-static \
+        ncurses-static \
+        libbsd-dev \
+        libbsd-static \
+        zlib-dev \
+        zlib-static; \
+        mkdir /app; \
+        sed -i 's/\#include <bsd\/sys\/cdefs.h>/\#define __BEGIN_DECLS\n\#define __END_DECLS\n\#define __GLIBC_PREREQ(x,y) 0/' /usr/include/bsd/string.h
 
-RUN         apt-get -y update; \
-            apt-get -y install \
-            libbsd-dev \
-            build-essential \
-            cmake \
-            zlib1g-dev \
-            libjson-c-dev \
-            libreadline-dev \
-            git
+COPY    . /usr/src/spadesx
 
-COPY        . /usr/src/spadesx
+WORKDIR /usr/src/spadesx
 
-WORKDIR     /usr/src/spadesx/build
+# readline relies on ncurses on alpine
+RUN     sed -i 's/readline/readline ncurses/' CMakeLists.txt; \
+        mkdir build; \
+        cp Resources/* /app
 
-RUN         cmake ..; \
-            make -j`nproc`; \
-            mkdir /app; \
-            cp SpadesX /app/
+WORKDIR /usr/src/spadesx/build
 
-################################
-# Stage 2: Runtime Environment #
-################################
+RUN     CFLAGS="-static" cmake .. -DGIT_SUBMODULES_FETCH=OFF; \
+        make -j$(nproc); \
+        run cp SpadesX /app
 
-FROM        scratch AS runtime
+# Runtime image uses built app, only scratch base is required
+FROM    scratch AS runtime
 
-COPY        --from=build /app /app
+# Copy built files
+COPY    --from=build /app /app
 
-VOLUME      [ "/app" ]
+WORKDIR /app
 
-EXPOSE      32887/udp
+# Expose ports used by SpadesX
+EXPOSE  32887/udp
 
-CMD         [ "/app/SpadesX" ]
+# Run SpadesX
+CMD     ["/app/SpadesX"]
