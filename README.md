@@ -36,23 +36,23 @@ cd SpadesX
 
 git submodule update --init 
 
-docker-compose build
+docker compose build
 ```
 
 Docker provides multiple methods to startup and shutdown the container, however the following may be useful for you.
 
 > Note that some commands assume you are already in the folder which the Dockerfile is in (i.e., `SpadesX`).
 
-- Startup container, attached: `docker-compose run spadesx`.
-- Startup container, detached: `docker-compose up -d`
+- Startup container, attached: `docker compose run spadesx`.
+- Startup container, detached: `docker compose up -d`
 - Shutdown container (whilst in game or in console): `/shutdown` command
-- Shutdown container (whilst detached): `docker-compose down`
+- Shutdown container (whilst detached): `docker compose down`
 
 To update your server to the latest commit (please shutdown your server first):
 ```bash
 git pull
 git submodule update --init  
-docker-compose build
+docker compose build
 ```
 
 ##### Unix based systems
