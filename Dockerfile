@@ -5,17 +5,18 @@ FROM    alpine:edge AS build
 # create output dir;
 # <sys/cdefs.h> is deprecated, this is a workaround until it gets fixed
 RUN     apk add --no-cache \
-        gcc \
+        build-base \
         cmake \
-        make \
-        musl-dev \
-        libc-dev \
+        gcc \
         json-c-dev \
-        readline-dev \
-        readline-static \
-        ncurses-static \
         libbsd-dev \
         libbsd-static \
+        libc-dev \
+        make \
+        musl-dev \
+        ncurses-static \
+        readline-dev \
+        readline-static \
         zlib-dev \
         zlib-static; \
         mkdir /app; \
