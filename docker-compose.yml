@@ -3,7 +3,12 @@ version: "3.8"
 services:
   spadesx:
     build: .
+    tty: true
+    stdin_open: true
     volumes: 
       - app:/app
     ports:
       - "32887:32887/udp"
+
+volumes:
+  app:
