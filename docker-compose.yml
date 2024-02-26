@@ -2,6 +2,7 @@ version: "3.8"
 
 services:
   spadesx:
+    build: .
     volumes: 
       - app:/app
     ports:
