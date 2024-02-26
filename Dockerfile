@@ -34,7 +34,7 @@ WORKDIR /usr/src/spadesx/build
 
 RUN     CFLAGS="-static" cmake .. -DGIT_SUBMODULES_FETCH=OFF; \
         make -j$(nproc); \
-        run cp SpadesX /app
+        cp SpadesX /app
 
 # Runtime image uses built app, only scratch base is required
 FROM    scratch AS runtime

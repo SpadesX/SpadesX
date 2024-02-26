@@ -5,4 +5,4 @@ services:
     volumes: 
       - app:/app
     ports:
-      - "32887:32887"
+      - "32887:32887/udp"
