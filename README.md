@@ -15,24 +15,60 @@ We just one day decided to brainstorm the name and ended up on something that so
 ## Installation
 
 ##### Libraries
-Be sure to install the development versions of those:
+If you are using the pre-supplied Dockerfile (details below) please skip this step.
+
+Otherwise, be sure to install the development versions of those:
 * [zlib](https://github.com/madler/zlib)
 * [json-c](https://github.com/json-c/json-c)
 * [libreadline](https://tracker.debian.org/pkg/readline)
 * [libbsd](https://tracker.debian.org/pkg/libbsd) (Only on some systems)
 
+#### Docker
+
+This method allows you to run SpadesX in a container which might be a more convenient and secure option for you. For your convenience, `Dockerfile` and `docker-compose.yml` are supplied for you in this repository.
+
+Initial setup commands:
+
+```bash
+git clone https://github.com/SpadesX/SpadesX
+
+cd SpadesX
+
+git submodule update --init 
+
+docker-compose build
+```
+
+Docker provides multiple methods to startup and shutdown the container, however the following may be useful for you.
+
+> Note that some commands assume you are already in the folder which the Dockerfile is in (i.e., `SpadesX`).
+
+- Startup container, attached: `docker-compose run spadesx`.
+- Startup container, detached: `docker-compose up -d`
+- Shutdown container (whilst in game or in console): `/shutdown` command
+- Shutdown container (whilst detached): `docker-compose down`
+
+To update your server to the latest commit (please shutdown your server first):
+```bash
+git pull
+git submodule update --init  
+docker-compose build
+```
+
 ##### Unix based systems
 Ubuntu 20.04 doesnt have the latest version of json-c and since SpadesX uses some functions that are in later releases you either have to build it on your own or update to 21.04+
 
-> git clone https://github.com/SpadesX/SpadesX
->
-> cd SpadesX
->
-> mkdir build && cd build
->
-> cmake ..
->
-> make -jX (Replace X with number of threads you have on your system)
+```bash
+git clone https://github.com/SpadesX/SpadesX
+
+cd SpadesX
+
+mkdir build && cd build
+
+cmake ..
+
+make -jX #(Replace X with number of threads you have on your system)
+```
 
 ##### Windows
 You can use mingw, but you'll still have to install the libraries first.
