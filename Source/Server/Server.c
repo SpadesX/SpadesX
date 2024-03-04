@@ -349,7 +349,7 @@ static void _handle_signal(const int sig)
             stop_server();
             break;
         default:
-            LOG_ERROR("Received unhandled signal %d", signal);
+            LOG_ERROR("Received unhandled signal %d", sig);
             break;
     }
 }
