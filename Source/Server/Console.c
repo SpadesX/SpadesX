@@ -15,10 +15,8 @@
 
 volatile int ctrlc = 0;
 
-void readline_new_line(int signal)
+void handle_sigint()
 {
-    (void) signal; // To prevent a warning about unused variable
-
     ctrlc = 1;
     printf("\n");
     LOG_INFO_WITHOUT_TIME("Are you sure you want to exit? (Y/n)\n");
