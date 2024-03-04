@@ -317,6 +317,54 @@ void stop_server(void)
     server.running = 0;
 }
 
+static void _set_sigaction(const int sig, const struct sigaction *sigact, const char *sig_name)
+{
+    /*
+    GCC recommends to not replace existing sigaction structs
+    if they specify SIG_IGN
+    */
+    struct sigaction prev_act;
+    sigaction(sig, NULL, &prev_act);
+    if(prev_act.sa_handler == SIG_IGN)
+    {
+        // signal should be ignored - so let's not tamper with it
+        return;
+    } 
+
+    // sigaction returns 0 if success, -1 if error
+    if(sigaction(sig, sigact, NULL))
+    {
+        LOG_ERROR("Unable to set sigaction for %s", sig_name);
+    }
+}
+
+static void _handle_signal(const int sig)
+{
+    switch(sig)
+    {
+        case SIGINT:
+            readline_new_line(sig);
+            break;
+        case SIGTERM:
+            stop_server();
+            break;
+        default:
+            LOG_ERROR("Received unhandled signal %d", signal);
+            break;
+    }
+}
+
+static inline void _apply_signal_handlers()
+{
+    struct sigaction sigact;
+    sigact.sa_handler = _handle_signal;
+    sigemptyset(&sigact.sa_mask);
+    sigact.sa_flags = 0;
+
+    _set_sigaction(SIGINT, &sigact, "SIGINT");
+    _set_sigaction(SIGTERM, &sigact, "SIGTERM");
+}
+
 void server_start(server_args args)
 {
     server.global_timers.time_since_start = get_nanos();
@@ -401,8 +449,7 @@ void server_start(server_args args)
     pthread_t console;
     pthread_create(&console, NULL, server_console, (void*) &server);
     pthread_detach(console);
-
-    signal(SIGINT, readline_new_line);
+    _apply_signal_handlers();
 
     while (server.running) {
         pthread_mutex_lock(&server_lock);
