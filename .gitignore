@@ -14,3 +14,10 @@ cmake-build-debug/
 workspace.code-workspace
 compile_commands.json
 .idea
+
+#
+# macOS
+#
+
+.DS_Store
+._.git
