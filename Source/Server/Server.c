@@ -450,7 +450,7 @@ void server_start(server_args args)
     pthread_create(&console, NULL, server_console, (void*) &server);
     pthread_detach(console);
 
-    signal(SIGINT, readline_new_line);
+    _apply_signal_handlers();
 
     while (server.running) {
         pthread_mutex_lock(&server_lock);
