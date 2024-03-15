@@ -343,7 +343,7 @@ static void _handle_signal(const int sig)
     switch(sig)
     {
         case SIGINT:
-            readline_new_line(sig);
+            handle_sigint();
             break;
         case SIGTERM:
             stop_server();
