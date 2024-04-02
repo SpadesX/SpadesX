@@ -43,7 +43,7 @@ void receive_grenade_packet(server_t* server, player_t* player, stream_t* data)
 
     if (player->item != TOOL_GRENADE) {
         send_server_notice(player, 0, "InstaSuicideNade detected. Grenade ineffective");
-        send_message_to_staff(server, 0, "Player %s (#%hhu) tried to use InstaSpadeNade", player->name, player->id);
+        send_message_to_staff(server, "Player %s (#%hhu) tried to use InstaSpadeNade", player->name, player->id);
         return;
     }
 
