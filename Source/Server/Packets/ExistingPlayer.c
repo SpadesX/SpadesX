@@ -11,12 +11,6 @@
 #include <Util/Weapon.h>
 #include <ctype.h>
 
-#ifdef _WIN32
-    #define strlcat(dst, src, siz) strcat_s(dst, siz, src)
-#else
-    #include <bsd/string.h>
-#endif
-
 void send_existing_player(server_t* server, player_t* receiver, player_t* existing_player)
 {
     if (server->protocol.num_players == 0) {
@@ -109,21 +103,48 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     }
 
     free(lowerCaseName);
-    int       count = 0;
+
+    // ensure the player has a unique name.
+    int       found_match = 0;
     player_t *connected_player, *tmp;
-    HASH_ITER(hh, server->players, connected_player, tmp)
-    {
-        if (is_past_join_screen(connected_player) && connected_player->id != player->id) {
-            if (strcmp(player->name, connected_player->name) == 0) {
-                count++;
+    char      new_name[17] = "";
+    strcpy(new_name, player->name);
+    while (1) {
+        found_match = 0;
+        HASH_ITER(hh, server->players, connected_player, tmp)
+        {
+            if (!is_past_join_screen(connected_player) || connected_player->id == player->id) {
+                // nonapplicable
+                continue;
+            }
+
+            if (strcmp(new_name, connected_player->name) == 0) {
+                // found match
+                found_match = 1;
             }
         }
+
+        if (!found_match) {
+            // non-conflicting name. we're done here.
+            break;
+        }
+
+        new_name[0] = '\0';
+        strcpy(new_name, player->name);
+        
+        char id_str[4];
+        snprintf(id_str, 4, "%d", player->id + 15);
+
+        size_t name_len = strlen(new_name);
+        size_t id_len = strlen(id_str);
+        if (name_len + id_len >= 16) {
+            name_len = 16 - id_len;
+            new_name[name_len] = '\0';
+        }
+        strncat(new_name, id_str, id_len);
     }
-    if (count > 0) {
-        char idChar[4];
-        snprintf(idChar, 4, "%d", player->id);
-        strlcat(player->name, idChar, 16);
-    }
+    player->name[0] = '\0';
+    strcpy(player->name, new_name);
 
     set_default_player_ammo(player);
     player->state = STATE_SPAWNING;
