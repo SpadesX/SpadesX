@@ -11,6 +11,8 @@
 #include <Util/Weapon.h>
 #include <ctype.h>
 
+#define PLAYER_NAME_STRLEN 16
+
 void send_existing_player(server_t* server, player_t* receiver, player_t* existing_player)
 {
     if (server->protocol.num_players == 0) {
@@ -25,7 +27,7 @@ void send_existing_player(server_t* server, player_t* receiver, player_t* existi
     stream_write_u8(&stream, existing_player->item);              // HELD ITEM
     stream_write_u32(&stream, existing_player->kills);            // KILLS
     stream_write_color_rgb(&stream, existing_player->tool_color); // COLOR
-    stream_write_array(&stream, existing_player->name, 16);       // NAME
+    stream_write_array(&stream, existing_player->name, PLAYER_NAME_STRLEN);       // NAME
 
     if (enet_peer_send(receiver->peer, 0, packet) != 0) {
         LOG_WARNING("Failed to send player state");
@@ -58,9 +60,9 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 
     uint32_t length  = stream_left(data);
     uint8_t  invName = 0;
-    if (length > 16) {
+    if (length > PLAYER_NAME_STRLEN) {
         LOG_WARNING("Name of player %d is too long. Cutting", player->id);
-        length = 16;
+        length = PLAYER_NAME_STRLEN;
     } else {
         player->name[length] = '\0';
     }
@@ -107,7 +109,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     // ensure the player has a unique name.
     int       found_match = 0;
     player_t *connected_player, *tmp;
-    char      new_name[17] = "";
+    char      new_name[PLAYER_NAME_STRLEN + 1] = "";
     strcpy(new_name, player->name);
     while (1) {
         found_match = 0;
@@ -137,8 +139,8 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 
         size_t name_len = strlen(new_name);
         size_t id_len = strlen(id_str);
-        if (name_len + id_len >= 16) {
-            name_len = 16 - id_len;
+        if (name_len + id_len >= PLAYER_NAME_STRLEN) {
+            name_len = PLAYER_NAME_STRLEN - id_len;
             new_name[name_len] = '\0';
         }
         strncat(new_name, id_str, id_len);
