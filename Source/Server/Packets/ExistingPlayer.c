@@ -110,7 +110,8 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     int       found_match = 0;
     player_t *connected_player, *tmp;
     char      new_name[PLAYER_NAME_STRLEN + 1] = "";
-    strcpy(new_name, player->name);
+    strncpy(new_name, player->name, PLAYER_NAME_STRLEN);
+    new_name[PLAYER_NAME_STRLEN] = '\0';
     while (1) {
         found_match = 0;
         HASH_ITER(hh, server->players, connected_player, tmp)
@@ -132,7 +133,8 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
         }
 
         new_name[0] = '\0';
-        strcpy(new_name, player->name);
+        strncpy(new_name, player->name, PLAYER_NAME_STRLEN);
+        new_name[PLAYER_NAME_STRLEN] = '\0';
         
         char id_str[4];
         snprintf(id_str, 4, "%d", player->id + 15);
@@ -146,7 +148,8 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
         strncat(new_name, id_str, id_len);
     }
     player->name[0] = '\0';
-    strcpy(player->name, new_name);
+    strncpy(player->name, new_name, PLAYER_NAME_STRLEN);
+    player->name[PLAYER_NAME_STRLEN] = '\0';
 
     set_default_player_ammo(player);
     player->state = STATE_SPAWNING;
