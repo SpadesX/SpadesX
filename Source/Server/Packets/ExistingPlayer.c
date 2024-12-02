@@ -61,7 +61,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     uint32_t length  = stream_left(data);
     uint8_t  invName = 0;
     if (length > PLAYER_NAME_STRLEN) {
-        LOG_WARNING("Name of player %d is too long. Cutting", player->id);
+        LOG_WARNING("Name of player %u is too long. Cutting", player->id);
         length = PLAYER_NAME_STRLEN;
     } else {
         player->name[length] = '\0';
@@ -137,7 +137,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
         new_name[PLAYER_NAME_STRLEN] = '\0';
         
         char id_str[4];
-        snprintf(id_str, 4, "%d", player->id + 15);
+        snprintf(id_str, 4, "%u", player->id + 15);
 
         size_t name_len = strlen(new_name);
         size_t id_len = strlen(id_str);
