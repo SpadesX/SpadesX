@@ -9,8 +9,6 @@ RUN     apk add --no-cache \
         cmake \
         gcc \
         json-c-dev \
-        libbsd-dev \
-        libbsd-static \
         libc-dev \
         make \
         musl-dev \
@@ -19,8 +17,7 @@ RUN     apk add --no-cache \
         readline-static \
         zlib-dev \
         zlib-static; \
-        mkdir /app; \
-        sed -i 's/\#include <bsd\/sys\/cdefs.h>/\#define __BEGIN_DECLS\n\#define __END_DECLS\n\#define __GLIBC_PREREQ(x,y) 0/' /usr/include/bsd/string.h
+        mkdir /app
 
 COPY    . /usr/src/spadesx
 
