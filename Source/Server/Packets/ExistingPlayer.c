@@ -11,8 +11,6 @@
 #include <Util/Weapon.h>
 #include <ctype.h>
 
-#define PLAYER_NAME_STRLEN 16
-
 void send_existing_player(server_t* server, player_t* receiver, player_t* existing_player)
 {
     if (server->protocol.num_players == 0) {

@@ -266,7 +266,7 @@ void init_player(server_t*  server,
     player->is_invisible = 0;
     player->kills        = 0;
     player->deaths       = 0;
-    memset(player->name, 0, 17);
+    memset(player->name, 0, PLAYER_NAME_STRLEN + 1);
     memset(player->os_info, 0, 255);
 }
 
