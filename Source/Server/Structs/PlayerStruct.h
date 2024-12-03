@@ -15,6 +15,8 @@
 #include <enet/enet.h>
 #include <stdint.h>
 
+#define PLAYER_NAME_STRLEN 16
+
 typedef struct player
 {
     UT_hash_handle           hh;
@@ -81,7 +83,7 @@ typedef struct player
     uint8_t                  airborne;
     uint8_t                  wade;
     uint8_t                  next_shot_invalid;
-    char                     name[17];
+    char                     name[PLAYER_NAME_STRLEN + 1];
     char                     os_info[255];
 } player_t;
 
