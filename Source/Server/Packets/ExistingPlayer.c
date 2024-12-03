@@ -1,3 +1,4 @@
+#include "Server/Structs/PlayerStruct.h"
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
 #include <Server/Server.h>
@@ -93,7 +94,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 
     while (unwantedNames[index] != NULL) {
         if (strstr(lowerCaseName, unwantedNames[index]) != NULL &&
-            strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
+            strncmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index]), PLAYER_NAME_STRLEN) == 0)
         {
             snprintf(player->name, strlen("Deuce") + 1, "Deuce");
             free(lowerCaseName);
@@ -119,7 +120,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
                 continue;
             }
 
-            if (strcmp(new_name, connected_player->name) == 0) {
+            if (strncmp(new_name, connected_player->name, PLAYER_NAME_STRLEN) == 0) {
                 // found match
                 found_match = 1;
             }
@@ -130,7 +131,6 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
             break;
         }
 
-        new_name[0] = '\0';
         strncpy(new_name, player->name, PLAYER_NAME_STRLEN);
         new_name[PLAYER_NAME_STRLEN] = '\0';
         
