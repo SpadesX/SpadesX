@@ -21,7 +21,6 @@ Otherwise, be sure to install the development versions of those:
 * [zlib](https://github.com/madler/zlib)
 * [json-c](https://github.com/json-c/json-c)
 * [libreadline](https://tracker.debian.org/pkg/readline)
-* [libbsd](https://tracker.debian.org/pkg/libbsd) (Only on some systems)
 
 #### Docker
 

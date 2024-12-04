@@ -32,10 +32,6 @@ target_link_libraries(SpadesX
         Threads::Threads
 )
 
-if (UNIX)
-    target_link_libraries(SpadesX PRIVATE bsd)
-endif()
-
 add_subdirectory(Source)
 
 set_target_properties(SpadesX Util Server

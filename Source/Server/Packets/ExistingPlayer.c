@@ -1,3 +1,4 @@
+#include "Server/Structs/PlayerStruct.h"
 #include <Server/Packets/Packets.h>
 #include <Server/ParseConvert.h>
 #include <Server/Server.h>
@@ -10,12 +11,6 @@
 #include <Util/Utlist.h>
 #include <Util/Weapon.h>
 #include <ctype.h>
-
-#ifdef _WIN32
-    #define strlcat(dst, src, siz) strcat_s(dst, siz, src)
-#else
-    #include <bsd/string.h>
-#endif
 
 void send_existing_player(server_t* server, player_t* receiver, player_t* existing_player)
 {
@@ -31,7 +26,7 @@ void send_existing_player(server_t* server, player_t* receiver, player_t* existi
     stream_write_u8(&stream, existing_player->item);              // HELD ITEM
     stream_write_u32(&stream, existing_player->kills);            // KILLS
     stream_write_color_rgb(&stream, existing_player->tool_color); // COLOR
-    stream_write_array(&stream, existing_player->name, 16);       // NAME
+    stream_write_array(&stream, existing_player->name, PLAYER_NAME_STRLEN);       // NAME
 
     if (enet_peer_send(receiver->peer, 0, packet) != 0) {
         LOG_WARNING("Failed to send player state");
@@ -64,9 +59,9 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 
     uint32_t length  = stream_left(data);
     uint8_t  invName = 0;
-    if (length > 16) {
-        LOG_WARNING("Name of player %d is too long. Cutting", player->id);
-        length = 16;
+    if (length > PLAYER_NAME_STRLEN) {
+        LOG_WARNING("Name of player %u is too long. Cutting", player->id);
+        length = PLAYER_NAME_STRLEN;
     } else {
         player->name[length] = '\0';
     }
@@ -99,7 +94,7 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
 
     while (unwantedNames[index] != NULL) {
         if (strstr(lowerCaseName, unwantedNames[index]) != NULL &&
-            strcmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index])) == 0)
+            strncmp(unwantedNames[index], strstr(lowerCaseName, unwantedNames[index]), PLAYER_NAME_STRLEN) == 0)
         {
             snprintf(player->name, strlen("Deuce") + 1, "Deuce");
             free(lowerCaseName);
@@ -109,21 +104,50 @@ void receive_existing_player(server_t* server, player_t* player, stream_t* data)
     }
 
     free(lowerCaseName);
-    int       count = 0;
+
+    // ensure the player has a unique name.
+    int       found_match = 0;
     player_t *connected_player, *tmp;
-    HASH_ITER(hh, server->players, connected_player, tmp)
-    {
-        if (is_past_join_screen(connected_player) && connected_player->id != player->id) {
-            if (strcmp(player->name, connected_player->name) == 0) {
-                count++;
+    char      new_name[PLAYER_NAME_STRLEN + 1] = "";
+    strncpy(new_name, player->name, PLAYER_NAME_STRLEN);
+    new_name[PLAYER_NAME_STRLEN] = '\0';
+    while (1) {
+        found_match = 0;
+        HASH_ITER(hh, server->players, connected_player, tmp)
+        {
+            if (!is_past_join_screen(connected_player) || connected_player->id == player->id) {
+                // nonapplicable
+                continue;
+            }
+
+            if (strncmp(new_name, connected_player->name, PLAYER_NAME_STRLEN) == 0) {
+                // found match
+                found_match = 1;
             }
         }
+
+        if (!found_match) {
+            // non-conflicting name. we're done here.
+            break;
+        }
+
+        strncpy(new_name, player->name, PLAYER_NAME_STRLEN);
+        new_name[PLAYER_NAME_STRLEN] = '\0';
+        
+        char id_str[4];
+        snprintf(id_str, 4, "%u", player->id + 15);
+
+        size_t name_len = strlen(new_name);
+        size_t id_len = strlen(id_str);
+        if (name_len + id_len >= PLAYER_NAME_STRLEN) {
+            name_len = PLAYER_NAME_STRLEN - id_len;
+            new_name[name_len] = '\0';
+        }
+        strncat(new_name, id_str, id_len);
     }
-    if (count > 0) {
-        char idChar[4];
-        snprintf(idChar, 4, "%d", player->id);
-        strlcat(player->name, idChar, 16);
-    }
+    player->name[0] = '\0';
+    strncpy(player->name, new_name, PLAYER_NAME_STRLEN);
+    player->name[PLAYER_NAME_STRLEN] = '\0';
 
     set_default_player_ammo(player);
     player->state = STATE_SPAWNING;
